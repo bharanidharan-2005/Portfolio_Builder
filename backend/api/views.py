@@ -24,14 +24,15 @@ load_dotenv()
 # ⚙️ CONFIGURATION HOOK
 # -----------------------------------------------------------------
 def get_gemini_client():
-    # 1. Try to get the key from the .env file first
-    api_key = os.environ.get("GEMINI_API_KEY", "")
+    # 1. Strictly load the key from the .env file
+    api_key = os.getenv("GEMINI_API_KEY")
     
-    # 2. If it's missing or doesn't start with "AIza", hardcode it temporarily for testing
-    if not api_key.startswith("AIza"):
-        print("⚠️ WARNING: Invalid or missing GEMINI_API_KEY in .env file. Using hardcoded fallback.")
-        # Paste your REAL API key between the quotes below!
-        api_key = "AQ.Ab8RN6KBMCYORFG2KhUclz7Y9-bnMPw2srBlTZ8ISy2AbKRsSw" 
+    # 2. Fail safely and loudly if the key is missing
+    if not api_key or not api_key.startswith("AIza"):
+        raise ValueError(
+            "⚠️ CRITICAL: Invalid or missing GEMINI_API_KEY. "
+            "Ensure your .env file is created in the root directory and contains the correct key."
+        )
         
     return genai.Client(api_key=api_key)
 
