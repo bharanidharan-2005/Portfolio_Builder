@@ -29,8 +29,11 @@ SECRET_KEY = 'django-insecure-cum8zdv%mo2x)2u(=wzn9oe9gv#@+hjyxemy3d524ff()os_=d
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = [
+    'aurabuild-backend.onrender.com',
+    'localhost',
+    '127.0.0.1'
+]
 
 # Application definition
 
