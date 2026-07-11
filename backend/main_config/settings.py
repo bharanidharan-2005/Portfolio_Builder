@@ -100,7 +100,8 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'laughinggupta2025@gmail.com' 
 
 # ⚠️ Replace with the 16-character App Password you just generated (keep the quotes)
-EMAIL_HOST_PASSWORD = 'cgdy daby aikz qsit'
+# ⚠️ Pulling the password securely from the environment
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 # PASTE THIS NEW BLOCK IN ITS PLACE:
