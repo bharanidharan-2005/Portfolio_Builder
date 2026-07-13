@@ -32,11 +32,12 @@ def get_gemini_client():
     # 1. Strictly load the key from the .env file
     api_key = os.getenv("GEMINI_API_KEY")
     
-    # 2. Fail safely and loudly if the key is missing
-    if not api_key or not api_key.startswith("AIza"):
+    # 2. Fail safely and loudly if the key is completely missing
+    # We removed the strict "AIza" requirement here so it accepts your AQ. key
+    if not api_key:
         raise ValueError(
             "⚠️ CRITICAL: Invalid or missing GEMINI_API_KEY. "
-            "Ensure your .env file is created in the root directory and contains the correct key."
+            "Ensure your environment variable is set in Render."
         )
         
     return genai.Client(api_key=api_key)
