@@ -16,9 +16,14 @@ from .models import Portfolio, PortfolioPage, PortfolioSection, AISessionLog
 from PIL import Image
 import random
 from django.core.mail import send_mail
-from .models import OTPVerification# --- NEW: Force load your environment variables ---
+from .models import OTPVerification
+import logging
+
+# --- NEW: Force load your environment variables ---
 from dotenv import load_dotenv
 load_dotenv() 
+
+logger = logging.getLogger(__name__)
 
 # -----------------------------------------------------------------
 # ⚙️ CONFIGURATION HOOK
@@ -36,7 +41,6 @@ def get_gemini_client():
         
     return genai.Client(api_key=api_key)
 
-# ... (keep the rest of your functions below exactly as they are) ...
 def extract_clean_json_payload(raw_text):
     """Safely cleans markdown formatting wrappers from AI returns."""
     clean_text = raw_text.strip()
@@ -155,6 +159,7 @@ class AISectionRefinementView(APIView):
             "message": "Content layout generated successfully!", "updated_data": updated_content,
             "log": log.to_frontend_dict() if hasattr(log, 'to_frontend_dict') else {"desc": log_desc, "type": change_tag}
         }, status=status.HTTP_200_OK)
+
 # -----------------------------------------------------------------
 # 4. MASTER WHOLE RESUME UPLOAD 
 # -----------------------------------------------------------------
@@ -189,6 +194,11 @@ CRITICAL MAPPING RULES:
 4. EXPERIENCE = PROJECTS: All Work Experience, Employment History, and Jobs MUST be extracted into the `projects_grid.projects` array. Use the Role/Company as the title, and the bullet points as the desc.
 5. CONTACT DETAILS: You MUST extract the email, phone number, and physical address/location into their respective keys.
 6. Extract all skills into the skills.items array.
+
+CRITICAL INSTRUCTIONS FOR AI:
+1. You MUST return ONLY valid, raw JSON. 
+2. Do NOT include markdown formatting, do NOT include ```json tags, and do NOT include any conversational text.
+3. The 'skills' and 'projects' fields MUST be strictly formatted as JSON arrays (lists) of strings or objects.
 """
             contents_payload = f"Read this resume.\nResume Text:\n{extracted_text}\nReturn ONLY JSON."
 
@@ -255,8 +265,8 @@ CRITICAL MAPPING RULES:
         except Exception as e:
             traceback.print_exc()
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-# -----------------------------------------------------------------
 
+# -----------------------------------------------------------------
 # 5. SITE BUILD INITIAL ARCHITECT BLUEPRINT WIZARD
 # -----------------------------------------------------------------
 class AITemplateGeneratorView(APIView):
@@ -371,6 +381,7 @@ class PortfolioReviewAPIView(APIView):
             "suggestions": suggestions if suggestions else ["Your portfolio layout is perfectly optimized!"],
             "missing_items": missing_items
         }, status=status.HTTP_200_OK)
+
 # -----------------------------------------------------------------
 # 7. IMAGE CUSTOMIZER (Gemini Imagen 3)
 # -----------------------------------------------------------------
@@ -390,7 +401,6 @@ def generate_custom_image(request):
                 aspect_ratio="16:9"
             )
         )
-        # (Rest of your successful generation code remains the same here)
         generated_image = response.generated_images[0]
         image_bytes = generated_image.image.image_bytes
         media_dir = os.path.join(settings.BASE_DIR, 'media', 'generated_assets')
@@ -408,7 +418,11 @@ def generate_custom_image(request):
             'success': True,
             'image_url': 'https://placehold.co/1280x720/13151c/a855f7?text=AuraBuild+Placeholder',
             'message': 'API unavailable. Using placeholder asset.'
-        }, status=status.HTTP_200_OK)# ADD THESE FUNCTIONS AT THE BOTTOM
+        }, status=status.HTTP_200_OK)
+
+# -----------------------------------------------------------------
+# 8. AUTHENTICATION & OTP
+# -----------------------------------------------------------------
 @api_view(['POST'])
 def send_verification_otp(request):
     email = request.data.get('email')
@@ -424,20 +438,21 @@ def send_verification_otp(request):
         defaults={'otp_code': otp}
     )
     
-    # Send the email (Check your terminal console to see the code if SMTP is not configured)
-    print(f"--- OTP FOR {email} IS: {otp} ---") 
     try:
         send_mail(
             'Your Portfolio Builder Verification Code',
             f'Your 6-digit verification code is: {otp}',
-            'noreply@aurabuild.com',
+            'laughinggupta2025@gmail.com',
             [email],
             fail_silently=False,
         )
     except Exception as e:
-        print("Email sending skipped, relying on console print.")
+        # 🚨 THE FIX: If Render blocks the email, don't crash! Just log it and continue.
+        logger.error(f"Render firewall blocked the email, but OTP is saved. Error: {e}")
+        print(f"--- BYPASS EMAIL BLOCK: OTP FOR {email} IS: {otp} ---")
 
-    return Response({'success': True, 'message': 'OTP sent'})
+    # Always return success to the frontend so the user can enter the console OTP
+    return Response({'success': True, 'message': 'OTP processed!'})
 
 @api_view(['POST'])
 def verify_otp_code(request):
