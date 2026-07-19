@@ -11,6 +11,7 @@ from .views import (
 )
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.decorators.csrf import csrf_exempt
 
 
 
@@ -27,6 +28,7 @@ urlpatterns = [
     # ⚡ Step 2: Register the review analytics path endpoint
     path('portfolio-review/', PortfolioReviewAPIView.as_view(), name='portfolio-review'), 
     path('generate-image/',generate_custom_image, name='generate_custom_image'),
+    path('generate-template/', csrf_exempt(AITemplateGeneratorView.as_view()), name='generate-template'),
 ]
 
 if settings.DEBUG:
