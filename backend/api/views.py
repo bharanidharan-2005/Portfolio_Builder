@@ -275,13 +275,14 @@ CRITICAL INSTRUCTIONS FOR AI:
 # -----------------------------------------------------------------
 # 5. SITE BUILD INITIAL ARCHITECT BLUEPRINT WIZARD
 # -----------------------------------------------------------------
-@method_decorator(csrf_exempt, name='dispatch')
+
 class AITemplateGeneratorView(APIView):
     authentication_classes = [] 
     permission_classes = [AllowAny]
     def post(self, request):
         user_idea = request.data.get('idea', '')
         if not user_idea:
+            print("INCOMING PAYLOAD DATA:", request.data)
             return Response({"error": "Please provide a website goal idea summary description concept."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
