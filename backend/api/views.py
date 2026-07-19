@@ -3,6 +3,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 import json
 import re  
 import traceback
@@ -246,8 +248,13 @@ CRITICAL INSTRUCTIONS FOR AI:
                 payload["contact"]["text"] = "Let's connect! Reach out directly below."
 
             # Save to Database
+# Save to Database
             home_page = PortfolioPage.objects.filter(slug="home").first()
-            if not home_page: return Response({"error": "Home page not found."}, status=status.HTTP_404_NOT_FOUND)
+            
+            # Auto-create the page if it doesn't exist
+            if not home_page: 
+                parent_portfolio, _ = Portfolio.objects.get_or_create(id=1, defaults={"owner_name": "Developer Workspace User", "title": "Master Studio Suite"})
+                home_page = PortfolioPage.objects.create(portfolio=parent_portfolio, name="Home", slug="home", order=0, theme_accent="dark")
 
             for section_name, content in payload.items():
                 existing_sections = PortfolioSection.objects.filter(page=home_page, section_type=section_name)
@@ -260,16 +267,10 @@ CRITICAL INSTRUCTIONS FOR AI:
                     PortfolioSection.objects.create(page=home_page, section_type=section_name, content_data=content)
 
             return Response({"message": "Resume parsed successfully.", "data": payload}, status=status.HTTP_200_OK)
-
-        except json.JSONDecodeError:
-            return Response({"error": "Gemini returned invalid JSON."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        except Exception as e:
-            traceback.print_exc()
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 # -----------------------------------------------------------------
 # 5. SITE BUILD INITIAL ARCHITECT BLUEPRINT WIZARD
 # -----------------------------------------------------------------
+@method_decorator(csrf_exempt, name='dispatch')
 class AITemplateGeneratorView(APIView):
     def post(self, request):
         user_idea = request.data.get('idea', '')
