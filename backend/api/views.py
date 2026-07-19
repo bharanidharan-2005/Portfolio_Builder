@@ -280,7 +280,7 @@ class AITemplateGeneratorView(APIView):
     authentication_classes = [] 
     permission_classes = [AllowAny]
     def post(self, request):
-        user_idea = request.data.get('idea', '')
+        user_idea = request.data.get('goal') or request.data.get('idea', '')
         if not user_idea:
             print("INCOMING PAYLOAD DATA:", request.data)
             return Response({"error": "Please provide a website goal idea summary description concept."}, status=status.HTTP_400_BAD_REQUEST)
