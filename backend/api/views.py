@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.permissions import AllowAny
 import json
 import re  
 import traceback
@@ -276,6 +277,8 @@ CRITICAL INSTRUCTIONS FOR AI:
 # -----------------------------------------------------------------
 @method_decorator(csrf_exempt, name='dispatch')
 class AITemplateGeneratorView(APIView):
+    authentication_classes = [] 
+    permission_classes = [AllowAny]
     def post(self, request):
         user_idea = request.data.get('idea', '')
         if not user_idea:
