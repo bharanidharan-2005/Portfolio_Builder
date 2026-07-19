@@ -267,6 +267,10 @@ CRITICAL INSTRUCTIONS FOR AI:
                     PortfolioSection.objects.create(page=home_page, section_type=section_name, content_data=content)
 
             return Response({"message": "Resume parsed successfully.", "data": payload}, status=status.HTTP_200_OK)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response({"error": f"Resume processing failed: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 # -----------------------------------------------------------------
 # 5. SITE BUILD INITIAL ARCHITECT BLUEPRINT WIZARD
 # -----------------------------------------------------------------
