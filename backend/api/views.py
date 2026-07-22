@@ -447,19 +447,23 @@ def send_verification_otp(request):
         email=email,
         defaults={'otp_code': otp}
     )
-    
     try:
-        send_mail(
-            'Your Portfolio Builder Verification Code',
-            f'Your 6-digit verification code is: {otp}',
-            'laughinggupta2025@gmail.com',
-            [email],
-            fail_silently=False,
-        )
+        # Set your API key (it's best practice to put this in your .env file eventually)
+        resend.api_key = os.getenv("RESEND_API_KEY", "re_your_api_key_here") 
+
+        params = {
+            "from": "onboarding@resend.dev", # Or your verified domain if you have one
+            "to": [email],
+            "subject": "Your Portfolio Builder Verification Code",
+            "html": f"<strong>Your 6-digit verification code is: {otp}</strong>",
+        }
+        
+        email_response = resend.Emails.send(params)
+        logger.info(f"Email successfully sent via Resend: {email_response}")
+
     except Exception as e:
-        # 🚨 THE FIX: If Render blocks the email, don't crash! Just log it and continue.
-        logger.error(f"Render firewall blocked the email, but OTP is saved. Error: {e}")
-        print(f"--- BYPASS EMAIL BLOCK: OTP FOR {email} IS: {otp} ---")
+        logger.error(f"Resend API failed to send email: {e}")
+        print(f"--- FALLBACK: OTP FOR {email} IS: {otp} ---")
 
     # Always return success to the frontend so the user can enter the console OTP
     return Response({'success': True, 'message': 'OTP processed!'})
