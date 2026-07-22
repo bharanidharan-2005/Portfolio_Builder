@@ -21,6 +21,7 @@ import random
 from django.core.mail import send_mail
 from .models import OTPVerification
 import logging
+import resend
 
 # --- NEW: Force load your environment variables ---
 from dotenv import load_dotenv
