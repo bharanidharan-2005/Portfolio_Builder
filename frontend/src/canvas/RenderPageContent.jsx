@@ -93,9 +93,14 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
         onInlineEdit(section.id, key, list);
     };
 
+    // --- SUBMIT CONTACT FIX ---
     const submitContact = async(e) => {
         e.preventDefault();
-        if (isPreview) return notify("Forms are disabled in preview mode.", 'info');
+        
+        // BUG FIX: Forms should ONLY be submittable in Preview Mode / Live Website
+        if (!isPreview) {
+            return notify("Form submissions are disabled inside the editor. Please test this in Live Preview.", 'info');
+        }
         
         if (!cName.trim() || !cEmail.trim() || !cMessage.trim()) {
             notify("Please fill in your name, email and message.", 'error');
@@ -103,7 +108,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
         }
         
         setCSending(true);
-        const result = await sendContactForm({ name: cName, email: cEmail, message: cMessage });
+        const result = await sendContactForm({ 
+            name: cName, 
+            email: cEmail, 
+            message: cMessage,
+            owner_email: data.email || "" // Passing the portfolio owner's email so the backend knows who to notify
+        });
 
         if (result.success) {
             notify("Message sent! The owner will be notified.", 'success');
@@ -411,7 +421,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                 </motion.div>
             )}
 
-            {/* 4. SKILLS SECTION (ZIGZAG LAYOUT) */}
+            {/* 4. SKILLS SECTION */}
             {currentType === "skills" && (
                 <motion.div {...fadeUpConfig} className="space-y-8 py-10">
                     {sectionImageBanner}
@@ -501,7 +511,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                 </motion.div>
             )}
 
-            {/* 5. PROJECTS SECTION (SUBDUED ANIMATIONS) */}
+            {/* 5. PROJECTS SECTION */}
             {currentType === "projects_grid" && (
                 <div className="space-y-8 py-10">
                     {sectionImageBanner}
@@ -520,7 +530,6 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 key={i}
                                 className={`relative group p-8 md:p-10 rounded-[2rem] border flex flex-col space-y-6 shadow-md backdrop-blur-xl transition-all duration-300 w-full overflow-hidden ${cardBg} ${borderClass} ${!isPreview ? 'hover:shadow-[0_10px_30px_rgb(0,0,0,0.15)] hover:border-white/10' : ''}`}
                             >
-                                {/* Expanding bottom glow line */}
                                 <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 transition-all duration-500 group-hover:w-full bg-current ${accentText}`}></div>
 
                                 {!isPreview && (
@@ -530,7 +539,6 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     >✕</button>
                                 )}
 
-                                {/* 1. HEADING: Subdued Left to Right */}
                                 <motion.h3 
                                     initial={{ opacity: 0, x: -30 }}
                                     whileInView={{ opacity: 1, x: 0 }}
@@ -545,7 +553,6 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     />
                                 </motion.h3>
                                 
-                                {/* 2. CONTENT / DESCRIPTION: Subdued Right to Left */}
                                 <motion.div 
                                     initial={{ opacity: 0, x: 30 }}
                                     whileInView={{ opacity: 1, x: 0 }}
@@ -561,7 +568,6 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     />
                                 </motion.div>
 
-                                {/* 3. VIEW PROJECT BUTTON: Gentler Pulse */}
                                 {project.projectUrl && project.projectUrl.trim() !== "" && (
                                     <div className="pt-2">
                                         <motion.button 
@@ -590,7 +596,6 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     </div>
                                 )}
 
-                                {/* 4. TOOLS / TAGS: Softer Jump */}
                                 <div className="pt-6 border-t border-dashed flex flex-col gap-5 mt-auto w-full" style={{ borderColor: 'inherit' }}>
                                     <motion.div 
                                         initial={{ opacity: 0, y: 30 }}
@@ -653,11 +658,11 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                 </div>
             )}
 
-            {/* 6. CONTACT SECTION (SUBDUED ANIMATED FORM) */}
+            {/* 6. CONTACT SECTION (FIXED FOR LIVE PREVIEW) */}
             {currentType === "contact" && (
                 <div className={`relative text-center py-16 mt-12 border-t ${borderClass}`}>
                     
-                    {/* Ambient Animated Glow Orb - Softer */}
+                    {/* Ambient Animated Glow Orb */}
                     <motion.div 
                         animate={{ scale: [1, 1.05, 1], opacity: [0.1, 0.15, 0.1] }}
                         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
@@ -731,42 +736,47 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             className={`max-w-md mx-auto mt-12 flex flex-col gap-5 text-left p-8 rounded-3xl border shadow-lg backdrop-blur-xl ${cardBg} ${borderClass}`}
                         >
                             <motion.div variants={staggerItem} className="group/input">
+                                {/* FIX: Input is unlocked ONLY when isPreview is true */}
                                 <input 
                                     type="text"
                                     value={cName}
                                     onChange={(e) => setCName(e.target.value)}
                                     placeholder="Your name"
-                                    readOnly={isPreview}
-                                    className={`w-full px-5 py-4 rounded-xl text-sm font-medium outline-none border transition-all duration-300 focus:-translate-y-1 focus:ring-2 focus:ring-blue-500/30 bg-black/20 hover:bg-black/40 ${borderClass} ${textPrimary} ${placeholderClass} ${isPreview ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                    readOnly={!isPreview}
+                                    className={`w-full px-5 py-4 rounded-xl text-sm font-medium outline-none border transition-all duration-300 focus:-translate-y-1 focus:ring-2 focus:ring-blue-500/30 bg-black/20 hover:bg-black/40 ${borderClass} ${textPrimary} ${placeholderClass} ${!isPreview ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 />
                             </motion.div>
                             <motion.div variants={staggerItem} className="group/input">
+                                {/* FIX: Input is unlocked ONLY when isPreview is true */}
                                 <input 
                                     type="email"
                                     value={cEmail}
                                     onChange={(e) => setCEmail(e.target.value)}
                                     placeholder="you@email.com"
-                                    readOnly={isPreview}
-                                    className={`w-full px-5 py-4 rounded-xl text-sm font-medium outline-none border transition-all duration-300 focus:-translate-y-1 focus:ring-2 focus:ring-blue-500/30 bg-black/20 hover:bg-black/40 ${borderClass} ${textPrimary} ${placeholderClass} ${isPreview ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                    readOnly={!isPreview}
+                                    className={`w-full px-5 py-4 rounded-xl text-sm font-medium outline-none border transition-all duration-300 focus:-translate-y-1 focus:ring-2 focus:ring-blue-500/30 bg-black/20 hover:bg-black/40 ${borderClass} ${textPrimary} ${placeholderClass} ${!isPreview ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 />
                             </motion.div>
                             <motion.div variants={staggerItem} className="group/input">
+                                {/* FIX: Textarea is unlocked ONLY when isPreview is true */}
                                 <textarea 
                                     rows="4"
                                     value={cMessage}
                                     onChange={(e) => setCMessage(e.target.value)}
                                     placeholder="Tell me about your project…"
-                                    readOnly={isPreview}
-                                    className={`w-full px-5 py-4 rounded-xl text-sm font-medium outline-none border resize-none transition-all duration-300 focus:-translate-y-1 focus:ring-2 focus:ring-blue-500/30 bg-black/20 hover:bg-black/40 ${borderClass} ${textPrimary} ${placeholderClass} ${isPreview ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                    readOnly={!isPreview}
+                                    className={`w-full px-5 py-4 rounded-xl text-sm font-medium outline-none border resize-none transition-all duration-300 focus:-translate-y-1 focus:ring-2 focus:ring-blue-500/30 bg-black/20 hover:bg-black/40 ${borderClass} ${textPrimary} ${placeholderClass} ${!isPreview ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 />
                             </motion.div>
+                            
                             <motion.button 
                                 variants={staggerItem}
                                 type="submit"
-                                disabled={cSending || isPreview}
-                                whileHover={!isPreview ? { scale: 1.02 } : {}}
-                                whileTap={!isPreview ? { scale: 0.98 } : {}}
-                                className={`w-full py-4 mt-2 rounded-xl text-sm font-bold transition-all shadow-md ${isPreview ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-blue-500/10 hover:border-white/10'} ${badgeClass}`}
+                                // FIX: Button is fully functional ONLY when isPreview is true
+                                disabled={cSending || !isPreview}
+                                whileHover={isPreview ? { scale: 1.02 } : {}}
+                                whileTap={isPreview ? { scale: 0.98 } : {}}
+                                className={`w-full py-4 mt-2 rounded-xl text-sm font-bold transition-all shadow-md ${!isPreview ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-blue-500/10 hover:border-white/10'} ${badgeClass}`}
                             >
                                 {cSending ? "Sending…" : "Send Message"}
                             </motion.button>
