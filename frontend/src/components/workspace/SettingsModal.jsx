@@ -54,9 +54,9 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
         }
     };
 
-    const cleanUsername = (localName || "developer").toLowerCase().replace(/\s+/g, '-');
-    const cleanToken = userData?.code || "demo";
-    const liveUrl = `${window.location.origin}/workspace/${cleanUsername}/${cleanToken}`;
+    // Strip spaces and special characters to create a valid, clean subdomain
+    const cleanUsername = (localName || "developer").toLowerCase().replace(/[^a-z0-9]/g, '');
+    const liveUrl = `https://${cleanUsername}.aurabuild.io`;
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
@@ -80,7 +80,6 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                         <HardDrive className="w-4 h-4" /> Data & Privacy
                     </button>
 
-                    {/* MOVED LOGOUT BUTTON HERE */}
                     <div className={`mt-auto pt-4 border-t ${isLight ? 'border-slate-200' : 'border-slate-800'}`}>
                         <button 
                             onClick={onLogout} 
@@ -106,7 +105,6 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                                 </div>
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-4 mb-2">
-                                        {/* Avatar Updater */}
                                         <div className="relative group">
                                             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl border shadow-sm ${isLight ? 'bg-slate-100 border-slate-300' : 'bg-slate-900 border-slate-700'}`}>
                                                 {localAvatar}
@@ -179,7 +177,6 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                                 <div className="space-y-4">
                                     <div className={`p-4 border rounded-xl flex items-center justify-between gap-4 ${isLight ? 'border-slate-200 bg-slate-50' : 'border-slate-800 bg-[#111218]'}`}>
                                         
-                                        {/* FIX: Added flex-1 and min-w-0 to prevent flex blowout */}
                                         <div className="flex-1 min-w-0 pr-2">
                                             <p className={`text-sm font-bold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>Public Portfolio URL</p>
                                             <p className={`text-xs mt-1 font-mono truncate ${isLight ? 'text-blue-600' : 'text-blue-400'}`}>
