@@ -307,16 +307,24 @@ class DeploymentView(APIView):
                 {'error': 'Deployment is not configured yet. Set VERCEL_TOKEN (and VERCEL_PROJECT_ID) in your backend/.env to enable one-click deploy.'},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
-
-        try:
+            try:
+            # 1. Use a new unique name so Vercel creates a separate static project
             payload = {
-                'name': 'portfolio-builder',
+                'name': 'published-user-portfolio', 
                 'files': [{'file': 'index.html', 'data': html_content}],
-                'projectSettings': {'framework': None, 'buildCommand': None, 'outputDirectory': ''},
+                'projectSettings': {
+                    'framework': None,       # Specifies "Other" framework to skip build
+                    'buildCommand': None,    # Leaves command empty to serve content directly
+                    'outputDirectory': None  # Leaves directory empty to skip build step
+                },
                 'target': 'production',
             }
-            if project_id:
-                payload['project'] = project_id
+            
+            # 2. IMPORTANT: Delete or comment out the project_id lines below! 
+            # If we send your React project ID, Vercel will overwrite your frontend.
+            # if project_id:
+            #     payload['project'] = project_id
+                
             resp = requests.post(
                 'https://api.vercel.com/v13/deployments',
                 headers={'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'},
