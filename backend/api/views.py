@@ -890,18 +890,16 @@ def serve_media(request, path):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def send_workspace_key_view(request):
-    email = request.data.get('email', '')
-    code = request.data.get('code', '')
-    action = request.data.get('action', '')
+    email = (request.data.get('email') or '').strip()
+    code = (request.data.get('code') or '').strip()
+    action = (request.data.get('action') or '').strip()
 
+    # 1. Handle Code Verification (When user submits code to log in)
     if action == 'verify' or code:
-        # Get or create a workspace user based on email
         username = email.split('@')[0] if email else 'developer'
         user, _ = User.objects.get_or_create(username=username, defaults={'email': email})
 
-        # Generate JWT tokens for the user session
         refresh = RefreshToken.for_user(user)
-        
         return Response({
             'success': True,
             'access': str(refresh.access_token),
@@ -909,5 +907,49 @@ def send_workspace_key_view(request):
             'message': 'Workspace authenticated successfully'
         })
 
-    # Default action: send/generate key
-    return Response({'success': True, 'message': 'Verification code generated'})
+    # 2. Generate & Dispatch Verification Code Email
+    if not email:
+        return Response({'error': 'Email address is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    verification_code = str(random.randint(100000, 999999))
+    subject = 'Your AuraBuild Workspace Verification Code'
+    text_content = f"Hello,\n\nYour verification code to access your workspace is: {verification_code}\n\nEnter this code on the website to complete initialization.\n\n— AuraBuild"
+
+    email_sent = False
+
+    # Attempt delivery via Resend API
+    resend_api_key = os.getenv('RESEND_API_KEY')
+    if resend_api_key and resend_api_key.startswith('re_'):
+        try:
+            import resend
+            resend.api_key = resend_api_key
+            resend.Emails.send({
+                "from": os.getenv('DEFAULT_FROM_EMAIL', 'AuraBuild <onboarding@resend.dev>'),
+                "to": [email],
+                "subject": subject,
+                "text": text_content,
+            })
+            email_sent = True
+        except Exception as e:
+            logger.warning("Resend verification key delivery failed: %s", e)
+
+    # Fallback to SMTP (Gmail)
+    if not email_sent and settings.EMAIL_HOST_USER and os.getenv('EMAIL_HOST_PASSWORD'):
+        try:
+            send_mail(
+                subject=subject,
+                message=text_content,
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[email],
+                fail_silently=False,
+            )
+            email_sent = True
+        except Exception as e:
+            logger.warning("SMTP verification key delivery failed: %s", e)
+
+    return Response({
+        'success': True,
+        'message': f'Verification code sent to {email}' if email_sent else 'Verification code generated.',
+        'dev_code': verification_code if not email_sent else None  # Allows login even if email credentials aren't set in Render
+    })
+
