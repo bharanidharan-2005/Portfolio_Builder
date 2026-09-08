@@ -6,6 +6,7 @@ import re
 import uuid
 import string
 import random
+import time
 import pdfplumber
 import requests
 from django.conf import settings
@@ -25,6 +26,7 @@ from .serializers import AISessionLogSerializer, PortfolioPageSerializer, Portfo
 from rest_framework.permissions import AllowAny
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
+
 logger = logging.getLogger(__name__)
 
 # -----------------------------------------------------------------
@@ -60,6 +62,31 @@ def get_gemini_client():
         
     return genai.Client(api_key=api_key.strip())
 
+def generate_text_with_fallback(client, prompt):
+    """
+    Attempts generation with primary model. Automatically retries on 503/429 errors 
+    and falls back to secondary models to guarantee success during high API traffic.
+    """
+    models_to_try = [TEXT_MODEL, 'gemini-3.1-flash-lite', 'gemini-3.1-pro']
+    
+    last_error = None
+    for model in models_to_try:
+        for attempt in range(3):  # Try 3 times per model
+            try:
+                return client.models.generate_content(model=model, contents=[prompt])
+            except Exception as e:
+                last_error = e
+                error_str = str(e).lower()
+                
+                # Intercept high traffic (503) or rate limits (429)
+                if '503' in error_str or 'unavailable' in error_str or '429' in error_str:
+                    logger.warning("Model %s overloaded (Attempt %d/3). Retrying in 3s...", model, attempt + 1)
+                    time.sleep(3)  # Wait 3 seconds to let Google's queue clear
+                    continue
+                else:
+                    raise e # Immediately crash on genuine errors (e.g., bad API key)
+    raise last_error
+
 def extract_clean_json_payload(raw_text):
     try:
         return json.loads(raw_text)
@@ -78,6 +105,7 @@ def extract_clean_json_payload(raw_text):
 # -----------------------------------------------------------------
 def get_user_filter(request):
     return request.user if request.user and request.user.is_authenticated else None
+
 def get_or_create_user_portfolio(request):
     user = get_user_filter(request)
     name = user.first_name if user and user.first_name else 'Guest'
@@ -188,6 +216,7 @@ class PageListAPIView(APIView):
         except Exception as e:
             logger.error("Page Create Error: %s", e)
             return Response({'error': 'Could not create page due to database state.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 # -----------------------------------------------------------------
 # 4. SECTION DETAIL & REORDER
 # -----------------------------------------------------------------
@@ -321,30 +350,23 @@ class DeploymentView(APIView):
             return Response({'error': 'html_content is required (max 5MB).'}, status=status.HTTP_400_BAD_REQUEST)
 
         token = os.getenv('VERCEL_TOKEN')
-        project_id = os.getenv('VERCEL_PROJECT_ID')
         if not token:
             return Response(
-                {'error': 'Deployment is not configured yet. Set VERCEL_TOKEN (and VERCEL_PROJECT_ID) in your backend/.env to enable one-click deploy.'},
+                {'error': 'Deployment is not configured yet. Set VERCEL_TOKEN in your backend/.env to enable one-click deploy.'},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
         
         try:
-            # 1. Use a new unique name so Vercel creates a separate static project
             payload = {
                 'name': 'published-user-portfolio', 
                 'files': [{'file': 'index.html', 'data': html_content}],
                 'projectSettings': {
-                    'framework': None,       # Specifies "Other" framework to skip build
-                    'buildCommand': None,    # Leaves command empty to serve content directly
-                    'outputDirectory': None  # Leaves directory empty to skip build step
+                    'framework': None,
+                    'buildCommand': None,
+                    'outputDirectory': None
                 },
                 'target': 'production',
             }
-            
-            # 2. IMPORTANT: Delete or comment out the project_id lines below! 
-            # If we send your React project ID, Vercel will overwrite your frontend.
-            # if project_id:
-            #     payload['project'] = project_id
                 
             resp = requests.post(
                 'https://api.vercel.com/v13/deployments',
@@ -438,7 +460,9 @@ class AISectionRefinementView(APIView):
                 "- contact: text, email, phone, linkedin, github (full https:// URLs)\n"
             )
             full = f"{sys_prompt}\nSection type: {section_type}\nCurrent content: {json.dumps(current)}\nInstruction: {prompt}"
-            res = client.models.generate_content(model=TEXT_MODEL, contents=[full])
+            
+            # Using the new robust fallback handler
+            res = generate_text_with_fallback(client, full)
             new_data = extract_clean_json_payload(res.text)
             
             if not isinstance(new_data, dict):
@@ -462,7 +486,6 @@ class AISectionRefinementView(APIView):
             error_message = str(e)
             logger.error("AI refinement failed: %s", error_message)
             
-            # Catch the 503 Overloaded error gracefully
             if "503" in error_message or "UNAVAILABLE" in error_message:
                 return Response({
                     "success": False, 
@@ -527,8 +550,11 @@ class ResumeUploadAPIView(APIView):
                 "linkedin, github and website must be full URLs starting with https://. "
                 "Return ONLY JSON.\n\n" + text
             )
-            res = client.models.generate_content(model=TEXT_MODEL, contents=[prompt])
+            
+            # Using the new robust fallback handler
+            res = generate_text_with_fallback(client, prompt)
             parsed = extract_clean_json_payload(res.text)
+            
             if not isinstance(parsed, dict):
                 raise ValueError("AI response was not a JSON object.")
         except AIKeyMissingError as e:
@@ -538,7 +564,6 @@ class ResumeUploadAPIView(APIView):
             error_message = str(e)
             logger.error("Resume AI parse failed: %s", error_message)
             
-            # Catch the 503 Overloaded error gracefully
             if "503" in error_message or "UNAVAILABLE" in error_message:
                 return Response({
                     "success": False, 
@@ -657,10 +682,11 @@ class AITemplateGeneratorView(APIView):
                 "glassmorphism, gradient, minimal_clean, cyberpunk_neon), layout suggestions (string), "
                 "and recommended sections (array of section_type strings)."
             )
-            res = client.models.generate_content(
-                model=TEXT_MODEL, contents=[f"{sys_prompt}\nRequest: {prompt}{category_hint}"]
-            )
+            
+            # Using the new robust fallback handler
+            res = generate_text_with_fallback(client, f"{sys_prompt}\nRequest: {prompt}{category_hint}")
             template = extract_clean_json_payload(res.text)
+            
             theme_accent = template.get('theme_accent') if isinstance(template, dict) else None
             if theme_accent:
                 page.theme_accent = theme_accent
@@ -907,9 +933,6 @@ def serve_media(request, path):
 # -----------------------------------------------------------------
 # 12. WORKSPACE KEY DISPATCHER
 # -----------------------------------------------------------------
-import string
-import random
-
 def generate_20_char_workspace_key():
     """Generates a secure 20-character key with letters, digits, and special characters."""
     chars = string.ascii_letters + string.digits + "!._-"
@@ -1020,4 +1043,3 @@ def send_workspace_key_view(request):
         'message': f'20-character key sent to {email}',
         'workspace_key': workspace_key if not email_sent else None,  # Emergency fallback display if email server fails
     })
-
