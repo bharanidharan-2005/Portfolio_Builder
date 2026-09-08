@@ -7,6 +7,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('accounts.urls')),
     path('api/', include('api.urls')),
+    
+    # ADDED THIS LINE: Bind api.urls to the root as well to catch Vercel requests
+    path('', include('api.urls')), 
 ]
 
 if settings.DEBUG:
