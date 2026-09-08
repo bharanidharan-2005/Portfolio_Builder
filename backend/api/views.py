@@ -61,30 +61,34 @@ def get_gemini_client():
         )
         
     return genai.Client(api_key=api_key.strip())
-
 def generate_text_with_fallback(client, prompt):
     """
-    Attempts generation with primary model. Automatically retries on 503/429 errors 
-    and falls back to secondary models to guarantee success during high API traffic.
+    Fast failover logic: Immediately switches to secondary models if the primary 
+    is overloaded, bypassing Render's 100-second timeout.
     """
-    models_to_try = [TEXT_MODEL, 'gemini-3.1-flash-lite', 'gemini-3.1-pro']
+    models_to_try = [
+        TEXT_MODEL,               # Primary (gemini-3.6-flash)
+        'gemini-3.8-flash',       # Latest flagship
+        'gemini-3.5-flash-lite',  # High-throughput lite version
+        'gemini-3.1-flash-lite'   # Fallback lite version
+    ]
     
     last_error = None
     for model in models_to_try:
-        for attempt in range(3):  # Try 3 times per model
-            try:
-                return client.models.generate_content(model=model, contents=[prompt])
-            except Exception as e:
-                last_error = e
-                error_str = str(e).lower()
+        try:
+            logger.info("Attempting AI generation with model: %s", model)
+            return client.models.generate_content(model=model, contents=[prompt])
+        except Exception as e:
+            last_error = e
+            error_str = str(e).lower()
+            
+            # Intercept high traffic (503) or rate limits (429)
+            if '503' in error_str or 'unavailable' in error_str or '429' in error_str:
+                logger.warning("Model %s is congested. Falling back immediately...", model)
+                continue  # Instantly switch to the next model without sleeping
+            else:
+                raise e # Immediately crash on genuine errors (e.g., bad API key)
                 
-                # Intercept high traffic (503) or rate limits (429)
-                if '503' in error_str or 'unavailable' in error_str or '429' in error_str:
-                    logger.warning("Model %s overloaded (Attempt %d/3). Retrying in 3s...", model, attempt + 1)
-                    time.sleep(3)  # Wait 3 seconds to let Google's queue clear
-                    continue
-                else:
-                    raise e # Immediately crash on genuine errors (e.g., bad API key)
     raise last_error
 
 def extract_clean_json_payload(raw_text):
