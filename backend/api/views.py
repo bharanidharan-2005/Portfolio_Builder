@@ -307,7 +307,8 @@ class DeploymentView(APIView):
                 {'error': 'Deployment is not configured yet. Set VERCEL_TOKEN (and VERCEL_PROJECT_ID) in your backend/.env to enable one-click deploy.'},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
-            try:
+        
+        try:
             # 1. Use a new unique name so Vercel creates a separate static project
             payload = {
                 'name': 'published-user-portfolio', 
