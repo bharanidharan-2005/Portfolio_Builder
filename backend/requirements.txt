@@ -13,3 +13,5 @@ requests==2.32.3
 psycopg[binary]==3.3.4
 dj-database-url==2.1.0
 resend==2.36.0
+dj-database-url==2.1.0
+psycopg2-binary==2.9.9
