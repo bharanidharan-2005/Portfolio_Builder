@@ -1,0 +1,22 @@
+[tool.ruff]
+target-version = "py312"
+line-length = 110
+# Files linted by CI. Migrations are generated code, and the venv is never linted.
+exclude = ["**/migrations", "venv"]
+
+[tool.ruff.lint]
+# Enforce the high-value rules: real errors (E4/E7/E9), pyflakes (F), import
+# sorting (I), pyupgrade (UP), bugbear (B), simplifications (SIM), misc (PIE,
+# C4) and log message format (G).
+# RUF012 is intentionally disabled: Django model `choices`/`constraints` lists
+# are class attributes, not actual mutable-default bugs.
+# BLE001 is intentionally disabled: AI-client code catches broad exceptions to
+# surface friendly errors without leaking internals.
+# E402/E501/W29*/TRY*/G004 are cosmetic or intentional (e.g. the import that
+# must come after settings config) and add no correctness value.
+select = [
+    "E4", "E7", "E9", "F", "I", "UP", "B", "SIM", "PIE", "C4", "G",
+]
+ignore = [
+    "RUF012", "BLE001", "SIM115", "G004", "E402",
+]

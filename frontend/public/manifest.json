@@ -1,0 +1,13 @@
+{
+    "name": "AuraBuild Portfolio Builder",
+    "short_name": "AuraBuild",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#111111",
+    "icons": [{
+        "src": "/Aura.svg",
+        "sizes": "any",
+        "type": "image/svg+xml"
+    }]
+}

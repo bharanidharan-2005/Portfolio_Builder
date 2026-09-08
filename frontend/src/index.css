@@ -1,0 +1,236 @@
+@import "tailwindcss";
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out both;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up {
+  animation: fadeInUp 0.45s ease-out both;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-toast-in {
+  animation: toastIn 0.25s ease-out both;
+}
+
+/* ==================================================================
+   MICRO-INTERACTIONS & ANIMATION UTILITIES
+   ================================================================== */
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-down {
+  animation: fadeInDown 0.45s ease-out both;
+}
+
+@keyframes slideInFromLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.animate-slide-in-from-left {
+  animation: slideInFromLeft 0.5s ease-out both;
+}
+
+@keyframes slideInFromRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.animate-slide-in-from-right {
+  animation: slideInFromRight 0.5s ease-out both;
+}
+
+@keyframes neonGlow {
+  0%, 100% { text-shadow: 0 0 5px currentColor, 0 0 10px currentColor; }
+  50% { text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor; }
+}
+.animate-neon-glow {
+  animation: neonGlow 2s ease-in-out infinite;
+}
+
+@keyframes borderGlow {
+  0%, 100% { box-shadow: 0 0 10px rgba(168, 85, 247, 0.4), 0 0 20px rgba(168, 85, 247, 0.2); }
+  50% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.6), 0 0 40px rgba(168, 85, 247, 0.4); }
+}
+.animate-border-glow {
+  animation: borderGlow 2s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Glassmorphism utilities */
+.glassmorphism {
+  background: rgba(13, 14, 18, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Neon border accent */
+.neon-border {
+  position: relative;
+}
+.neon-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: calc(8px + 2px);
+  background: linear-gradient(135deg, transparent, currentColor, transparent);
+  z-index: -1;
+  filter: blur(10px);
+  opacity: 0;
+  animation: borderGlow 2s ease-in-out infinite;
+}
+.neon-border:hover::before {
+  opacity: 1;
+}
+
+/* Focus ring with neon glow */
+.focus-neon:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+}
+
+/* Neon glow utility for buttons */
+.glow-neon {
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.4), 0 0 30px rgba(168, 85, 247, 0.2);
+  transition: box-shadow 0.3s ease;
+}
+.glow-neon:hover {
+  box-shadow: 0 0 25px rgba(168, 85, 247, 0.6), 0 0 50px rgba(168, 85, 247, 0.4);
+}
+
+/* ==================================================================
+   APP THEME (dark default) + LIGHT THEME
+   ==================================================================*/
+*:focus-visible {
+  outline: 2px solid #a855f7;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ==================================================================
+   APP THEME (dark default) + LIGHT THEME
+   The app chrome (header, sidebar, panels, wizard, landing) is themeable.
+   The canvas preview frame (.aurabuild-canvas) is the user's ARTWORK:
+   it always renders with the selected portfolio theme, so every light-mode
+   remap below is paired with a .aurabuild-canvas reset that restores the
+   original dark value.
+   ================================================================== */
+
+/* ---------- LIGHT THEME: background remaps ---------- */
+.theme-light .bg-\[\#05050A\] { background-color: #f5f6fa; }
+.theme-light .bg-\[\#090a0f\] { background-color: #e9edf4; }
+.theme-light .bg-\[\#0A0B10\] { background-color: #eef2f7; }
+.theme-light .bg-\[\#0d0e12\] { background-color: #ffffff; }
+.theme-light .bg-\[\#0F111A\] { background-color: #ffffff; }
+.theme-light .bg-\[\#13151c\] { background-color: #f4f6fa; }
+.theme-light .bg-\[\#1f222c\] { background-color: #dbe3ee; }
+.theme-light .bg-\[\#161925\] { background-color: #e2e8f0; }
+.theme-light .bg-\[\#181a24\] { background-color: #e2e8f0; }
+.theme-light .bg-\[\#191b24\] { background-color: #e2e8f0; }
+.theme-light .bg-\[\#1e2330\] { background-color: #dbe3ee; }
+.theme-light .bg-\[\#282b3d\] { background-color: #c7d2e3; }
+.theme-light .hover\:bg-\[\#1f222c\]:hover { background-color: #dbe3ee; }
+.theme-light .hover\:bg-\[\#181a24\]:hover { background-color: #e2e8f0; }
+.theme-light .bg-\[\#0d0e12\]\/40 { background-color: rgba(255, 255, 255, 0.4); }
+.theme-light .bg-\[\#0d0e12\]\/60 { background-color: rgba(255, 255, 255, 0.6); }
+.theme-light .bg-\[\#0F111A\]\/80 { background-color: rgba(255, 255, 255, 0.8); }
+.theme-light .bg-\[\#05050A\]\/90 { background-color: rgba(245, 246, 250, 0.9); }
+
+/* ---------- LIGHT THEME: slate surface backgrounds ---------- */
+.theme-light .bg-slate-900 { background-color: #dbe3ee; }
+.theme-light .bg-slate-800 { background-color: #e2e8f0; }
+.theme-light .bg-slate-800\/70 { background-color: rgba(226, 232, 240, 0.7); }
+.theme-light .bg-slate-700 { background-color: #cbd5e1; }
+.theme-light .bg-slate-700\/50 { background-color: rgba(203, 213, 225, 0.5); }
+.theme-light .bg-slate-600 { background-color: #cbd5e1; }
+.theme-light .hover\:bg-slate-900:hover { background-color: #dbe3ee; }
+.theme-light .hover\:bg-slate-700:hover { background-color: #cbd5e1; }
+
+/* ---------- LIGHT THEME: borders ---------- */
+.theme-light .border-\[\#1f222c\] { border-color: #e2e8f0; }
+.theme-light .border-\[\#232635\] { border-color: #cbd5e1; }
+.theme-light .border-slate-800 { border-color: #cbd5e1; }
+.theme-light .border-slate-800\/50 { border-color: rgba(203, 213, 225, 0.5); }
+.theme-light .border-slate-800\/20 { border-color: rgba(203, 213, 225, 0.4); }
+.theme-light .border-slate-800\/10 { border-color: rgba(203, 213, 225, 0.3); }
+.theme-light .border-slate-700 { border-color: #cbd5e1; }
+.theme-light .border-slate-700\/60 { border-color: rgba(203, 213, 225, 0.8); }
+.theme-light .border-slate-700\/50 { border-color: rgba(203, 213, 225, 0.6); }
+.theme-light .border-slate-600\/30 { border-color: rgba(148, 163, 184, 0.3); }
+.theme-light .border-slate-500 { border-color: #94a3b8; }
+
+/* ---------- LIGHT THEME: text ---------- */
+.theme-light .text-white { color: #0f172a; }
+.theme-light .text-slate-200 { color: #0f172a; }
+.theme-light .text-slate-300 { color: #334155; }
+.theme-light .text-slate-400 { color: #64748b; }
+.theme-light .text-slate-500 { color: #64748b; }
+.theme-light .text-slate-600 { color: #64748b; }
+.theme-light .text-slate-700 { color: #334155; }
+.theme-light .text-slate-900 { color: #0f172a; }
+.theme-light .text-purple-400 { color: #7c3aed; }
+.theme-light .text-purple-300 { color: #7c3aed; }
+.theme-light .text-\[\#a855f7\] { color: #7c3aed; }
+.theme-light .text-emerald-400 { color: #059669; }
+.theme-light .text-rose-400 { color: #e11d48; }
+.theme-light .text-red-400 { color: #dc2626; }
+
+/* Keep white text on solid purple action buttons in light mode */
+.theme-light .bg-purple-600 .text-white,
+.theme-light .bg-purple-600.text-white,
+.theme-light .bg-\[\#a855f7\] .text-white,
+.theme-light .bg-\[\#a855f7\].text-white {
+  color: #ffffff;
+}
+
+/* ==================================================================
+   CANVAS ARTBOUND: lock the portfolio preview to the selected theme.
+   These resets come AFTER the light remaps so they win inside the frame.
+   ================================================================== */
+.aurabuild-canvas .bg-\[\#0d0e12\] { background-color: #0d0e12; }
+.aurabuild-canvas .bg-\[\#13151c\] { background-color: #13151c; }
+.aurabuild-canvas .bg-\[\#181a24\] { background-color: #181a24; }
+.aurabuild-canvas .bg-slate-900 { background-color: #0f172a; }
+.aurabuild-canvas .bg-slate-800 { background-color: #1e293b; }
+.aurabuild-canvas .bg-slate-700 { background-color: #334155; }
+.aurabuild-canvas .border-\[\#1f222c\] { border-color: #1f222c; }
+.aurabuild-canvas .border-\[\#232635\] { border-color: #232635; }
+.aurabuild-canvas .border-slate-700\/60 { border-color: rgba(51, 65, 85, 0.6); }
+.aurabuild-canvas .border-slate-800\/20 { border-color: rgba(30, 41, 59, 0.2); }
+.aurabuild-canvas .border-slate-800\/10 { border-color: rgba(30, 41, 59, 0.1); }
+.aurabuild-canvas .text-white { color: #ffffff; }
+.aurabuild-canvas .text-slate-200 { color: #e2e8f0; }
+.aurabuild-canvas .text-slate-300 { color: #cbd5e1; }
+.aurabuild-canvas .text-slate-400 { color: #94a3b8; }
+.aurabuild-canvas .text-slate-500 { color: #64748b; }
+.aurabuild-canvas .text-slate-600 { color: #475569; }
+.aurabuild-canvas .text-slate-900 { color: #0f172a; }
+.aurabuild-canvas .text-slate-950 { color: #020617; }
+.aurabuild-canvas .text-purple-400 { color: #c084fc; }
+.aurabuild-canvas .text-emerald-400 { color: #34d399; }
+.aurabuild-canvas .text-pink-400 { color: #f472b6; }
+.aurabuild-canvas .text-indigo-300 { color: #a5b4fc; }
+.aurabuild-canvas .text-\[\#f000ff\] { color: #f000ff; }
+.aurabuild-canvas .text-\[\#00f0ff\] { color: #00f0ff; }
+.aurabuild-canvas .hover\:bg-slate-900:hover { background-color: #0f172a; }
