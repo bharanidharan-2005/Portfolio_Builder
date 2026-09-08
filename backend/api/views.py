@@ -63,14 +63,15 @@ def get_gemini_client():
     return genai.Client(api_key=api_key.strip())
 def generate_text_with_fallback(client, prompt):
     """
-    Fast failover logic: Immediately switches to secondary models if the primary 
-    is overloaded, bypassing Render's 100-second timeout.
+    Bulletproof Fast Failover: Attempts generation and falls back on ANY 
+    traffic, rate-limit, or missing-model error to guarantee a successful parse.
     """
     models_to_try = [
-        TEXT_MODEL,               # Primary (gemini-3.6-flash)
-        'gemini-3.8-flash',       # Latest flagship
-        'gemini-3.5-flash-lite',  # High-throughput lite version
-        'gemini-3.1-flash-lite'   # Fallback lite version
+        TEXT_MODEL,               # Your primary model
+        'gemini-1.5-flash',       # Extremely fast and rarely overloaded
+        'gemini-1.5-pro',         # Heavy-duty fallback
+        'gemini-pro',             # Legacy stable model
+        'gemini-3.1-flash-lite'   # Alternate fallback
     ]
     
     last_error = None
@@ -82,13 +83,15 @@ def generate_text_with_fallback(client, prompt):
             last_error = e
             error_str = str(e).lower()
             
-            # Intercept high traffic (503) or rate limits (429)
-            if '503' in error_str or 'unavailable' in error_str or '429' in error_str:
-                logger.warning("Model %s is congested. Falling back immediately...", model)
-                continue  # Instantly switch to the next model without sleeping
-            else:
-                raise e # Immediately crash on genuine errors (e.g., bad API key)
-                
+            # If the API key itself is completely invalid/revoked, stop immediately
+            if 'api_key' in error_str or 'unauthenticated' in error_str or '401' in error_str:
+                raise e
+            
+            # For ANY other error (503 overloaded, 429 rate limit, 404 model not found), skip to the next model!
+            logger.warning("Model %s failed (%s). Falling back immediately...", model, error_str[:50])
+            continue
+            
+    # Only crashes if EVERY single model in the list failed
     raise last_error
 
 def extract_clean_json_payload(raw_text):
