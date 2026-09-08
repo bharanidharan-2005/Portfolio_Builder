@@ -11,11 +11,11 @@ from pathlib import Path
 import dj_database_url
 from dotenv import load_dotenv
 
-# Load .env variables
-load_dotenv(override=True)
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load .env variables from BASE_DIR if present
+load_dotenv(BASE_DIR / '.env', override=True)
 
 # -----------------------------------------------------------------
 # 🔒 SECURITY CONFIGURATION
@@ -34,16 +34,15 @@ if not SECRET_KEY:
     else:
         raise RuntimeError("SECRET_KEY environment variable must be set when DEBUG is False.")
 
-# 1. Properly parsed ALLOWED_HOSTS with your live Render URL
+# Properly parsed ALLOWED_HOSTS with wildcard support for Render and Vercel domains
+default_hosts = 'portfolio-builder-ufev.onrender.com,localhost,127.0.0.1,.onrender.com,.vercel.app'
 ALLOWED_HOSTS = [
     host.strip()
-    for host in os.getenv(
-        'ALLOWED_HOSTS', 'portfolio-builder-ufev.onrender.com,localhost,127.0.0.1'
-    ).split(',')
+    for host in os.getenv('ALLOWED_HOSTS', default_hosts).split(',')
     if host.strip()
 ]
 
-# Tell Django it's behind a reverse proxy (Render)
+# Tell Django it's behind a reverse proxy (Render / HTTPS)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # -----------------------------------------------------------------
@@ -81,12 +80,20 @@ ROOT_URLCONF = 'main_config.urls'
 # -----------------------------------------------------------------
 # 🌐 CORS & CSRF CONFIGURATION
 # -----------------------------------------------------------------
-# 2. Included your live Vercel URL to prevent cross-origin blocks
-default_cors = "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,https://portfolio-builder-one-brown.vercel.app"
+default_cors = (
+    "http://localhost:5173,"
+    "http://localhost:3000,"
+    "http://127.0.0.1:5173,"
+    "https://portfolio-builder-one-brown.vercel.app"
+)
 cors_env = os.getenv('CORS_ALLOWED_ORIGINS', default_cors)
 
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_env.split(',') if origin.strip()]
-CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv('CSRF_TRUSTED_ORIGINS', default_cors).split(',') if origin.strip()]
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip() if origin.startswith(('http://', 'https://')) else f"https://{origin.strip()}"
+    for origin in os.getenv('CSRF_TRUSTED_ORIGINS', default_cors).split(',')
+    if origin.strip()
+]
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -129,11 +136,11 @@ TEMPLATES = [
 WSGI_APPLICATION = 'main_config.wsgi.application'
 
 # -----------------------------------------------------------------
-# 🗄️ DATABASE CONFIGURATION
+# 🗄️ DATABASE CONFIGURATION (Supports Neon, Supabase & Render Postgres)
 # -----------------------------------------------------------------
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
         conn_max_age=600,
         conn_health_checks=True,
     )
@@ -179,18 +186,17 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle',
     ),
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '10/minute',
+        'anon': '30/minute',
         'user': '1000/minute',
     },
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=120),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=14),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACK_LIST_AFTER_ROTATION': True,
 }
-
 
 # -----------------------------------------------------------------
 # 🌐 INTERNATIONALIZATION & STATIC ASSETS
@@ -205,7 +211,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Django 4.2+ STORAGES syntax for WhiteNoise
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
 
 # Media files
 MEDIA_URL = '/media/'
