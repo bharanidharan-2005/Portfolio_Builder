@@ -12,7 +12,8 @@ import {
 import { API } from "../../api"; 
 import { deployAnimatedSite } from "../../utils/deploymentUtils";
 
-export default function WorkspaceLayout({ userData, setUserData, themeMode, onToggleTheme, onLogout }) {
+// 1. Accept the isPreviewMode prop (renamed locally to isPublicPreview to avoid state collision)
+export default function WorkspaceLayout({ userData, setUserData, themeMode, onToggleTheme, onLogout, isPreviewMode: isPublicPreview = false }) {
     // --- Centralized Backend State ---
     const [pages, setPages] = useState([]);
     const [activePage, setActivePage] = useState("Home");
@@ -29,24 +30,22 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
     const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
-    // --- GLOBAL BACKGROUND STATE (PERSISTENT FIX) ---
+    // --- GLOBAL BACKGROUND STATE ---
     const [globalBg, setGlobalBg] = useState(() => {
-        // Try to load from Django userData first, fallback to browser local storage tied to user
         return userData?.globalBg || localStorage.getItem(`aurabuild_bg_${userData?.name || 'default'}`) || null;
     });
 
-    // Auto-save the background to localStorage & userData when it changes
     useEffect(() => {
         if (globalBg) {
             localStorage.setItem(`aurabuild_bg_${userData?.name || 'default'}`, globalBg);
-            setUserData(prev => ({ ...prev, globalBg })); // Syncs upstream
+            if (setUserData) setUserData(prev => ({ ...prev, globalBg }));
         } else {
             localStorage.removeItem(`aurabuild_bg_${userData?.name || 'default'}`);
         }
-    }, [globalBg, userData?.name]);
+    }, [globalBg, userData?.name, setUserData]);
     
-    // --- ADVANCED Preview Modal State ---
-    const [isPreviewMode, setIsPreviewMode] = useState(false);
+    // --- ADVANCED Preview Modal State (Renamed to avoid conflict with public preview prop) ---
+    const [isInternalPreviewOpen, setIsInternalPreviewOpen] = useState(false);
     const [previewViewport, setPreviewViewport] = useState("desktop"); 
     const [isLandscape, setIsLandscape] = useState(false);
     
@@ -59,12 +58,11 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
     const [history, setHistory] = useState({ past: [], future: [] });
     const lastLoadedPage = useRef(null);
 
-    // Keep ref in sync with React state for external changes (Undo, Redo, Page load)
     useEffect(() => {
         sectionsRef.current = sections;
     }, [sections]);
 
-    // 1. BOOT SEQUENCE: Load user data from Django DB
+    // BOOT SEQUENCE
     useEffect(() => {
         const loadWorkspace = async () => {
             try {
@@ -86,7 +84,7 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
         loadWorkspace();
     }, []);
 
-    // 2. PAGE SWITCHER: Update visible sections ONLY when actually changing tabs
+    // PAGE SWITCHER
     useEffect(() => {
         if (pages.length > 0 && lastLoadedPage.current !== activePage) {
             const pageObj = pages.find(p => p.name === activePage);
@@ -98,15 +96,15 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
         }
     }, [activePage, pages]);
 
-    // --- URL Routing visually ---
+    // --- URL Routing visually (Only apply if NOT in public preview) ---
     useEffect(() => {
-        if (userData && userData.name && userData.code) {
+        if (!isPublicPreview && userData && userData.name && userData.code) {
             const cleanUsername = userData.name.toLowerCase().replace(/\s+/g, '-');
             const cleanToken = userData.code;
             const newPath = `/workspace/${cleanUsername}/${cleanToken}`;
             window.history.replaceState({}, '', newPath);
         }
-    }, [userData]);
+    }, [userData, isPublicPreview]);
 
     // --- BULLETPROOF HISTORY RECORDER ---
     const commitHistory = (newSections, oldSections) => {
@@ -123,16 +121,10 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
     // --- Undo / Redo Handlers ---
     const handleUndo = () => {
         if (history.past.length === 0) return;
-        
         const previous = history.past[history.past.length - 1];
         const newPast = history.past.slice(0, -1);
         const currentSnapshot = JSON.parse(JSON.stringify(sectionsRef.current));
-        
-        setHistory({
-            past: newPast,
-            future: [currentSnapshot, ...history.future]
-        });
-        
+        setHistory({ past: newPast, future: [currentSnapshot, ...history.future] });
         setSections(previous);
         setPages(prev => prev.map(p => p.name === activePage ? { ...p, sections: previous } : p));
         setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Action undone.` }]);
@@ -140,22 +132,15 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
 
     const handleRedo = () => {
         if (history.future.length === 0) return;
-        
         const next = history.future[0];
         const newFuture = history.future.slice(1);
         const currentSnapshot = JSON.parse(JSON.stringify(sectionsRef.current));
-        
-        setHistory({
-            past: [...history.past, currentSnapshot],
-            future: newFuture
-        });
-        
+        setHistory({ past: [...history.past, currentSnapshot], future: newFuture });
         setSections(next);
         setPages(prev => prev.map(p => p.name === activePage ? { ...p, sections: next } : p));
         setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Action redone.` }]);
     };
 
-    // Keyboard Shortcuts (Ctrl+Z / Ctrl+Y)
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
@@ -214,7 +199,6 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
         });
     };
 
-    // 🎯 AUTOSAVE
     const handleUpdateSectionContent = async (sectionId, key, value) => {
         const currentSections = sectionsRef.current;
         const newSections = currentSections.map(sec => {
@@ -316,32 +300,36 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
 
     return (
         <div className={`h-screen w-screen flex flex-col font-sans overflow-hidden ${isLight ? 'bg-slate-50 text-slate-900' : 'bg-[#05050A] text-slate-100'}`}>
-            <header className="h-14 lg:h-16 shrink-0 w-full z-50 relative">
-                <TopNav 
-                    theme={themeMode}
-                    setTheme={onToggleTheme}
-                    activeTheme={currentTheme}
-                    onThemeChange={(newTheme) => setUserData({...userData, theme: newTheme })}
-                    onDeploy={triggerDeployment}
-                    onToggleLeft={() => setIsLeftOpen(!isLeftOpen)}
-                    onToggleRight={() => setIsRightOpen(!isRightOpen)}
-                    userData={userData}
-                    onLogout={onLogout}
-                    onHelpClick={() => setIsHelpModalOpen(true)} 
-                    isPreviewMode={isPreviewMode}
-                    onTogglePreview={() => setIsPreviewMode(!isPreviewMode)}
-                    onUndo={handleUndo}
-                    canUndo={history.past.length > 0}
-                    onRedo={handleRedo}
-                    canRedo={history.future.length > 0}
-                />
-            </header>
+            
+            {/* HIDE TOP NAV IN PUBLIC PREVIEW */}
+            {!isPublicPreview && (
+                <header className="h-14 lg:h-16 shrink-0 w-full z-50 relative">
+                    <TopNav 
+                        theme={themeMode}
+                        setTheme={onToggleTheme}
+                        activeTheme={currentTheme}
+                        onThemeChange={(newTheme) => setUserData({...userData, theme: newTheme })}
+                        onDeploy={triggerDeployment}
+                        onToggleLeft={() => setIsLeftOpen(!isLeftOpen)}
+                        onToggleRight={() => setIsRightOpen(!isRightOpen)}
+                        userData={userData}
+                        onLogout={onLogout}
+                        onHelpClick={() => setIsHelpModalOpen(true)} 
+                        isPreviewMode={isInternalPreviewOpen}
+                        onTogglePreview={() => setIsInternalPreviewOpen(!isInternalPreviewOpen)}
+                        onUndo={handleUndo}
+                        canUndo={history.past.length > 0}
+                        onRedo={handleRedo}
+                        canRedo={history.future.length > 0}
+                    />
+                </header>
+            )}
 
             {/* DUAL-PANE ARCHITECTURE STARTS HERE */}
             <div className="flex-1 flex w-full h-full overflow-hidden relative">
                 
                 {/* Mobile Overlay */}
-                {(isLeftOpen || isRightOpen) && (
+                {!isPublicPreview && (isLeftOpen || isRightOpen) && (
                     <div 
                         className="fixed inset-0 bg-black/60 z-30 lg:hidden backdrop-blur-sm"
                         onClick={() => {
@@ -351,77 +339,83 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
                     />
                 )}
 
-                {/* 1. FAR LEFT: Expanding Icon Bar (LeftSidebar) */}
-                <aside className={`absolute lg:relative group h-full shrink-0 transition-all duration-300 ease-in-out w-16 hover:w-64 overflow-hidden z-40 shadow-2xl ${isLeftOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${isLight ? 'bg-white border-r border-slate-200' : 'bg-[#0B0C10] border-r border-slate-800'}`}>
-                    <LeftSidebar 
-                        pages={pages}
-                        activePage={activePage}
-                        setActivePage={setActivePage}
-                        activeTool={activeTool}
-                        onSelectTool={(tool) => {
-                            setActiveTool(activeTool === tool ? null : tool);
-                            if (window.innerWidth < 1024) {
-                                setIsLeftOpen(false);
-                                setIsRightOpen(true);
-                            }
-                        }}
-                        onAddPage={handleAddPage}
-                        onDeletePage={handleDeletePage}
-                        themeMode={themeMode}
-                        setTerminalLogs={setTerminalLogs}
-                        onResumeParsed={handleResumeParsed}
-                        onOpenSettings={() => setIsSettingsModalOpen(true)}
-                    />
-                </aside>
+                {/* HIDE LEFT SIDEBAR IN PUBLIC PREVIEW */}
+                {!isPublicPreview && (
+                    <aside className={`absolute lg:relative group h-full shrink-0 transition-all duration-300 ease-in-out w-16 hover:w-64 overflow-hidden z-40 shadow-2xl ${isLeftOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${isLight ? 'bg-white border-r border-slate-200' : 'bg-[#0B0C10] border-r border-slate-800'}`}>
+                        <LeftSidebar 
+                            pages={pages}
+                            activePage={activePage}
+                            setActivePage={setActivePage}
+                            activeTool={activeTool}
+                            onSelectTool={(tool) => {
+                                setActiveTool(activeTool === tool ? null : tool);
+                                if (window.innerWidth < 1024) {
+                                    setIsLeftOpen(false);
+                                    setIsRightOpen(true);
+                                }
+                            }}
+                            onAddPage={handleAddPage}
+                            onDeletePage={handleDeletePage}
+                            themeMode={themeMode}
+                            setTerminalLogs={setTerminalLogs}
+                            onResumeParsed={handleResumeParsed}
+                            onOpenSettings={() => setIsSettingsModalOpen(true)}
+                        />
+                    </aside>
+                )}
 
                 {/* 2. CENTER: CLEAN LIVE PREVIEW CANVAS */}
                 <main className={`flex-1 h-full flex flex-col relative z-10 ${isLight ? 'bg-slate-100/50' : 'bg-[#08080C]'}`}>
-                    <div className="flex-1 overflow-y-auto w-full h-full p-4 sm:p-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                        <div className="w-full max-w-[1024px] mx-auto transition-all duration-300">
+                    {/* REMOVED PADDING IF IN PUBLIC PREVIEW SO IT SPANS FULL WIDTH */}
+                    <div className={`flex-1 overflow-y-auto w-full h-full ${!isPublicPreview ? 'p-4 sm:p-8' : 'p-0'} [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`}>
+                        {/* REMOVED MAX WIDTH CONSTRAINT IF IN PUBLIC PREVIEW */}
+                        <div className={`w-full transition-all duration-300 ${!isPublicPreview ? 'max-w-[1024px] mx-auto' : ''}`}>
                             <CanvasContainer 
                                 activePage={activePage}
                                 sections={sections}
-                                activeSectionId={activeSectionId}
-                                setActiveSectionId={setActiveSectionId}
+                                /* Only allow editing interactions if NOT in public preview */
+                                activeSectionId={!isPublicPreview ? activeSectionId : null}
+                                setActiveSectionId={!isPublicPreview ? setActiveSectionId : () => {}}
                                 portfolioTheme={currentTheme}
                                 themeMode={themeMode}
-                                globalBgImage={globalBg} /* <-- PASSED HERE */
-                                onInlineEdit={handleUpdateSectionContent} 
-                                onDropSection={handleDropSection} 
+                                globalBgImage={globalBg}
+                                onInlineEdit={!isPublicPreview ? handleUpdateSectionContent : undefined} 
+                                onDropSection={!isPublicPreview ? handleDropSection : undefined} 
+                                /* Trigger Canvas preview logic for BOTH internal modal and public route */
+                                isPreview={isPublicPreview || isInternalPreviewOpen} 
                             />
                         </div>
                     </div>
                 </main>
 
-                {/* 3. FAR RIGHT: Tool Panel (RightSidebar) */}
-                <aside className={`absolute right-0 lg:relative h-full w-80 shrink-0 border-l transition-transform duration-300 ease-in-out z-40 shadow-2xl ${isRightOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'} ${isLight ? 'bg-white border-slate-200' : 'bg-[#0B0C10] border-slate-800'}`}>
-                    <RightSidebar 
-                        userData={userData}
-                        activeSectionId={activeSectionId}
-                        themeMode={themeMode}
-                        activeTool={activeTool}
-                        terminalLogs={terminalLogs}
-                        setTerminalLogs={setTerminalLogs}
-                        activeTheme={currentTheme}
-                        onThemeChange={(newTheme) => setUserData({...userData, theme: newTheme })}
-                        sections={sections}
-                        onUpdateSectionContent={handleUpdateSectionContent}
-                        onUpdateGlobalBg={setGlobalBg} /* <-- PASSED HERE */
-                        onAddSection={handleAddManualSection}
-                        onDeploy={triggerDeployment}
-                        onExportZip={handleExportZip}
-                    />
-                </aside>
+                {/* HIDE RIGHT SIDEBAR IN PUBLIC PREVIEW */}
+                {!isPublicPreview && (
+                    <aside className={`absolute right-0 lg:relative h-full w-80 shrink-0 border-l transition-transform duration-300 ease-in-out z-40 shadow-2xl ${isRightOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'} ${isLight ? 'bg-white border-slate-200' : 'bg-[#0B0C10] border-slate-800'}`}>
+                        <RightSidebar 
+                            userData={userData}
+                            activeSectionId={activeSectionId}
+                            themeMode={themeMode}
+                            activeTool={activeTool}
+                            terminalLogs={terminalLogs}
+                            setTerminalLogs={setTerminalLogs}
+                            activeTheme={currentTheme}
+                            onThemeChange={(newTheme) => setUserData({...userData, theme: newTheme })}
+                            sections={sections}
+                            onUpdateSectionContent={handleUpdateSectionContent}
+                            onUpdateGlobalBg={setGlobalBg}
+                            onAddSection={handleAddManualSection}
+                            onDeploy={triggerDeployment}
+                            onExportZip={handleExportZip}
+                        />
+                    </aside>
+                )}
             </div>
 
-            {/* --- UPGRADED FULL-SCREEN PREVIEW MODAL --- */}
-            {isPreviewMode && (
+            {/* --- UPGRADED FULL-SCREEN PREVIEW MODAL (ONLY IN EDITOR MODE) --- */}
+            {!isPublicPreview && isInternalPreviewOpen && (
                 <div className="fixed inset-0 z-[200] flex flex-col bg-slate-950/95 backdrop-blur-lg animate-in fade-in duration-200">
                     
-                    {/* Preview Top Navigation Bar */}
                     <div className={`h-16 px-4 md:px-6 flex items-center justify-between border-b ${isLight ? 'bg-slate-900 border-slate-800 text-white' : 'bg-[#0B0C10] border-slate-800 text-slate-100'}`}>
-                        
-                        {/* Left Controls: Devices & Rotation */}
                         <div className="flex items-center gap-2 md:gap-4">
                             <span className="hidden lg:block text-sm font-bold uppercase tracking-wider text-blue-400">Live Preview</span>
                             
@@ -449,7 +443,6 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
                                 </button>
                             </div>
 
-                            {/* Rotation Toggle (Only for mobile/tablet) */}
                             {previewViewport !== 'desktop' && (
                                 <button 
                                     onClick={() => setIsLandscape(!isLandscape)}
@@ -461,10 +454,7 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
                             )}
                         </div>
 
-                        {/* Right Controls: Tools & Actions */}
                         <div className="flex items-center gap-2 md:gap-3">
-                            
-                          {/* In-Preview Theme Switcher */}
                             <div className="hidden md:flex items-center gap-2 bg-black/40 border border-slate-700/50 px-3 py-1.5 rounded-lg">
                                 <LayoutTemplate className="w-4 h-4 text-slate-400" />
                                 <select 
@@ -501,7 +491,7 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
                             </button>
 
                             <button 
-                                onClick={() => setIsPreviewMode(false)}
+                                onClick={() => setIsInternalPreviewOpen(false)}
                                 className="flex items-center gap-2 px-4 py-2 ml-1 md:ml-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-full transition-all cursor-pointer shadow-lg hover:scale-105"
                             >
                                 <X className="w-4 h-4" /> <span className="hidden sm:inline">Exit Preview</span>
@@ -509,11 +499,8 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
                         </div>
                     </div>
 
-                    {/* Device Frame Viewport Container */}
                     <div className="flex-1 overflow-auto flex items-center justify-center p-4 md:p-8 custom-scrollbar">
                         <div className={frameStyle}>
-                            
-                            {/* Dynamic iPhone Notch */}
                             {previewViewport === 'mobile' && !isLandscape && (
                                 <div className="absolute top-0 inset-x-0 h-7 flex justify-center z-50 pointer-events-none">
                                     <div className="w-32 h-7 bg-slate-900 rounded-b-3xl"></div>
@@ -525,9 +512,7 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
                                 </div>
                             )}
 
-                            {/* Canvas Scroll Area */}
                             <div className="flex-1 overflow-y-auto w-full h-full relative z-10 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                                {/* Spacing to push content down/right below the notch so it doesn't overlap text */}
                                 <div className={`pb-24 ${previewViewport === 'mobile' && !isLandscape ? 'pt-8 px-2' : previewViewport === 'mobile' && isLandscape ? 'pl-10 pr-4 pt-4' : 'pt-8 px-4'}`}>
                                     <CanvasContainer 
                                         activePage={activePage}
@@ -536,7 +521,7 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
                                         setActiveSectionId={() => {}} 
                                         portfolioTheme={currentTheme}
                                         themeMode={themeMode}
-                                        globalBgImage={globalBg} /* <-- PASSED HERE */
+                                        globalBgImage={globalBg} 
                                         isPreview={true} 
                                     />
                                 </div>
@@ -546,8 +531,8 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
                 </div>
             )}
 
-            {/* --- COMPREHENSIVE AI TOOLS HELP GUIDE MODAL --- */}
-            {isHelpModalOpen && (
+            {/* HIDE HELP & SETTINGS MODALS IN PUBLIC PREVIEW */}
+            {!isPublicPreview && isHelpModalOpen && (
                 <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/60 backdrop-blur-md animate-in fade-in p-4">
                     <div className={`w-full max-w-3xl max-h-[85vh] flex flex-col rounded-3xl shadow-2xl border ${isLight ? 'bg-white border-slate-200' : 'bg-[#0D0E12] border-slate-800'}`}>
                         
@@ -692,14 +677,16 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
                 </div>
             )}
 
-            <SettingsModal 
-                isOpen={isSettingsModalOpen} 
-                onClose={() => setIsSettingsModalOpen(false)} 
-                userData={userData} 
-                setUserData={setUserData} 
-                themeMode={themeMode}
-                onLogout={onLogout} /* <-- ADDED HERE */
-            />
+            {!isPublicPreview && (
+                <SettingsModal 
+                    isOpen={isSettingsModalOpen} 
+                    onClose={() => setIsSettingsModalOpen(false)} 
+                    userData={userData} 
+                    setUserData={setUserData} 
+                    themeMode={themeMode}
+                    onLogout={onLogout}
+                />
+            )}
         </div>
     );
 }

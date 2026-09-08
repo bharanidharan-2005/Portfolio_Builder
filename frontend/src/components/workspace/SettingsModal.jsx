@@ -57,7 +57,7 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
     // Clean username (e.g. "Bharani Dharan" -> "bharanidharan") and restore functional Vercel routing
     const cleanUsername = (localName || "developer").toLowerCase().replace(/[^a-z0-9]/g, '');
     const cleanToken = userData?.code || "demo";
-    const liveUrl = `${window.location.origin}/workspace/${cleanUsername}/${cleanToken}`;
+    const liveUrl = `${window.location.origin}/preview/${cleanUsername}/${cleanToken}`;
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
