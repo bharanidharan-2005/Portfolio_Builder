@@ -92,7 +92,7 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                 </div>
 
                 {/* Settings Content */}
-                <div className="flex-1 flex flex-col relative">
+                <div className="flex-1 flex flex-col relative overflow-hidden">
                     <button onClick={onClose} className={`absolute top-4 right-4 p-1.5 rounded-md transition-colors cursor-pointer z-10 ${isLight ? 'text-slate-400 hover:bg-slate-100 hover:text-slate-700' : 'text-slate-500 hover:bg-slate-800 hover:text-slate-200'}`}>
                         <X className="w-5 h-5" />
                     </button>
@@ -177,13 +177,16 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                                     <p className={`text-sm ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Configure your live environment routing.</p>
                                 </div>
                                 <div className="space-y-4">
-                                    <div className={`p-4 border rounded-xl flex items-center justify-between ${isLight ? 'border-slate-200 bg-slate-50' : 'border-slate-800 bg-[#111218]'}`}>
-                                        <div className="overflow-hidden pr-4">
+                                    <div className={`p-4 border rounded-xl flex items-center justify-between gap-4 ${isLight ? 'border-slate-200 bg-slate-50' : 'border-slate-800 bg-[#111218]'}`}>
+                                        
+                                        {/* FIX: Added flex-1 and min-w-0 to prevent flex blowout */}
+                                        <div className="flex-1 min-w-0 pr-2">
                                             <p className={`text-sm font-bold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>Public Portfolio URL</p>
                                             <p className={`text-xs mt-1 font-mono truncate ${isLight ? 'text-blue-600' : 'text-blue-400'}`}>
                                                 {liveUrl}
                                             </p>
                                         </div>
+                                        
                                         <button 
                                             onClick={() => window.open(liveUrl, '_blank')}
                                             className={`shrink-0 px-3 py-1.5 text-xs font-bold rounded-lg border transition-colors flex items-center gap-2 cursor-pointer ${isLight ? 'border-slate-300 hover:bg-slate-200 text-slate-700' : 'border-slate-700 hover:bg-slate-800 text-slate-300'}`}
