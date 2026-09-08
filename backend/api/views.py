@@ -310,6 +310,7 @@ class DeploymentView(APIView):
 
         try:
             payload = {
+                'name': 'portfolio-builder',
                 'files': [{'file': 'index.html', 'data': html_content}],
                 'projectSettings': {'framework': None, 'buildCommand': None, 'outputDirectory': ''},
                 'target': 'production',
