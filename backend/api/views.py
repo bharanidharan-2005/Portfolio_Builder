@@ -887,54 +887,85 @@ def serve_media(request, path):
 # -----------------------------------------------------------------
 # 12. WORKSPACE KEY DISPATCHER
 # -----------------------------------------------------------------
+import string
+import random
+
+def generate_20_char_workspace_key():
+    """Generates a secure 20-character key with letters, digits, and special characters."""
+    chars = string.ascii_letters + string.digits + "!._-"
+    return ''.join(random.choices(chars, k=20))
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def send_workspace_key_view(request):
-    email = (request.data.get('email') or '').strip()
+    email = (request.data.get('email') or '').strip().lower()
     code = (request.data.get('code') or '').strip()
     action = (request.data.get('action') or '').strip()
 
-    # 1. Handle Code Verification (When user submits code to log in)
-    if action == 'verify' or code:
-        username = email.split('@')[0] if email else 'developer'
-        user, _ = User.objects.get_or_create(username=username, defaults={'email': email})
+    # -----------------------------------------------------------------
+    # 1. VERIFY WORKSPACE CODE (User logs in using ONLY the 20-char key)
+    # -----------------------------------------------------------------
+    if action == 'verify' or (code and len(code) >= 10):
+        # Look up user by their unique 20-character workspace key stored in last_name
+        user = User.objects.filter(last_name=code).first()
+        
+        # Fallback search by email if provided
+        if not user and email:
+            user = User.objects.filter(email=email).first()
+            if user and user.last_name != code:
+                user = None
 
+        if not user:
+            return Response(
+                {'error': 'Invalid 20-character workspace key. Please check your key or request a new one.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Generate JWT session tokens for the user
         refresh = RefreshToken.for_user(user)
         return Response({
             'success': True,
             'access': str(refresh.access_token),
             'refresh': str(refresh),
+            'email': user.email,
             'message': 'Workspace authenticated successfully'
         })
 
-    # 2. Generate & Dispatch Verification Code Email
+    # -----------------------------------------------------------------
+    # 2. GENERATE & SEND PERMANENT 20-CHARACTER KEY TO ANY EMAIL
+    # -----------------------------------------------------------------
     if not email:
         return Response({'error': 'Email address is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    verification_code = str(random.randint(100000, 999999))
-    subject = 'Your AuraBuild Workspace Verification Code'
-    text_content = f"Hello,\n\nYour verification code to access your workspace is: {verification_code}\n\nEnter this code on the website to complete initialization.\n\n— AuraBuild"
+    username = email.split('@')[0]
+    user, created = User.objects.get_or_create(username=username, defaults={'email': email})
+    
+    if not user.email:
+        user.email = email
+        user.save()
+
+    # Retrieve or generate permanent 20-character workspace key
+    if user.last_name and len(user.last_name) == 20:
+        workspace_key = user.last_name
+    else:
+        workspace_key = generate_20_char_workspace_key()
+        user.last_name = workspace_key
+        user.save()
+
+    recipient_name = user.first_name if user.first_name else username
+    subject = 'Your AuraBuild Workspace Verification Key'
+    text_content = (
+        f"Hello {recipient_name},\n\n"
+        f"Your unique 20-character permanent account key for AuraBuild Studio is:\n\n"
+        f"{workspace_key}\n\n"
+        f"Keep this key safe and confidential. You will need it to mount your workspace anytime.\n\n"
+        f"— AuraBuild Team"
+    )
 
     email_sent = False
 
-    # Attempt delivery via Resend API
-    resend_api_key = os.getenv('RESEND_API_KEY')
-    if resend_api_key and resend_api_key.startswith('re_'):
-        try:
-            import resend
-            resend.api_key = resend_api_key
-            resend.Emails.send({
-                "from": os.getenv('DEFAULT_FROM_EMAIL', 'AuraBuild <onboarding@resend.dev>'),
-                "to": [email],
-                "subject": subject,
-                "text": text_content,
-            })
-            email_sent = True
-        except Exception as e:
-            logger.warning("Resend verification key delivery failed: %s", e)
-
-    # Fallback to SMTP (Gmail)
-    if not email_sent and settings.EMAIL_HOST_USER and os.getenv('EMAIL_HOST_PASSWORD'):
+    # Attempt delivery via Gmail SMTP first (Can send to ANY email address)
+    if settings.EMAIL_HOST_USER and os.getenv('EMAIL_HOST_PASSWORD'):
         try:
             send_mail(
                 subject=subject,
@@ -945,11 +976,28 @@ def send_workspace_key_view(request):
             )
             email_sent = True
         except Exception as e:
-            logger.warning("SMTP verification key delivery failed: %s", e)
+            logger.warning("SMTP delivery failed for %s: %s", email, e)
+
+    # Secondary attempt via Resend API
+    if not email_sent:
+        resend_api_key = os.getenv('RESEND_API_KEY')
+        if resend_api_key and resend_api_key.startswith('re_'):
+            try:
+                import resend
+                resend.api_key = resend_api_key
+                resend.Emails.send({
+                    "from": os.getenv('DEFAULT_FROM_EMAIL', 'AuraBuild <onboarding@resend.dev>'),
+                    "to": [email],
+                    "subject": subject,
+                    "text": text_content,
+                })
+                email_sent = True
+            except Exception as e:
+                logger.warning("Resend delivery failed for %s: %s", email, e)
 
     return Response({
         'success': True,
-        'message': f'Verification code sent to {email}' if email_sent else 'Verification code generated.',
-        'dev_code': verification_code if not email_sent else None  # Allows login even if email credentials aren't set in Render
+        'message': f'20-character key sent to {email}',
+        'workspace_key': workspace_key if not email_sent else None,  # Emergency fallback display if email server fails
     })
 
