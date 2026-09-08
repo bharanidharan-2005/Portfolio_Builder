@@ -34,10 +34,11 @@ if not SECRET_KEY:
     else:
         raise RuntimeError("SECRET_KEY environment variable must be set when DEBUG is False.")
 
+# 1. Properly parsed ALLOWED_HOSTS with your live Render URL
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.getenv(
-        'ALLOWED_HOSTS', 'aurabuild-backend.onrender.com,localhost,127.0.0.1'
+        'ALLOWED_HOSTS', 'portfolio-builder-ufev.onrender.com,localhost,127.0.0.1'
     ).split(',')
     if host.strip()
 ]
@@ -80,7 +81,8 @@ ROOT_URLCONF = 'main_config.urls'
 # -----------------------------------------------------------------
 # 🌐 CORS & CSRF CONFIGURATION
 # -----------------------------------------------------------------
-default_cors = "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,https://aurabuild-nine.vercel.app"
+# 2. Included your live Vercel URL to prevent cross-origin blocks
+default_cors = "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,https://portfolio-builder-one-brown.vercel.app"
 cors_env = os.getenv('CORS_ALLOWED_ORIGINS', default_cors)
 
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_env.split(',') if origin.strip()]
