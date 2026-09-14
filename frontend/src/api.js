@@ -1,7 +1,16 @@
 import axios from 'axios';
 
+// Ensure the baseURL always ends with /api/ correctly, regardless of Vercel env var typos
+let rawBaseUrl = import.meta.env.VITE_API_URL || 'https://aurabuild-backend.onrender.com/api/';
+if (!rawBaseUrl.endsWith('/')) {
+    rawBaseUrl += '/';
+}
+if (!rawBaseUrl.endsWith('api/')) {
+    rawBaseUrl += 'api/';
+}
+
 export const API = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'https://aurabuild-backend.onrender.com/api/',
+    baseURL: rawBaseUrl,
     timeout: 60000, // Accommodates Render free tier cold starts
     headers: {
         'Content-Type': 'application/json',
