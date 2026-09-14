@@ -56,6 +56,7 @@ export default function RightSidebar({
 }) {
     const isLight = themeMode === 'light';
     const [genTab, setGenTab] = useState("generate");
+    const [paletteTab, setPaletteTab] = useState("themes");
     const [chatInput, setChatInput] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -567,25 +568,28 @@ export default function RightSidebar({
                 <span className={`text-[11px] font-black uppercase tracking-widest flex items-center gap-2 ${isLight ? 'text-slate-800' : 'text-slate-200'}`}> <Sparkles className="w-4 h-4 text-blue-500" /> Content Generator </span>
             </div>
 
-            <div className={`flex rounded-xl p-1 border shadow-inner ${isLight ? 'bg-slate-100/50 border-slate-200' : 'bg-slate-900/80 border-slate-800'}`}>
+            <div className={`flex rounded-xl p-1.5 border shadow-inner transition-colors duration-300 ${isLight ? 'bg-slate-200/50 border-slate-300' : 'bg-slate-900/90 border-slate-800'}`}>
                 {["generate", "improve", "ingest", "review"].map((tab) => (
                     <button
                         key={tab}
                         onClick={() => setGenTab(tab)}
-                        className={`flex-1 py-1.5 text-[10px] font-bold uppercase rounded-lg transition-all duration-300 cursor-pointer ${
+                        className={`flex-1 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all duration-300 cursor-pointer relative overflow-hidden ${
                             genTab === tab 
-                            ? (isLight ? 'bg-white text-blue-600 shadow-sm ring-1 ring-slate-900/5' : 'bg-slate-700 text-white shadow-md ring-1 ring-white/10') 
-                            : (isLight ? 'text-slate-500 hover:text-slate-800 hover:bg-white/50' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5')
+                            ? (isLight ? 'bg-white text-blue-600 shadow-md ring-1 ring-blue-500/20' : 'bg-gradient-to-br from-slate-700 to-slate-800 text-blue-400 shadow-[0_4px_15px_rgba(0,0,0,0.5)] ring-1 ring-blue-500/30') 
+                            : (isLight ? 'text-slate-500 hover:text-slate-800 hover:bg-white/60' : 'text-slate-400 hover:text-slate-100 hover:bg-white/5')
                         }`}
                     >
                         {tab}
+                        {genTab === tab && (
+                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-[2px] bg-blue-500 rounded-t-full shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
+                        )}
                     </button>
                 ))}
             </div>
 
             {genTab === "generate" && (
-                <div className="space-y-3 animate-in slide-in-from-bottom-2 duration-300">
-                    <div className="h-[400px] overflow-y-auto pr-2 space-y-2.5 pb-10 custom-scrollbar">
+                <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-500">
+                    <div className="space-y-3 pb-8">
                         {[
                             { title: "Generate Hero Section", sub: "Assembles profile structures & headlines.", icon: Sparkles, type: 'hero' },
                             { title: "Generate About Me Bio", sub: "Auto-writes deep professional summaries.", icon: User, type: 'about' },
@@ -598,8 +602,13 @@ export default function RightSidebar({
                                 key={i}
                                 disabled={isProcessing}
                                 onClick={() => handleGenerateSection(bp.title, bp.type)}
-                                className={`w-full flex items-start gap-3 p-3.5 rounded-2xl border transition-all duration-300 text-left cursor-pointer group hover:-translate-y-0.5 ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''} ${isLight ? 'bg-white border-slate-200 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/10' : 'bg-[#15161D] border-slate-800 hover:border-blue-500 hover:bg-slate-800 hover:shadow-lg hover:shadow-blue-900/20'}`}
+                                className={`p-4 border rounded-2xl flex items-start gap-4 text-left transition-all duration-300 group cursor-pointer relative overflow-hidden ${
+                                    isLight 
+                                    ? 'bg-gradient-to-b from-white to-slate-50 border-slate-200 hover:border-blue-400 hover:shadow-[0_10px_30px_rgba(37,99,235,0.12)] hover:-translate-y-1' 
+                                    : 'bg-gradient-to-b from-[#1A1C23] to-[#121319] border-slate-800 hover:border-blue-500/50 hover:shadow-[0_10px_30px_rgba(59,130,246,0.15)] hover:-translate-y-1'
+                                }`}
                             >
+                                <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-gradient-to-r from-blue-500 to-purple-500`}></div>
                                 <bp.icon className={`w-4 h-4 mt-0.5 shrink-0 transition-colors ${isLight ? 'text-blue-500 group-hover:text-blue-600' : 'text-blue-400 group-hover:text-blue-300'}`} />
                                 <div>
                                     <div className={`text-xs font-bold transition-colors ${isLight ? 'text-slate-800' : 'text-slate-200'}`}> {bp.title} </div>
@@ -839,78 +848,105 @@ export default function RightSidebar({
                 <span className={`text-[11px] font-black uppercase tracking-widest flex items-center gap-2 ${isLight ? 'text-slate-800' : 'text-slate-200'}`}> <Wand2 className="w-4 h-4 text-purple-500" /> Palette Studio </span>
             </div>
             
-            <div className="space-y-3">
-                <label className={`block text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}> Describe your Vibe (AI Theme Selector) </label>
-                <div className="flex gap-2 relative group/input">
-                    <input 
-                        type="text" 
-                        value={vibeInput}
-                        onChange={(e) => setVibeInput(e.target.value)}
-                        placeholder="e.g. Cyberpunk dark, clean minimal..."
-                        className={`flex-1 text-xs px-4 py-3.5 rounded-xl border outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-300 ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#15161D] border-slate-800'}`}
-                    />
-                    <button 
-                        disabled={isProcessing || !vibeInput.trim()}
-                        onClick={handleGenerateVibe} 
-                        className={`bg-gradient-to-b from-purple-500 to-purple-600 hover:from-purple-400 hover:to-purple-500 text-white px-5 py-3.5 rounded-xl text-xs font-bold transition-all duration-300 shadow-lg active:scale-95 shadow-purple-900/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] ${isProcessing || !vibeInput.trim() ? 'opacity-50 cursor-not-allowed shadow-none' : 'cursor-pointer hover:shadow-xl hover:-translate-y-0.5'}`}
+            <div className={`flex rounded-xl p-1.5 border shadow-inner transition-colors duration-300 ${isLight ? 'bg-slate-200/50 border-slate-300' : 'bg-slate-900/90 border-slate-800'}`}>
+                {["themes", "fonts"].map((tab) => (
+                    <button
+                        key={tab}
+                        onClick={() => setPaletteTab(tab)}
+                        className={`flex-1 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all duration-300 cursor-pointer relative overflow-hidden ${
+                            paletteTab === tab 
+                            ? (isLight ? 'bg-white text-purple-600 shadow-md ring-1 ring-purple-500/20' : 'bg-gradient-to-br from-slate-700 to-slate-800 text-purple-400 shadow-[0_4px_15px_rgba(0,0,0,0.5)] ring-1 ring-purple-500/30') 
+                            : (isLight ? 'text-slate-500 hover:text-slate-800 hover:bg-white/60' : 'text-slate-400 hover:text-slate-100 hover:bg-white/5')
+                        }`}
                     >
-                        {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Gen'}
+                        {tab}
+                        {paletteTab === tab && (
+                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-[2px] bg-purple-500 rounded-t-full shadow-[0_0_8px_rgba(168,85,247,0.8)]"></div>
+                        )}
                     </button>
-                </div>
+                ))}
             </div>
 
-            <div className="pt-4 space-y-3">
-                <label className={`block text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}> Preset Brand Themes </label>
-                <div className="grid grid-cols-1 gap-3 h-[350px] overflow-y-auto pr-2 custom-scrollbar">
-                    {PORTFOLIO_THEMES && Object.entries(PORTFOLIO_THEMES).map(([themeKey, theme]) => {
-                        const isSelected = activeTheme === themeKey;
-                        return (
-                            <button
-                                key={themeKey}
-                                onClick={() => {
-                                    if (onThemeChange) onThemeChange(themeKey);
-                                    setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Applied ${theme.name} layout theme.` }]);
-                                }}
-                                className={`w-full flex items-center justify-between p-4 rounded-2xl border text-xs font-bold text-left transition-all duration-300 cursor-pointer group hover:-translate-y-0.5 ${
-                                    isSelected 
-                                        ? (isLight ? 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-400 text-purple-700 shadow-lg ring-2 ring-purple-400/20' : 'bg-gradient-to-r from-purple-900/20 to-pink-900/20 border-purple-500 text-purple-400 ring-2 ring-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.15)]') 
-                                        : (isLight ? 'bg-white border-slate-200 text-slate-700 hover:border-purple-300 hover:shadow-md' : 'bg-[#15161D] border-slate-800 text-slate-300 hover:border-purple-500/50 hover:bg-slate-800 hover:shadow-lg')
-                                }`}
+            {paletteTab === "themes" && (
+                <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                    <div className="space-y-3">
+                        <label className={`block text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}> Describe your Vibe (AI Theme Selector) </label>
+                        <div className="flex gap-2 relative group/input">
+                            <input 
+                                type="text" 
+                                value={vibeInput}
+                                onChange={(e) => setVibeInput(e.target.value)}
+                                placeholder="e.g. Cyberpunk dark, clean minimal..."
+                                className={`flex-1 text-xs px-4 py-3.5 rounded-xl border outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-300 ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#15161D] border-slate-800'}`}
+                            />
+                            <button 
+                                disabled={isProcessing || !vibeInput.trim()}
+                                onClick={handleGenerateVibe} 
+                                className={`bg-gradient-to-b from-purple-500 to-purple-600 hover:from-purple-400 hover:to-purple-500 text-white px-5 py-3.5 rounded-xl text-xs font-bold transition-all duration-300 shadow-lg active:scale-95 shadow-purple-900/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] ${isProcessing || !vibeInput.trim() ? 'opacity-50 cursor-not-allowed shadow-none' : 'cursor-pointer hover:shadow-xl hover:-translate-y-0.5'}`}
                             >
-                                <span className="tracking-wide"> {theme.name} </span> 
-                                {isSelected && <CheckCircle2 className="w-4 h-4 shrink-0 animate-in zoom-in" />}
+                                {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Gen'}
                             </button>
-                        );
-                    })}
-                </div>
-            </div>
+                        </div>
+                    </div>
 
-            <div className="pt-4 space-y-3">
-                <label className={`block text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}> Typography Engine </label>
-                <div className="grid grid-cols-1 gap-3 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
-                    {PORTFOLIO_FONTS && PORTFOLIO_FONTS.map((font) => {
-                        const isSelected = activeFont === font.id;
-                        return (
-                            <button
-                                key={font.id}
-                                onClick={() => {
-                                    if (onUpdateFont) onUpdateFont(font.id);
-                                    setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Applied ${font.name} typography.` }]);
-                                }}
-                                className={`w-full flex items-center justify-between p-4 rounded-2xl border text-xs font-bold text-left transition-all duration-300 cursor-pointer group hover:-translate-y-0.5 ${
-                                    isSelected 
-                                        ? (isLight ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-400 text-blue-700 shadow-lg ring-2 ring-blue-400/20' : 'bg-gradient-to-r from-blue-900/20 to-indigo-900/20 border-blue-500 text-blue-400 ring-2 ring-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.15)]') 
-                                        : (isLight ? 'bg-white border-slate-200 text-slate-700 hover:border-blue-300 hover:shadow-md' : 'bg-[#15161D] border-slate-800 text-slate-300 hover:border-blue-500/50 hover:bg-slate-800 hover:shadow-lg')
-                                }`}
-                                style={font.style}
-                            >
-                                <span className="tracking-wide text-sm"> {font.name} </span> 
-                                {isSelected && <CheckCircle2 className="w-4 h-4 shrink-0 animate-in zoom-in" />}
-                            </button>
-                        );
-                    })}
+                    <div className="space-y-3">
+                        <label className={`block text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}> Preset Brand Themes </label>
+                        <div className="grid grid-cols-1 gap-3 pb-6">
+                            {PORTFOLIO_THEMES && Object.entries(PORTFOLIO_THEMES).map(([themeKey, theme]) => {
+                                const isSelected = activeTheme === themeKey;
+                                return (
+                                    <button
+                                        key={themeKey}
+                                        onClick={() => {
+                                            if (onThemeChange) onThemeChange(themeKey);
+                                            setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Applied ${theme.name} layout theme.` }]);
+                                        }}
+                                        className={`w-full flex items-center justify-between p-4 rounded-2xl border text-xs font-bold text-left transition-all duration-300 cursor-pointer group hover:-translate-y-0.5 ${
+                                            isSelected 
+                                                ? (isLight ? 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-400 text-purple-700 shadow-lg ring-2 ring-purple-400/20' : 'bg-gradient-to-r from-purple-900/20 to-pink-900/20 border-purple-500 text-purple-400 ring-2 ring-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.15)]') 
+                                                : (isLight ? 'bg-white border-slate-200 text-slate-700 hover:border-purple-300 hover:shadow-md' : 'bg-[#15161D] border-slate-800 text-slate-300 hover:border-purple-500/50 hover:bg-slate-800 hover:shadow-lg')
+                                        }`}
+                                    >
+                                        <span className="tracking-wide"> {theme.name} </span> 
+                                        {isSelected && <CheckCircle2 className="w-4 h-4 shrink-0 animate-in zoom-in" />}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
                 </div>
-            </div>
+            )}
+
+            {paletteTab === "fonts" && (
+                <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                    <div className="space-y-3">
+                        <label className={`block text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}> Typography Engine </label>
+                        <div className="grid grid-cols-1 gap-3 pb-6">
+                            {PORTFOLIO_FONTS && PORTFOLIO_FONTS.map((font) => {
+                                const isSelected = activeFont === font.id;
+                                return (
+                                    <button
+                                        key={font.id}
+                                        onClick={() => {
+                                            if (onUpdateFont) onUpdateFont(font.id);
+                                            setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Applied ${font.name} typography.` }]);
+                                        }}
+                                        className={`w-full flex items-center justify-between p-4 rounded-2xl border text-xs font-bold text-left transition-all duration-300 cursor-pointer group hover:-translate-y-0.5 ${
+                                            isSelected 
+                                                ? (isLight ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-400 text-blue-700 shadow-lg ring-2 ring-blue-400/20' : 'bg-gradient-to-r from-blue-900/20 to-indigo-900/20 border-blue-500 text-blue-400 ring-2 ring-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.15)]') 
+                                                : (isLight ? 'bg-white border-slate-200 text-slate-700 hover:border-blue-300 hover:shadow-md' : 'bg-[#15161D] border-slate-800 text-slate-300 hover:border-blue-500/50 hover:bg-slate-800 hover:shadow-lg')
+                                        }`}
+                                        style={font.style}
+                                    >
+                                        <span className="tracking-wide text-sm"> {font.name} </span> 
+                                        {isSelected && <CheckCircle2 className="w-4 h-4 shrink-0 animate-in zoom-in" />}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 
@@ -1148,7 +1184,7 @@ export default function RightSidebar({
             ) : imageTab === "gallery" ? (
                 <div className="space-y-4 animate-in slide-in-from-right-2 duration-300">
                     <label className={`block text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}> Curated Backgrounds </label>
-                    <div className="grid grid-cols-2 gap-2 h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                    <div className="grid grid-cols-2 gap-3 pb-8">
                         {UNSPLASH_GALLERY.map((img) => (
                             <div 
                                 key={img.id} 

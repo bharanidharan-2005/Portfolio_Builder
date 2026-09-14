@@ -4,6 +4,10 @@ import { sendContactForm } from "../utils/contactUtils";
 import EditableText from "./EditableText";
 import { PORTFOLIO_THEMES } from "./themes";
 import { motion, AnimatePresence } from "framer-motion";
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import { ResumePDF } from "../components/ResumePDF";
+import { HeroParticles } from "./HeroParticles";
+import { GitHubCalendar } from 'react-github-calendar';
 
 // --- Subdued Premium Animation Configurations ---
 const springTransition = { type: "spring", stiffness: 80, damping: 20 };
@@ -45,13 +49,15 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
     const themeDef = PORTFOLIO_THEMES[portfolioTheme] || PORTFOLIO_THEMES.modern_glass || {};
     
     const borderClass = themeDef.border || "border-slate-700";
+    const innerBorderClass = (themeDef.border || "").split(' ').find(c => c.startsWith('border-')) || "border-white/10";
+    
     const accentText = themeDef.accentText || "text-blue-400";
     const accentBg = themeDef.accentBg || accentText.replace('text-transparent', '').replace('bg-clip-text', '').replace(/text-/g, 'bg-').trim();
     const textPrimary = "text-slate-50"; 
     const textSecondary = "text-slate-300";
     const placeholderClass = "placeholder-slate-500";
     const cardBg = "bg-white/[0.03] backdrop-blur-xl"; 
-    const badgeClass = `bg-black/40 text-slate-200 border ${borderClass} shadow-sm backdrop-blur-md`;
+    const badgeClass = `bg-black/40 text-slate-200 border ${innerBorderClass} shadow-sm backdrop-blur-md`;
 
     // --- SMART TEXT ROUTER ---
     const TextElement = ({ value, placeholder, onCommit, multiline = false }) => {
@@ -168,13 +174,15 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
             {currentType === "hero" && (
                 <motion.div 
                     {...fadeUpConfig}
-                    className={`text-center py-10 sm:py-20 px-4 space-y-6 relative rounded-3xl ${!bgImage ? cardBg : ""}`}
+                    className={`text-center py-10 sm:py-20 px-4 space-y-6 relative rounded-3xl overflow-hidden ${!bgImage ? cardBg : ""}`}
                     style={bgImage ? {
                         backgroundImage: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.8)), url('${bgImage}')`,
                         backgroundSize: "cover",
                         backgroundPosition: "center",
                     } : undefined}
                 >
+                    {!bgImage && <HeroParticles isDark={themeDef.bodyBg?.includes('black') || themeDef.bodyBg?.includes('#0')} />}
+                    
                     <div className="relative z-10 space-y-4 max-w-3xl mx-auto flex flex-col items-center w-full">
                         <motion.h1
                             initial={{ opacity: 0, y: 15 }}
@@ -221,7 +229,16 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             transition={{ ...springTransition, delay: 0.2 }}
                             className="flex flex-wrap justify-center gap-4 pt-6 w-full"
                         >
-                            <div className="relative">
+                            <div className="relative flex items-center gap-4">
+                                {isPreview && (
+                                    <PDFDownloadLink
+                                        document={<ResumePDF sections={sections} />}
+                                        fileName={`${data.heading?.replace(/\s+/g, '_') || 'Portfolio'}_Resume.pdf`}
+                                        className={`px-6 py-3 rounded-xl text-sm font-bold transition-all bg-white text-slate-900 shadow-md hover:shadow-lg hover:scale-105 active:scale-95 inline-block`}
+                                    >
+                                        {({ blob, url, loading, error }) => (loading ? 'Preparing PDF...' : 'Download Resume')}
+                                    </PDFDownloadLink>
+                                )}
                                 <motion.button 
                                     whileHover={{ scale: 1.03 }}
                                     whileTap={{ scale: 0.97 }}
@@ -395,7 +412,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                         />
                                     </span>
                                 </div>
-                                <div className={`mt-4 pt-4 border-t flex items-center gap-2 text-sm overflow-hidden ${borderClass}`}>
+                                <div className={`mt-4 pt-4 border-t flex items-center gap-2 text-sm overflow-hidden ${innerBorderClass}`}>
                                     <span className={`shrink-0 ${textSecondary}`}>Performance:</span>
                                     <span className={`font-mono font-bold truncate max-w-full ${accentText}`}>
                                         <TextElement 
@@ -662,14 +679,42 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         ))}
                     </div>
 
+                    {data.githubUsername && data.githubUsername.trim() !== "" && (
+                        <div className={`w-full max-w-5xl mx-auto mt-16 p-6 sm:p-8 rounded-3xl border shadow-lg overflow-x-auto flex flex-col items-center ${cardBg} ${borderClass}`}>
+                            <h3 className={`text-sm font-black tracking-widest uppercase mb-8 ${accentText}`}>
+                                Open Source Contributions
+                            </h3>
+                            <div className="scale-90 sm:scale-100 origin-center">
+                                <GitHubCalendar 
+                                    username={data.githubUsername.trim()} 
+                                    colorScheme={themeDef.bodyBg?.includes('black') || themeDef.bodyBg?.includes('#0') ? 'dark' : 'light'}
+                                    blockSize={12}
+                                    blockMargin={4}
+                                    fontSize={12}
+                                />
+                            </div>
+                        </div>
+                    )}
+
                     {!isPreview && (
-                        <div className="pt-10 w-full px-2">
+                        <div className="pt-10 w-full px-2 max-w-5xl mx-auto space-y-4">
                             <button 
                                 onClick={(e) => { e.stopPropagation(); addArrayItem('projects', { title: "New Project", desc: "Brief description of the project.", tags: ["React", "Tailwind CSS"], projectUrl: "" }); }}
-                                className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-sm font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
+                                className={`w-full py-5 rounded-xl border border-dashed text-sm font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
                             >
                                 + Add Another Project
                             </button>
+                            
+                            <div className={`text-xs font-mono w-full ${textSecondary} flex items-center gap-3 p-3 rounded-xl bg-black/20 border ${borderClass}`}>
+                                <span className="text-xl shrink-0">🐙</span>
+                                <div className="flex-1 truncate w-full">
+                                    <TextElement 
+                                        value={data.githubUsername || ""}
+                                        placeholder="Enter your GitHub Username (e.g., torvalds) to show your contribution graph!"
+                                        onCommit={(v) => updateScalar("githubUsername", v)}
+                                    />
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>

@@ -11,11 +11,12 @@ import {
     X, Zap, Sparkles, Target, TrendingUp, 
     Palette, Image as ImageIcon, Share2, Code2, Layers, CheckCircle2,
     Moon, Sun, Monitor, Menu, Check, Search, Download, PanelLeftClose, PanelLeftOpen, GripVertical, Settings as SettingsIcon,
-    Smartphone, Tablet as TabletIcon, ExternalLink, Copy, RotateCcw, LayoutTemplate
+    Smartphone, Tablet as TabletIcon, ExternalLink, Copy, RotateCcw, LayoutTemplate, Undo2, Redo2
 } from "lucide-react";
-import { DEFAULT_BLOCK_DATA } from '../../utils/constants';
+import { DEFAULT_BLOCK_DATA, SECTION_ORDER_WEIGHTS } from '../../utils/constants';
 import { API } from "../../api"; 
 import { deployAnimatedSite } from "../../utils/deploymentUtils";
+import SEOUpdater from "../../utils/SEOUpdater";
 
 // 1. Accept the isPreviewMode prop (renamed locally to isPublicPreview to avoid state collision)
 export default function WorkspaceLayout({ userData, setUserData, themeMode, onToggleTheme, onLogout, isPreviewMode: isPublicPreview = false }) {
@@ -84,7 +85,7 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
         const loadWorkspace = async () => {
             try {
                 let res;
-                if (isPreviewMode && userData?.name) {
+                if (isPublicPreview && userData?.name) {
                     const cleanUsername = userData.name.toLowerCase().replace(/[^a-z0-9]/g, '');
                     res = await API.get(`public-portfolio/${cleanUsername}/`);
                     // The public API returns a flat list of pages directly, just like 'pages/'
@@ -282,12 +283,74 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
         const newSection = { id: newId, section_type: type, content_data: defaultContent };
         
         const currentSections = sectionsRef.current;
-        const newSections = [...currentSections, newSection];
+        
+        const targetWeight = SECTION_ORDER_WEIGHTS[type] || 999;
+        let insertIndex = currentSections.length;
+        
+        for (let i = 0; i < currentSections.length; i++) {
+            const currentWeight = SECTION_ORDER_WEIGHTS[currentSections[i].section_type] || 999;
+            if (targetWeight < currentWeight) {
+                insertIndex = i;
+                break;
+            }
+        }
+        
+        const newSections = [
+            ...currentSections.slice(0, insertIndex),
+            newSection,
+            ...currentSections.slice(insertIndex)
+        ];
 
         sectionsRef.current = newSections;
         commitHistory(newSections, currentSections); 
         
         setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Added local ${type} block to canvas.` }]);
+    };
+
+    const handleDeleteSection = async (sectionId) => {
+        const currentSections = sectionsRef.current;
+        const newSections = currentSections.filter(s => String(s.id) !== String(sectionId));
+        
+        sectionsRef.current = newSections;
+        commitHistory(newSections, currentSections);
+        
+        // If it's a numeric ID, it's stored in the database
+        const isNumericId = /^\d+$/.test(String(sectionId));
+        if (isNumericId) {
+            try {
+                await API.delete(`sections/${sectionId}/`);
+                setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Deleted section from database.` }]);
+            } catch (e) {
+                setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Failed to delete section from database.` }]);
+            }
+        } else {
+            setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Deleted local section.` }]);
+        }
+    };
+
+    const handleDuplicateSection = async (sectionId) => {
+        const currentSections = sectionsRef.current;
+        const sectionIndex = currentSections.findIndex(s => String(s.id) === String(sectionId));
+        if (sectionIndex === -1) return;
+        
+        const originalSection = currentSections[sectionIndex];
+        const newId = `sec-dup-${Date.now()}`;
+        
+        const clonedSection = {
+            id: newId,
+            section_type: originalSection.section_type,
+            content_data: JSON.parse(JSON.stringify(originalSection.content_data || {}))
+        };
+        
+        const newSections = [
+            ...currentSections.slice(0, sectionIndex + 1),
+            clonedSection,
+            ...currentSections.slice(sectionIndex + 1)
+        ];
+        
+        sectionsRef.current = newSections;
+        commitHistory(newSections, currentSections);
+        setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Duplicated section block.` }]);
     };
 
     const triggerDeployment = async () => {
@@ -327,9 +390,11 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
     }
 
     return (
-        <div className={`h-screen w-screen flex flex-col font-sans overflow-hidden ${isLight ? 'bg-slate-50 text-slate-900' : 'bg-[#05050A] text-slate-100'}`}>
+        <div className={`h-screen w-full flex flex-col overflow-hidden select-none transition-colors duration-500 font-inter ${themeMode === 'dark' ? 'bg-[#0B0C10] text-slate-200' : 'bg-slate-50 text-slate-800'}`}>
             
-            {/* HIDE TOP NAV IN PUBLIC PREVIEW */}
+            <SEOUpdater pages={pages} userData={userData} isPublicPreview={isPublicPreview} />
+
+            {/* Top Navigation */}
             {!isPublicPreview && (
                 <header className="h-14 lg:h-16 shrink-0 w-full z-50 relative">
                     <TopNav 
@@ -394,6 +459,30 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
 
                 {/* 2. CENTER: CLEAN LIVE PREVIEW CANVAS */}
                 <main className={`flex-1 h-full flex flex-col relative z-10 ${isLight ? 'bg-slate-100/50' : 'bg-[#08080C]'}`}>
+                    
+                    {/* --- FLOATING HISTORY TOOLBAR --- */}
+                    {!isPublicPreview && (history.past.length > 0 || history.future.length > 0) && (
+                        <div className="absolute top-6 right-8 z-50 pointer-events-auto flex items-center gap-1 p-1.5 rounded-2xl bg-slate-900/80 backdrop-blur-xl border border-slate-700/80 shadow-[0_8px_30px_rgb(0,0,0,0.4)] animate-in slide-in-from-top-4 duration-500">
+                            <button 
+                                onClick={handleUndo} 
+                                disabled={history.past.length === 0} 
+                                className={`p-2.5 rounded-xl transition-all duration-200 ${history.past.length === 0 ? 'opacity-30 cursor-not-allowed text-slate-500' : 'text-slate-200 hover:text-white hover:bg-slate-700 active:scale-95 cursor-pointer'} `}
+                                title="Undo (Ctrl+Z)"
+                            >
+                                <Undo2 className="w-4 h-4" />
+                            </button>
+                            <div className="w-px h-5 bg-slate-700/50 mx-1"></div>
+                            <button 
+                                onClick={handleRedo} 
+                                disabled={history.future.length === 0} 
+                                className={`p-2.5 rounded-xl transition-all duration-200 ${history.future.length === 0 ? 'opacity-30 cursor-not-allowed text-slate-500' : 'text-slate-200 hover:text-white hover:bg-slate-700 active:scale-95 cursor-pointer'} `}
+                                title="Redo (Ctrl+Y)"
+                            >
+                                <Redo2 className="w-4 h-4" />
+                            </button>
+                        </div>
+                    )}
+
                     {/* REMOVED PADDING IF IN PUBLIC PREVIEW SO IT SPANS FULL WIDTH */}
                     <div id="workspace-scroll-container" className={`flex-1 overflow-y-auto w-full h-full ${!isPublicPreview ? 'p-4 sm:p-8' : 'p-0'} [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`}>
                         {/* REMOVED MAX WIDTH CONSTRAINT IF IN PUBLIC PREVIEW */}
@@ -410,6 +499,12 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
                                 globalFont={globalFont}
                                 onInlineEdit={!isPublicPreview ? handleUpdateSectionContent : undefined} 
                                 onDropSection={!isPublicPreview ? handleDropSection : undefined} 
+                                onDeleteSection={!isPublicPreview ? handleDeleteSection : undefined}
+                                onDuplicateSection={!isPublicPreview ? handleDuplicateSection : undefined}
+                                onUndo={!isPublicPreview ? handleUndo : undefined}
+                                onRedo={!isPublicPreview ? handleRedo : undefined}
+                                canUndo={history.past.length > 0}
+                                canRedo={history.future.length > 0}
                                 /* Trigger Canvas preview logic for BOTH internal modal and public route */
                                 isPreview={isPublicPreview || isInternalPreviewOpen} 
                             />

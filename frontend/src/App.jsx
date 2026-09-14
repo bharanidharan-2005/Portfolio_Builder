@@ -1,6 +1,38 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import LandingPage from "./components/LandingPage.jsx";
 import WorkspaceLayout from "./components/workspace/WorkspaceLayout.jsx";
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("ErrorBoundary caught an error", error, errorInfo);
+    this.setState({ errorInfo });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 20, color: 'red', fontFamily: 'monospace' }}>
+          <h2>Something went wrong.</h2>
+          <details style={{ whiteSpace: 'pre-wrap' }}>
+            {this.state.error && this.state.error.toString()}
+            <br />
+            {this.state.errorInfo && this.state.errorInfo.componentStack}
+          </details>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function App() {
     // Check current URL path and hostname
@@ -97,10 +129,12 @@ export default function App() {
     // -----------------------------------------------------------------
     if (!isAuthenticated) {
         return (
-            <LandingPage onEnterWorkspace={(data) => {
-                setUserData(prev => ({...prev, ...data }));
-                setIsAuthenticated(true);
-            }} />
+            <ErrorBoundary>
+                <LandingPage onEnterWorkspace={(data) => {
+                    setUserData(prev => ({...prev, ...data }));
+                    setIsAuthenticated(true);
+                }} />
+            </ErrorBoundary>
         );
     }
 
@@ -108,15 +142,17 @@ export default function App() {
     // ROUTE 3: FULL WORKSPACE EDITOR
     // -----------------------------------------------------------------
     return (
-        <div className={`min-h-screen ${themeMode === 'light' ? 'bg-slate-50' : 'bg-[#05050A]'}`}>
-            <WorkspaceLayout 
-                userData={userData}
-                setUserData={setUserData}
-                themeMode={themeMode}
-                onToggleTheme={handleToggleTheme}
-                onLogout={handleLogout}
-                isPreviewMode={false}
-            />
-        </div>
+        <ErrorBoundary>
+            <div className={`min-h-screen ${themeMode === 'light' ? 'bg-slate-50' : 'bg-[#05050A]'}`}>
+                <WorkspaceLayout 
+                    userData={userData}
+                    setUserData={setUserData}
+                    themeMode={themeMode}
+                    onToggleTheme={handleToggleTheme}
+                    onLogout={handleLogout}
+                    isPreviewMode={false}
+                />
+            </div>
+        </ErrorBoundary>
     );
 }

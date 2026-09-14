@@ -239,31 +239,6 @@ export default function CanvasContainer({
                 globalBgImage ? 'bg-[#0B0C10]/40 backdrop-blur-2xl' : 'bg-[#0B0C10] ' + (currentTheme.bodyBg || '')
             }`} style={{ ...currentFontObj.style }}>
                 
-                {/* --- STICKY HISTORY TOOLBAR --- */}
-                {!isPreview && (onUndo || onRedo) && (
-                    <div className="absolute top-6 right-6 z-50 pointer-events-none animate-in slide-in-from-top-4 duration-500">
-                        <div className="pointer-events-auto flex items-center gap-1 p-1.5 rounded-2xl bg-slate-900/80 backdrop-blur-xl border border-slate-700/80 shadow-[0_8px_30px_rgb(0,0,0,0.4)]">
-                            <button 
-                                onClick={onUndo} 
-                                disabled={!canUndo} 
-                                className={`p-2.5 rounded-xl transition-all duration-200 ${!canUndo ? 'opacity-30 cursor-not-allowed text-slate-500' : 'text-slate-200 hover:text-white hover:bg-slate-700 active:scale-95 cursor-pointer'} `}
-                                title="Undo (Ctrl+Z)"
-                            >
-                                <Undo2 className="w-4 h-4" />
-                            </button>
-                            <div className="w-px h-5 bg-slate-700/50 mx-1"></div>
-                            <button 
-                                onClick={onRedo} 
-                                disabled={!canRedo} 
-                                className={`p-2.5 rounded-xl transition-all duration-200 ${!canRedo ? 'opacity-30 cursor-not-allowed text-slate-500' : 'text-slate-200 hover:text-white hover:bg-slate-700 active:scale-95 cursor-pointer'} `}
-                                title="Redo (Ctrl+Y)"
-                            >
-                                <Redo2 className="w-4 h-4" />
-                            </button>
-                        </div>
-                    </div>
-                )}
-                
                 {/* --- GLOBAL BACKGROUND LAYER --- */}
                 {globalBgImage === 'PARTICLES_3D' ? (
                     <ParticleNetwork />

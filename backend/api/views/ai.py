@@ -324,10 +324,19 @@ class AIGithubIngestAPIView(APIView):
 
         try:
             # 1. Fetch GitHub Repos
-            gh_response = requests.get(
-                f"https://api.github.com/users/{username}/repos?sort=updated&per_page=15",
-                headers={"Accept": "application/vnd.github.v3+json"}
-            )
+            try:
+                gh_response = requests.get(
+                    f"https://api.github.com/users/{username}/repos?sort=updated&per_page=15",
+                    headers={
+                        "Accept": "application/vnd.github.v3+json",
+                        "User-Agent": "Portfolio-Builder-App/1.0"
+                    },
+                    timeout=15
+                )
+            except requests.exceptions.Timeout:
+                return Response({'error': 'Connection to GitHub timed out. Please check your network or try again later.'}, status=status.HTTP_504_GATEWAY_TIMEOUT)
+            except requests.exceptions.RequestException as e:
+                return Response({'error': f'Failed to connect to GitHub API: Network issue or API is unreachable.'}, status=status.HTTP_502_BAD_GATEWAY)
             
             if gh_response.status_code != 200:
                 return Response({'error': f'Failed to fetch GitHub profile for {username}.'}, status=status.HTTP_400_BAD_REQUEST)

@@ -35,7 +35,6 @@ from .utils import *
 # -----------------------------------------------------------------
 class PageListAPIView(APIView):
     permission_classes = [permissions.AllowAny]
-    authentication_classes = []  # Ignore expired Bearer headers on public workspace loading
     throttle_classes = []
 
     def get(self, request):

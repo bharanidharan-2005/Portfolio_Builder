@@ -21,6 +21,7 @@
     "lucide-react": "^1.38.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "react-github-calendar": "^5.0.9",
     "three": "^0.185.1"
   },
   "devDependencies": {

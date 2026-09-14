@@ -35,7 +35,6 @@ from .ai import *
 # -----------------------------------------------------------------
 class ResumeUploadAPIView(APIView):
     permission_classes = [permissions.AllowAny]
-    authentication_classes = []  # Ignores expired Bearer tokens in headers
     throttle_classes = [AICreditThrottle]
 
     @staticmethod
@@ -140,6 +139,7 @@ class ResumeUploadAPIView(APIView):
                     'github': parsed.get('github'),
                 },
                 'about': {'bio': parsed.get('about')},
+                'education': {'schools': parsed.get('education') or []},
                 'skills': {'items': skill_items},
                 'projects_grid': {
                     'title': parsed.get('projects_title', 'Showcase of Innovations'),
@@ -174,17 +174,6 @@ class ResumeUploadAPIView(APIView):
                         sections[stype] = PortfolioSection.objects.create(
                             page=page, section_type=stype, order=max_order + 1, content_data=cdata
                         )
-
-            edu = parsed.get('education')
-            if edu is not None:
-                if 'education' in sections:
-                    sections['education'].content_data = {'schools': edu}
-                    sections['education'].save()
-                else:
-                    max_order = page.sections.aggregate(models.Max('order'))['order__max'] or -1
-                    sections['education'] = PortfolioSection.objects.create(
-                        page=page, section_type='education', order=max_order + 1, content_data={'schools': edu}
-                    )
 
             word_count = len(text.split())
             log = AISessionLog.objects.create(

@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { 
     Zap, Shield, Moon, Sun, Palette, ChevronDown, Check, Menu, 
-    Settings2, HelpCircle, Cloud, Eye 
+    Settings2, HelpCircle, Cloud, Eye, Undo2, Redo2 
 } from "lucide-react";
 import { PORTFOLIO_THEMES } from "../../canvas/themes.js";
 
 export function TopNav({ 
     onDeploy, theme, setTheme, activeTheme, onThemeChange, 
     onToggleLeft, onToggleRight, userData, onLogout, onHelpClick,
-    isPreviewMode, onTogglePreview 
+    isPreviewMode, onTogglePreview, onUndo, canUndo, onRedo, canRedo
 }) {
     const isLight = theme === 'light';
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -97,7 +97,7 @@ export function TopNav({
 
             {/* 3. RIGHT SECTION - Actions & User Profile */}
             <div className="flex items-center gap-1.5 sm:gap-2.5"> 
-                
+
                 {/* Highlighted Preview Mode Toggle */}
                 <button 
                     type="button"
