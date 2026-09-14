@@ -3,7 +3,7 @@ import {
     ArrowRight, X, Loader2, User, Mail, KeyRound, 
     ChevronDown, Layout, Code2, Paintbrush, Shield, Zap, Terminal, Globe 
 } from 'lucide-react';
-import { setAuthTokens } from '../api';
+import { API, setAuthTokens } from '../api';
 
 const ThreeBackground = lazy(() => import('./ThreeBackground'));
 
@@ -123,7 +123,7 @@ export default function LandingPage({ onEnterWorkspace }) {
         setIsLoading(true);
 
         try {
-            const response = await fetch("http://127.0.0.1:8000/api/send-key/", {
+            const response = await fetch(`${API.defaults.baseURL}send-key/`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name: formData.name, email: formData.email })
@@ -137,8 +137,8 @@ export default function LandingPage({ onEnterWorkspace }) {
                 setStepState("verify"); 
             }
         } catch (err) {
-            console.warn("Django backend offline. Proceeding to verification step.");
-            setStepState("verify");
+            console.warn("Django backend offline or request failed.", err);
+            alert("Failed to send code. Please try again later.");
         } finally {
             setIsLoading(false);
         }
@@ -149,7 +149,7 @@ export default function LandingPage({ onEnterWorkspace }) {
         setIsLoading(true);
         
         try {
-            const response = await fetch("http://127.0.0.1:8000/api/send-key/", {
+            const response = await fetch(`${API.defaults.baseURL}send-key/`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -163,15 +163,30 @@ export default function LandingPage({ onEnterWorkspace }) {
 
             if (response.ok && data.access) {
                 setAuthTokens(data.access, data.refresh);
-                setStepState("avatar");
+                
+                if (authMode === "login") {
+                    // Skip avatar step for login, immediately enter workspace
+                    if (onEnterWorkspace) {
+                        onEnterWorkspace({
+                            name: data.name || "Developer",
+                            email: formData.email,
+                            code: formData.code,
+                            theme: "modern_glass"
+                        });
+                    }
+                } else {
+                    // For signup, save the name and go to avatar selection
+                    if (data.name) {
+                        setFormData(prev => ({ ...prev, name: data.name }));
+                    }
+                    setStepState("avatar");
+                }
             } else {
                 alert(data.error || data.message || "Invalid workspace access code.");
             }
         } catch (err) {
             console.error("Authentication error:", err);
-            alert("Failed to connect to Django server.");
-            // REMOVE THIS IN PRODUCTION: Fallback for frontend testing if django is down
-            setStepState("avatar"); 
+            alert("Failed to connect to Django server. Please try again.");
         } finally {
             setIsLoading(false);
         }

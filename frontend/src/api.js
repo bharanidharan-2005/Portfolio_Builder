@@ -81,7 +81,7 @@ API.interceptors.response.use(
         isRefreshing = true;
 
         return axios
-            .post(`${API.defaults.baseURL}auth/token/refresh/`, { refresh })
+            .post(`${API.defaults.baseURL}token/refresh/`, { refresh })
             .then((resp) => {
                 const newAccessToken = resp.data.access;
                 const newRefreshToken = resp.data.refresh || null;

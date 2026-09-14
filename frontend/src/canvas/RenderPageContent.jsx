@@ -46,6 +46,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
     
     const borderClass = themeDef.border || "border-slate-700";
     const accentText = themeDef.accentText || "text-blue-400";
+    const accentBg = themeDef.accentBg || accentText.replace('text-transparent', '').replace('bg-clip-text', '').replace(/text-/g, 'bg-').trim();
     const textPrimary = "text-slate-50"; 
     const textSecondary = "text-slate-300";
     const placeholderClass = "placeholder-slate-500";
@@ -162,12 +163,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
     });
 
     return (
-        <div className={`w-full relative ${isPreview ? '' : 'group/section'}`}>
+        <div className={`w-full relative ${isPreview ? '' : 'group/section'} ${openMenu ? 'z-50' : 'z-10'}`}>
             {/* 1. HERO SECTION */}
             {currentType === "hero" && (
                 <motion.div 
                     {...fadeUpConfig}
-                    className={`text-center py-10 sm:py-20 px-4 space-y-6 relative overflow-hidden rounded-3xl ${!bgImage ? cardBg : ""}`}
+                    className={`text-center py-10 sm:py-20 px-4 space-y-6 relative rounded-3xl ${!bgImage ? cardBg : ""}`}
                     style={bgImage ? {
                         backgroundImage: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.8)), url('${bgImage}')`,
                         backgroundSize: "cover",
@@ -239,7 +240,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                             initial={{ opacity: 0, y: 5, scale: 0.98 }} 
                                             animate={{ opacity: 1, y: 0, scale: 1 }} 
                                             exit={{ opacity: 0, y: 5, scale: 0.98 }}
-                                            className={`absolute z-20 top-full mt-3 w-48 rounded-xl p-2 shadow-xl border ${cardBg} ${borderClass} left-1/2 -translate-x-1/2`}
+                                            className={`absolute z-50 top-full mt-3 w-48 rounded-xl p-2 shadow-2xl border ${cardBg} ${borderClass} left-1/2 -translate-x-1/2`}
                                         >
                                             {heroLiveOptions.map((opt, i) => (
                                                 <button 
@@ -278,7 +279,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                             initial={{ opacity: 0, y: 5, scale: 0.98 }} 
                                             animate={{ opacity: 1, y: 0, scale: 1 }} 
                                             exit={{ opacity: 0, y: 5, scale: 0.98 }}
-                                            className={`absolute z-20 top-full mt-3 w-56 rounded-xl p-2 shadow-xl border ${cardBg} ${borderClass} left-1/2 -translate-x-1/2`}
+                                            className={`absolute z-50 top-full mt-3 w-56 rounded-xl p-2 shadow-2xl border ${cardBg} ${borderClass} left-1/2 -translate-x-1/2`}
                                         >
                                             {heroDesignOptions.map((opt, i) => (
                                                 <button 
@@ -484,7 +485,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                         }}
                                     >
                                         <motion.div 
-                                            className={`h-full rounded-full bg-current ${accentText}`}
+                                            className={`h-full rounded-full ${accentBg}`}
                                             initial={{ width: 0 }}
                                             whileInView={{ width: `${skill.level || 50}%` }}
                                             viewport={{ once: false }}
@@ -528,14 +529,30 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         {(data.projects || []).map((project, i) => (
                             <div 
                                 key={i}
-                                className={`relative group p-8 md:p-10 rounded-[2rem] border flex flex-col space-y-6 shadow-md backdrop-blur-xl transition-all duration-300 w-full overflow-hidden ${cardBg} ${borderClass} ${!isPreview ? 'hover:shadow-[0_10px_30px_rgb(0,0,0,0.15)] hover:border-white/10' : ''}`}
+                                id={`project-card-${i}`}
+                                onMouseMove={(e) => {
+                                    if (isPreview) return; // Keep it clean in edit mode or apply only in preview? 
+                                    // Actually, it's nice to have everywhere. Let's apply everywhere.
+                                    const card = e.currentTarget;
+                                    const rect = card.getBoundingClientRect();
+                                    const x = e.clientX - rect.left;
+                                    const y = e.clientY - rect.top;
+                                    const rotateX = ((y - (rect.height / 2)) / (rect.height / 2)) * -5; 
+                                    const rotateY = ((x - (rect.width / 2)) / (rect.width / 2)) * 5;
+                                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+                                }}
+                                style={{ transition: "transform 0.1s ease-out" }}
+                                className={`relative group p-8 md:p-10 rounded-[2rem] border flex flex-col space-y-6 shadow-md backdrop-blur-xl w-full overflow-hidden ${cardBg} ${borderClass} ${!isPreview ? 'hover:shadow-[0_20px_40px_rgb(0,0,0,0.2)] hover:border-white/20 z-10 hover:z-20' : ''}`}
                             >
                                 <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 transition-all duration-500 group-hover:w-full bg-current ${accentText}`}></div>
 
                                 {!isPreview && (
                                     <button 
                                         onClick={(e) => { e.stopPropagation(); removeArrayItem('projects', i); }}
-                                        className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-20"
+                                        className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-30"
                                     >✕</button>
                                 )}
 
@@ -782,6 +799,256 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             </motion.button>
                         </motion.form>
                     </div>
+                </div>
+            )}
+            {/* 6. WORK EXPERIENCE SECTION */}
+            {currentType === 'experience' && (
+                <div className="py-12 sm:py-24 px-4">
+                    {sectionImageBanner}
+                    <motion.div {...fadeUpConfig} className="max-w-4xl mx-auto space-y-12">
+                        <div className="text-center space-y-4">
+                            <h2 className={"text-3xl sm:text-4xl font-black tracking-tight " + textPrimary}>
+                                Work Experience
+                            </h2>
+                        </div>
+                        <div className="relative border-l-2 border-slate-700/30 ml-3 md:ml-0 md:space-y-12 space-y-8">
+                            {(data.items || []).map((item, idx) => (
+                                <motion.div key={idx} variants={staggerItem} className="relative pl-6 md:pl-8">
+                                    <div className="absolute w-4 h-4 bg-blue-500 rounded-full -left-[9px] top-1.5 shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
+                                    <div className={"p-6 rounded-2xl border backdrop-blur-md shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg " + cardBg + " " + borderClass}>
+                                        <h3 className={"text-xl font-bold mb-1 " + textPrimary}>
+                                            <TextElement value={item.title} placeholder="Job Title" onCommit={(v) => updateArrayItem('items', idx, 'title', v)} />
+                                        </h3>
+                                        <div className={"text-sm font-semibold mb-3 text-blue-400"}>
+                                            <TextElement value={item.company} placeholder="Company" onCommit={(v) => updateArrayItem('items', idx, 'company', v)} />
+                                            <span className="mx-2 opacity-50">•</span>
+                                            <span className="opacity-80">
+                                                <TextElement value={item.dates} placeholder="Dates" onCommit={(v) => updateArrayItem('items', idx, 'dates', v)} />
+                                            </span>
+                                        </div>
+                                        <p className={"text-sm leading-relaxed " + textSecondary}>
+                                            <TextElement multiline value={item.description} placeholder="Description of responsibilities and achievements." onCommit={(v) => updateArrayItem('items', idx, 'description', v)} />
+                                        </p>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                        {!isPreview && (
+                            <div className="pt-10 w-full px-2">
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); addArrayItem('items', { title: "New Position", company: "Company", dates: "YYYY - YYYY", description: "Brief description of responsibilities." }); }}
+                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-sm font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
+                                >
+                                    + Add Another Experience
+                                </button>
+                            </div>
+                        )}
+                    </motion.div>
+                </div>
+            )}
+
+            {/* 7. SERVICES SECTION */}
+            {currentType === 'services' && (
+                <div className="py-12 sm:py-24 px-4">
+                    {sectionImageBanner}
+                    <motion.div {...fadeUpConfig} className="max-w-6xl mx-auto space-y-12">
+                        <div className="text-center space-y-4">
+                            <h2 className={"text-3xl sm:text-4xl font-black tracking-tight " + textPrimary}>
+                                Services & Offerings
+                            </h2>
+                        </div>
+                        <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {(data.items || []).map((item, idx) => (
+                                <motion.div key={idx} variants={staggerItem} className={"p-6 sm:p-8 rounded-3xl border shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl " + cardBg + " " + borderClass}>
+                                    <div className="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center mb-6 text-2xl">
+                                        ⚡
+                                    </div>
+                                    <h3 className={"text-xl font-bold mb-3 " + textPrimary}>
+                                        <TextElement value={item.title} placeholder="Service Name" onCommit={(v) => updateArrayItem('items', idx, 'title', v)} />
+                                    </h3>
+                                    <p className={"text-sm leading-relaxed " + textSecondary}>
+                                        <TextElement multiline value={item.description} placeholder="Detailed description of what you offer." onCommit={(v) => updateArrayItem('items', idx, 'description', v)} />
+                                    </p>
+                                </motion.div>
+                            ))}
+                        </motion.div>
+                        {!isPreview && (
+                            <div className="pt-10 w-full px-2">
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); addArrayItem('items', { title: "New Service", description: "Detailed description of what you offer." }); }}
+                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-sm font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
+                                >
+                                    + Add Another Service
+                                </button>
+                            </div>
+                        )}
+                    </motion.div>
+                </div>
+            )}
+
+            {/* 8. TESTIMONIALS SECTION */}
+            {currentType === 'testimonials' && (
+                <div className="py-12 sm:py-24 px-4">
+                    {sectionImageBanner}
+                    <motion.div {...fadeUpConfig} className="max-w-6xl mx-auto space-y-12">
+                        <div className="text-center space-y-4">
+                            <h2 className={"text-3xl sm:text-4xl font-black tracking-tight " + textPrimary}>
+                                Client Testimonials
+                            </h2>
+                        </div>
+                        <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {(data.items || []).map((item, idx) => (
+                                <motion.div key={idx} variants={staggerItem} className={"p-8 rounded-3xl border shadow-sm relative " + cardBg + " " + borderClass}>
+                                    <div className="absolute top-6 right-6 text-6xl text-blue-500/20 font-serif leading-none">
+                                        &quot;
+                                    </div>
+                                    <p className={"text-base sm:text-lg italic leading-relaxed mb-8 relative z-10 " + textSecondary}>
+                                        <TextElement multiline value={item.quote} placeholder="A glowing recommendation from a client or colleague." onCommit={(v) => updateArrayItem('items', idx, 'quote', v)} />
+                                    </p>
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 shadow-inner flex items-center justify-center text-white font-bold text-lg">
+                                            {(item.name || 'U').charAt(0).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <h4 className={"font-bold text-sm sm:text-base " + textPrimary}>
+                                                <TextElement value={item.name} placeholder="Person Name" onCommit={(v) => updateArrayItem('items', idx, 'name', v)} />
+                                            </h4>
+                                            <p className={"text-xs font-medium " + accentText}>
+                                                <TextElement value={item.role} placeholder="Role & Company" onCommit={(v) => updateArrayItem('items', idx, 'role', v)} />
+                                            </p>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </motion.div>
+                        {!isPreview && (
+                            <div className="pt-10 w-full px-2">
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); addArrayItem('items', { quote: "A glowing recommendation.", name: "Client Name", role: "Role & Company" }); }}
+                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-sm font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
+                                >
+                                    + Add Another Testimonial
+                                </button>
+                            </div>
+                        )}
+                    </motion.div>
+                </div>
+            )}
+
+            {/* 9. CERTIFICATIONS SECTION */}
+            {currentType === 'certifications' && (
+                <div className="py-12 sm:py-24 px-4">
+                    {sectionImageBanner}
+                    <motion.div {...fadeUpConfig} className="max-w-4xl mx-auto space-y-12">
+                        <div className="text-center space-y-4">
+                            <h2 className={"text-3xl sm:text-4xl font-black tracking-tight " + textPrimary}>
+                                Certifications & Awards
+                            </h2>
+                        </div>
+                        <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="flex flex-col gap-4">
+                            {(data.items || []).map((item, idx) => (
+                                <motion.div key={idx} variants={staggerItem} className={"flex flex-col sm:flex-row sm:items-center justify-between p-6 rounded-2xl border transition-colors hover:bg-white/5 " + cardBg + " " + borderClass}>
+                                    <div className="flex items-center gap-4 mb-4 sm:mb-0">
+                                        <div className="w-10 h-10 rounded-full bg-amber-500/20 text-amber-500 flex items-center justify-center text-xl shrink-0">
+                                            🏆
+                                        </div>
+                                        <div>
+                                            <h3 className={"text-lg font-bold " + textPrimary}>
+                                                <TextElement value={item.name} placeholder="Certification Name" onCommit={(v) => updateArrayItem('items', idx, 'name', v)} />
+                                            </h3>
+                                            <p className={"text-sm " + textSecondary}>
+                                                <TextElement value={item.issuer} placeholder="Issuing Organization" onCommit={(v) => updateArrayItem('items', idx, 'issuer', v)} />
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className={"text-sm font-semibold sm:text-right " + accentText}>
+                                        <TextElement value={item.date} placeholder="Year/Date" onCommit={(v) => updateArrayItem('items', idx, 'date', v)} />
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </motion.div>
+                        {!isPreview && (
+                            <div className="pt-10 w-full px-2">
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); addArrayItem('items', { name: "New Certification", issuer: "Issuing Organization", date: "Year/Date" }); }}
+                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-sm font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
+                                >
+                                    + Add Another Certification
+                                </button>
+                            </div>
+                        )}
+                    </motion.div>
+                </div>
+            )}
+
+            {/* 10. STATS SECTION */}
+            {currentType === 'stats' && (
+                <div className="py-12 sm:py-20 px-4">
+                    {sectionImageBanner}
+                    <motion.div {...fadeUpConfig} className="max-w-6xl mx-auto">
+                        <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                            {(data.items || []).map((item, idx) => (
+                                <motion.div key={idx} variants={staggerItem} className={"text-center p-8 rounded-3xl border " + cardBg + " " + borderClass}>
+                                    <div className={"text-4xl sm:text-5xl font-black mb-2 " + accentText}>
+                                        <TextElement value={item.metric} placeholder="50+" onCommit={(v) => updateArrayItem('items', idx, 'metric', v)} />
+                                    </div>
+                                    <div className={"text-xs sm:text-sm font-bold uppercase tracking-widest " + textSecondary}>
+                                        <TextElement value={item.label} placeholder="Projects" onCommit={(v) => updateArrayItem('items', idx, 'label', v)} />
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </motion.div>
+                        {!isPreview && (
+                            <div className="pt-10 w-full px-2">
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); addArrayItem('items', { metric: "50+", label: "Projects" }); }}
+                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-sm font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
+                                >
+                                    + Add Another Stat
+                                </button>
+                            </div>
+                        )}
+                    </motion.div>
+                </div>
+            )}
+
+            {/* 11. BLOG SECTION */}
+            {currentType === 'blog' && (
+                <div className="py-12 sm:py-24 px-4">
+                    {sectionImageBanner}
+                    <motion.div {...fadeUpConfig} className="max-w-6xl mx-auto space-y-12">
+                        <div className="text-center space-y-4">
+                            <h2 className={"text-3xl sm:text-4xl font-black tracking-tight " + textPrimary}>
+                                Publications & Articles
+                            </h2>
+                        </div>
+                        <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {(data.articles || []).map((item, idx) => (
+                                <motion.a key={idx} variants={staggerItem} href={item.link ? (item.link.startsWith('http') ? item.link : 'https://'+item.link) : '#'} target="_blank" rel="noopener noreferrer" className={"block p-6 sm:p-8 rounded-3xl border shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl group " + cardBg + " " + borderClass}>
+                                    <div className={"text-xs font-bold uppercase tracking-wider mb-3 flex items-center justify-between " + accentText}>
+                                        <span><TextElement value={item.publisher} placeholder="Publisher" onCommit={(v) => updateArrayItem('articles', idx, 'publisher', v)} /></span>
+                                        <span><TextElement value={item.date} placeholder="Date" onCommit={(v) => updateArrayItem('articles', idx, 'date', v)} /></span>
+                                    </div>
+                                    <h3 className={"text-xl font-bold mb-4 group-hover:text-blue-400 transition-colors " + textPrimary}>
+                                        <TextElement value={item.title} placeholder="Article Title" onCommit={(v) => updateArrayItem('articles', idx, 'title', v)} />
+                                    </h3>
+                                    <div className={"text-sm font-bold flex items-center gap-2 " + textSecondary}>
+                                        Read Article <span>→</span>
+                                    </div>
+                                </motion.a>
+                            ))}
+                        </motion.div>
+                        {!isPreview && (
+                            <div className="pt-10 w-full px-2">
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); addArrayItem('articles', { publisher: "Publisher", date: "Date", title: "Article Title", link: "" }); }}
+                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-sm font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
+                                >
+                                    + Add Another Article
+                                </button>
+                            </div>
+                        )}
+                    </motion.div>
                 </div>
             )}
         </div>

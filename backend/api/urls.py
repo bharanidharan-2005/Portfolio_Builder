@@ -16,6 +16,10 @@ from .views import (
     generate_custom_image,
     serve_media,
     send_workspace_key_view,
+    AICopilotAPIView,
+    AIGithubIngestAPIView,
+    AISEOAnalyticsAPIView,
+    PublicPortfolioAPIView,
 )
 
 urlpatterns = [
@@ -27,6 +31,7 @@ urlpatterns = [
     path('pages/', PageListAPIView.as_view(), name='page-list'),
     path('pages/create/', PageListAPIView.as_view(), name='page-create'),
     path('pages/<int:pk>/', PageDetailAPIView.as_view(), name='page-detail'),
+    path('public-portfolio/<str:username>/', PublicPortfolioAPIView.as_view(), name='public-portfolio'),
     path('sections/<int:pk>/', SectionDetailAPIView.as_view(), name='section-detail'),
     path('sections/<int:pk>/duplicate/', SectionDuplicateAPIView.as_view(), name='section-duplicate'),
     path('sections/reorder/', SectionReorderAPIView.as_view(), name='section-reorder'),
@@ -41,6 +46,9 @@ urlpatterns = [
     # AI Studio Tools
     path('ai-refine/', AISectionRefinementView.as_view(), name='ai-refine'),
     path('ai-logs/', AISessionLogListAPIView.as_view(), name='ai-logs'),
+    path('ai-copilot/', AICopilotAPIView.as_view(), name='ai-copilot'),
+    path('ai-github-ingest/', AIGithubIngestAPIView.as_view(), name='ai-github-ingest'),
+    path('ai-seo-analytics/', AISEOAnalyticsAPIView.as_view(), name='ai-seo-analytics'),
     path('ai-generate-template/', AITemplateGeneratorView.as_view(), name='ai-generate-template'),
     path('portfolio-review/', PortfolioReviewAPIView.as_view(), name='portfolio-review'),
     path('generate-image/', generate_custom_image, name='generate_custom_image'),

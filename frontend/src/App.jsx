@@ -1,23 +1,56 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import LandingPage from "./components/LandingPage.jsx";
 import WorkspaceLayout from "./components/workspace/WorkspaceLayout.jsx";
 
 export default function App() {
-    // Check current URL path
+    // Check current URL path and hostname
     const path = window.location.pathname;
-    const isPreviewRoute = path.startsWith("/preview/");
+    const hostname = window.location.hostname;
+    
+    // Subdomain routing detection (e.g. username.aurabuild.io)
+    const rootDomains = ['aurabuild.io', 'www.aurabuild.io', 'aurabuild.com', 'localhost', '127.0.0.1'];
+    let subdomainUsername = null;
+    
+    if (!rootDomains.includes(hostname)) {
+        const parts = hostname.split('.');
+        // Extract the first part as username if it is not just localhost
+        if (parts.length >= 2 && !rootDomains.includes(parts.slice(-2).join('.'))) {
+           subdomainUsername = parts[0];
+        } else if (hostname.endsWith('.localhost')) {
+           subdomainUsername = parts[0];
+        }
+    }
+    
+    const isSubdomainPreview = !!subdomainUsername;
+    const isPreviewRoute = path.startsWith("/preview/") || isSubdomainPreview;
 
     const [isAuthenticated, setIsAuthenticated] = useState(() => {
-        return localStorage.getItem("aurabuild_access") === "true";
+        const token = localStorage.getItem("aurabuild_access");
+        if (token === "true") {
+            // Cleanup corrupted state from previous bug
+            localStorage.removeItem("aurabuild_access");
+            return false;
+        }
+        return !!token;
     });
 
     const [themeMode, setThemeMode] = useState("light");
 
-    const [userData, setUserData] = useState({
-        name: "Developer",
-        email: "",
-        theme: "modern_glass"
+    const [userData, setUserData] = useState(() => {
+        const saved = localStorage.getItem("aurabuild_user");
+        if (saved) {
+            try { return JSON.parse(saved); } catch (e) {}
+        }
+        return {
+            name: "Developer",
+            email: "",
+            theme: "modern_glass"
+        };
     });
+
+    useEffect(() => {
+        localStorage.setItem("aurabuild_user", JSON.stringify(userData));
+    }, [userData]);
 
     const handleToggleTheme = () => {
         setThemeMode(prev => prev === "light" ? "dark" : "light");
@@ -39,10 +72,10 @@ export default function App() {
     // ROUTE 1: PUBLIC PREVIEW (Bypasses Login)
     // -----------------------------------------------------------------
     if (isPreviewRoute) {
-        // Extract username and token from /preview/username/token
+        // Extract username and token from /preview/username/token OR subdomain
         const pathParts = path.split("/");
-        const publicUsername = pathParts[2];
-        const publicToken = pathParts[3];
+        const publicUsername = isSubdomainPreview ? subdomainUsername : pathParts[2];
+        const publicToken = isSubdomainPreview ? "public" : pathParts[3];
 
         return (
             <div className={`min-h-screen ${themeMode === 'light' ? 'bg-slate-50' : 'bg-[#05050A]'}`}>
@@ -66,7 +99,6 @@ export default function App() {
         return (
             <LandingPage onEnterWorkspace={(data) => {
                 setUserData(prev => ({...prev, ...data }));
-                localStorage.setItem("aurabuild_access", "true");
                 setIsAuthenticated(true);
             }} />
         );

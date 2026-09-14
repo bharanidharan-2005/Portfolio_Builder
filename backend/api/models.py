@@ -49,6 +49,12 @@ class PortfolioSection(models.Model):
         ('skills', 'Skills with Levels'),
         ('projects_grid', 'Featured Projects Grid'),
         ('contact', 'Contact Action Channel'),
+        ('experience', 'Work Experience'),
+        ('services', 'Services & Offerings'),
+        ('testimonials', 'Client Testimonials'),
+        ('certifications', 'Certifications & Awards'),
+        ('stats', 'Key Statistics'),
+        ('blog', 'Blog & Publications'),
     ]
 
     page = models.ForeignKey(PortfolioPage, on_delete=models.CASCADE, related_name="sections")

@@ -1,9 +1,98 @@
+import React, { useState, useEffect, useRef } from 'react';
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Undo2, Redo2, Layers, Sparkles } from 'lucide-react';
 import RenderPageContent from './RenderPageContent';
-import { PORTFOLIO_THEMES } from './themes';
+import { PORTFOLIO_THEMES, PORTFOLIO_FONTS } from './themes';
+
+function ParticleNetwork() {
+    const canvasRef = useRef(null);
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = canvas.parentElement.offsetWidth;
+        let height = canvas.height = canvas.parentElement.offsetHeight;
+        let particles = [];
+        const mouse = { x: null, y: null, radius: 150 };
+
+        const handleMouseMove = (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = e.clientX - rect.left;
+            mouse.y = e.clientY - rect.top;
+        };
+        canvas.addEventListener('mousemove', handleMouseMove);
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 1;
+                this.vy = (Math.random() - 0.5) * 1;
+                this.size = Math.random() * 2 + 1;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+                
+                if (mouse.x) {
+                    const dx = mouse.x - this.x;
+                    const dy = mouse.y - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < mouse.radius) {
+                        const force = (mouse.radius - dist) / mouse.radius;
+                        this.vx -= (dx / dist) * force * 0.2;
+                        this.vy -= (dy / dist) * force * 0.2;
+                    }
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(59, 130, 246, 0.5)';
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+        const animate = () => {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach((p, i) => {
+                p.update();
+                p.draw();
+                for (let j = i; j < particles.length; j++) {
+                    const p2 = particles[j];
+                    const dist = Math.sqrt((p.x - p2.x)**2 + (p.y - p2.y)**2);
+                    if (dist < 120) {
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.strokeStyle = `rgba(59, 130, 246, ${1 - dist/120})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                }
+            });
+            requestAnimationFrame(animate);
+        };
+        animate();
+
+        const handleResize = () => {
+            width = canvas.width = canvas.parentElement.offsetWidth;
+            height = canvas.height = canvas.parentElement.offsetHeight;
+        };
+        window.addEventListener('resize', handleResize);
+        return () => {
+            canvas.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('resize', handleResize);
+        };
+    }, []);
+    return <canvas ref={canvasRef} className="absolute inset-0 z-0 opacity-40 pointer-events-auto" />;
+}
 
 function SortableSection({ section, children }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
@@ -81,15 +170,40 @@ export default function CanvasContainer({
     onInlineEdit,
     themeMode,
     isPreview = false,
+    globalFont = 'font-inter',
     onUndo,
     canUndo,
     onRedo,
     canRedo
 }) {
     const currentTheme = PORTFOLIO_THEMES[portfolioTheme] || {};
+    const currentFontObj = PORTFOLIO_FONTS.find(f => f.id === globalFont) || PORTFOLIO_FONTS[0];
     const displaySections = sections || [];
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+
+    const [scrollRotation, setScrollRotation] = useState(0);
+
+    useEffect(() => {
+        // Try both internal workspace scroll and window scroll (if deployed)
+        const scrollContainer = document.getElementById('workspace-scroll-container') || window;
+        
+        const handleScroll = () => {
+            const currentScroll = scrollContainer.scrollTop || window.scrollY;
+            const maxScroll = (scrollContainer.scrollHeight || document.body.scrollHeight) - (scrollContainer.clientHeight || window.innerHeight);
+            if (maxScroll <= 0) return;
+            
+            // Spin slowly as user scrolls down
+            const rotation = (currentScroll / maxScroll) * 360;
+            setScrollRotation(rotation);
+        };
+
+        scrollContainer.addEventListener('scroll', handleScroll);
+        // Initial setup
+        handleScroll();
+        
+        return () => scrollContainer.removeEventListener('scroll', handleScroll);
+    }, []);
 
     const handleNavClick = (navLabel) => {
         if (!displaySections.length) return;
@@ -123,7 +237,7 @@ export default function CanvasContainer({
             {/* Main Outer Container */}
             <div className={`dark relative w-full shadow-2xl rounded-[2rem] min-h-[700px] transition-all duration-500 ease-out border overflow-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${currentTheme.border || 'border-slate-800/80'} ${
                 globalBgImage ? 'bg-[#0B0C10]/40 backdrop-blur-2xl' : 'bg-[#0B0C10] ' + (currentTheme.bodyBg || '')
-            }`}>
+            }`} style={{ ...currentFontObj.style }}>
                 
                 {/* --- STICKY HISTORY TOOLBAR --- */}
                 {!isPreview && (onUndo || onRedo) && (
@@ -150,21 +264,21 @@ export default function CanvasContainer({
                     </div>
                 )}
                 
-                {/* --- GLOBAL ROTATING PARALLAX BACKGROUND LAYER --- */}
-                {globalBgImage && (
-                    <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                        <div 
-                            className="absolute top-1/2 left-1/2 w-[160%] h-[160%] -translate-x-1/2 -translate-y-1/2 opacity-60 animate-[spin_150s_linear_infinite]"
-                            style={{
-                                backgroundImage: `url('${globalBgImage}')`,
-                                backgroundSize: 'cover',
-                                backgroundPosition: 'center',
-                                filter: 'blur(4px)'
-                            }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#0B0C10]/90 backdrop-blur-[2px]" />
-                    </div>
-                )}
+                {/* --- GLOBAL BACKGROUND LAYER --- */}
+                {globalBgImage === 'PARTICLES_3D' ? (
+                    <ParticleNetwork />
+                ) : globalBgImage ? (
+                    <div 
+                        className="absolute inset-0 z-0 pointer-events-none"
+                        style={{
+                            backgroundImage: `url('${globalBgImage}')`,
+                            backgroundSize: 'cover',
+                            backgroundRepeat: 'no-repeat',
+                            backgroundPosition: 'center',
+                            opacity: 0.3
+                        }}
+                    />
+                ) : null}
 
                 {/* --- MAIN CONTENT WRAPPER --- */}
                 <div className="relative z-10 w-full p-4 sm:p-10 flex flex-col">
@@ -195,7 +309,7 @@ export default function CanvasContainer({
                         <div key={activePage} className="space-y-8 w-full animate-in slide-in-from-bottom-4 duration-700 ease-out">
                             {displaySections.length > 0 ? (
                                 displaySections.map((section) => (
-                                    <div key={section.id} id={`preview-node-block-${section.id}`} className="w-full overflow-hidden">
+                                    <div key={section.id} id={`preview-node-block-${section.id}`} className="w-full overflow-visible">
                                         <RenderPageContent 
                                             section={section} 
                                             portfolioTheme={portfolioTheme} 
@@ -224,12 +338,12 @@ export default function CanvasContainer({
                                                                 e.stopPropagation();
                                                                 setActiveSectionId(section.id);
                                                             }} 
-                                                            className={`relative group rounded-3xl border p-4 sm:p-6 transition-all duration-300 cursor-pointer w-full overflow-hidden ${
+                                                            className={`relative group rounded-3xl border p-4 sm:p-6 transition-all duration-300 cursor-pointer w-full overflow-visible ${
                                                                 isActive
-                                                                    ? 'border-blue-500/50 bg-blue-500/5 shadow-[0_0_30px_rgba(59,130,246,0.15)] ring-1 ring-blue-500/20'
+                                                                    ? 'border-blue-500/50 bg-blue-500/5 shadow-[0_0_30px_rgba(59,130,246,0.15)] ring-1 ring-blue-500/20 z-50'
                                                                     : globalBgImage
-                                                                        ? 'border-white/5 bg-white/[0.02] hover:bg-white/[0.04] backdrop-blur-xl'
-                                                                        : 'border-transparent hover:border-slate-700/50 bg-slate-900/30 hover:bg-slate-900/60'
+                                                                        ? 'border-white/10 bg-black/20 hover:bg-black/30 backdrop-blur-sm z-10'
+                                                                        : 'border-transparent hover:border-slate-700/50 bg-slate-900/30 hover:bg-slate-900/60 z-10'
                                                             } ${isDragging ? 'border-dashed border-blue-400 bg-blue-900/20' : ''}`}
                                                         >
                                                             {/* Floating Action Menu */}

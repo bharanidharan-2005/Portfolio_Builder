@@ -210,7 +210,7 @@ class WorkspaceAPITests(TestCase):
         self.assertEqual(res.status_code, 400)
 
     @patch.dict(os.environ, {'RESEND_API_KEY': ''}, clear=False)
-    @patch('api.views.send_mail')
+    @patch('api.views.utils.send_mail')
     def test_contact_message_delivers_to_owner_inbox(self, mock_send):
         headers = auth_client(self.client, self.owner)
         res = self.client.post(
@@ -393,7 +393,7 @@ class ImageGenerationTests(TestCase):
             )
         )
 
-    @patch('api.views.get_gemini_client')
+    @patch('api.views.ai.get_gemini_client')
     def test_generate_image_success(self, mock_client):
         mock_client.return_value = self._fake_client(image_data=self.png)
         res = self.client.post(
@@ -410,7 +410,7 @@ class ImageGenerationTests(TestCase):
         )
         self.assertEqual(res.status_code, 400)
 
-    @patch('api.views.get_gemini_client')
+    @patch('api.views.ai.get_gemini_client')
     def test_generate_image_no_payload_returns_500(self, mock_client):
         mock_client.return_value = self._fake_client(image_data=None)
         res = self.client.post(
@@ -419,7 +419,7 @@ class ImageGenerationTests(TestCase):
         self.assertEqual(res.status_code, 500)
         self.assertIn('error', res.json())
 
-    @patch('api.views.get_gemini_client')
+    @patch('api.views.ai.get_gemini_client')
     def test_generate_image_rate_limit_returns_friendly_error(self, mock_client):
         err = Exception('HTTP 429: rate limit exceeded')
         mock_client.return_value = self._fake_client(error=err)
@@ -429,7 +429,7 @@ class ImageGenerationTests(TestCase):
         self.assertEqual(res.status_code, 500)
         self.assertIn('rate limit', res.json()['error'].lower())
 
-    @patch('api.views.get_gemini_client')
+    @patch('api.views.ai.get_gemini_client')
     def test_generate_image_imagen_fallback(self, mock_client):
         mock_client.return_value = self._fake_client(image_data=None, imagen_data=self.png)
         res = self.client.post(
@@ -438,7 +438,7 @@ class ImageGenerationTests(TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertTrue(res.json()['success'])
 
-    @patch('api.views.get_gemini_client')
+    @patch('api.views.ai.get_gemini_client')
     def test_generate_image_free_tier_zero_quota(self, mock_client):
         err = Exception('429 RESOURCE_EXHAUSTED quota free_tier_requests limit: 0')
         mock_client.return_value = self._fake_client(error=err)
@@ -448,7 +448,7 @@ class ImageGenerationTests(TestCase):
         self.assertEqual(res.status_code, 500)
         self.assertIn('free tier', res.json()['error'].lower())
 
-    @patch('api.views.get_gemini_client')
+    @patch('api.views.ai.get_gemini_client')
     def test_generate_image_rejects_non_http_imagen_uri(self, mock_client):
         # A non-HTTP scheme from the image service must never be downloaded.
         mock_client.return_value = self._fake_client(image_data=None, imagen_uri='file:///etc/passwd')
@@ -458,7 +458,7 @@ class ImageGenerationTests(TestCase):
         self.assertEqual(res.status_code, 500)
         self.assertIn('invalid', res.json()['error'].lower())
 
-    @patch('api.views.get_gemini_client')
+    @patch('api.views.ai.get_gemini_client')
     def test_generate_image_downloads_http_imagen_uri(self, mock_client):
         from unittest.mock import patch as _patch
         mock_client.return_value = self._fake_client(image_data=None, imagen_uri='https://cdn.example/img.png')

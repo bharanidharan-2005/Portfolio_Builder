@@ -6,7 +6,8 @@ import {
     GraduationCap, Mail, Crosshair, BarChart, 
     Share2, Send, Copy, Edit3, Download
 } from "lucide-react";
-import { PORTFOLIO_THEMES } from "../../canvas/themes.js";
+import { PORTFOLIO_THEMES, PORTFOLIO_FONTS } from "../../canvas/themes.js";
+import { API } from "../../api";
 
 const BROAD_JOB_CONCEPTS = [
     "React", "Node.js", "Python", "Java", "Django", "Flask", "AWS", "Docker", 
@@ -20,6 +21,22 @@ const BROAD_JOB_CONCEPTS = [
     "Problem Solving", "Troubleshooting", "Debugging", "Deployment", "Automation"
 ];
 
+const UNSPLASH_GALLERY = [
+    { id: 'particles_3d', url: 'PARTICLES_3D', label: '✨ Interactive Particles' },
+    { id: 'tech1', url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070', label: 'Tech Nodes' },
+    { id: 'tech2', url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070', label: 'Circuit Board' },
+    { id: 'space1', url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072', label: 'Global Network' },
+    { id: 'code1', url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=2070', label: 'Matrix Code' },
+    { id: 'abs1', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2064', label: 'Liquid Dark' },
+    { id: 'abs2', url: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?q=80&w=2070', label: '3D Geometry' },
+    { id: 'abs3', url: 'https://images.unsplash.com/photo-1634152962476-4b8a00e1915c?q=80&w=2070', label: 'Dark Glass' },
+    { id: 'neon1', url: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070', label: 'Cyberpunk Server' },
+    { id: 'abs4', url: 'https://images.unsplash.com/photo-1604871000636-074fa5117945?q=80&w=2070', label: 'Dark Waves' },
+    { id: 'min1', url: 'https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?q=80&w=2074', label: 'Minimal Dark' },
+    { id: 'abs5', url: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?q=80&w=2070', label: 'Blue Science' },
+    { id: 'nat1', url: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=2070', label: 'Starry Mountains' }
+];
+
 export default function RightSidebar({ 
     activeSectionId,
     themeMode, 
@@ -28,6 +45,8 @@ export default function RightSidebar({
     setTerminalLogs, 
     activeTheme, 
     onThemeChange,
+    activeFont,
+    onUpdateFont,
     sections = [],
     onUpdateSectionContent,
     onUpdateGlobalBg,
@@ -54,6 +73,7 @@ export default function RightSidebar({
     const [pitchTab, setPitchTab] = useState("seo");
     const [pitchTarget, setPitchTarget] = useState("");
     const [generatedPitchText, setGeneratedPitchText] = useState("");
+    const [seoData, setSeoData] = useState(null);
     
     // Image Studio States
     const [imageTab, setImageTab] = useState("ai");
@@ -407,6 +427,24 @@ export default function RightSidebar({
         }
     };
 
+    const handleGenerateSEO = async () => {
+        setIsProcessing(true);
+        setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Analyzing canvas to generate SEO tags and Analytics...` }]);
+        try {
+            const API = (await import('../../api')).default;
+            const res = await API.post('/ai-seo-analytics/', { sections: sections });
+            if (res.data.success) {
+                setSeoData(res.data.data);
+                setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] SEO and Analytics generated successfully.` }]);
+            }
+        } catch (e) {
+            console.error(e);
+            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Failed to generate SEO data.` }]);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     const handleGeneratePitch = async () => {
         if (!pitchTarget.trim()) return;
         setIsProcessing(true);
@@ -457,12 +495,40 @@ export default function RightSidebar({
         const userMsg = chatInput;
         setChatInput(""); 
         setTerminalLogs(prev => [...prev, { type: "user", text: `> ${userMsg}` }]);
+        setIsProcessing(true);
 
         try {
-            await new Promise(resolve => setTimeout(resolve, 600)); 
-            setTerminalLogs(prev => [...prev, { type: "system", text: "Studio AI: Select a tool from the panel above to mutate canvas sections directly." }]);
+            const response = await API.post("/ai-copilot/", {
+                prompt: userMsg,
+                canvas_state: sections
+            });
+            
+            const data = response.data;
+            if (data.success && data.action) {
+                const action = data.action;
+                setTerminalLogs(prev => [...prev, { type: "system", text: `Co-Pilot: ${action.message || "Executing..."}` }]);
+                
+                if (action.action === "update_theme" && onThemeChange) {
+                    onThemeChange(action.theme);
+                } else if (action.action === "update_section" && onUpdateSectionContent) {
+                    const targetSec = sections.find(s => s.section_type === action.section_type);
+                    if (targetSec && action.updates) {
+                        Object.entries(action.updates).forEach(([k, v]) => {
+                            onUpdateSectionContent(targetSec.id, k, v);
+                        });
+                    } else if (!targetSec) {
+                        setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Section of type '${action.section_type}' not found on canvas.` }]);
+                    }
+                } else if (action.action === "add_section" && onAddSection) {
+                    onAddSection(action.section_type);
+                }
+            } else {
+                setTerminalLogs(prev => [...prev, { type: "system", text: `Co-Pilot: I couldn't process that.` }]);
+            }
         } catch (error) {
-            setTerminalLogs(prev => [...prev, { type: "error", text: "[ERROR] AI Chat disconnected." }]);
+            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Copilot error: ${error.response?.data?.error || error.message}` }]);
+        } finally {
+            setIsProcessing(false);
         }
     };
 
@@ -502,7 +568,7 @@ export default function RightSidebar({
             </div>
 
             <div className={`flex rounded-xl p-1 border shadow-inner ${isLight ? 'bg-slate-100/50 border-slate-200' : 'bg-slate-900/80 border-slate-800'}`}>
-                {["generate", "improve", "review"].map((tab) => (
+                {["generate", "improve", "ingest", "review"].map((tab) => (
                     <button
                         key={tab}
                         onClick={() => setGenTab(tab)}
@@ -585,6 +651,65 @@ export default function RightSidebar({
                     </button>
                 </div>
             )}
+
+            {genTab === "ingest" && (
+                <div className="space-y-4 animate-in slide-in-from-right-2 duration-300">
+                    <div className="space-y-2">
+                        <label className={`block text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}> GitHub Auto-Ingestion </label>
+                        <p className={`text-[10px] leading-relaxed mb-4 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}> Enter your GitHub username to automatically fetch repositories and populate your Projects and Skills sections. Make sure those sections exist on your canvas first!</p>
+                        <input 
+                            type="text" 
+                            id="gh-username"
+                            placeholder="e.g. torvalds"
+                            className={`w-full text-xs p-3.5 rounded-xl border outline-none transition-all duration-300 focus:ring-2 focus:ring-blue-500/50 ${isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-[#15161D] border-slate-800 text-slate-200'}`}
+                        />
+                    </div>
+                    <button
+                        disabled={isProcessing}
+                        onClick={async () => {
+                            const username = document.getElementById('gh-username')?.value;
+                            if (!username) return;
+                            setIsProcessing(true);
+                            setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Scraping GitHub for ${username}...` }]);
+                            try {
+                                const res = await API.post('/ai-github-ingest/', { username });
+                                if (res.data.success) {
+                                    const { skills, projects } = res.data.data;
+                                    
+                                    const skillsSec = sections.find(s => s.section_type === 'skills');
+                                    const projSec = sections.find(s => s.section_type === 'projects_grid');
+
+                                    const formattedSkills = (skills || []).map(skill => ({ name: skill, level: 80 }));
+                                    const formattedProjects = (projects || []).map(p => ({
+                                        title: p.title || "",
+                                        desc: p.description || p.desc || "",
+                                        projectUrl: p.demo_link || p.projectUrl || ""
+                                    }));
+                                    
+                                    if (skillsSec && onUpdateSectionContent) onUpdateSectionContent(skillsSec.id, 'items', formattedSkills);
+                                    if (projSec && onUpdateSectionContent) onUpdateSectionContent(projSec.id, 'projects', formattedProjects);
+                                    
+                                    if (!skillsSec || !projSec) {
+                                        setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Data fetched! Please add a Skills or Projects block to see the data.` }]);
+                                    } else {
+                                        setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Ingested ${projects.length} projects and ${skills.length} skills into canvas!` }]);
+                                    }
+                                }
+                            } catch (e) {
+                                setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Ingestion failed: ${e.response?.data?.error || e.message}` }]);
+                            } finally {
+                                setIsProcessing(false);
+                            }
+                        }}
+                        className={`w-full py-3.5 rounded-xl text-xs font-bold transition-all duration-300 shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-95 ${
+                            isProcessing ? 'bg-blue-900/30 text-blue-300/50 cursor-not-allowed border border-blue-900/20 shadow-none' : 'bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white shadow-blue-900/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]'
+                        }`}
+                    >
+                        {isProcessing ? <><Loader2 className="w-4 h-4 animate-spin" /> Scraping...</> : <><Globe className="w-4 h-4" /> Sync GitHub Data</>}
+                    </button>
+                </div>
+            )}
+
 
             {genTab === "review" && (
                 <div className="space-y-3 animate-in slide-in-from-left-2 duration-300">
@@ -759,6 +884,33 @@ export default function RightSidebar({
                     })}
                 </div>
             </div>
+
+            <div className="pt-4 space-y-3">
+                <label className={`block text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}> Typography Engine </label>
+                <div className="grid grid-cols-1 gap-3 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
+                    {PORTFOLIO_FONTS && PORTFOLIO_FONTS.map((font) => {
+                        const isSelected = activeFont === font.id;
+                        return (
+                            <button
+                                key={font.id}
+                                onClick={() => {
+                                    if (onUpdateFont) onUpdateFont(font.id);
+                                    setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Applied ${font.name} typography.` }]);
+                                }}
+                                className={`w-full flex items-center justify-between p-4 rounded-2xl border text-xs font-bold text-left transition-all duration-300 cursor-pointer group hover:-translate-y-0.5 ${
+                                    isSelected 
+                                        ? (isLight ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-400 text-blue-700 shadow-lg ring-2 ring-blue-400/20' : 'bg-gradient-to-r from-blue-900/20 to-indigo-900/20 border-blue-500 text-blue-400 ring-2 ring-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.15)]') 
+                                        : (isLight ? 'bg-white border-slate-200 text-slate-700 hover:border-blue-300 hover:shadow-md' : 'bg-[#15161D] border-slate-800 text-slate-300 hover:border-blue-500/50 hover:bg-slate-800 hover:shadow-lg')
+                                }`}
+                                style={font.style}
+                            >
+                                <span className="tracking-wide text-sm"> {font.name} </span> 
+                                {isSelected && <CheckCircle2 className="w-4 h-4 shrink-0 animate-in zoom-in" />}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
         </div>
     );
 
@@ -789,12 +941,43 @@ export default function RightSidebar({
 
             {pitchTab === "seo" && (
                 <div className="space-y-4 animate-in slide-in-from-bottom-2 duration-300">
-                    <p className={`text-[11px] leading-relaxed mb-4 p-3 rounded-xl border ${isLight ? 'text-indigo-800 bg-indigo-50 border-indigo-200' : 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20'}`}>
-                        Auto-generate meta descriptions and OpenGraph tags extracted from canvas content.
-                    </p>
-                    <button onClick={() => executeAiAction("SEO Tag Generator", "[SUCCESS] Derived SEO tags from your active canvas blocks.")} className="w-full py-3.5 rounded-xl bg-gradient-to-b from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] shadow-indigo-900/20 cursor-pointer flex items-center justify-center gap-2 transition-all duration-300 active:scale-95 hover:-translate-y-0.5">
-                        <Share2 className="w-4 h-4" /> Generate SEO Setup
-                    </button>
+                    {!seoData ? (
+                        <>
+                            <p className={`text-[11px] leading-relaxed mb-4 p-3 rounded-xl border ${isLight ? 'text-indigo-800 bg-indigo-50 border-indigo-200' : 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20'}`}>
+                                Auto-generate meta descriptions, OpenGraph tags, and layout analytics extracted from your canvas content.
+                            </p>
+                            <button disabled={isProcessing} onClick={handleGenerateSEO} className={`w-full py-3.5 rounded-xl text-white text-xs font-bold shadow-lg transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 ${isProcessing ? 'bg-indigo-900/30 text-indigo-300/50 cursor-not-allowed shadow-none' : 'bg-gradient-to-b from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] shadow-indigo-900/20 hover:-translate-y-0.5'}`}>
+                                {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />} Generate SEO Setup
+                            </button>
+                        </>
+                    ) : (
+                        <div className="space-y-4">
+                            <div className={`p-3 rounded-xl border ${isLight ? 'bg-white border-slate-200' : 'bg-[#15161D] border-slate-800'}`}>
+                                <h4 className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Title Tag</h4>
+                                <p className={`text-xs ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>{seoData.title_tag}</p>
+                            </div>
+                            <div className={`p-3 rounded-xl border ${isLight ? 'bg-white border-slate-200' : 'bg-[#15161D] border-slate-800'}`}>
+                                <h4 className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Meta Description</h4>
+                                <p className={`text-xs leading-relaxed ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>{seoData.meta_description}</p>
+                            </div>
+                            {seoData.analytics_suggestions && (
+                                <div className={`p-3 rounded-xl border ${isLight ? 'bg-indigo-50/50 border-indigo-200' : 'bg-indigo-500/10 border-indigo-500/20'}`}>
+                                    <h4 className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${isLight ? 'text-indigo-600' : 'text-indigo-400'}`}>UX Analytics Report</h4>
+                                    <ul className="space-y-2">
+                                        {seoData.analytics_suggestions.map((suggestion, idx) => (
+                                            <li key={idx} className={`text-xs flex gap-2 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
+                                                <span className="text-indigo-500 font-bold">•</span>
+                                                {suggestion}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                            <button onClick={() => setSeoData(null)} className={`w-full py-2 rounded-lg text-xs font-bold transition-colors ${isLight ? 'text-slate-500 hover:bg-slate-100' : 'text-slate-400 hover:bg-white/5'}`}>
+                                Regenerate
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -851,8 +1034,9 @@ export default function RightSidebar({
 
             <div className={`flex rounded-xl p-1 border shadow-inner ${isLight ? 'bg-slate-100/50 border-slate-200' : 'bg-slate-900/80 border-slate-800'}`}>
                 {[
-                    { id: "ai", label: "AI Generator" },
-                    { id: "upload", label: "Local Upload" }
+                    { id: "ai", label: "AI Gen" },
+                    { id: "upload", label: "Upload" },
+                    { id: "gallery", label: "Gallery" }
                 ].map((tab) => (
                     <button
                         key={tab.id}
@@ -899,22 +1083,23 @@ export default function RightSidebar({
 
                     <button
                         disabled={isProcessing}
-                        onClick={() => {
+                        onClick={async () => {
                             if (!imagePrompt.trim()) return setTerminalLogs(prev => [...prev, { type: "error", text: "[ERROR] Enter prompt." }]);
                             setIsProcessing(true);
                             
-                            const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?width=1200&height=500&nologo=true`;
-                            const img = new Image();
-                            img.src = url;
-                            
-                            img.onload = () => { 
-                                setGeneratedImageUrl(url); 
-                                setIsProcessing(false); 
-                                setTerminalLogs(prev => [...prev, { type: "success", text: "[SUCCESS] Image generated!" }]); 
-                            };
-                            img.onerror = () => {
-                                setIsProcessing(false); 
-                                setTerminalLogs(prev => [...prev, { type: "error", text: "[ERROR] Image generation failed." }]); 
+                            try {
+                                const response = await API.post("/generate-image/", { prompt: imagePrompt });
+                                if (response.data && response.data.success) {
+                                    setGeneratedImageUrl(response.data.image_url);
+                                    setTerminalLogs(prev => [...prev, { type: "success", text: "[SUCCESS] Image generated successfully!" }]);
+                                } else {
+                                    setTerminalLogs(prev => [...prev, { type: "error", text: "[ERROR] Image generation returned no url." }]);
+                                }
+                            } catch (error) {
+                                const errorMsg = error.response?.data?.error || "Image generation failed.";
+                                setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] ${errorMsg}` }]);
+                            } finally {
+                                setIsProcessing(false);
                             }
                         }}
                         className={`w-full py-3.5 rounded-xl text-xs font-bold transition-all duration-300 shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-95 ${
@@ -936,7 +1121,7 @@ export default function RightSidebar({
                         </div>
                     )}
                 </div>
-            ) : (
+            ) : imageTab === "upload" ? (
                 <div className="space-y-4 animate-in slide-in-from-right-2 duration-300">
                     <div className="space-y-2">
                         <label className={`block text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}> Upload Local Image </label>
@@ -960,7 +1145,26 @@ export default function RightSidebar({
                         </div>
                     )}
                 </div>
-            )}
+            ) : imageTab === "gallery" ? (
+                <div className="space-y-4 animate-in slide-in-from-right-2 duration-300">
+                    <label className={`block text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}> Curated Backgrounds </label>
+                    <div className="grid grid-cols-2 gap-2 h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                        {UNSPLASH_GALLERY.map((img) => (
+                            <div 
+                                key={img.id} 
+                                onClick={() => handleApplyImage(img.url)}
+                                className="relative group/gal overflow-hidden rounded-xl border border-slate-700/30 cursor-pointer bg-slate-900"
+                            >
+                                <img src={img.url} alt={img.label} className="w-full h-24 object-cover transition-transform duration-500 group-hover/gal:scale-110" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover/gal:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-2">
+                                    <span className="text-white text-[10px] font-bold truncate">{img.label}</span>
+                                    <span className="text-emerald-400 text-[9px] font-bold uppercase mt-0.5">Apply</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ) : null}
         </div>
     );
 
@@ -1048,9 +1252,15 @@ export default function RightSidebar({
         const quickInsertModules = [
             { label: "Hero Header", type: "hero", icon: "✨" },
             { label: "About Bio", type: "about", icon: "👤" },
+            { label: "Experience", type: "experience", icon: "💼" },
             { label: "Education", type: "education", icon: "🎓" },
             { label: "Skills Map", type: "skills", icon: "⚡" },
             { label: "Project Grid", type: "projects_grid", icon: "🚀" },
+            { label: "Services", type: "services", icon: "🛠️" },
+            { label: "Testimonials", type: "testimonials", icon: "💬" },
+            { label: "Certifications", type: "certifications", icon: "📜" },
+            { label: "Key Stats", type: "stats", icon: "📊" },
+            { label: "Blog", type: "blog", icon: "📝" },
             { label: "Contact Form", type: "contact", icon: "✉️" },
         ];
 
