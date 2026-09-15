@@ -40,12 +40,13 @@ export default function App() {
     const hostname = window.location.hostname;
     
     // Subdomain routing detection (e.g. username.aurabuild.io)
-    const rootDomains = ['aurabuild.io', 'www.aurabuild.io', 'aurabuild.com', 'localhost', '127.0.0.1'];
+    const rootDomains = ['aurabuild.io', 'www.aurabuild.io', 'aurabuild.com', 'localhost', '127.0.0.1', 'vercel.app', 'onrender.com', 'netlify.app'];
     let subdomainUsername = null;
     
     if (!rootDomains.includes(hostname)) {
         const parts = hostname.split('.');
         // Extract the first part as username if it is not just localhost
+        // If the domain is something like project-name.vercel.app, parts.slice(-2) is vercel.app
         if (parts.length >= 2 && !rootDomains.includes(parts.slice(-2).join('.'))) {
            subdomainUsername = parts[0];
         } else if (hostname.endsWith('.localhost')) {
