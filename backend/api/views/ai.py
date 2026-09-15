@@ -69,8 +69,9 @@ def generate_text_with_fallback(client, prompt):
     traffic, rate-limit, or missing-model error to guarantee a successful parse.
     """
     models_to_try = [
-        TEXT_MODEL,               # Your primary model
-        'gemini-1.5-pro',         # Heavy-duty fallback
+        TEXT_MODEL,                     # Your primary model
+        'gemini-1.5-pro-latest',        # Heavy-duty fallback (Google AI Studio alias)
+        'gemini-2.0-flash',             # Next-gen fallback
     ]
     
     last_error = None
@@ -497,7 +498,8 @@ class PortfolioReviewAPIView(APIView):
 # 10. CUSTOM IMAGE GENERATION
 # -----------------------------------------------------------------
 IMAGE_MODELS = [
-    'gemini-1.5-pro',
+    'gemini-1.5-pro-latest',
+    'gemini-2.0-flash',
     'gemini-2.5-flash',
 ]
 
