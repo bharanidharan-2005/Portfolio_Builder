@@ -48,7 +48,8 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
         } else {
             localStorage.removeItem(`aurabuild_bg_${userData?.name || 'default'}`);
         }
-    }, [globalBg, userData?.name, setUserData]);
+        if (!isPublicPreview) API.patch('portfolio-settings/', { globalBg: globalBg || "" }).catch(() => {});
+    }, [globalBg, userData?.name, setUserData, isPublicPreview]);
 
     // --- GLOBAL FONT STATE ---
     const [globalFont, setGlobalFont] = useState(() => {
@@ -60,7 +61,15 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
             localStorage.setItem(`aurabuild_font_${userData?.name || 'default'}`, globalFont);
             if (setUserData) setUserData(prev => ({ ...prev, globalFont }));
         }
-    }, [globalFont, userData?.name, setUserData]);
+        if (!isPublicPreview) API.patch('portfolio-settings/', { globalFont }).catch(() => {});
+    }, [globalFont, userData?.name, setUserData, isPublicPreview]);
+    
+    // --- Sync Theme to Backend ---
+    useEffect(() => {
+        if (userData?.theme && !isPublicPreview) {
+            API.patch('portfolio-settings/', { theme: userData.theme }).catch(() => {});
+        }
+    }, [userData?.theme, isPublicPreview]);
     
     // --- ADVANCED Preview Modal State (Renamed to avoid conflict with public preview prop) ---
     const [isInternalPreviewOpen, setIsInternalPreviewOpen] = useState(false);
@@ -84,18 +93,32 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
     useEffect(() => {
         const loadWorkspace = async () => {
             try {
-                let res;
+                let pagesData = [];
                 if (isPublicPreview && userData?.name) {
                     const cleanUsername = userData.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-                    res = await API.get(`public-portfolio/${cleanUsername}/`);
-                    // The public API returns a flat list of pages directly, just like 'pages/'
+                    const res = await API.get(`public-portfolio/${cleanUsername}/`);
+                    pagesData = res.data.pages || res.data;
+                    if (res.data.settings) {
+                        setGlobalBg(res.data.settings.globalBg || null);
+                        setGlobalFont(res.data.settings.globalFont || 'font-inter');
+                        if (setUserData && res.data.settings.theme) setUserData(prev => ({...prev, theme: res.data.settings.theme}));
+                    }
                 } else {
-                    res = await API.get('pages/');
+                    const res = await API.get('pages/');
+                    pagesData = res.data;
+                    try {
+                        const settingsRes = await API.get('portfolio-settings/');
+                        if (settingsRes.data) {
+                            setGlobalBg(settingsRes.data.globalBg || null);
+                            setGlobalFont(settingsRes.data.globalFont || 'font-inter');
+                            if (setUserData && settingsRes.data.theme) setUserData(prev => ({...prev, theme: settingsRes.data.theme}));
+                        }
+                    } catch (e) {}
                 }
                 
-                if (res.data && res.data.length > 0) {
-                    setPages(res.data);
-                    const firstPage = res.data[0];
+                if (pagesData && pagesData.length > 0) {
+                    setPages(pagesData);
+                    const firstPage = pagesData[0];
                     setActivePage(firstPage.name);
                     setSections(firstPage.sections || []);
                     lastLoadedPage.current = firstPage.name;

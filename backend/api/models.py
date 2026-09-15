@@ -8,6 +8,9 @@ class Portfolio(models.Model):
     title = models.CharField(max_length=200)
     owner = models.ForeignKey('auth.User', on_delete=models.CASCADE, null=True, blank=True)
     owner_name = models.CharField(max_length=100)
+    global_theme = models.CharField(max_length=50, default="modern_glass", blank=True)
+    global_bg_image = models.TextField(blank=True, null=True)
+    global_font = models.CharField(max_length=50, default="font-inter", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

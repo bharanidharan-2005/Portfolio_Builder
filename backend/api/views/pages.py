@@ -162,3 +162,27 @@ class PageDetailAPIView(APIView):
         return Response({'success': True}, status=status.HTTP_204_NO_CONTENT)
 
 # -----------------------------------------------------------------
+
+class PortfolioSettingsAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = []
+
+    def get(self, request):
+        portfolio = ensure_user_workspace(request)
+        return Response({
+            'globalBg': portfolio.global_bg_image,
+            'theme': portfolio.global_theme,
+            'globalFont': portfolio.global_font,
+        }, status=status.HTTP_200_OK)
+
+    def patch(self, request):
+        portfolio = ensure_user_workspace(request)
+        data = request.data
+        if 'globalBg' in data:
+            portfolio.global_bg_image = data['globalBg']
+        if 'theme' in data:
+            portfolio.global_theme = data['theme']
+        if 'globalFont' in data:
+            portfolio.global_font = data['globalFont']
+        portfolio.save()
+        return Response({'success': True}, status=status.HTTP_200_OK)

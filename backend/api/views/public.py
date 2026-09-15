@@ -31,4 +31,12 @@ class PublicPortfolioAPIView(APIView):
             
         pages = PortfolioPage.objects.filter(portfolio=matched_portfolio).order_by('order')
         data = PortfolioPageSerializer(pages, many=True).data
-        return Response(data, status=status.HTTP_200_OK)
+        
+        return Response({
+            'settings': {
+                'globalBg': matched_portfolio.global_bg_image,
+                'theme': matched_portfolio.global_theme,
+                'globalFont': matched_portfolio.global_font,
+            },
+            'pages': data
+        }, status=status.HTTP_200_OK)
