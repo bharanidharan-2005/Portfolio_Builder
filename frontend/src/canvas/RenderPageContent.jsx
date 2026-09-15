@@ -851,11 +851,14 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                 <div className="py-12 sm:py-24 px-4">
                     {sectionImageBanner}
                     <motion.div {...fadeUpConfig} className="max-w-4xl mx-auto space-y-12">
-                        <div className="text-center space-y-4">
-                            <h2 className={"text-3xl sm:text-4xl font-black tracking-tight " + textPrimary}>
-                                Work Experience
-                            </h2>
-                        </div>
+                        <motion.h2 
+                            initial={{ opacity: 0, y: -15 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: false, amount: 0.1 }}
+                            className={`text-sm uppercase font-black tracking-widest text-center mb-12 ${accentText}`}
+                        >
+                            Work Experience
+                        </motion.h2>
                         <div className="relative border-l-2 border-slate-700/30 ml-3 md:ml-0 md:space-y-12 space-y-8">
                             {(data.items || []).map((item, idx) => (
                                 <motion.div key={idx} variants={staggerItem} className="relative pl-6 md:pl-8">
@@ -897,11 +900,14 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                 <div className="py-12 sm:py-24 px-4">
                     {sectionImageBanner}
                     <motion.div {...fadeUpConfig} className="max-w-6xl mx-auto space-y-12">
-                        <div className="text-center space-y-4">
-                            <h2 className={"text-3xl sm:text-4xl font-black tracking-tight " + textPrimary}>
-                                Services & Offerings
-                            </h2>
-                        </div>
+                        <motion.h2 
+                            initial={{ opacity: 0, y: -15 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: false, amount: 0.1 }}
+                            className={`text-sm uppercase font-black tracking-widest text-center mb-12 ${accentText}`}
+                        >
+                            Services & Offerings
+                        </motion.h2>
                         <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {(data.items || []).map((item, idx) => (
                                 <motion.div key={idx} variants={staggerItem} className={"p-6 sm:p-8 rounded-3xl border shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl " + cardBg + " " + borderClass}>
@@ -936,11 +942,14 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                 <div className="py-12 sm:py-24 px-4">
                     {sectionImageBanner}
                     <motion.div {...fadeUpConfig} className="max-w-6xl mx-auto space-y-12">
-                        <div className="text-center space-y-4">
-                            <h2 className={"text-3xl sm:text-4xl font-black tracking-tight " + textPrimary}>
-                                Client Testimonials
-                            </h2>
-                        </div>
+                        <motion.h2 
+                            initial={{ opacity: 0, y: -15 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: false, amount: 0.1 }}
+                            className={`text-sm uppercase font-black tracking-widest text-center mb-12 ${accentText}`}
+                        >
+                            Client Testimonials
+                        </motion.h2>
                         <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {(data.items || []).map((item, idx) => (
                                 <motion.div key={idx} variants={staggerItem} className={"p-8 rounded-3xl border shadow-sm relative " + cardBg + " " + borderClass}>
@@ -985,11 +994,14 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                 <div className="py-12 sm:py-24 px-4">
                     {sectionImageBanner}
                     <motion.div {...fadeUpConfig} className="max-w-4xl mx-auto space-y-12">
-                        <div className="text-center space-y-4">
-                            <h2 className={"text-3xl sm:text-4xl font-black tracking-tight " + textPrimary}>
-                                Certifications & Awards
-                            </h2>
-                        </div>
+                        <motion.h2 
+                            initial={{ opacity: 0, y: -15 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: false, amount: 0.1 }}
+                            className={`text-sm uppercase font-black tracking-widest text-center mb-12 ${accentText}`}
+                        >
+                            Certifications & Awards
+                        </motion.h2>
                         <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="flex flex-col gap-4">
                             {(data.items || []).map((item, idx) => (
                                 <motion.div key={idx} variants={staggerItem} className={"flex flex-col sm:flex-row sm:items-center justify-between p-6 rounded-2xl border transition-colors hover:bg-white/5 " + cardBg + " " + borderClass}>
@@ -1062,11 +1074,14 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                 <div className="py-12 sm:py-24 px-4">
                     {sectionImageBanner}
                     <motion.div {...fadeUpConfig} className="max-w-6xl mx-auto space-y-12">
-                        <div className="text-center space-y-4">
-                            <h2 className={"text-3xl sm:text-4xl font-black tracking-tight " + textPrimary}>
-                                Publications & Articles
-                            </h2>
-                        </div>
+                        <motion.h2 
+                            initial={{ opacity: 0, y: -15 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: false, amount: 0.1 }}
+                            className={`text-sm uppercase font-black tracking-widest text-center mb-12 ${accentText}`}
+                        >
+                            Publications & Articles
+                        </motion.h2>
                         <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {(data.articles || []).map((item, idx) => (
                                 <motion.a key={idx} variants={staggerItem} href={item.link ? (item.link.startsWith('http') ? item.link : 'https://'+item.link) : '#'} target="_blank" rel="noopener noreferrer" className={"block p-6 sm:p-8 rounded-3xl border shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl group " + cardBg + " " + borderClass}>

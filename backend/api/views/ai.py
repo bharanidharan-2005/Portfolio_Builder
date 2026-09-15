@@ -33,7 +33,7 @@ from .utils import *
 # -----------------------------------------------------------------
 # 1. GEMINI CLIENT HELPERS
 # -----------------------------------------------------------------
-TEXT_MODEL = 'gemini-3.6-flash'
+TEXT_MODEL = 'gemini-1.5-flash'
 
 class AICreditThrottle(UserRateThrottle):
     scope = 'ai'
@@ -69,10 +69,10 @@ def generate_text_with_fallback(client, prompt):
     """
     models_to_try = [
         TEXT_MODEL,               # Your primary model
-        'gemini-1.5-flash',       # Extremely fast and rarely overloaded
+        'gemini-2.5-flash',       # Try newer model
         'gemini-1.5-pro',         # Heavy-duty fallback
+        'gemini-1.5-flash-8b',    # Extremely fast and rarely overloaded
         'gemini-pro',             # Legacy stable model
-        'gemini-3.1-flash-lite'   # Alternate fallback
     ]
     
     last_error = None
@@ -524,8 +524,8 @@ class PortfolioReviewAPIView(APIView):
 # 10. CUSTOM IMAGE GENERATION
 # -----------------------------------------------------------------
 IMAGE_MODELS = [
-    'gemini-3.6-flash-image',
-    'gemini-3.1-flash-lite-image',
+    'gemini-1.5-pro',
+    'gemini-2.5-flash',
 ]
 
 IMAGEN_MODEL = 'imagen-3.0-generate-002'
