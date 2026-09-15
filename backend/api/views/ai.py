@@ -69,9 +69,7 @@ def generate_text_with_fallback(client, prompt):
     """
     models_to_try = [
         TEXT_MODEL,               # Your primary model
-        'gemini-2.5-flash',       # Try newer model
         'gemini-1.5-pro',         # Heavy-duty fallback
-        'gemini-1.5-flash-8b',    # Extremely fast and rarely overloaded
     ]
     
     last_error = None
