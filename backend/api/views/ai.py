@@ -26,6 +26,7 @@ from ..serializers import AISessionLogSerializer, PortfolioPageSerializer, Portf
 from rest_framework.permissions import AllowAny
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
+from ..tasks import process_ai_refinement_task
 
 logger = logging.getLogger(__name__)
 
@@ -150,52 +151,27 @@ class AISectionRefinementView(APIView):
                 current = section.content_data
 
         try:
-            client = get_gemini_client()
-            sys_prompt = (
-                "You are an expert portfolio copywriter. Return ONLY valid JSON matching the "
-                "content_data schema for the given section type. Keys per section_type:\n"
-                "- hero: heading, subheading, liveUrl, designUrl, backgroundImage, "
-                "linkedin, github (linkedin/github as full https:// URLs)\n"
-                "- about: bio\n"
-                "- education: schools (array of {institution, degree, years, score})\n"
-                "- skills: items (array of {name, level (integer percent)})\n"
-                "- projects_grid: title, projects (array of {title, desc, tags, projectUrl})\n"
-                "- contact: text, email, phone, linkedin, github (full https:// URLs)\n"
-            )
-            full = f"{sys_prompt}\nSection type: {section_type}\nCurrent content: {json.dumps(current)}\nInstruction: {prompt}"
+            # Dispatch Celery Task for Asynchronous execution
+            user_id = get_user_filter(request).id if get_user_filter(request) else None
             
-            # Using the new robust fallback handler
-            res = generate_text_with_fallback(client, full)
-            new_data = extract_clean_json_payload(res.text)
-            
-            if not isinstance(new_data, dict):
-                new_data = {}
-
-            if section:
-                section.content_data = new_data
-                section.save()
-
-            log = AISessionLog.objects.create(
-                user=get_user_filter(request),
-                change_type='Refinement',
-                description=f"Refined '{section_type}' section: {prompt[:120]}",
-                status='applied',
+            task = process_ai_refinement_task.delay(
+                section_id=section.id if section else None,
+                prompt=prompt,
+                section_type=section_type,
+                current_content=current,
+                user_id=user_id
             )
-            return Response({'success': True, 'content_data': new_data, 'log': log.to_frontend_dict()})
-        except AIKeyMissingError as e:
-            logger.error("AI key missing during refinement: %s", e)
-            return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            
+            return Response({
+                'success': True, 
+                'message': 'AI refinement task queued successfully.',
+                'task_id': task.id
+            }, status=status.HTTP_202_ACCEPTED)
+            
         except Exception as e:
             error_message = str(e)
-            logger.error("AI refinement failed: %s", error_message)
-            
-            if "503" in error_message or "UNAVAILABLE" in error_message:
-                return Response({
-                    "success": False, 
-                    "error": "The AI model is currently experiencing high traffic. Please wait 30 seconds and try again."
-                }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-                
-            return Response({'error': f'AI generation failed: {error_message}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.error("AI refinement task dispatch failed: %s", error_message)
+            return Response({'error': f'AI generation dispatch failed: {error_message}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------

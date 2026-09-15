@@ -109,14 +109,31 @@ class ContactMessageView(APIView):
         name = (request.data.get('name') or '').strip()
         email = (request.data.get('email') or '').strip()
         message = (request.data.get('message') or '').strip()
+        owner_email = (request.data.get('owner_email') or '').strip()
+
         if not name or not email or not message:
             return Response({'error': 'name, email and message are required.'}, status=status.HTTP_400_BAD_REQUEST)
         if len(message) > 5000:
             return Response({'error': 'Message is too long (max 5000 characters).'}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Secure Recipient Resolution (Prevents Open Relay)
+        recipient = None
+        if request.user and request.user.is_authenticated:
+            recipient = request.user.email
+        elif owner_email:
+            # Must strictly belong to a registered system user to prevent abuse
+            registered_user = User.objects.filter(email=owner_email).first()
+            if registered_user:
+                recipient = registered_user.email
+                
+        if not recipient:
+            return Response(
+                {'error': 'Invalid recipient. Contact form messages can only be sent to registered portfolio owners. Ensure the contact email in your portfolio matches your account email.'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         subject = f'New portfolio contact from {name}'
         text = f"Name: {name}\nEmail: {email}\n\n{message}\n\n— sent via AuraBuild contact form"
-        recipient = request.user.email if (request.user and request.user.is_authenticated) else "guest@aurabuild.local"
 
         resend_api_key = os.getenv('RESEND_API_KEY')
         if resend_api_key and resend_api_key.startswith('re_'):
@@ -261,7 +278,7 @@ def send_workspace_key_view(request):
 
         # Generate JWT session tokens for the user
         refresh = RefreshToken.for_user(user)
-        return Response({
+        response = Response({
             'success': True,
             'access': str(refresh.access_token),
             'refresh': str(refresh),
@@ -269,6 +286,25 @@ def send_workspace_key_view(request):
             'name': user.first_name,
             'message': 'Workspace authenticated successfully'
         })
+        
+        # Set Secure HTTPOnly Cookies for Google-scale XSS protection
+        response.set_cookie(
+            key=settings.SIMPLE_JWT['AUTH_COOKIE'],
+            value=str(refresh.access_token),
+            expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
+            secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+            httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
+            samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
+        )
+        response.set_cookie(
+            key=settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'],
+            value=str(refresh),
+            expires=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'],
+            secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+            httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
+            samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
+        )
+        return response
 
     # -----------------------------------------------------------------
     # 2. GENERATE & SEND PERMANENT 20-CHARACTER KEY TO ANY EMAIL

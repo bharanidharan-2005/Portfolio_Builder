@@ -6,8 +6,8 @@
     "background_color": "#ffffff",
     "theme_color": "#111111",
     "icons": [{
-        "src": "/Aura.svg",
+        "src": "/favicon.png",
         "sizes": "any",
-        "type": "image/svg+xml"
+        "type": "image/png"
     }]
 }

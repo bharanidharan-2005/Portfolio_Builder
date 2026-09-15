@@ -682,18 +682,20 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                     </div>
 
                     {data.githubUsername && data.githubUsername.trim() !== "" && (
-                        <div className={`w-full max-w-5xl mx-auto mt-16 p-6 sm:p-8 rounded-3xl border shadow-lg overflow-x-auto flex flex-col items-center ${cardBg} ${borderClass}`}>
-                            <h3 className={`text-sm font-black tracking-widest uppercase mb-8 ${accentText}`}>
+                        <div className={`w-full max-w-5xl mx-auto mt-16 p-4 sm:p-8 rounded-3xl border shadow-lg overflow-hidden ${cardBg} ${borderClass}`}>
+                            <h3 className={`text-sm font-black tracking-widest uppercase mb-8 text-center w-full ${accentText}`}>
                                 Open Source Contributions
                             </h3>
-                            <div className="scale-90 sm:scale-100 origin-center">
-                                <GitHubCalendar 
-                                    username={data.githubUsername.trim()} 
-                                    colorScheme={themeDef.bodyBg?.includes('black') || themeDef.bodyBg?.includes('#0') ? 'dark' : 'light'}
-                                    blockSize={12}
-                                    blockMargin={4}
-                                    fontSize={12}
-                                />
+                            <div className={`w-full overflow-x-auto pb-4 ${textPrimary}`}>
+                                <div className="w-max mx-auto px-2" style={{ color: 'inherit' }}>
+                                    <GitHubCalendar 
+                                        username={data.githubUsername.trim()} 
+                                        colorScheme={themeDef.bodyBg?.includes('black') || themeDef.bodyBg?.includes('#0') || themeDef.bodyBg?.includes('950') || themeDef.id !== 'minimal_executive' ? 'dark' : 'light'}
+                                        blockSize={12}
+                                        blockMargin={4}
+                                        fontSize={12}
+                                    />
+                                </div>
                             </div>
                         </div>
                     )}

@@ -140,11 +140,33 @@ WSGI_APPLICATION = 'main_config.wsgi.application'
 # -----------------------------------------------------------------
 DATABASES = {
     'default': dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        default=os.getenv('DATABASE_URL', f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
         conn_max_age=600,
         conn_health_checks=True,
     )
 }
+
+# Require PostgreSQL in Production
+if not DEBUG and 'sqlite' in DATABASES['default']['ENGINE']:
+    raise RuntimeError("SQLite is not allowed in production (Google Scale). Set DATABASE_URL to a valid PostgreSQL instance.")
+
+# -----------------------------------------------------------------
+# 🚀 CACHING CONFIGURATION (Redis)
+# -----------------------------------------------------------------
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": os.getenv("REDIS_URL", "redis://127.0.0.1:6379/1"),
+    }
+}
+
+# -----------------------------------------------------------------
+# ⚙️ CELERY (Task Queue)
+# -----------------------------------------------------------------
+CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0")
+CELERY_RESULT_BACKEND = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0")
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
 
 # -----------------------------------------------------------------
 # 📧 EMAIL CONFIGURATION
@@ -176,7 +198,7 @@ AUTHENTICATION_BACKENDS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'api.authentication.CookieJWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
@@ -196,6 +218,14 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=14),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACK_LIST_AFTER_ROTATION': True,
+    
+    # Custom Cookie Auth Settings (Used by our CookieJWTAuthentication)
+    'AUTH_COOKIE': 'aurabuild_access',
+    'AUTH_COOKIE_REFRESH': 'aurabuild_refresh',
+    'AUTH_COOKIE_SECURE': not DEBUG,
+    'AUTH_COOKIE_HTTP_ONLY': True,
+    'AUTH_COOKIE_PATH': '/',
+    'AUTH_COOKIE_SAMESITE': 'Lax' if DEBUG else 'None',
 }
 
 # -----------------------------------------------------------------

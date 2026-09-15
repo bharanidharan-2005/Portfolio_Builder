@@ -11,58 +11,47 @@ if (!rawBaseUrl.endsWith('api/')) {
 
 export const API = axios.create({
     baseURL: rawBaseUrl,
-    timeout: 60000, // Accommodates Render free tier cold starts
+    timeout: 60000,
+    withCredentials: true, // Send HTTPOnly cookies automatically
     headers: {
         'Content-Type': 'application/json',
     },
 });
 
-const ACCESS_TOKEN_KEY = 'aurabuild_access';
-const REFRESH_TOKEN_KEY = 'aurabuild_refresh';
+const IS_LOGGED_IN_KEY = 'aurabuild_is_logged_in';
 
 export function setAuthTokens(access, refresh) {
-    if (access) localStorage.setItem(ACCESS_TOKEN_KEY, access);
-    if (refresh) localStorage.setItem(REFRESH_TOKEN_KEY, refresh);
+    // We no longer store tokens in localStorage. We just store a flag.
+    localStorage.setItem(IS_LOGGED_IN_KEY, 'true');
 }
 
 export function clearAuthTokens() {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    localStorage.removeItem(IS_LOGGED_IN_KEY);
 }
 
-function getAccessToken() {
-    return localStorage.getItem(ACCESS_TOKEN_KEY);
-}
-
-// Request Interceptor: Attach Bearer Token
+// Request Interceptor: No longer needed for Bearer tokens
 API.interceptors.request.use(
-    (config) => {
-        const token = getAccessToken();
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
+    (config) => config,
     (error) => Promise.reject(error)
 );
 
 let isRefreshing = false;
 let pendingSubscribers = [];
 
-function flushSubscribers(newAccessToken) {
+function flushSubscribers(success) {
     isRefreshing = false;
     const subs = pendingSubscribers;
     pendingSubscribers = [];
     subs.forEach(({ resolve, reject }) => {
-        if (newAccessToken) {
-            resolve(newAccessToken);
+        if (success) {
+            resolve();
         } else {
             reject(new Error('Token refresh failed'));
         }
     });
 }
 
-// Response Interceptor: Handle 401 & Concurrent Refresh Queue
+// Response Interceptor: Handle 401 & Concurrent Refresh Queue via Cookie
 API.interceptors.response.use(
     (response) => response,
     (error) => {
@@ -72,8 +61,8 @@ API.interceptors.response.use(
         }
         originalRequest._retry = true;
 
-        const refresh = localStorage.getItem(REFRESH_TOKEN_KEY);
-        if (!refresh) {
+        const isLoggedIn = localStorage.getItem(IS_LOGGED_IN_KEY);
+        if (!isLoggedIn) {
             clearAuthTokens();
             return Promise.reject(error);
         }
@@ -81,29 +70,23 @@ API.interceptors.response.use(
         if (isRefreshing) {
             return new Promise((resolve, reject) => {
                 pendingSubscribers.push({ resolve, reject });
-            }).then((newAccessToken) => {
-                originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+            }).then(() => {
                 return API(originalRequest);
             });
         }
 
         isRefreshing = true;
 
+        // The refresh token is now sent automatically via the HttpOnly cookie
         return axios
-            .post(`${API.defaults.baseURL}token/refresh/`, { refresh })
-            .then((resp) => {
-                const newAccessToken = resp.data.access;
-                const newRefreshToken = resp.data.refresh || null;
-
-                setAuthTokens(newAccessToken, newRefreshToken);
-                flushSubscribers(newAccessToken);
-
-                originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+            .post(`${API.defaults.baseURL}token/refresh/`, {}, { withCredentials: true })
+            .then(() => {
+                flushSubscribers(true);
                 return API(originalRequest);
             })
             .catch((refreshError) => {
                 clearAuthTokens();
-                flushSubscribers(null);
+                flushSubscribers(false);
                 return Promise.reject(refreshError);
             });
     }

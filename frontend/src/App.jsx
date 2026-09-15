@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
-import LandingPage from "./components/LandingPage.jsx";
-import WorkspaceLayout from "./components/workspace/WorkspaceLayout.jsx";
+import React, { useState, useEffect, Suspense, lazy } from "react";
+
+const LandingPage = lazy(() => import("./components/LandingPage.jsx"));
+const WorkspaceLayout = lazy(() => import("./components/workspace/WorkspaceLayout.jsx"));
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -58,13 +59,8 @@ export default function App() {
     const isPreviewRoute = path.startsWith("/preview/") || isSubdomainPreview;
 
     const [isAuthenticated, setIsAuthenticated] = useState(() => {
-        const token = localStorage.getItem("aurabuild_access");
-        if (token === "true") {
-            // Cleanup corrupted state from previous bug
-            localStorage.removeItem("aurabuild_access");
-            return false;
-        }
-        return !!token;
+        const isLoggedIn = localStorage.getItem("aurabuild_is_logged_in");
+        return !!isLoggedIn;
     });
 
     const [themeMode, setThemeMode] = useState("light");
@@ -90,7 +86,7 @@ export default function App() {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem("aurabuild_access");
+        localStorage.removeItem("aurabuild_is_logged_in");
         setIsAuthenticated(false);
         setUserData({
             name: "Developer",
@@ -116,11 +112,13 @@ export default function App() {
                   We pass isPreviewMode={true} so the WorkspaceLayout knows 
                   to hide the sidebars, top nav, and editing tools.
                 */}
-                <WorkspaceLayout 
-                    userData={{ name: publicUsername, code: publicToken }}
-                    themeMode={themeMode}
-                    isPreviewMode={true} 
-                />
+                <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-bold text-slate-500">Loading Preview...</div>}>
+                    <WorkspaceLayout 
+                        userData={{ name: publicUsername, code: publicToken }}
+                        themeMode={themeMode}
+                        isPreviewMode={true} 
+                    />
+                </Suspense>
             </div>
         );
     }
@@ -131,10 +129,12 @@ export default function App() {
     if (!isAuthenticated) {
         return (
             <ErrorBoundary>
-                <LandingPage onEnterWorkspace={(data) => {
-                    setUserData(prev => ({...prev, ...data }));
-                    setIsAuthenticated(true);
-                }} />
+                <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-bold text-slate-500">Loading AuraBuild...</div>}>
+                    <LandingPage onEnterWorkspace={(data) => {
+                        setUserData(prev => ({...prev, ...data }));
+                        setIsAuthenticated(true);
+                    }} />
+                </Suspense>
             </ErrorBoundary>
         );
     }
@@ -145,14 +145,16 @@ export default function App() {
     return (
         <ErrorBoundary>
             <div className={`min-h-screen ${themeMode === 'light' ? 'bg-slate-50' : 'bg-[#05050A]'}`}>
-                <WorkspaceLayout 
-                    userData={userData}
-                    setUserData={setUserData}
-                    themeMode={themeMode}
-                    onToggleTheme={handleToggleTheme}
-                    onLogout={handleLogout}
-                    isPreviewMode={false}
-                />
+                <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-bold text-slate-500">Loading Workspace...</div>}>
+                    <WorkspaceLayout 
+                        userData={userData}
+                        setUserData={setUserData}
+                        themeMode={themeMode}
+                        onToggleTheme={handleToggleTheme}
+                        onLogout={handleLogout}
+                        isPreviewMode={false}
+                    />
+                </Suspense>
             </div>
         </ErrorBoundary>
     );
