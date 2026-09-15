@@ -1,6 +1,6 @@
 import { 
-    X, Zap, Sparkles, Target, TrendingUp, 
-    Palette, Image as ImageIcon, Share2, Code2, Layers, CheckCircle2
+    X, Sparkles, Target, TrendingUp, 
+    Palette, Image as ImageIcon, Share2, Code2, Layers, CheckCircle2, Zap
 } from "lucide-react";
 
 export default function HelpModal({ isOpen, onClose, isLight }) {
@@ -15,7 +15,7 @@ export default function HelpModal({ isOpen, onClose, isLight }) {
                     <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[80px] rounded-full pointer-events-none"></div>
                     <div className="flex items-center gap-4 relative z-10">
                         <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/20">
-                            <Zap className="w-6 h-6" />
+                            <Sparkles className="w-6 h-6" />
                         </div>
                         <div>
                             <h2 className={`text-xl font-black tracking-tight ${isLight ? 'text-slate-800' : 'text-slate-100'}`}>

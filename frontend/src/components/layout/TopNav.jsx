@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { 
-    Zap, Shield, Moon, Sun, Palette, ChevronDown, Check, Menu, 
+    Sparkles, Shield, Moon, Sun, Palette, ChevronDown, Check, Menu, 
     Settings2, HelpCircle, Cloud, Eye, Undo2, Redo2 
 } from "lucide-react";
 import { PORTFOLIO_THEMES } from "../../canvas/themes.js";
@@ -37,7 +37,7 @@ export function TopNav({
                     <Menu className="w-5 h-5" />
                 </button> 
                 <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-md">
-                    <Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
+                    <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
                 </div> 
                 <h1 className={`text-base sm:text-lg font-bold tracking-tight hidden md:block ${isLight ? 'text-slate-800' : 'text-slate-100'}`}>
                     AuraBuild 
