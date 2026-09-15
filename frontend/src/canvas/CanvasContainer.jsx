@@ -235,7 +235,9 @@ export default function CanvasContainer({
         <div className="w-full flex flex-col items-center relative animate-in fade-in duration-500"> 
 
             {/* Main Outer Container */}
-            <div className={`dark relative w-full shadow-2xl rounded-[2rem] min-h-[700px] transition-all duration-500 ease-out border overflow-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${currentTheme.border || 'border-slate-800/80'} ${
+            <div className={`dark relative w-full min-h-[700px] transition-all duration-500 ease-out overflow-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
+                !isPreview ? `shadow-2xl rounded-[2rem] border ${currentTheme.border || 'border-slate-800/80'}` : 'min-h-screen'
+            } ${
                 globalBgImage ? 'bg-[#0B0C10]/40 backdrop-blur-2xl' : 'bg-[#0B0C10] ' + (currentTheme.bodyBg || '')
             }`} style={{ ...currentFontObj.style }}>
                 

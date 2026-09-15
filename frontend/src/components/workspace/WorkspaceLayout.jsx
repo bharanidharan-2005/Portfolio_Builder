@@ -101,7 +101,10 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
                     if (res.data.settings) {
                         setGlobalBg(res.data.settings.globalBg || null);
                         setGlobalFont(res.data.settings.globalFont || 'font-inter');
-                        if (setUserData && res.data.settings.theme) setUserData(prev => ({...prev, theme: res.data.settings.theme}));
+                        if (res.data.settings.theme) {
+                            if (setUserData) setUserData(prev => ({...prev, theme: res.data.settings.theme}));
+                            setLocalTheme(res.data.settings.theme);
+                        }
                     }
                 } else {
                     const res = await API.get('pages/');
@@ -111,7 +114,10 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
                         if (settingsRes.data) {
                             setGlobalBg(settingsRes.data.globalBg || null);
                             setGlobalFont(settingsRes.data.globalFont || 'font-inter');
-                            if (setUserData && settingsRes.data.theme) setUserData(prev => ({...prev, theme: settingsRes.data.theme}));
+                            if (settingsRes.data.theme) {
+                                if (setUserData) setUserData(prev => ({...prev, theme: settingsRes.data.theme}));
+                                setLocalTheme(settingsRes.data.theme);
+                            }
                         }
                     } catch (e) {}
                 }
@@ -207,7 +213,15 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
     }, [history, sections]);
 
     const isLight = themeMode === 'light';
-    const currentTheme = (userData && userData.theme) || 'modern_glass';
+    
+    // --- Local fallback for theme in public preview mode ---
+    const [localTheme, setLocalTheme] = useState(userData?.theme || 'modern_glass');
+    
+    useEffect(() => {
+        if (userData?.theme) setLocalTheme(userData.theme);
+    }, [userData?.theme]);
+
+    const currentTheme = (userData && userData.theme) || localTheme;
 
     // --- Backend-Synced Data Handlers ---
     const handleAddPage = async (pageName = "New Page") => {
