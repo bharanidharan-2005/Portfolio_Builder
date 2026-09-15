@@ -72,7 +72,6 @@ def generate_text_with_fallback(client, prompt):
         'gemini-2.5-flash',       # Try newer model
         'gemini-1.5-pro',         # Heavy-duty fallback
         'gemini-1.5-flash-8b',    # Extremely fast and rarely overloaded
-        'gemini-pro',             # Legacy stable model
     ]
     
     last_error = None
