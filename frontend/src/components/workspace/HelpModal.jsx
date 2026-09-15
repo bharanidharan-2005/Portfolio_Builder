@@ -14,8 +14,8 @@ export default function HelpModal({ isOpen, onClose, isLight }) {
                 <div className={`shrink-0 p-6 flex items-center justify-between border-b relative overflow-hidden ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#15161D] border-slate-800'}`}>
                     <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[80px] rounded-full pointer-events-none"></div>
                     <div className="flex items-center gap-4 relative z-10">
-                        <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/20">
-                            <Sparkles className="w-6 h-6" />
+                        <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-lg shadow-blue-500/20 border border-slate-200 dark:border-slate-800">
+                            <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
                         </div>
                         <div>
                             <h2 className={`text-xl font-black tracking-tight ${isLight ? 'text-slate-800' : 'text-slate-100'}`}>

@@ -36,8 +36,8 @@ export function TopNav({
                 <button onClick={onToggleLeft} className={`lg:hidden p-1.5 rounded-md transition-colors ${isLight ? 'text-slate-600 hover:bg-slate-100' : 'text-slate-300 hover:bg-slate-800'}`}>
                     <Menu className="w-5 h-5" />
                 </button> 
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-md">
-                    <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg overflow-hidden flex items-center justify-center shadow-md border border-slate-200 dark:border-slate-800">
+                    <img src="/logo.png" alt="AuraBuild Logo" className="w-full h-full object-cover" />
                 </div> 
                 <h1 className={`text-base sm:text-lg font-bold tracking-tight hidden md:block ${isLight ? 'text-slate-800' : 'text-slate-100'}`}>
                     AuraBuild 
