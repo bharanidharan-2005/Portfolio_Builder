@@ -57,14 +57,11 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
     // Clean username (e.g. "Bharani Dharan" -> "bharanidharan")
     const cleanUsername = (localName || "developer").toLowerCase().replace(/[^a-z0-9]/g, '');
     
-    // Subdomain routing format
-    const hostname = window.location.hostname;
-    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
-    const baseDomain = isLocalhost ? 'localhost' : 'aurabuild.io';
-    const portStr = (isLocalhost && window.location.port) ? `:${window.location.port}` : '';
-    const protocol = isLocalhost ? 'http:' : 'https:';
+    // Path-based preview routing format
+    const protocol = window.location.protocol;
+    const host = window.location.host;
     
-    const liveUrl = `${protocol}//${cleanUsername}.${baseDomain}${portStr}`;
+    const liveUrl = `${protocol}//${host}/preview/${cleanUsername}/public`;
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
