@@ -95,8 +95,10 @@ export default function PreviewModal({
 
                     <button 
                         onClick={() => {
-                            navigator.clipboard.writeText(window.location.href);
-                            setTerminalLogs(prev => [...prev, { type: "system", text: "[SYSTEM] Preview link copied to clipboard." }]);
+                            const cleanUsername = (userData?.name || "developer").toLowerCase().replace(/[^a-z0-9]/g, '');
+                            const liveUrl = `${window.location.protocol}//${window.location.host}/preview/${cleanUsername}/public`;
+                            navigator.clipboard.writeText(liveUrl);
+                            setTerminalLogs(prev => [...prev, { type: "system", text: "[SYSTEM] Portfolio link copied to clipboard." }]);
                         }}
                         className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
                         title="Copy Shareable Link"
@@ -105,7 +107,11 @@ export default function PreviewModal({
                     </button>
 
                     <button 
-                        onClick={() => window.open(window.location.href, '_blank')}
+                        onClick={() => {
+                            const cleanUsername = (userData?.name || "developer").toLowerCase().replace(/[^a-z0-9]/g, '');
+                            const liveUrl = `${window.location.protocol}//${window.location.host}/preview/${cleanUsername}/public`;
+                            window.open(liveUrl, '_blank');
+                        }}
                         className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
                         title="Test in New Browser Tab"
                     >

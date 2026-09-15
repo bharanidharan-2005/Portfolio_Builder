@@ -56,7 +56,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
     const textPrimary = "text-slate-50"; 
     const textSecondary = "text-slate-300";
     const placeholderClass = "placeholder-slate-500";
-    const cardBg = "bg-white/[0.03] backdrop-blur-xl"; 
+    const cardBg = "bg-black/40 backdrop-blur-xl"; 
     const badgeClass = `bg-black/40 text-slate-200 border ${innerBorderClass} shadow-sm backdrop-blur-md`;
 
     // --- SMART TEXT ROUTER ---
