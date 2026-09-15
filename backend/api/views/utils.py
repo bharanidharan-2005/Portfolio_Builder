@@ -241,14 +241,17 @@ def send_workspace_key_view(request):
     # 1. VERIFY WORKSPACE CODE (User logs in using ONLY the 20-char key)
     # -----------------------------------------------------------------
     if action == 'verify' or (code and len(code) >= 10):
-        # Enforce that BOTH email and code match
-        if not email:
+        # User logs in using ONLY the 20-char key, or with email during signup
+        if not code:
             return Response(
-                {'error': 'Email is required for verification.'},
+                {'error': 'Workspace key is required for verification.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        user = User.objects.filter(email=email, last_name=code).first()
+        if email:
+            user = User.objects.filter(email=email, last_name=code).first()
+        else:
+            user = User.objects.filter(last_name=code).first()
 
         if not user:
             return Response(
