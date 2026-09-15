@@ -1,19 +1,9 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Font, Link } from '@react-pdf/renderer';
-
-// Register a basic font (you can expand this later)
-Font.register({
-  family: 'Inter',
-  fonts: [
-    { src: 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2' },
-    { src: 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYAZ9hiA.woff2', fontWeight: 700 }
-  ]
-});
+import { Document, Page, Text, View, StyleSheet, Link } from '@react-pdf/renderer';
 
 const styles = StyleSheet.create({
   page: {
     padding: 40,
-    fontFamily: 'Inter',
     backgroundColor: '#ffffff',
     color: '#333333',
   },
@@ -25,7 +15,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 24,
-    fontWeight: 700,
+    fontWeight: 'bold',
     marginBottom: 4,
     color: '#111111',
   },
@@ -45,7 +35,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 14,
-    fontWeight: 700,
+    fontWeight: 'bold',
     marginBottom: 8,
     color: '#111111',
     textTransform: 'uppercase',
@@ -64,7 +54,7 @@ const styles = StyleSheet.create({
   },
   itemTitle: {
     fontSize: 12,
-    fontWeight: 700,
+    fontWeight: 'bold',
     color: '#222222',
   },
   itemDate: {
@@ -119,10 +109,10 @@ export const ResumePDF = ({ sections = [] }) => {
         </View>
 
         {/* About */}
-        {about.text && (
+        {about.bio && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>About</Text>
-            <Text style={styles.itemDesc}>{about.text}</Text>
+            <Text style={styles.itemDesc}>{about.bio}</Text>
           </View>
         )}
 
@@ -158,11 +148,11 @@ export const ResumePDF = ({ sections = [] }) => {
         )}
 
         {/* Skills */}
-        {skills.skills && skills.skills.length > 0 && (
+        {skills.items && skills.items.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Skills</Text>
             <View style={styles.skills}>
-              {skills.skills.map((skill, i) => (
+              {skills.items.map((skill, i) => (
                 <Text key={i} style={styles.skillBadge}>{skill.name}</Text>
               ))}
             </View>

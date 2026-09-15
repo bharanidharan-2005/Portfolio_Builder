@@ -174,14 +174,16 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
             {currentType === "hero" && (
                 <motion.div 
                     {...fadeUpConfig}
-                    className={`text-center py-10 sm:py-20 px-4 space-y-6 relative rounded-3xl overflow-hidden ${!bgImage ? cardBg : ""}`}
+                    className={`text-center py-10 sm:py-20 px-4 space-y-6 relative rounded-3xl ${!bgImage ? cardBg : ""}`}
                     style={bgImage ? {
                         backgroundImage: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.8)), url('${bgImage}')`,
                         backgroundSize: "cover",
                         backgroundPosition: "center",
                     } : undefined}
                 >
-                    {!bgImage && <HeroParticles isDark={themeDef.bodyBg?.includes('black') || themeDef.bodyBg?.includes('#0')} />}
+                    <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+                        {!bgImage && <HeroParticles isDark={themeDef.bodyBg?.includes('black') || themeDef.bodyBg?.includes('#0')} />}
+                    </div>
                     
                     <div className="relative z-10 space-y-4 max-w-3xl mx-auto flex flex-col items-center w-full">
                         <motion.h1
