@@ -34,6 +34,7 @@ export const PORTFOLIO_THEMES = {
         textPrimary: 'text-slate-900 dark:text-slate-50',
         textSecondary: 'text-slate-600 dark:text-slate-300',
         trackBg: 'bg-slate-100 dark:bg-black/40',
+        badgeText: 'text-slate-800 dark:text-slate-200',
     },
     cyber_neon: {
         id: 'cyber_neon',
