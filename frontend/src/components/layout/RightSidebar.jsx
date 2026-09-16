@@ -82,10 +82,14 @@ export default function RightSidebar({
     const [uploadedImagePreview, setUploadedImagePreview] = useState(null);
 
     const logContainerRef = useRef(null);
+    const largeLogContainerRef = useRef(null);
 
     useEffect(() => {
         if (logContainerRef.current) {
             logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+        }
+        if (largeLogContainerRef.current) {
+            largeLogContainerRef.current.scrollTop = largeLogContainerRef.current.scrollHeight;
         }
     }, [terminalLogs]);
 
@@ -1204,6 +1208,32 @@ export default function RightSidebar({
         </div>
     );
 
+    const renderActivityLog = () => (
+        <div className="flex-1 space-y-6 flex flex-col h-full animate-in fade-in zoom-in-95 duration-500 ease-out">
+            <div className="flex items-center gap-2 mb-2 border-b pb-4 border-slate-800/50 shrink-0">
+                <Activity className={`w-4 h-4 ${isLight ? 'text-blue-600' : 'text-blue-400'}`} />
+                <span className={`text-[11px] font-black uppercase tracking-widest ${isLight ? 'text-slate-800' : 'text-slate-200'}`}> Activity Log </span>
+            </div>
+            
+            <div ref={largeLogContainerRef} className={`flex-1 overflow-y-auto space-y-3 p-4 rounded-xl border shadow-inner text-xs font-mono custom-scrollbar ${isLight ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-[#090A0F] border-slate-800 text-slate-400'}`}>
+                <div className="flex items-center gap-1.5 mb-4 opacity-50 pb-3 border-b border-slate-700/50 shrink-0">
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>
+                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
+                    <span className="ml-2 text-[10px] uppercase tracking-widest">Studio Terminal v2.1</span>
+                </div>
+                {terminalLogs && terminalLogs.map((log, i) => (
+                    <div key={i} className={`flex items-start gap-3 animate-in fade-in slide-in-from-bottom-1 duration-300 ${
+                        log.type === 'system' ? 'opacity-70' : log.type === 'success' ? 'text-emerald-400 font-bold' : log.type === 'error' ? 'text-red-400 font-bold' : log.type === 'user' ? (isLight ? 'text-blue-600 font-bold' : 'text-orange-400 font-bold') : 'italic opacity-50'
+                    }`}>
+                        <span className="opacity-50 select-none mt-0.5">{">"}</span>
+                        <span className="leading-relaxed whitespace-pre-wrap">{log.text}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+
     const renderCodeExport = () => (
         <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500 ease-out">
             <div className="flex items-center justify-between mb-4 border-b pb-4 border-slate-800/50">
@@ -1336,12 +1366,13 @@ export default function RightSidebar({
                 {activeTool === "image" && renderImageCustomizer()}
                 {activeTool === "seo_pitch" && renderSeoAndPitch()}
                 {activeTool === "export" && renderCodeExport()}
-                {(activeTool === "structure" || !activeTool) && renderStructureBuilder()}
+                {activeTool === "activity_log" && renderActivityLog()}
+                {(activeTool === "structure" || (!activeTool && activeTool !== "activity_log")) && renderStructureBuilder()}
             </div>
 
             <div className={`shrink-0 border-t p-6 flex flex-col gap-4 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-10 ${isLight ? 'border-slate-200 bg-white' : 'border-slate-800/80 bg-[#0F111A]'}`}>
-                {/* Sleek Terminal Logs */}
-                <div ref={logContainerRef} className={`text-[10px] font-mono h-28 overflow-y-auto space-y-2 custom-scrollbar p-3 rounded-xl border shadow-inner ${isLight ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-[#090A0F] border-slate-800 text-slate-400'}`}>
+                {/* Sleek Terminal Logs - Hidden on Desktop so the full view takes over, but visible on mobile */}
+                <div ref={logContainerRef} className={`lg:hidden text-[10px] font-mono h-28 overflow-y-auto space-y-2 custom-scrollbar p-3 rounded-xl border shadow-inner ${isLight ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-[#090A0F] border-slate-800 text-slate-400'}`}>
                     <div className="flex items-center gap-1.5 mb-2 opacity-50 pb-2 border-b border-slate-700/50">
                         <div className="w-2 h-2 rounded-full bg-red-500"></div>
                         <div className="w-2 h-2 rounded-full bg-yellow-500"></div>

@@ -153,6 +153,7 @@ export default function LeftSidebar({
                     </div>
                     <div className="space-y-1">
                         {[
+                            { id: "activity_log", icon: "⌨️", name: "Activity Log" },
                             { id: "generator", icon: "✨", name: "Content Generator" },
                             { id: "matcher", icon: "🎯", name: "Target Role Matcher" },
                             { id: "impact", icon: "🚀", name: "Impact Quantifier" },
