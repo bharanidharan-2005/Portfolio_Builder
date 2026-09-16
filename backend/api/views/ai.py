@@ -26,7 +26,6 @@ from ..serializers import AISessionLogSerializer, PortfolioPageSerializer, Portf
 from rest_framework.permissions import AllowAny
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
-from ..tasks import process_ai_refinement_task
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +173,7 @@ class AISectionRefinementView(APIView):
         try:
             # Dispatch Celery Task for Asynchronous execution
             user_id = get_user_filter(request).id if get_user_filter(request) else None
-            
+            from ..tasks import process_ai_refinement_task
             task = process_ai_refinement_task.delay(
                 section_id=section.id if section else None,
                 prompt=prompt,
