@@ -38,7 +38,7 @@ export default function LeftSidebar({
         try {
             const data = await uploadAndParseResume(file, activePage);
             setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] AI parsed ${data.wordCount || 'data'} successfully.` }]);
-            if (onResumeParsed && data.data) onResumeParsed(data.data);
+            if (onResumeParsed && data) onResumeParsed(data);
         } catch (error) {
             const errorMsg = error.error || error.message || "Network error. Make sure your Django backend is running.";
             setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] ${errorMsg}` }]);
