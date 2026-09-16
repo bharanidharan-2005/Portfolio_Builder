@@ -617,6 +617,8 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
                     setUserData={setUserData} 
                     themeMode={themeMode}
                     onLogout={onLogout}
+                    onDeploy={triggerDeployment}
+                    onExportZip={handleExportZip}
                 />
             )}
         </div>

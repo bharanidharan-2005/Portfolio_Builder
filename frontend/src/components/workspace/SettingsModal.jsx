@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
-import { X, User, Shield, HardDrive, Download, AlertTriangle, Trash2, Loader2, CheckCircle2, ExternalLink, LogOut } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { X, User, Shield, HardDrive, Download, AlertTriangle, Trash2, Loader2, CheckCircle2, ExternalLink, LogOut, Globe } from "lucide-react";
 import { API } from "../../api"; 
 
-export default function SettingsModal({ isOpen, onClose, userData, setUserData, themeMode, onLogout }) {
+export default function SettingsModal({ isOpen, onClose, userData, setUserData, themeMode, onLogout, onDeploy, onExportZip }) {
     const isLight = themeMode === 'light';
     const [activeTab, setActiveTab] = useState("account");
     
@@ -10,7 +10,6 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
     const [localName, setLocalName] = useState(userData?.name || "Developer");
     const [localAvatar, setLocalAvatar] = useState(userData?.avatar || "🐱");
     const [isSaving, setIsSaving] = useState(false);
-    const [saveStatus, setSaveStatus] = useState(null); // 'success' or 'error'
 
     // Keep it synced if user data loads slightly after the modal mounts
     useEffect(() => {
@@ -18,41 +17,32 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
         if (userData?.avatar) setLocalAvatar(userData.avatar);
     }, [userData?.name, userData?.avatar]);
 
+    // Auto-save changes with debounce
+    useEffect(() => {
+        if (!isOpen) return;
+        if (localName === userData?.name && localAvatar === userData?.avatar) return;
+
+        const timeoutId = setTimeout(async () => {
+            setIsSaving(true);
+            try {
+                await API.patch('/user/profile/', { name: localName, avatar: localAvatar });
+                if (setUserData) {
+                    setUserData(prev => ({ ...prev, name: localName, avatar: localAvatar }));
+                }
+            } catch (error) {
+                console.warn("Backend endpoint not found or failed, updating local state only.", error);
+                if (setUserData) {
+                    setUserData(prev => ({ ...prev, name: localName, avatar: localAvatar }));
+                }
+            } finally {
+                setIsSaving(false);
+            }
+        }, 1000);
+
+        return () => clearTimeout(timeoutId);
+    }, [localName, localAvatar, userData?.name, userData?.avatar, isOpen, setUserData]);
+
     if (!isOpen) return null;
-
-    // Push changes to the Django backend, then update global state
-    const handleSaveChanges = async () => {
-        setIsSaving(true);
-        setSaveStatus(null);
-        
-        try {
-            await API.patch('/user/profile/', { name: localName, avatar: localAvatar });
-            
-            if (setUserData) {
-                setUserData({ ...userData, name: localName, avatar: localAvatar });
-            }
-            
-            setSaveStatus('success');
-            setTimeout(() => {
-                setSaveStatus(null);
-                onClose();
-            }, 1200);
-
-        } catch (error) {
-            console.warn("Backend endpoint not found or failed, updating local state only.", error);
-            
-            if (setUserData) {
-                setUserData({ ...userData, name: localName, avatar: localAvatar });
-            }
-            setSaveStatus('error');
-            setTimeout(() => {
-                setSaveStatus(null);
-                onClose();
-            }, 1500);
-        } finally {
-            setIsSaving(false);
-        }
-    };
 
     // Clean username (e.g. "Bharani Dharan" -> "bharanidharan")
     const cleanUsername = (localName || "developer").toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -73,8 +63,11 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                         <h2 className={`text-lg font-bold ${isLight ? 'text-slate-800' : 'text-slate-100'}`}>Settings</h2>
                     </div>
                     
-                    <button onClick={() => setActiveTab("account")} className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${activeTab === "account" ? (isLight ? 'bg-blue-100 text-blue-700 shadow-sm' : 'bg-blue-900/40 text-blue-400 ring-1 ring-blue-500/20') : (isLight ? 'text-slate-600 hover:bg-slate-200' : 'text-slate-400 hover:bg-slate-800')}`}>
-                        <User className="w-4 h-4" /> Account
+                    <button onClick={() => setActiveTab("account")} className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${activeTab === "account" ? (isLight ? 'bg-blue-100 text-blue-700 shadow-sm' : 'bg-blue-900/40 text-blue-400 ring-1 ring-blue-500/20') : (isLight ? 'text-slate-600 hover:bg-slate-200' : 'text-slate-400 hover:bg-slate-800')}`}>
+                        <div className="flex items-center gap-2">
+                            <User className="w-4 h-4" /> Account
+                        </div>
+                        {isSaving && <Loader2 className="w-3 h-3 animate-spin opacity-50" />}
                     </button>
                     
                     <button onClick={() => setActiveTab("workspace")} className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${activeTab === "workspace" ? (isLight ? 'bg-blue-100 text-blue-700 shadow-sm' : 'bg-blue-900/40 text-blue-400 ring-1 ring-blue-500/20') : (isLight ? 'text-slate-600 hover:bg-slate-200' : 'text-slate-400 hover:bg-slate-800')}`}>
@@ -106,7 +99,11 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                             <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
                                 <div>
                                     <h3 className={`text-xl font-bold mb-1 ${isLight ? 'text-slate-800' : 'text-slate-100'}`}>My Profile</h3>
-                                    <p className={`text-sm ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Manage your public builder identity.</p>
+                                    <p className={`text-sm flex items-center gap-2 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                                        Manage your public builder identity.
+                                        {isSaving && <span className="text-blue-500 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin"/> Saving...</span>}
+                                        {!isSaving && (localName !== userData?.name || localAvatar !== userData?.avatar) === false && <span className="text-emerald-500 flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/> Saved</span>}
+                                    </p>
                                 </div>
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-4 mb-2">
@@ -147,28 +144,6 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                                             className={`w-full max-w-md px-4 py-3 rounded-xl border text-sm font-mono opacity-70 cursor-not-allowed ${isLight ? 'bg-slate-100 border-slate-200 text-slate-500' : 'bg-slate-900/50 border-slate-800 text-slate-500'}`} 
                                         />
                                     </div>
-                                    
-                                    <div className="pt-2">
-                                        <button 
-                                            onClick={handleSaveChanges}
-                                            disabled={isSaving || (localName === userData?.name && localAvatar === userData?.avatar)}
-                                            className={`px-5 py-2.5 text-white text-sm font-bold rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer ${
-                                                isSaving || (localName === userData?.name && localAvatar === userData?.avatar) ? 'opacity-50 cursor-not-allowed bg-slate-500' :
-                                                saveStatus === 'success' ? 'bg-emerald-600' : 
-                                                saveStatus === 'error' ? 'bg-orange-500' : 
-                                                'bg-blue-600 hover:bg-blue-500 hover:shadow-blue-900/20'
-                                            }`}
-                                        >
-                                            {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
-                                            {saveStatus === 'success' && <CheckCircle2 className="w-4 h-4" />}
-                                            {saveStatus === 'error' && <AlertTriangle className="w-4 h-4" />}
-                                            
-                                            {isSaving ? "Saving to Cloud..." : 
-                                             saveStatus === 'success' ? "Saved Successfully!" :
-                                             saveStatus === 'error' ? "Saved Locally (No DB)" :
-                                             "Save Changes"}
-                                        </button>
-                                    </div>
                                 </div>
                             </div>
                         )}
@@ -177,24 +152,38 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                             <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
                                 <div>
                                     <h3 className={`text-xl font-bold mb-1 ${isLight ? 'text-slate-800' : 'text-slate-100'}`}>Workspace Preferences</h3>
-                                    <p className={`text-sm ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Configure your live environment routing.</p>
+                                    <p className={`text-sm ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Configure your live environment routing and deployment.</p>
                                 </div>
                                 <div className="space-y-4">
                                     <div className={`p-4 border rounded-xl flex items-center justify-between gap-4 ${isLight ? 'border-slate-200 bg-slate-50' : 'border-slate-800 bg-[#111218]'}`}>
                                         
                                         <div className="flex-1 min-w-0 pr-2">
-                                            <p className={`text-sm font-bold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>Public Portfolio URL</p>
+                                            <p className={`text-sm font-bold flex items-center gap-2 ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
+                                                Public Portfolio URL
+                                                <span className="bg-blue-500/20 text-blue-500 px-2 py-0.5 rounded text-[10px] uppercase">Live</span>
+                                            </p>
                                             <p className={`text-xs mt-1 font-mono truncate ${isLight ? 'text-blue-600' : 'text-blue-400'}`}>
                                                 {liveUrl}
                                             </p>
                                         </div>
                                         
-                                        <button 
-                                            onClick={() => window.open(liveUrl, '_blank')}
-                                            className={`shrink-0 px-3 py-1.5 text-xs font-bold rounded-lg border transition-colors flex items-center gap-2 cursor-pointer ${isLight ? 'border-slate-300 hover:bg-slate-200 text-slate-700' : 'border-slate-700 hover:bg-slate-800 text-slate-300'}`}
-                                        >
-                                            Visit <ExternalLink className="w-3 h-3" />
-                                        </button>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            <button 
+                                                onClick={async () => {
+                                                    if (onDeploy) await onDeploy();
+                                                    onClose();
+                                                }}
+                                                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors flex items-center gap-2 cursor-pointer bg-blue-600 hover:bg-blue-500 text-white shadow-sm hover:shadow-blue-900/20`}
+                                            >
+                                                Deploy to Edge <Globe className="w-3 h-3" />
+                                            </button>
+                                            <button 
+                                                onClick={() => window.open(liveUrl, '_blank')}
+                                                className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-colors flex items-center gap-2 cursor-pointer ${isLight ? 'border-slate-300 hover:bg-slate-200 text-slate-700' : 'border-slate-700 hover:bg-slate-800 text-slate-300'}`}
+                                            >
+                                                Visit <ExternalLink className="w-3 h-3" />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -208,13 +197,19 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                                 </div>
                                 
                                 <div className="space-y-3">
-                                    <button className={`w-full flex items-center justify-between p-4 border rounded-xl transition-all cursor-pointer ${isLight ? 'border-slate-200 hover:border-blue-400 hover:bg-blue-50 hover:shadow-sm' : 'border-slate-800 hover:border-blue-500/50 hover:bg-[#111218] hover:shadow-lg'}`}>
+                                    <button 
+                                        onClick={async () => {
+                                            if (onExportZip) await onExportZip();
+                                            onClose();
+                                        }}
+                                        className={`w-full flex items-center justify-between p-4 border rounded-xl transition-all cursor-pointer ${isLight ? 'border-slate-200 hover:border-blue-400 hover:bg-blue-50 hover:shadow-sm' : 'border-slate-800 hover:border-blue-500/50 hover:bg-[#111218] hover:shadow-lg'}`}
+                                    >
                                         <div className="flex items-center gap-4">
                                             <div className={`p-2.5 rounded-lg ${isLight ? 'bg-blue-100 text-blue-600' : 'bg-blue-900/30 text-blue-400 ring-1 ring-blue-500/20'}`}>
                                                 <Download className="w-5 h-5" />
                                             </div>
                                             <div className="text-left">
-                                                <p className={`text-sm font-bold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>Export Source Code</p>
+                                                <p className={`text-sm font-bold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>Export Source Code (.ZIP)</p>
                                                 <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Download a ZIP of your raw HTML/React components.</p>
                                             </div>
                                         </div>
