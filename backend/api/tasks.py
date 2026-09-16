@@ -1,7 +1,7 @@
 import logging
 import json
 from celery import shared_task
-from .views.ai import get_gemini_client, generate_text_with_fallback, extract_clean_json_payload
+from .views.ai import get_gemini_client, get_gemini_clients, generate_text_with_fallback, extract_clean_json_payload
 from .models import PortfolioSection, AISessionLog
 from django.contrib.auth.models import User
 
@@ -14,7 +14,7 @@ def process_ai_refinement_task(self, section_id, prompt, section_type, current_c
     Prevents gunicorn workers from timing out under high load.
     """
     try:
-        client = get_gemini_client()
+        clients = get_gemini_clients()
         sys_prompt = (
             "You are an expert portfolio copywriter. Return ONLY valid JSON matching the "
             "content_data schema for the given section type. Keys per section_type:\n"
@@ -28,7 +28,7 @@ def process_ai_refinement_task(self, section_id, prompt, section_type, current_c
         )
         full = f"{sys_prompt}\nSection type: {section_type}\nCurrent content: {json.dumps(current_content)}\nInstruction: {prompt}"
         
-        res = generate_text_with_fallback(client, full)
+        res = generate_text_with_fallback(clients, full)
         new_data = extract_clean_json_payload(res.text)
         
         if not isinstance(new_data, dict):

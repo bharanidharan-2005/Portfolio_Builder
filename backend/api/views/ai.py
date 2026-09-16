@@ -34,7 +34,7 @@ from .utils import *
 # -----------------------------------------------------------------
 # 1. GEMINI CLIENT HELPERS
 # -----------------------------------------------------------------
-TEXT_MODEL = 'gemini-1.5-flash'
+TEXT_MODEL = 'gemini-3.6-flash'
 
 class AICreditThrottle(UserRateThrottle):
     scope = 'ai'
@@ -47,51 +47,71 @@ class ImageGenerationThrottle(UserRateThrottle):
 class AIKeyMissingError(RuntimeError):
     pass
 
-def get_gemini_client():
-    api_key = os.getenv("GEMINI_API_KEY")
+def get_gemini_clients():
+    keys_str = os.getenv("GEMINI_API_KEYS", "")
+    single_key = os.getenv("GEMINI_API_KEY", "")
     
-    if not api_key or any(
-        token in api_key.lower() for token in ('<placeholder>', 'your-', 'replace-', 'changeme')
-    ):
-        raise AIKeyMissingError(
-            "GEMINI_API_KEY is not configured. Add it to your .env or server environment variables."
-        )
+    keys = []
+    if keys_str:
+        keys = [k.strip() for k in keys_str.split(',') if k.strip()]
+    if single_key and single_key.strip() not in keys:
+        keys.append(single_key.strip())
         
-    if len(api_key.strip()) < 30:
-        raise AIKeyMissingError(
-            "GEMINI_API_KEY does not look like a valid key. Check Google AI Studio and update your .env."
-        )
+    valid_clients = []
+    for api_key in keys:
+        if not api_key or any(
+            token in api_key.lower() for token in ('<placeholder>', 'your-', 'replace-', 'changeme')
+        ):
+            continue
+        if len(api_key.strip()) < 30:
+            continue
+        valid_clients.append(genai.Client(api_key=api_key.strip()))
         
-    return genai.Client(api_key=api_key.strip())
-def generate_text_with_fallback(client, prompt):
+    if not valid_clients:
+        raise AIKeyMissingError(
+            "No valid GEMINI_API_KEY(S) configured. Add them to your .env or server environment variables."
+        )
+    return valid_clients
+
+def get_gemini_client():
+    return get_gemini_clients()[0]
+def generate_text_with_fallback(clients, prompt):
     """
     Bulletproof Fast Failover: Attempts generation and falls back on ANY 
-    traffic, rate-limit, or missing-model error to guarantee a successful parse.
+    traffic, rate-limit, or missing-model error across multiple clients.
     """
+    if not isinstance(clients, list):
+        clients = [clients]
+        
     models_to_try = [
         TEXT_MODEL,                     # Your primary model
-        'gemini-1.5-pro-latest',        # Heavy-duty fallback (Google AI Studio alias)
         'gemini-2.0-flash',             # Next-gen fallback
+        'gemini-1.5-flash',             # Reliable fallback
+        'gemini-1.5-flash-8b',          # Fast fallback
     ]
     
     last_error = None
-    for model in models_to_try:
-        try:
-            logger.info("Attempting AI generation with model: %s", model)
-            return client.models.generate_content(model=model, contents=[prompt])
-        except Exception as e:
-            last_error = e
-            error_str = str(e).lower()
+    for client in clients:
+        for model in models_to_try:
+            try:
+                logger.info("Attempting AI generation with model: %s", model)
+                return client.models.generate_content(model=model, contents=[prompt])
+            except Exception as e:
+                last_error = e
+                error_str = str(e).lower()
+                
+                if '429' in error_str or 'quota' in error_str or 'exhausted' in error_str:
+                    logger.warning("Key exhausted or rate limited (%s). Switching to next key...", error_str[:50])
+                    break
+                    
+                if 'api_key' in error_str or 'unauthenticated' in error_str or '401' in error_str:
+                    logger.warning("Key invalid/unauthenticated. Switching to next key...")
+                    break
+                
+                logger.warning("Model %s failed (%s). Falling back immediately...", model, error_str[:50])
+                continue
             
-            # If the API key itself is completely invalid/revoked, stop immediately
-            if 'api_key' in error_str or 'unauthenticated' in error_str or '401' in error_str:
-                raise e
-            
-            # For ANY other error (503 overloaded, 429 rate limit, 404 model not found), skip to the next model!
-            logger.warning("Model %s failed (%s). Falling back immediately...", model, error_str[:50])
-            continue
-            
-    # Only crashes if EVERY single model in the list failed
+    # Only crashes if EVERY single model across all clients failed
     raise last_error
 
 def extract_clean_json_payload(raw_text):
@@ -199,7 +219,7 @@ class AITemplateGeneratorView(APIView):
             return Response({'error': 'prompt is required.'}, status=status.HTTP_400_BAD_REQUEST)
         try:
             page = ensure_user_workspace(request)
-            client = get_gemini_client()
+            clients = get_gemini_clients()
             category = request.data.get('category') or request.data.get('field') or ''
             category_hint = f"\nUser category/field: {category}" if category else ""
             sys_prompt = (
@@ -210,7 +230,7 @@ class AITemplateGeneratorView(APIView):
             )
             
             # Using the new robust fallback handler
-            res = generate_text_with_fallback(client, f"{sys_prompt}\nRequest: {prompt}{category_hint}")
+            res = generate_text_with_fallback(clients, f"{sys_prompt}\nRequest: {prompt}{category_hint}")
             template = extract_clean_json_payload(res.text)
             
             theme_accent = template.get('theme_accent') if isinstance(template, dict) else None
@@ -240,7 +260,7 @@ class AICopilotAPIView(APIView):
             return Response({'error': 'Prompt is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            client = get_gemini_client()
+            clients = get_gemini_clients()
             system_instruction = f"""You are an AI Co-Pilot for a React portfolio builder. 
 The user wants to modify their portfolio canvas through a chat interface.
 
@@ -266,7 +286,7 @@ Choose ONE of the following formats based on the user's intent:
 4. If you just need to reply to the user without changing anything (e.g. asking for clarification):
 {{"action": "reply", "message": "<your_message>"}}
 """
-            response = generate_text_with_fallback(client, system_instruction)
+            response = generate_text_with_fallback(clients, system_instruction)
             action_data = extract_clean_json_payload(response.text)
 
             # Log the session
@@ -328,7 +348,7 @@ class AIGithubIngestAPIView(APIView):
             repo_text = "\n".join(repo_summary[:10])
 
             # 2. Ask Gemini to format into Portfolio schema
-            client = get_gemini_client()
+            clients = get_gemini_clients()
             prompt = f"""You are a technical recruiter building a portfolio.
 I have fetched the latest GitHub repositories for the user '{username}'. 
 Here is the data:
@@ -354,7 +374,7 @@ Return ONLY a strictly valid JSON object exactly in this schema:
 }}
 DO NOT include any markdown blocks like ```json.
 """
-            res = generate_text_with_fallback(client, prompt)
+            res = generate_text_with_fallback(clients, prompt)
             structured_data = extract_clean_json_payload(res.text)
 
             return Response({'success': True, 'data': structured_data})
@@ -386,7 +406,7 @@ class AISEOAnalyticsAPIView(APIView):
             
             raw_text = "\\n".join(content_dump)[:3000] # Cap to prevent huge payloads
             
-            client = get_gemini_client()
+            clients = get_gemini_clients()
             prompt = f"""You are an expert Technical SEO Specialist and UX Analyst for a high-end portfolio builder.
 I am providing you the raw content of a user's portfolio website.
 
@@ -416,7 +436,7 @@ Return ONLY a strictly valid JSON object exactly in this schema:
 }}
 DO NOT include any markdown blocks like ```json.
 """
-            res = generate_text_with_fallback(client, prompt)
+            res = generate_text_with_fallback(clients, prompt)
             structured_data = extract_clean_json_payload(res.text)
 
             user = request.user if request.user.is_authenticated else None
@@ -498,9 +518,9 @@ class PortfolioReviewAPIView(APIView):
 # 10. CUSTOM IMAGE GENERATION
 # -----------------------------------------------------------------
 IMAGE_MODELS = [
-    'gemini-1.5-pro-latest',
+    'gemini-3.6-flash',
+    'gemini-2.0-flash-exp',
     'gemini-2.0-flash',
-    'gemini-2.5-flash',
 ]
 
 IMAGEN_MODEL = 'imagen-3.0-generate-002'
@@ -543,62 +563,84 @@ def _extract_image_data(response):
             return inline.data
     return None
 
-def _generate_gemini_image(client, prompt):
+def _generate_gemini_image(clients, prompt):
+    if not isinstance(clients, list):
+        clients = [clients]
+        
     last_friendly = None
-    for model in IMAGE_MODELS:
-        for attempt in range(2):
-            try:
-                response = client.models.generate_content(
-                    model=model,
-                    contents=[f"Generate an image for: {prompt}"],
-                    config=types.GenerateContentConfig(response_modalities=["IMAGE", "TEXT"]),
-                )
-                image_data = _extract_image_data(response)
-                if not image_data:
-                    last_friendly = "The image service returned no image payload."
-                    continue
-                return image_data, None
-            except Exception as e:
-                if _is_free_tier_zero_quota(e):
-                    return None, FREE_TIER_ZERO_QUOTA_MESSAGE
-                if _is_auth_error(e):
-                    return None, "Your GEMINI_API_KEY is invalid or was revoked."
-                friendly = _friendly_image_error(e)
-                if friendly:
-                    last_friendly = friendly
+    for client in clients:
+        for model in IMAGE_MODELS:
+            for attempt in range(2):
+                try:
+                    response = client.models.generate_content(
+                        model=model,
+                        contents=[f"Generate an image for: {prompt}"],
+                        config=types.GenerateContentConfig(response_modalities=["IMAGE", "TEXT"]),
+                    )
+                    image_data = _extract_image_data(response)
+                    if not image_data:
+                        last_friendly = "The image service returned no image payload."
+                        continue
+                    return image_data, None
+                except Exception as e:
+                    error_str = str(e).lower()
+                    if _is_free_tier_zero_quota(e) or '429' in error_str or 'quota' in error_str or 'exhausted' in error_str:
+                        last_friendly = FREE_TIER_ZERO_QUOTA_MESSAGE if _is_free_tier_zero_quota(e) else "Image service rate limit reached."
+                        break # break attempts loop, will break model loop too
+                    if _is_auth_error(e):
+                        last_friendly = "Your GEMINI_API_KEY is invalid or was revoked."
+                        break # break attempts loop
+                    friendly = _friendly_image_error(e)
+                    if friendly:
+                        last_friendly = friendly
+            else:
+                continue # if didn't break out of attempts, try next model
+            break # if broke out of attempts, it's a key issue, try next client
     return None, last_friendly
 
-def _generate_imagen_image(client, prompt):
-    try:
-        response = client.models.generate_images(
-            model=IMAGEN_MODEL,
-            prompt=prompt,
-            config=types.GenerateImagesConfig(numberOfImages=1),
-        )
-        generated = response.generated_images or []
-        if generated:
-            image = generated[0].image
-            image_bytes = getattr(image, 'image_bytes', None)
-            if image_bytes:
-                return image_bytes, None
-            uri = getattr(image, 'uri', None)
-            if uri and uri.startswith(('https://', 'http://')):
-                try:
-                    with requests.get(uri, timeout=10, stream=True) as r:
-                        r.raise_for_status()
-                        chunks = []
-                        size = 0
-                        for chunk in r.iter_content(256 * 1024):
-                            chunks.append(chunk)
-                            size += len(chunk)
-                            if size > 10 * 1024 * 1024:
-                                return None, "The generated image was too large to save."
-                        return b''.join(chunks), None
-                except requests.RequestException:
-                    return None, "The image service returned an unreachable URL."
-        return None, "The image service returned no image."
-    except Exception as e:
-        return None, _friendly_image_error(e)
+def _generate_imagen_image(clients, prompt):
+    if not isinstance(clients, list):
+        clients = [clients]
+        
+    last_friendly = None
+    for client in clients:
+        try:
+            response = client.models.generate_images(
+                model=IMAGEN_MODEL,
+                prompt=prompt,
+                config=types.GenerateImagesConfig(numberOfImages=1),
+            )
+            generated = response.generated_images or []
+            if generated:
+                image = generated[0].image
+                image_bytes = getattr(image, 'image_bytes', None)
+                if image_bytes:
+                    return image_bytes, None
+                uri = getattr(image, 'uri', None)
+                if uri and uri.startswith(('https://', 'http://')):
+                    try:
+                        with requests.get(uri, timeout=10, stream=True) as r:
+                            r.raise_for_status()
+                            chunks = []
+                            size = 0
+                            for chunk in r.iter_content(256 * 1024):
+                                chunks.append(chunk)
+                                size += len(chunk)
+                                if size > 10 * 1024 * 1024:
+                                    return None, "The generated image was too large to save."
+                            return b''.join(chunks), None
+                    except requests.RequestException:
+                        last_friendly = "The image service returned an unreachable URL."
+                        continue
+            last_friendly = "The image service returned no image."
+            continue
+        except Exception as e:
+            error_str = str(e).lower()
+            if _is_free_tier_zero_quota(e) or '429' in error_str or 'quota' in error_str or 'exhausted' in error_str or _is_auth_error(e):
+                last_friendly = _friendly_image_error(e)
+                continue # Try next client
+            return None, _friendly_image_error(e)
+    return None, last_friendly
 
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
@@ -609,13 +651,13 @@ def generate_custom_image(request):
         return JsonResponse({'error': 'prompt is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        client = get_gemini_client()
+        clients = get_gemini_clients()
     except AIKeyMissingError as e:
         return JsonResponse({'error': str(e)}, status=503)
 
-    image_data, friendly = _generate_gemini_image(client, prompt)
+    image_data, friendly = _generate_gemini_image(clients, prompt)
     if not image_data and friendly != FREE_TIER_ZERO_QUOTA_MESSAGE:
-        image_data, imagen_friendly = _generate_imagen_image(client, prompt)
+        image_data, imagen_friendly = _generate_imagen_image(clients, prompt)
         if not image_data and imagen_friendly and (not friendly or 'no image' in friendly.lower()):
             friendly = imagen_friendly
 

@@ -263,7 +263,7 @@ class WorkspaceAPITests(TestCase):
         fake_client = type('FakeClient', (), {})()
         fake_client.models = fake_models
 
-        with patch('api.views.get_gemini_client', return_value=fake_client):
+        with patch('api.views.get_gemini_clients', return_value=[fake_client]):
             res = self.client.post(
                 reverse('ai-refinement'),
                 {'prompt': 'Write a hero', 'section_type': 'hero', 'page': 'Home'},
@@ -285,7 +285,7 @@ class WorkspaceAPITests(TestCase):
         fake_client = type('FakeClient', (), {})()
         fake_client.models = fake_models
 
-        with patch('api.views.get_gemini_client', return_value=fake_client):
+        with patch('api.views.get_gemini_clients', return_value=[fake_client]):
             res = self.client.post(
                 reverse('ai-refinement'),
                 {'prompt': 'Write a bio', 'section_type': 'about', 'page': 'Home'},
@@ -303,7 +303,7 @@ class WorkspaceAPITests(TestCase):
         fake_models = type('FakeModels', (), {'generate_content': lambda self, model, contents: fake_resp})()
         fake_client = type('FakeClient', (), {})()
         fake_client.models = fake_models
-        with patch('api.views.get_gemini_client', return_value=fake_client):
+        with patch('api.views.get_gemini_clients', return_value=[fake_client]):
             res = self.client.post(
                 reverse('ai-refinement'),
                 {'prompt': 'Write a bio', 'section_type': 'about', 'page': 'Home'},
@@ -393,9 +393,9 @@ class ImageGenerationTests(TestCase):
             )
         )
 
-    @patch('api.views.ai.get_gemini_client')
+    @patch('api.views.ai.get_gemini_clients')
     def test_generate_image_success(self, mock_client):
-        mock_client.return_value = self._fake_client(image_data=self.png)
+        mock_client.return_value = [self._fake_client(image_data=self.png)]
         res = self.client.post(
             self.url, {'prompt': 'A dark developer workspace'}, content_type='application/json', **self.headers
         )
@@ -410,58 +410,58 @@ class ImageGenerationTests(TestCase):
         )
         self.assertEqual(res.status_code, 400)
 
-    @patch('api.views.ai.get_gemini_client')
+    @patch('api.views.ai.get_gemini_clients')
     def test_generate_image_no_payload_returns_500(self, mock_client):
-        mock_client.return_value = self._fake_client(image_data=None)
+        mock_client.return_value = [self._fake_client(image_data=None)]
         res = self.client.post(
             self.url, {'prompt': 'A dark workspace'}, content_type='application/json', **self.headers
         )
         self.assertEqual(res.status_code, 500)
         self.assertIn('error', res.json())
 
-    @patch('api.views.ai.get_gemini_client')
+    @patch('api.views.ai.get_gemini_clients')
     def test_generate_image_rate_limit_returns_friendly_error(self, mock_client):
         err = Exception('HTTP 429: rate limit exceeded')
-        mock_client.return_value = self._fake_client(error=err)
+        mock_client.return_value = [self._fake_client(error=err)]
         res = self.client.post(
             self.url, {'prompt': 'A dark workspace'}, content_type='application/json', **self.headers
         )
         self.assertEqual(res.status_code, 500)
         self.assertIn('rate limit', res.json()['error'].lower())
 
-    @patch('api.views.ai.get_gemini_client')
+    @patch('api.views.ai.get_gemini_clients')
     def test_generate_image_imagen_fallback(self, mock_client):
-        mock_client.return_value = self._fake_client(image_data=None, imagen_data=self.png)
+        mock_client.return_value = [self._fake_client(image_data=None, imagen_data=self.png)]
         res = self.client.post(
             self.url, {'prompt': 'A dark workspace'}, content_type='application/json', **self.headers
         )
         self.assertEqual(res.status_code, 200)
         self.assertTrue(res.json()['success'])
 
-    @patch('api.views.ai.get_gemini_client')
+    @patch('api.views.ai.get_gemini_clients')
     def test_generate_image_free_tier_zero_quota(self, mock_client):
         err = Exception('429 RESOURCE_EXHAUSTED quota free_tier_requests limit: 0')
-        mock_client.return_value = self._fake_client(error=err)
+        mock_client.return_value = [self._fake_client(error=err)]
         res = self.client.post(
             self.url, {'prompt': 'A dark workspace'}, content_type='application/json', **self.headers
         )
         self.assertEqual(res.status_code, 500)
         self.assertIn('free tier', res.json()['error'].lower())
 
-    @patch('api.views.ai.get_gemini_client')
+    @patch('api.views.ai.get_gemini_clients')
     def test_generate_image_rejects_non_http_imagen_uri(self, mock_client):
         # A non-HTTP scheme from the image service must never be downloaded.
-        mock_client.return_value = self._fake_client(image_data=None, imagen_uri='file:///etc/passwd')
+        mock_client.return_value = [self._fake_client(image_data=None, imagen_uri='file:///etc/passwd')]
         res = self.client.post(
             self.url, {'prompt': 'A dark workspace'}, content_type='application/json', **self.headers
         )
         self.assertEqual(res.status_code, 500)
         self.assertIn('invalid', res.json()['error'].lower())
 
-    @patch('api.views.ai.get_gemini_client')
+    @patch('api.views.ai.get_gemini_clients')
     def test_generate_image_downloads_http_imagen_uri(self, mock_client):
         from unittest.mock import patch as _patch
-        mock_client.return_value = self._fake_client(image_data=None, imagen_uri='https://cdn.example/img.png')
+        mock_client.return_value = [self._fake_client(image_data=None, imagen_uri='https://cdn.example/img.png')]
 
         class FakeResp:
             def __enter__(self):

@@ -74,7 +74,7 @@ class ResumeUploadAPIView(APIView):
             )
 
         try:
-            client = get_gemini_client()
+            clients = get_gemini_clients()
             prompt = (
                 "Parse this resume text into structured JSON with keys: "
                 "name, headline, about, email, phone, location, linkedin, github, website, "
@@ -90,7 +90,7 @@ class ResumeUploadAPIView(APIView):
             )
             
             # Using the new robust fallback handler
-            res = generate_text_with_fallback(client, prompt)
+            res = generate_text_with_fallback(clients, prompt)
             parsed = extract_clean_json_payload(res.text)
             
             if not isinstance(parsed, dict):
