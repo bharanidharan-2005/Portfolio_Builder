@@ -15,7 +15,7 @@ export default function HelpModal({ isOpen, onClose, isLight }) {
                     <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[80px] rounded-full pointer-events-none"></div>
                     <div className="flex items-center gap-4 relative z-10">
                         <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-lg shadow-blue-500/20 border border-slate-200 dark:border-slate-800">
-                            <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
+                            <img src="/logo.svg" alt="Logo" className="w-full h-full object-cover" />
                         </div>
                         <div>
                             <h2 className={`text-xl font-black tracking-tight ${isLight ? 'text-slate-800' : 'text-slate-100'}`}>

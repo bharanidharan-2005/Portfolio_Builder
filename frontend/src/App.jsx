@@ -132,6 +132,7 @@ export default function App() {
                 <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-bold text-slate-500">Loading AuraBuild...</div>}>
                     <LandingPage onEnterWorkspace={(data) => {
                         setUserData(prev => ({...prev, ...data }));
+                        localStorage.setItem("aurabuild_is_logged_in", "true");
                         setIsAuthenticated(true);
                     }} />
                 </Suspense>

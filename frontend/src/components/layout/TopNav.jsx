@@ -37,7 +37,7 @@ export function TopNav({
                     <Menu className="w-5 h-5" />
                 </button> 
                 <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg overflow-hidden flex items-center justify-center shadow-md border border-slate-200 dark:border-slate-800">
-                    <img src="/logo.png" alt="AuraBuild Logo" className="w-full h-full object-cover" />
+                    <img src="/logo.svg" alt="AuraBuild Logo" className="w-full h-full object-cover" />
                 </div> 
                 <h1 className={`text-base sm:text-lg font-bold tracking-tight hidden md:block ${isLight ? 'text-slate-800' : 'text-slate-100'}`}>
                     AuraBuild 
