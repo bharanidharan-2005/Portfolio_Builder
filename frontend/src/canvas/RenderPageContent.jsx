@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { notify } from "../toast";
 import { sendContactForm } from "../utils/contactUtils";
 import EditableText from "./EditableText";
@@ -33,6 +33,8 @@ const staggerItem = {
 };
 
 export default function RenderPageContent({ section, portfolioTheme, sections, onInlineEdit, isPreview = false }) {
+    // Memoize the PDF document to prevent massive memory leaks and re-renders on scroll
+    const pdfDocument = useMemo(() => <ResumePDF sections={sections} />, [sections]);
     const [openMenu, setOpenMenu] = useState(null);
     const [cName, setCName] = useState("");
     const [cEmail, setCEmail] = useState("");
@@ -236,7 +238,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             <div className="relative flex items-center gap-4">
                                 {isPreview && (
                                     <PDFDownloadLink
-                                        document={<ResumePDF sections={sections} />}
+                                        document={pdfDocument}
                                         fileName={`${data.heading?.replace(/\s+/g, '_') || 'Portfolio'}_Resume.pdf`}
                                         className={`px-6 py-3 rounded-xl text-sm font-bold transition-all bg-white text-slate-900 shadow-md hover:shadow-lg hover:scale-105 active:scale-95 inline-block`}
                                     >
