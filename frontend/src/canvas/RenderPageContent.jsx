@@ -53,11 +53,13 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
     
     const accentText = themeDef.accentText || "text-blue-400";
     const accentBg = themeDef.accentBg || accentText.replace('text-transparent', '').replace('bg-clip-text', '').replace(/text-/g, 'bg-').trim();
-    const textPrimary = "text-slate-50"; 
-    const textSecondary = "text-slate-300";
-    const placeholderClass = "placeholder-slate-500";
-    const cardBg = "bg-black/40 backdrop-blur-xl"; 
-    const badgeClass = `bg-black/40 text-slate-200 border ${innerBorderClass} shadow-sm backdrop-blur-md`;
+    const textPrimary = themeDef.textPrimary || "text-slate-50"; 
+    const textSecondary = themeDef.textSecondary || "text-slate-300";
+    const placeholderClass = themeDef.placeholderClass || "placeholder-slate-500";
+    const cardBg = themeDef.cardBg || "bg-black/40 backdrop-blur-xl"; 
+    const trackBg = themeDef.trackBg || "bg-black/40";
+    const trackBgLight = themeDef.trackBgLight || "bg-black/20";
+    const badgeClass = `${themeDef.badgeBg || trackBg} ${themeDef.badgeText || 'text-slate-200'} border ${innerBorderClass} shadow-sm backdrop-blur-md`;
 
     // --- SMART TEXT ROUTER ---
     const TextElement = ({ value, placeholder, onCommit, multiline = false }) => {
@@ -479,7 +481,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                 onCommit={(v) => updateArrayItem("items", i, "name", v)}
                                             />
                                         </span>
-                                        <span className={`${accentText} font-mono text-sm flex items-center shrink-0 bg-black/40 px-4 py-2 rounded-xl border ${borderClass} shadow-inner`}>
+                                        <span className={`${accentText} font-mono text-sm flex items-center shrink-0 ${trackBg} px-4 py-2 rounded-xl border ${borderClass} shadow-inner`}>
                                             <TextElement 
                                                 value={String(skill.level || 50)}
                                                 placeholder="50"
@@ -494,7 +496,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     </div>
                                     
                                     <div 
-                                        className={`w-full h-3.5 rounded-full overflow-hidden border ${borderClass} bg-black/40 relative group/bar transition-all ${!isPreview ? 'cursor-pointer hover:h-4 shadow-inner' : ''}`}
+                                        className={`w-full h-3.5 rounded-full overflow-hidden border ${borderClass} ${trackBg} relative group/bar transition-all ${!isPreview ? 'cursor-pointer hover:h-4 shadow-inner' : ''}`}
                                         onClick={(e) => {
                                             if (isPreview) return;
                                             e.stopPropagation();
@@ -642,7 +644,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     >
                                         {(project.tags || []).length > 0 ? (
                                             (project.tags || []).map((tag, tIdx) => (
-                                                <span key={tIdx} className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider border bg-black/40 shadow-inner break-words transition-colors hover:bg-black/60 ${textPrimary} ${borderClass}`}>
+                                                <span key={tIdx} className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider border ${trackBg} shadow-inner break-words transition-colors hover:brightness-110 ${textPrimary} ${borderClass}`}>
                                                     {tag}
                                                 </span>
                                             ))
@@ -654,7 +656,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     {!isPreview && (
                                         <div className={`text-xs flex items-center gap-3 opacity-50 hover:opacity-100 transition-opacity w-full ${textSecondary}`}>
                                             <span className="shrink-0 font-bold">✎ Edit Tools:</span>
-                                            <div className="flex-1 bg-black/20 px-4 py-2 rounded-xl border border-transparent hover:border-slate-500/30 transition-colors w-full overflow-hidden">
+                                            <div className={`flex-1 ${trackBgLight} px-4 py-2 rounded-xl border border-transparent hover:border-slate-500/30 transition-colors w-full overflow-hidden`}>
                                                 <TextElement 
                                                     value={(project.tags || []).join(", ")}
                                                     placeholder="React.js, Node.js, MongoDB"
@@ -666,7 +668,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 </div>
 
                                 {!isPreview && (
-                                    <div className={`text-xs font-mono w-full ${textSecondary} flex items-center gap-3 p-3 rounded-xl bg-black/20 border ${borderClass}`}>
+                                    <div className={`text-xs font-mono w-full ${textSecondary} flex items-center gap-3 p-3 rounded-xl ${trackBgLight} border ${borderClass}`}>
                                         <span className="text-xl shrink-0">🔗</span>
                                         <div className="flex-1 truncate w-full">
                                             <TextElement 
@@ -709,7 +711,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 + Add Another Project
                             </button>
                             
-                            <div className={`text-xs font-mono w-full ${textSecondary} flex items-center gap-3 p-3 rounded-xl bg-black/20 border ${borderClass}`}>
+                            <div className={`text-xs font-mono w-full ${textSecondary} flex items-center gap-3 p-3 rounded-xl ${trackBgLight} border ${borderClass}`}>
                                 <span className="text-xl shrink-0">🐙</span>
                                 <div className="flex-1 truncate w-full">
                                     <TextElement 
@@ -809,7 +811,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     onChange={(e) => setCName(e.target.value)}
                                     placeholder="Your name"
                                     readOnly={!isPreview}
-                                    className={`w-full px-5 py-4 rounded-xl text-sm font-medium outline-none border transition-all duration-300 focus:-translate-y-1 focus:ring-2 focus:ring-blue-500/30 bg-black/20 hover:bg-black/40 ${borderClass} ${textPrimary} ${placeholderClass} ${!isPreview ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    className={`w-full px-5 py-4 rounded-xl text-sm font-medium outline-none border transition-all duration-300 focus:-translate-y-1 focus:ring-2 focus:ring-blue-500/30 ${trackBgLight} focus:${trackBg} ${borderClass} ${textPrimary} ${placeholderClass} ${!isPreview ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 />
                             </motion.div>
                             <motion.div variants={staggerItem} className="group/input">
@@ -820,7 +822,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     onChange={(e) => setCEmail(e.target.value)}
                                     placeholder="you@email.com"
                                     readOnly={!isPreview}
-                                    className={`w-full px-5 py-4 rounded-xl text-sm font-medium outline-none border transition-all duration-300 focus:-translate-y-1 focus:ring-2 focus:ring-blue-500/30 bg-black/20 hover:bg-black/40 ${borderClass} ${textPrimary} ${placeholderClass} ${!isPreview ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    className={`w-full px-5 py-4 rounded-xl text-sm font-medium outline-none border transition-all duration-300 focus:-translate-y-1 focus:ring-2 focus:ring-blue-500/30 ${trackBgLight} focus:${trackBg} ${borderClass} ${textPrimary} ${placeholderClass} ${!isPreview ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 />
                             </motion.div>
                             <motion.div variants={staggerItem} className="group/input">
@@ -831,7 +833,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     onChange={(e) => setCMessage(e.target.value)}
                                     placeholder="Tell me about your project…"
                                     readOnly={!isPreview}
-                                    className={`w-full px-5 py-4 rounded-xl text-sm font-medium outline-none border resize-none transition-all duration-300 focus:-translate-y-1 focus:ring-2 focus:ring-blue-500/30 bg-black/20 hover:bg-black/40 ${borderClass} ${textPrimary} ${placeholderClass} ${!isPreview ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    className={`w-full px-5 py-4 rounded-xl text-sm font-medium outline-none border resize-none transition-all duration-300 focus:-translate-y-1 focus:ring-2 focus:ring-blue-500/30 ${trackBgLight} focus:${trackBg} ${borderClass} ${textPrimary} ${placeholderClass} ${!isPreview ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 />
                             </motion.div>
                             

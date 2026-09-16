@@ -30,6 +30,10 @@ export const PORTFOLIO_THEMES = {
         border: 'border-slate-200 dark:border-slate-800',
         accentText: 'text-slate-900 dark:text-[#D4A72C]',
         accentBg: 'bg-slate-900 dark:bg-[#D4A72C]',
+        cardBg: 'bg-white shadow-sm dark:bg-[#1a1a1a] dark:shadow-none',
+        textPrimary: 'text-slate-900 dark:text-slate-50',
+        textSecondary: 'text-slate-600 dark:text-slate-300',
+        trackBg: 'bg-slate-100 dark:bg-black/40',
     },
     cyber_neon: {
         id: 'cyber_neon',
