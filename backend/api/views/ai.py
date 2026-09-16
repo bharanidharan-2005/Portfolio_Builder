@@ -15,6 +15,7 @@ from django.db import IntegrityError, models, transaction
 from django.http import FileResponse, JsonResponse
 from google import genai
 from google.genai import types
+from groq import Groq
 from rest_framework import permissions, status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.response import Response
@@ -72,45 +73,50 @@ def get_gemini_clients():
 def get_gemini_client():
     return get_gemini_clients()[0]
 
+def get_groq_client():
+    api_key = os.environ.get("GROQ_API_KEY", "").strip()
+    if not api_key:
+        raise AIKeyMissingError("No GROQ_API_KEY configured. Add it to your .env or server environment variables.")
+    return Groq(api_key=api_key)
+
 def generate_text_with_fallback(clients, prompt):
     """
-    Bulletproof Fast Failover: Attempts generation and falls back on ANY 
-    traffic, rate-limit, or missing-model error across multiple clients.
+    Bulletproof Fast Failover: Attempts generation using Groq's fast inference models.
     """
-    if not isinstance(clients, list):
-        clients = [clients]
-        
+    client = get_groq_client()
     models_to_try = [
-        'gemini-2.5-flash',
-        'gemini-2.0-flash',
-        TEXT_MODEL,                     # 'gemini-1.5-flash'
-        'gemini-1.5-flash-latest',      # Fallback for some regions/versions
-        'gemini-1.5-pro',               # Pro fallback
-        'gemini-1.5-pro-latest',        # Pro latest fallback
+        'llama-3.1-70b-versatile',
+        'llama-3.1-8b-instant',
+        'mixtral-8x7b-32768',
+        'gemma2-9b-it'
     ]
     
     last_error = None
-    for client in clients:
-        for model in models_to_try:
-            try:
-                logger.info("Attempting AI generation with model: %s", model)
-                return client.models.generate_content(model=model, contents=[prompt])
-            except Exception as e:
-                last_error = e
-                error_str = str(e).lower()
-                
-                if '429' in error_str or 'quota' in error_str or 'exhausted' in error_str:
-                    logger.warning("Key exhausted or rate limited (%s). Switching to next key...", error_str[:50])
-                    break
-                    
-                if 'api_key' in error_str or 'unauthenticated' in error_str or '401' in error_str:
-                    logger.warning("Key invalid/unauthenticated. Switching to next key...")
-                    break
-                
-                logger.warning("Model %s failed (%s). Falling back immediately...", model, error_str[:50])
-                continue
+    for model in models_to_try:
+        try:
+            logger.info("Attempting AI generation with model: %s", model)
+            chat_completion = client.chat.completions.create(
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
+                model=model,
+                temperature=0.7,
+            )
+            # Create a mock response object to keep compatibility with existing `res.text` expectations
+            class MockResponse:
+                def __init__(self, text):
+                    self.text = text
+            return MockResponse(chat_completion.choices[0].message.content)
+        except Exception as e:
+            last_error = e
+            error_str = str(e).lower()
+            logger.warning("Model %s failed (%s). Falling back immediately...", model, error_str[:50])
+            continue
             
-    # Only crashes if EVERY single model across all clients failed
+    # Only crashes if EVERY single model failed
     raise last_error
 
 def extract_clean_json_payload(raw_text):
@@ -218,7 +224,6 @@ class AITemplateGeneratorView(APIView):
             return Response({'error': 'prompt is required.'}, status=status.HTTP_400_BAD_REQUEST)
         try:
             page = ensure_user_workspace(request)
-            clients = get_gemini_clients()
             category = request.data.get('category') or request.data.get('field') or ''
             category_hint = f"\nUser category/field: {category}" if category else ""
             sys_prompt = (
@@ -229,7 +234,7 @@ class AITemplateGeneratorView(APIView):
             )
             
             # Using the new robust fallback handler
-            res = generate_text_with_fallback(clients, f"{sys_prompt}\nRequest: {prompt}{category_hint}")
+            res = generate_text_with_fallback(None, f"{sys_prompt}\nRequest: {prompt}{category_hint}")
             template = extract_clean_json_payload(res.text)
             
             theme_accent = template.get('theme_accent') if isinstance(template, dict) else None
@@ -259,7 +264,6 @@ class AICopilotAPIView(APIView):
             return Response({'error': 'Prompt is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            clients = get_gemini_clients()
             system_instruction = f"""You are an AI Co-Pilot for a React portfolio builder. 
 The user wants to modify their portfolio canvas through a chat interface.
 
@@ -285,7 +289,7 @@ Choose ONE of the following formats based on the user's intent:
 4. If you just need to reply to the user without changing anything (e.g. asking for clarification):
 {{"action": "reply", "message": "<your_message>"}}
 """
-            response = generate_text_with_fallback(clients, system_instruction)
+            response = generate_text_with_fallback(None, system_instruction)
             action_data = extract_clean_json_payload(response.text)
 
             # Log the session
@@ -346,8 +350,7 @@ class AIGithubIngestAPIView(APIView):
             
             repo_text = "\n".join(repo_summary[:10])
 
-            # 2. Ask Gemini to format into Portfolio schema
-            clients = get_gemini_clients()
+            # 2. Ask Groq to format into Portfolio schema
             prompt = f"""You are a technical recruiter building a portfolio.
 I have fetched the latest GitHub repositories for the user '{username}'. 
 Here is the data:
@@ -373,7 +376,7 @@ Return ONLY a strictly valid JSON object exactly in this schema:
 }}
 DO NOT include any markdown blocks like ```json.
 """
-            res = generate_text_with_fallback(clients, prompt)
+            res = generate_text_with_fallback(None, prompt)
             structured_data = extract_clean_json_payload(res.text)
 
             return Response({'success': True, 'data': structured_data})
@@ -405,7 +408,6 @@ class AISEOAnalyticsAPIView(APIView):
             
             raw_text = "\\n".join(content_dump)[:3000] # Cap to prevent huge payloads
             
-            clients = get_gemini_clients()
             prompt = f"""You are an expert Technical SEO Specialist and UX Analyst for a high-end portfolio builder.
 I am providing you the raw content of a user's portfolio website.
 
@@ -435,7 +437,7 @@ Return ONLY a strictly valid JSON object exactly in this schema:
 }}
 DO NOT include any markdown blocks like ```json.
 """
-            res = generate_text_with_fallback(clients, prompt)
+            res = generate_text_with_fallback(None, prompt)
             structured_data = extract_clean_json_payload(res.text)
 
             user = request.user if request.user.is_authenticated else None
