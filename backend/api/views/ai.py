@@ -33,7 +33,7 @@ from .utils import *
 # -----------------------------------------------------------------
 # 1. GEMINI CLIENT HELPERS
 # -----------------------------------------------------------------
-TEXT_MODEL = 'gemini-3.6-flash'
+TEXT_MODEL = 'gemini-1.5-flash'
 
 class AICreditThrottle(UserRateThrottle):
     scope = 'ai'
@@ -43,19 +43,16 @@ class ImageGenerationThrottle(UserRateThrottle):
     scope = 'image-gen'
     rate = '5/minute'
 
-class AIKeyMissingError(RuntimeError):
+class AIKeyMissingError(Exception):
     pass
 
 def get_gemini_clients():
-    keys_str = os.getenv("GEMINI_API_KEYS", "")
-    single_key = os.getenv("GEMINI_API_KEY", "")
-    
-    keys = []
-    if keys_str:
-        keys = [k.strip() for k in keys_str.split(',') if k.strip()]
-    if single_key and single_key.strip() not in keys:
-        keys.append(single_key.strip())
+    keys_env = os.environ.get("GEMINI_API_KEYS", "")
+    if not keys_env:
+        keys_env = os.environ.get("GEMINI_API_KEY", "")
         
+    keys = [k.strip() for k in keys_env.split(',') if k.strip()]
+    
     valid_clients = []
     for api_key in keys:
         if not api_key or any(
@@ -74,6 +71,7 @@ def get_gemini_clients():
 
 def get_gemini_client():
     return get_gemini_clients()[0]
+
 def generate_text_with_fallback(clients, prompt):
     """
     Bulletproof Fast Failover: Attempts generation and falls back on ANY 
@@ -83,10 +81,10 @@ def generate_text_with_fallback(clients, prompt):
         clients = [clients]
         
     models_to_try = [
-        TEXT_MODEL,                     # Your primary model
-        'gemini-2.0-flash',             # Next-gen fallback
-        'gemini-1.5-flash',             # Reliable fallback
-        'gemini-1.5-flash-8b',          # Fast fallback
+        TEXT_MODEL,                     # 'gemini-1.5-flash'
+        'gemini-1.5-flash-latest',      # Fallback for some regions/versions
+        'gemini-1.5-pro',               # Pro fallback
+        'gemini-1.5-pro-latest',        # Pro latest fallback
     ]
     
     last_error = None
