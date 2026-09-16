@@ -81,6 +81,8 @@ def generate_text_with_fallback(clients, prompt):
         clients = [clients]
         
     models_to_try = [
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
         TEXT_MODEL,                     # 'gemini-1.5-flash'
         'gemini-1.5-flash-latest',      # Fallback for some regions/versions
         'gemini-1.5-pro',               # Pro fallback
