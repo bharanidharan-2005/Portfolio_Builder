@@ -261,29 +261,47 @@ export default function CanvasContainer({
                 <div className="relative z-10 w-full p-4 sm:p-10 flex flex-col">
                     
                     {/* Navigation Header */}
-                    <div className={`sticky top-0 z-40 backdrop-blur-xl bg-black/10 border-b pb-4 pt-4 -mt-4 mb-10 flex flex-col md:flex-row flex-wrap gap-4 justify-between items-center text-xs select-none border-slate-700/30 rounded-t-[1.5rem]`}>
-                        <div className="flex items-center gap-2 pl-2">
+                    <div className={`sticky top-0 z-40 backdrop-blur-xl ${currentTheme.cardBg ? currentTheme.cardBg.replace('bg-white', 'bg-white/80').replace('bg-[#1a1a1a]', 'bg-[#1a1a1a]/80') : 'bg-black/10'} border-b pb-4 pt-4 -mt-4 mb-10 flex flex-col md:flex-row flex-wrap gap-4 justify-between items-center text-xs select-none ${currentTheme.border || 'border-slate-700/30'} rounded-t-[1.5rem] transition-all duration-300 shadow-sm`}>
+                        <div className="flex items-center gap-2 pl-4">
                             <Sparkles className={`w-4 h-4 ${currentTheme.accentText ? '' : 'text-blue-400'}`} />
                             <span className={`font-black tracking-widest uppercase text-[10px] text-center ${currentTheme.accentText || 'text-blue-400'}`}> 
                                 {portfolioTheme ? portfolioTheme.replace('_', ' ') : 'Modern Glass'} 
                             </span> 
                         </div>
-                        <div className="flex flex-wrap justify-center gap-1 md:gap-2 opacity-90 pr-2"> 
-                            {["About", "Education", "Skills", "Projects", "Contact"].map((navItem) => ( 
-                                <button 
-                                    key={navItem} 
-                                    type="button" 
-                                    onClick={() => handleNavClick(navItem)} 
-                                    className="bg-transparent px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all whitespace-nowrap cursor-pointer text-slate-400 hover:text-white hover:bg-white/10"
-                                > 
-                                    {navItem} 
-                                </button>
-                            ))} 
+                        <div className="flex flex-wrap justify-center gap-1 md:gap-2 opacity-100 pr-4"> 
+                            {displaySections
+                                .filter(s => s.section_type !== 'hero' && s.section_type !== 'footer')
+                                .map((section) => {
+                                    const type = section.section_type;
+                                    // Capitalize or use mapped label (assuming SECTION_LABELS might not be imported, use fallback)
+                                    const rawLabel = type === 'projects_grid' ? 'Projects' : type.replace(/_/g, ' ');
+                                    const navLabel = rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1);
+                                    
+                                    return (
+                                        <button 
+                                            key={`nav-${section.id}`} 
+                                            type="button" 
+                                            onClick={() => {
+                                                if (!isPreview && setActiveSectionId) setActiveSectionId(section.id);
+                                                setTimeout(() => {
+                                                    const targetId = isPreview ? `preview-node-block-${section.id}` : `live-node-block-${section.id}`;
+                                                    const targetElement = document.getElementById(targetId);
+                                                    if (targetElement) {
+                                                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                                    }
+                                                }, 30); // Faster, sharper animation
+                                            }} 
+                                            className={`bg-transparent px-3 py-1.5 rounded-full text-[11px] font-bold transition-all whitespace-nowrap cursor-pointer ${currentTheme.textSecondary || 'text-slate-400'} hover:${currentTheme.textPrimary || 'text-white'} hover:${currentTheme.trackBg || 'bg-white/10'} active:scale-95`}
+                                        > 
+                                            {navLabel} 
+                                        </button>
+                                    );
+                                })}
                         </div> 
                     </div>
 
                     {isPreview ? (
-                        <div key={activePage} className="space-y-8 w-full animate-in slide-in-from-bottom-4 duration-700 ease-out">
+                        <div key={activePage} className="space-y-8 w-full animate-in slide-in-from-bottom-2 duration-500 ease-out fade-in fill-mode-both">
                             {displaySections.length > 0 ? (
                                 displaySections.map((section) => (
                                     <div key={section.id} id={`preview-node-block-${section.id}`} className="w-full overflow-visible">
