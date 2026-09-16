@@ -315,7 +315,7 @@ export default function RenderPageContent({ section, portfolioTheme }) {
                             {project.projectUrl && (
                                 <div className="pt-2">
                                     <a href={project.projectUrl} target="_blank" rel="noopener noreferrer" className={\`inline-flex w-max items-center justify-center px-8 py-3.5 rounded-xl text-sm font-bold transition-all border \${badgeClass}\`}>
-                                        View Live ↗
+                                        View Live ->
                                     </a>
                                 </div>
                             )}

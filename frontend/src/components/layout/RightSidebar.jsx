@@ -503,9 +503,23 @@ export default function RightSidebar({
         setIsProcessing(true);
 
         try {
+            // Strip out heavy base64 strings to prevent 413 Payload Too Large
+            const strippedSections = sections.map(sec => {
+                const cleanData = { ...sec.data };
+                if (cleanData.image) delete cleanData.image;
+                if (cleanData.avatar) delete cleanData.avatar;
+                if (cleanData.projects) {
+                    cleanData.projects = cleanData.projects.map(p => {
+                        const { image, ...rest } = p;
+                        return rest;
+                    });
+                }
+                return { ...sec, data: cleanData };
+            });
+
             const response = await API.post("/ai-copilot/", {
                 prompt: userMsg,
-                canvas_state: sections
+                canvas_state: strippedSections
             });
             
             const data = response.data;
