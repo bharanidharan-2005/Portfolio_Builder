@@ -85,10 +85,10 @@ def generate_text_with_fallback(clients, prompt):
     """
     client = get_groq_client()
     models_to_try = [
-        'llama-3.1-70b-versatile',
-        'llama-3.1-8b-instant',
-        'mixtral-8x7b-32768',
-        'gemma2-9b-it'
+        'groq/compound',
+        'qwen/qwen3.8-27b',
+        'openai/gpt-oss-120b',
+        'groq/compound-mini'
     ]
     
     last_error = None
