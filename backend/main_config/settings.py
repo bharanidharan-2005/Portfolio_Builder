@@ -151,20 +151,30 @@ if not DEBUG and 'sqlite' in DATABASES['default']['ENGINE']:
     raise RuntimeError("SQLite is not allowed in production (Google Scale). Set DATABASE_URL to a valid PostgreSQL instance.")
 
 # -----------------------------------------------------------------
-# 🚀 CACHING CONFIGURATION (Redis)
+# 🚀 CACHING CONFIGURATION (Redis or Local Memory)
 # -----------------------------------------------------------------
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": os.getenv("REDIS_URL", "redis://127.0.0.1:6379/1"),
+redis_url = os.getenv("REDIS_URL")
+if redis_url:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": redis_url,
+        }
     }
-}
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "aurabuild-cache",
+        }
+    }
 
 # -----------------------------------------------------------------
 # ⚙️ CELERY (Task Queue)
 # -----------------------------------------------------------------
-CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0")
-CELERY_RESULT_BACKEND = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0")
+# If Redis is missing, we use in-memory broker (only for dev/testing; prod requires real broker)
+CELERY_BROKER_URL = os.getenv("REDIS_URL", "memory://")
+CELERY_RESULT_BACKEND = os.getenv("REDIS_URL", "cache+memory://")
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 
