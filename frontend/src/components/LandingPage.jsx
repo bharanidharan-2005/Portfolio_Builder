@@ -126,6 +126,7 @@ export default function LandingPage({ onEnterWorkspace }) {
             const response = await fetch(`${API.defaults.baseURL}send-key/`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                credentials: "include",
                 body: JSON.stringify({ name: formData.name, email: formData.email })
             });
 
@@ -152,6 +153,7 @@ export default function LandingPage({ onEnterWorkspace }) {
             const response = await fetch(`${API.defaults.baseURL}send-key/`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                credentials: "include",
                 body: JSON.stringify({
                     email: formData.email,
                     code: formData.code,
