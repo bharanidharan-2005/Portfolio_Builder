@@ -39,7 +39,6 @@ class PageListAPIView(APIView):
     permission_classes = [permissions.AllowAny]
     throttle_classes = []
 
-    @method_decorator(cache_page(60 * 15, key_prefix="public_pages"))
     def get(self, request):
         try:
             ensure_user_workspace(request)
