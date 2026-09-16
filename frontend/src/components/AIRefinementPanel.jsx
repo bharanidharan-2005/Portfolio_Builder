@@ -94,7 +94,7 @@ export default function AIRefinementPanel({
             setBusyMessage(`Parsing resume "${file.name}"...`);
             const res = await API.post("upload-resume/", formData);
             if (res.data && res.data.data) {
-                if (onDataExtracted) onDataExtracted(res.data.data);
+                if (onDataExtracted) onDataExtracted(res.data);
                 notify("Resume imported — sections updated", 'success');
             }
         } catch (error) {

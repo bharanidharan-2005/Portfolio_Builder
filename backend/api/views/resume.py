@@ -194,6 +194,7 @@ class ResumeUploadAPIView(APIView):
             'message': 'Parsed successfully',
             'wordCount': f"{word_count} words",
             'data': parsed,
+            'sections': PortfolioSectionSerializer(page.sections.all(), many=True).data if page else [],
             'log': log.to_frontend_dict()
         })
 

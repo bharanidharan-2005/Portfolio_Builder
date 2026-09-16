@@ -251,15 +251,22 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
         }
     };
 
-    const handleResumeParsed = (parsedData) => {
-        if (!parsedData) return;
-        setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Refreshing canvas with parsed data...` }]);
-        API.get('pages/').then(res => {
-            setPages(res.data);
-            const active = res.data.find(p => p.name === activePage) || res.data[0];
+    const handleResumeParsed = (resData) => {
+        if (!resData) return;
+        
+        if (resData.sections && resData.sections.length > 0) {
+            setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Canvas instantly updated with new sections!` }]);
             setHistory({ past: [], future: [] }); 
-            setSections(active.sections || []);
-        });
+            setSections(resData.sections);
+        } else {
+            setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Refreshing canvas with parsed data...` }]);
+            API.get('pages/').then(res => {
+                setPages(res.data);
+                const active = res.data.find(p => p.name === activePage) || res.data[0];
+                setHistory({ past: [], future: [] }); 
+                setSections(active.sections || []);
+            });
+        }
     };
 
     const handleUpdateSectionContent = async (sectionId, key, value) => {
