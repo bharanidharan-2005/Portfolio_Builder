@@ -2,6 +2,16 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, Download, Database, Code2, Layers, Cpu, Globe, Cloud, LayoutTemplate, Activity } from 'lucide-react';
 
+export const getRoleImage = (subheading) => {
+    const role = (subheading || "").toLowerCase();
+    if (role.includes('civil') || role.includes('construct') || role.includes('architect')) return '/3d_civil.jpg';
+    if (role.includes('design') || role.includes('art') || role.includes('ui/ux') || role.includes('ux')) return '/3d_design.jpg';
+    if (role.includes('data') || role.includes('ai') || role.includes('machine learning') || role.includes('ml')) return '/3d_data.jpg';
+    if (role.includes('develop') || role.includes('software') || role.includes('engineer') || role.includes('program')) return '/3d_developer_workspace.jpg';
+    return '/3d_generic.jpg';
+};
+
+
 // Reusable Premium Hero Component
 const PremiumHero = ({ d, config }) => {
     const { bgClass, textClass, accentClass, buttonClass, layoutDir, RightVisual, hideStatus } = config;
@@ -57,7 +67,7 @@ const PremiumHero = ({ d, config }) => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ type: "spring", stiffness: 50 }}
                             className="font-black tracking-tight leading-tight w-full"
-                            style={{ fontSize: 'clamp(40px, 5vw, 72px)' }}
+                            style={{ fontSize: 'clamp(32px, 5vw, 56px)', wordBreak: 'break-word', lineHeight: '1.1' }}
                         >
                             {d.name}
                         </motion.h1>
@@ -123,10 +133,10 @@ const PremiumHero = ({ d, config }) => {
 
 // --- Custom Right Visuals for the 15 Templates ---
 
-const ImageVisual = () => (
+const ImageVisual = ({ d }) => (
     <motion.div animate={{ y: [-15, 15, -15], rotateZ: [-2, 2, -2] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }} className="relative w-[300px] h-[300px] md:w-[450px] md:h-[450px] lg:w-[500px] lg:h-[500px]">
         <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-[100px]"></div>
-        <img src="/3d_developer_workspace.jpg" alt="Developer Workspace" className="absolute inset-0 w-full h-full object-cover mix-blend-screen opacity-90 rounded-3xl drop-shadow-2xl" />
+        <img src={getRoleImage(d?.headline || "")} alt="Workspace Concept" className="absolute inset-0 w-full h-full object-cover mix-blend-screen opacity-90 rounded-3xl drop-shadow-2xl" />
     </motion.div>
 );
 

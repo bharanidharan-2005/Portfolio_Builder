@@ -287,7 +287,7 @@ export default function CanvasContainer({
                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg shadow-inner ${currentTheme.accentBg || 'bg-blue-600'} text-white`}>
                                 {initials}
                             </div>
-                            <span className={`font-black tracking-widest uppercase hidden sm:block text-sm md:text-base ${currentTheme.accentText || 'text-blue-400'}`}> 
+                            <span className={`font-black tracking-widest uppercase hidden sm:block text-sm md:text-base leading-none translate-y-[1px] ${currentTheme.accentText || 'text-blue-400'}`}> 
                                 {heroName.split(' ')[0]} 
                             </span> 
                         </div>

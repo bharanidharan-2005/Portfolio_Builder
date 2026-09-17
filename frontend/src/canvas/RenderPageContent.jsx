@@ -178,7 +178,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
             {currentType === "hero" && (
                 <motion.div 
                     {...fadeUpConfig}
-                    className={`py-12 sm:py-24 px-4 sm:px-10 relative rounded-3xl ${!bgImage ? cardBg : ""} overflow-hidden`}
+                    className={`py-12 sm:py-24 px-4 sm:px-10 relative rounded-3xl bg-transparent overflow-hidden`}
                     style={bgImage ? {
                         backgroundImage: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.8)), url('${bgImage}')`,
                         backgroundSize: "cover",
@@ -210,7 +210,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     viewport={{ once: false, amount: 0.1 }}
                                     transition={springTransition}
                                     className={`font-black tracking-tight leading-tight w-full ${bgImage ? 'text-white' : textPrimary}`}
-                                    style={{ fontSize: 'clamp(40px, 5vw, 72px)', whiteSpace: 'normal', wordBreak: 'normal' }}
+                                    style={{ fontSize: 'clamp(32px, 5vw, 56px)', whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.1' }}
                                 >
                                     <TextElement
                                         value={data.heading || "YOUR NAME"}
@@ -249,29 +249,47 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 whileInView={{ opacity: 1, y: 0 }} 
                                 viewport={{ once: false, amount: 0.1 }}
                                 transition={{ ...springTransition, delay: 0.2 }}
-                                className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-4 w-full"
+                                className="flex flex-col items-center lg:items-start gap-6 pt-4 w-full"
                             >
-                                <motion.button 
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        const projectsSection = document.getElementById('preview-node-block-' + (sections.find(s => s.section_type === 'projects_grid')?.id || ''));
-                                        if (projectsSection) projectsSection.scrollIntoView({ behavior: 'smooth' });
-                                    }}
-                                    className={`px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all shadow-lg hover:shadow-xl ${accentBg} text-white flex items-center gap-2`}
-                                >
-                                    View My Work &rarr;
-                                </motion.button>
-                                
-                                {isPreview && (
-                                    <PDFDownloadLink
-                                        document={pdfDocument}
-                                        fileName={`${data.heading?.replace(/\s+/g, '_') || 'Portfolio'}_Resume.pdf`}
-                                        className={`px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all bg-transparent hover:bg-white/5 border shadow-sm hover:shadow-md ${textPrimary} ${borderClass}`}
+                                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 w-full">
+                                    <motion.button 
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            const projectsSection = document.getElementById('preview-node-block-' + (sections.find(s => s.section_type === 'projects_grid')?.id || ''));
+                                            if (projectsSection) projectsSection.scrollIntoView({ behavior: 'smooth' });
+                                        }}
+                                        className={`px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all shadow-lg hover:shadow-xl ${accentBg} text-white flex items-center gap-2`}
                                     >
-                                        {({ blob, url, loading, error }) => (loading ? 'Preparing PDF...' : 'Download Resume')}
-                                    </PDFDownloadLink>
+                                        View My Work &rarr;
+                                    </motion.button>
+                                    
+                                    {isPreview && (
+                                        <PDFDownloadLink
+                                            document={pdfDocument}
+                                            fileName={`${data.heading?.replace(/\s+/g, '_') || 'Portfolio'}_Resume.pdf`}
+                                            className={`px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all bg-transparent hover:bg-white/5 border shadow-sm hover:shadow-md ${textPrimary} ${borderClass}`}
+                                        >
+                                            {({ blob, url, loading, error }) => (loading ? 'Preparing...' : 'Download Resume')}
+                                        </PDFDownloadLink>
+                                    )}
+                                </div>
+                                
+                                {/* Dynamic Social Links */}
+                                {(heroLiveOptions.length > 0 || heroDesignOptions.length > 0) && (
+                                    <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 w-full">
+                                        {[...heroLiveOptions, ...heroDesignOptions].map((link, i) => (
+                                            <motion.button
+                                                key={i}
+                                                whileHover={{ scale: 1.05 }}
+                                                onClick={(e) => { e.stopPropagation(); openExternal(link.url); }}
+                                                className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all border shadow-sm flex items-center gap-2 ${badgeClass}`}
+                                            >
+                                                {link.label} ↗
+                                            </motion.button>
+                                        ))}
+                                    </div>
                                 )}
                             </motion.div>
                         </div>
@@ -290,8 +308,8 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             >
                                 <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-[100px]"></div>
                                 <img 
-                                    src="/3d_developer_workspace.jpg" 
-                                    alt="3D Developer Workspace" 
+                                    src={getRoleImage(data.subheading || "")} 
+                                    alt="3D Workspace" 
                                     className="absolute inset-0 w-full h-full object-cover mix-blend-screen opacity-90 hover:opacity-100 transition-opacity duration-500 rounded-3xl"
                                     style={{ filter: "drop-shadow(0 0 30px rgba(59,130,246,0.3))" }}
                                 />
