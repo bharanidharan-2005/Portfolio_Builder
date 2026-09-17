@@ -67,7 +67,7 @@ const PremiumHero = ({ d, config }) => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ type: "spring", stiffness: 50 }}
                             className="font-black tracking-tight leading-tight w-full"
-                            style={{ fontSize: 'clamp(32px, 5vw, 56px)', wordBreak: 'break-word', lineHeight: '1.1' }}
+                            className={`font-black tracking-tight leading-tight w-full text-5xl sm:text-6xl lg:text-7xl break-words`}
                         >
                             {d.name}
                         </motion.h1>

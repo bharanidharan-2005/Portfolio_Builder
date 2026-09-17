@@ -312,10 +312,16 @@ export default function CanvasContainer({
                         {/* Right Side - Resume */}
                         <div>
                             <button 
-                                onClick={() => handleNavClick('resume')}
+                                onClick={() => {
+                                    if(isPreview) {
+                                        window.print();
+                                    } else {
+                                        alert("Please test Resume Download in the Live Preview.");
+                                    }
+                                }}
                                 className={`px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-md hover:shadow-lg ${currentTheme.accentBg || 'bg-blue-600'} text-white flex items-center gap-2`}
                             >
-                                Resume
+                                Print Resume
                             </button>
                         </div>
                     </div>
