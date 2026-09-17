@@ -151,7 +151,7 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
         
         // Add staggered animation delay based on index so they cascade nicely
         const animDelay = (idx % 3) * 0.2;
-        sectionsHtml += `<div id="section-${sec.id}" class="scroll-mt-32 reveal-on-scroll opacity-0 translate-y-12 transition-all duration-1000 ease-out" style="transition-delay: ${animDelay}s">`;
+        sectionsHtml += `<div id="section-${sec.id}" class="scroll-mt-32 reveal-on-scroll stagger-container" style="transition-delay: ${animDelay}s">`;
 
         if (type === 'hero') {
             const bgImage = getAbsoluteUrl(data.backgroundImage || '');
@@ -167,7 +167,7 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
             <section class="py-16 sm:py-24 px-6 sm:px-12 relative rounded-3xl overflow-visible border ${theme.border} ${!bgImage ? theme.cardBg || 'bg-black/40 backdrop-blur-xl' : ''} mb-16 shadow-2xl" ${bgInlineStyle}>
                 <div class="relative z-10 w-full max-w-7xl mx-auto flex flex-col-reverse lg:flex-row items-center gap-12 lg:gap-20">
                     <!-- Left Column: Text -->
-                    <div class="flex-1 space-y-8 flex flex-col items-center lg:items-start text-center lg:text-left">
+                    <div class="flex-1 space-y-8 flex flex-col items-center lg:items-start text-center lg:text-left stagger-item stagger-delay-1">
                         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold border ${theme.border} bg-white/5 backdrop-blur-md shadow-sm">
                             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                             <span class="${theme.textSecondary}">Open to opportunities</span>
@@ -192,7 +192,7 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                     </div>
 
                     <!-- Right Column: Visual -->
-                    <div class="flex-1 w-full max-w-md lg:max-w-none relative aspect-square flex justify-center items-center">
+                    <div class="flex-1 w-full max-w-md lg:max-w-none relative aspect-square flex justify-center items-center stagger-item stagger-delay-2">
                         <div class="absolute inset-0 bg-gradient-to-tr from-blue-500/20 to-purple-500/20 rounded-full blur-[80px] animate-pulse"></div>
                         <img src="${roleImageUrl}" alt="Hero Visual" class="absolute inset-0 w-full h-full object-cover mix-blend-screen opacity-90 rounded-3xl drop-shadow-2xl hover:scale-105 transition-transform duration-700" />
                     </div>
@@ -204,12 +204,12 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
             <section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl">
                 <div class="flex flex-col lg:flex-row gap-12 items-center">
                     ${aboutImg ? `
-                    <div class="flex-1 w-full relative group perspective-1000">
+                    <div class="flex-1 w-full relative group perspective-1000 stagger-item stagger-delay-1">
                         <div class="absolute inset-0 bg-blue-500/10 rounded-3xl blur-[40px] group-hover:bg-blue-500/30 transition-all duration-700"></div>
                         <img src="${aboutImg}" alt="About Me" class="w-full object-cover rounded-3xl shadow-2xl border ${theme.border} transform transition-all duration-700 group-hover:scale-105 group-hover:rotate-y-6" />
                     </div>
                     ` : ''}
-                    <div class="flex-1 w-full space-y-8">
+                    <div class="flex-1 w-full space-y-8 stagger-item stagger-delay-2">
                         <h2 class="text-sm md:text-base uppercase font-black tracking-[0.2em] ${theme.accentText}">${escapeHtml(data.title) || 'About Me'}</h2>
                         <div class="prose prose-lg prose-invert max-w-none text-slate-300 leading-relaxed font-medium">
                             ${escapeHtml(data.bio) || 'Introduction...'}
@@ -219,7 +219,7 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
             </section>`;
         } else if (type === 'education') {
             const itemsHtml = (data.schools || []).map(s => `
-                <div class="p-8 rounded-2xl border ${theme.border} bg-white/5 hover:bg-white/10 transition-all shadow-sm hover:shadow-xl hover:-translate-y-1">
+                <div class="stagger-item p-8 rounded-2xl border ${theme.border} bg-white/5 hover:bg-white/10 transition-all shadow-sm hover:shadow-xl hover:-translate-y-1">
                     <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-4">
                         <h3 class="text-xl font-bold ${theme.textPrimary}">${escapeHtml(s.school)}</h3>
                         <span class="px-4 py-1.5 text-xs font-bold rounded-full border ${theme.border} bg-black/40 text-slate-300">${escapeHtml(s.duration)}</span>
@@ -228,10 +228,12 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                     <div class="text-sm text-slate-400 font-mono leading-relaxed">${escapeHtml(s.details)}</div>
                 </div>
             `).join('');
-            sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl"><h2 class="text-sm md:text-base uppercase font-black tracking-[0.2em] mb-10 ${theme.accentText}">${escapeHtml(data.title) || 'Education'}</h2><div class="grid grid-cols-1 gap-6">${itemsHtml}</div></section>`;
+            // Add staggered delays for grid items
+const delayEduHtml = itemsHtml.split('stagger-item').map((part, i) => i === 0 ? part : `stagger-item stagger-delay-${(i % 4) + 1}` + part).join('');
+sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl stagger-container"><h2 class="text-sm md:text-base uppercase font-black tracking-[0.2em] mb-10 ${theme.accentText} stagger-item stagger-delay-1">${escapeHtml(data.title) || 'Education'}</h2><div class="grid grid-cols-1 gap-6">${delayEduHtml}</div></section>`;
         } else if (type === 'skills') {
             const itemsHtml = (data.items || []).map(s => `
-                <div class="group p-6 rounded-2xl border ${theme.border} bg-white/5 hover:bg-white/10 transition-all shadow-sm hover:shadow-xl">
+                <div class="stagger-item group p-6 rounded-2xl border ${theme.border} bg-white/5 hover:bg-white/10 transition-all shadow-sm hover:shadow-xl">
                     <div class="flex justify-between text-sm font-bold mb-4 ${theme.textPrimary}">
                         <span class="tracking-wide">${escapeHtml(s.name)}</span>
                         <span class="${theme.accentText}">${escapeHtml(s.level)}%</span>
@@ -241,10 +243,12 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                     </div>
                 </div>
             `).join('');
-            sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl"><h2 class="text-sm md:text-base uppercase font-black tracking-[0.2em] mb-10 ${theme.accentText}">${escapeHtml(data.title) || 'Skills'}</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-6">${itemsHtml}</div></section>`;
+            // Add staggered delays for grid items
+const delaySkillHtml = itemsHtml.split('stagger-item').map((part, i) => i === 0 ? part : `stagger-item stagger-delay-${(i % 4) + 1}` + part).join('');
+sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl stagger-container"><h2 class="text-sm md:text-base uppercase font-black tracking-[0.2em] mb-10 ${theme.accentText} stagger-item stagger-delay-1">${escapeHtml(data.title) || 'Skills'}</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-6">${delaySkillHtml}</div></section>`;
         } else if (type === 'projects_grid') {
             const projectsHtml = (data.projects || []).map(p => `
-                <div class="group relative flex flex-col rounded-3xl border ${theme.border} bg-white/5 overflow-hidden hover:shadow-2xl transition-all duration-700 hover:-translate-y-3">
+                <div class="stagger-item group relative flex flex-col rounded-3xl border ${theme.border} bg-white/5 overflow-hidden hover:shadow-2xl transition-all duration-700 hover:-translate-y-3">
                     <div class="p-8 flex-1 space-y-4 relative z-10">
                         <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                         <h3 class="text-2xl font-bold ${theme.textPrimary}">${escapeHtml(p.title)}</h3>
@@ -258,7 +262,9 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                     </div>
                 </div>
             `).join('');
-            sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl"><h2 class="text-sm md:text-base uppercase font-black tracking-[0.2em] mb-10 ${theme.accentText}">${escapeHtml(data.title) || 'Projects'}</h2><div class="grid grid-cols-1 lg:grid-cols-2 gap-8">${projectsHtml}</div></section>`;
+            // Add staggered delays for grid items
+const delayProjHtml = projectsHtml.split('stagger-item').map((part, i) => i === 0 ? part : `stagger-item stagger-delay-${(i % 4) + 1}` + part).join('');
+sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl stagger-container"><h2 class="text-sm md:text-base uppercase font-black tracking-[0.2em] mb-10 ${theme.accentText} stagger-item stagger-delay-1">${escapeHtml(data.title) || 'Projects'}</h2><div class="grid grid-cols-1 lg:grid-cols-2 gap-8">${delayProjHtml}</div></section>`;
         } else if (type === 'contact') {
             // Render the actual form elements to match the preview exactly!
             const formHtml = `
@@ -322,11 +328,20 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; border: 2px solid rgba(0,0,0,0.2); }
         ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
         
-        .reveal-on-scroll.is-visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        /* Staggered Children Animations */
+        .reveal-on-scroll { opacity: 0; transform: translateY(30px); transition: all 1s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal-on-scroll.is-visible { opacity: 1; transform: translateY(0); }
         
+        /* Stagger elements inside sections */
+        .stagger-container .stagger-item { opacity: 0; transform: translateY(20px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal-on-scroll.is-visible.stagger-container .stagger-item, 
+        .reveal-on-scroll.is-visible .stagger-item { opacity: 1; transform: translateY(0); }
+        
+        .stagger-delay-1 { transition-delay: 0.1s; }
+        .stagger-delay-2 { transition-delay: 0.2s; }
+        .stagger-delay-3 { transition-delay: 0.3s; }
+        .stagger-delay-4 { transition-delay: 0.4s; }
+
         @keyframes fadeInDown {
             0% { opacity: 0; transform: translateY(-30px); }
             100% { opacity: 1; transform: translateY(0); }
