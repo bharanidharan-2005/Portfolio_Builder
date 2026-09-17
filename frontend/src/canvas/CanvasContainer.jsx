@@ -181,7 +181,7 @@ export default function CanvasContainer({
     const currentTheme = PORTFOLIO_THEMES[portfolioTheme] || {};
     const currentFontObj = PORTFOLIO_FONTS.find(f => f.id === globalFont) || PORTFOLIO_FONTS[0];
     const displaySections = sections || [];
-    const pdfDocument = useMemo(() => <ResumePDF sections={sections} />, [sections]);
+    const pdfDocument = useMemo(() => isPreview ? <ResumePDF sections={sections} /> : null, [sections, isPreview]);
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
@@ -222,8 +222,10 @@ export default function CanvasContainer({
                 const targetId = isPreview ? `preview-node-block-${foundSection.id}` : `live-node-block-${foundSection.id}`;
                 const targetElement = document.getElementById(targetId);
                 if (targetElement) {
-                    const scrollContainer = document.getElementById('workspace-scroll-container') || window;
-                    const topOffset = targetElement.getBoundingClientRect().top + (scrollContainer.scrollTop || window.scrollY) - 100;
+                    const isPreviewScroll = isPreview || !document.getElementById('workspace-scroll-container');
+                    const scrollContainer = isPreviewScroll ? window : document.getElementById('workspace-scroll-container');
+                    const topOffset = targetElement.getBoundingClientRect().top + (isPreviewScroll ? window.scrollY : scrollContainer.scrollTop) - 100;
+                    
                     if (scrollContainer.scrollTo) {
                         scrollContainer.scrollTo({ top: topOffset, behavior: 'smooth' });
                     } else {

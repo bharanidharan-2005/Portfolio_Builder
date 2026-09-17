@@ -43,7 +43,7 @@ export const getRoleImage = (subheading) => {
 
 export default function RenderPageContent({ section, portfolioTheme, sections, onInlineEdit, isPreview = false }) {
     // Memoize the PDF document to prevent massive memory leaks and re-renders on scroll
-    const pdfDocument = useMemo(() => <ResumePDF sections={sections} />, [sections]);
+    const pdfDocument = useMemo(() => isPreview ? <ResumePDF sections={sections} /> : null, [sections, isPreview]);
     const [openMenu, setOpenMenu] = useState(null);
     const [cName, setCName] = useState("");
     const [cEmail, setCEmail] = useState("");
@@ -164,7 +164,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
 
     const heroProjects = [];
     if (Array.isArray(sections)) {
-        const pg = sections.find((s) => (s.section_type || "").toLowerCase().trim() === "projects_grid");
+        const pg = sections.find((s) => { const st = (s.section_type || "").toLowerCase().trim(); return st === "projects_grid" || st === "projects"; });
         if (pg && pg.content_data && pg.content_data.projects) {
             heroProjects.push(...pg.content_data.projects);
         }
@@ -218,7 +218,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: false, amount: 0.1 }}
                                     transition={springTransition}
-                                    className={`font-black tracking-tight leading-tight w-full max-w-3xl text-4xl sm:text-5xl lg:text-6xl ${bgImage ? 'text-white' : textPrimary}`}
+                                    className={`font-black tracking-tight leading-tight w-full max-w-3xl text-3xl sm:text-4xl lg:text-5xl xl:text-6xl break-words ${bgImage ? 'text-white' : textPrimary}`}
                                 >
                                     <TextElement
                                         value={data.heading || "YOUR NAME"}
@@ -294,7 +294,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                 <button className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg flex items-center gap-2 bg-[#0a0a0f] hover:bg-[#1a1a24] text-white">
                                                     See Live ▾
                                                 </button>
-                                                <div className="absolute top-full left-0 mt-2 w-48 rounded-xl border border-slate-800 bg-[#0a0a0f]/95 backdrop-blur-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col p-2 overflow-hidden">
+                                                <div className="absolute top-full left-0 mt-2 w-48 rounded-xl border border-slate-800 bg-[#0a0a0f]/95 backdrop-blur-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col p-2 max-h-60 overflow-y-auto custom-scrollbar">
                                                     {heroLiveOptions.map((link, i) => (
                                                         <button
                                                             key={`social-${i}`}
@@ -315,7 +315,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                 <button className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg flex items-center gap-2 bg-[#0a0a0f] hover:bg-[#1a1a24] text-white">
                                                     Projects ▾
                                                 </button>
-                                                <div className="absolute top-full left-0 mt-2 w-56 rounded-xl border border-slate-800 bg-[#0a0a0f]/95 backdrop-blur-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col p-2 overflow-hidden">
+                                                <div className="absolute top-full left-0 mt-2 w-56 rounded-xl border border-slate-800 bg-[#0a0a0f]/95 backdrop-blur-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col p-2 max-h-60 overflow-y-auto custom-scrollbar">
                                                     {heroDesignOptions.map((link, i) => (
                                                         <button
                                                             key={`proj-${i}`}
