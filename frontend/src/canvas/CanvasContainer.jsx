@@ -236,9 +236,10 @@ export default function CanvasContainer({
                         const containerRect = scrollContainer.getBoundingClientRect();
                         const elementRect = targetElement.getBoundingClientRect();
                         const relativeTop = elementRect.top - containerRect.top;
-                        scrollContainer.scrollTo({ top: scrollContainer.scrollTop + relativeTop - 100, behavior: 'smooth' });
+                        // 0 offset to snap exactly to the top of the section (since sections have their own padding)
+                        scrollContainer.scrollTo({ top: scrollContainer.scrollTop + relativeTop, behavior: 'smooth' });
                     } else {
-                        const topOffset = targetElement.getBoundingClientRect().top + window.scrollY - 100;
+                        const topOffset = targetElement.getBoundingClientRect().top + window.scrollY;
                         window.scrollTo({ top: topOffset, behavior: 'smooth' });
                     }
                 }
