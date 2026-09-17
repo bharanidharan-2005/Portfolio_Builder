@@ -323,9 +323,14 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             </motion.div>
                         )}
                         <div className={`flex-[1_1_300px] space-y-5 w-full text-center min-[600px]:text-left`}>
-                            <h2 className={`sticky top-[100px] z-30 py-4 backdrop-blur-xl bg-transparent text-2xl md:text-3xl uppercase font-black tracking-widest ${accentText}`}>
-                                About Me
-                            </h2>
+                            <div className={`sticky top-0 sm:top-[60px] z-40 w-[calc(100%+2rem)] -ml-4 sm:w-[calc(100%+4rem)] sm:-ml-8 px-4 sm:px-8 py-4 mb-8 backdrop-blur-2xl bg-black/40 border-b shadow-lg transition-all ${borderClass}`}>
+                        <motion.h2 
+                            initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: false }}
+                            className={`text-xl md:text-2xl uppercase font-black tracking-widest ${accentText}`}
+                        >
+                            About Me
+                        </motion.h2>
+                    </div>
                             <div className={`text-lg md:text-xl leading-relaxed break-words max-w-full font-medium ${textSecondary}`}>
                                 <TextElement 
                                     multiline 
@@ -343,9 +348,14 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
             {currentType === "education" && (
                 <motion.div {...fadeUpConfig} className="space-y-6 py-8">
                     {sectionImageBanner}
-                    <h2 className={`sticky top-[100px] z-30 py-4 backdrop-blur-xl bg-transparent text-2xl md:text-3xl uppercase font-black tracking-widest ${accentText}`}>
-                        Educational Background
-                    </h2>
+                    <div className={`sticky top-0 sm:top-[60px] z-40 w-[calc(100%+2rem)] -ml-4 sm:w-[calc(100%+4rem)] sm:-ml-8 px-4 sm:px-8 py-4 mb-8 backdrop-blur-2xl bg-black/40 border-b shadow-lg transition-all ${borderClass}`}>
+                        <motion.h2 
+                            initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: false }}
+                            className={`text-xl md:text-2xl uppercase font-black tracking-widest ${accentText}`}
+                        >
+                            Educational Background
+                        </motion.h2>
+                    </div>
                     
                     <motion.div 
                         variants={staggerContainer}
@@ -423,9 +433,14 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
             {currentType === "skills" && (
                 <motion.div {...fadeUpConfig} className="space-y-8 py-10">
                     {sectionImageBanner}
-                    <h2 className={`sticky top-[100px] z-30 py-4 backdrop-blur-xl bg-transparent text-2xl md:text-3xl uppercase font-black tracking-widest text-center mb-12 ${accentText}`}>
-                        Core Expertise
-                    </h2>
+                    <div className={`sticky top-0 sm:top-[60px] z-40 w-[calc(100%+2rem)] -ml-4 sm:w-[calc(100%+4rem)] sm:-ml-8 px-4 sm:px-8 py-4 mb-12 backdrop-blur-2xl bg-black/40 border-b shadow-lg transition-all ${borderClass}`}>
+                        <motion.h2 
+                            initial={{ opacity: 0, y: -20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
+                            className={`text-xl md:text-2xl uppercase font-black tracking-widest text-center ${accentText}`}
+                        >
+                            Core Expertise
+                        </motion.h2>
+                    </div>
                     
                     <div className="flex flex-col gap-6 pt-2 w-full max-w-5xl mx-auto px-2">
                         {(data.items || []).map((skill, i) => {
@@ -513,14 +528,14 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
             {currentType === "projects_grid" && (
                 <div className="space-y-8 py-10">
                     {sectionImageBanner}
-                    <motion.h2 
-                        initial={{ opacity: 0, y: -15 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: false, amount: 0.1 }}
-                        className={`text-sm uppercase font-black tracking-widest text-center mb-12 ${accentText}`}
-                    >
-                        {data.title || "Showcase of Innovations"}
-                    </motion.h2>
+                    <div className={`sticky top-0 sm:top-[60px] z-40 w-[calc(100%+2rem)] -ml-4 sm:w-[calc(100%+4rem)] sm:-ml-8 px-4 sm:px-8 py-4 mb-12 backdrop-blur-2xl bg-black/40 border-b shadow-lg transition-all ${borderClass}`}>
+                        <motion.h2 
+                            initial={{ opacity: 0, y: -20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
+                            className={`text-xl md:text-2xl uppercase font-black tracking-widest text-center ${accentText}`}
+                        >
+                            {data.title || "Showcase of Innovations"}
+                        </motion.h2>
+                    </div>
                     
                     <div className="flex flex-col gap-10 w-full max-w-5xl mx-auto px-2">
                         {(data.projects || []).map((project, i) => (
