@@ -185,7 +185,7 @@ class DeploymentView(APIView):
         
         try:
             payload = {
-                'name': 'published-user-portfolio', 
+                'name': f'portfolio-{__import__("uuid").uuid4().hex[:8]}', 
                 'files': [{'file': 'index.html', 'data': html_content}],
                 'projectSettings': {
                     'framework': None,
