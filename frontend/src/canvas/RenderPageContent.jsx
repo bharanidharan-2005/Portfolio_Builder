@@ -219,7 +219,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             whileInView={{ opacity: 1, y: 0 }} 
                             viewport={{ once: false, amount: 0.1 }}
                             transition={{ ...springTransition, delay: 0.1 }}
-                            className={`text-base sm:text-lg leading-relaxed w-full max-w-full font-medium ${bgImage ? 'text-white/90' : textSecondary}`}
+                            className={`text-lg md:text-xl leading-relaxed w-full max-w-full font-medium ${bgImage ? 'text-white/90' : textSecondary}`}
                         >
                             <TextElement 
                                 value={data.subheading || ""}
@@ -349,10 +349,10 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             </motion.div>
                         )}
                         <div className={`flex-[1_1_300px] space-y-5 w-full text-center min-[600px]:text-left`}>
-                            <h2 className={`text-sm uppercase font-black tracking-widest ${accentText}`}>
+                            <h2 className={`sticky top-[100px] z-30 py-4 backdrop-blur-xl bg-transparent text-2xl md:text-3xl uppercase font-black tracking-widest ${accentText}`}>
                                 About Me
                             </h2>
-                            <div className={`text-base md:text-lg leading-relaxed break-words max-w-full font-medium ${textSecondary}`}>
+                            <div className={`text-lg md:text-xl leading-relaxed break-words max-w-full font-medium ${textSecondary}`}>
                                 <TextElement 
                                     multiline 
                                     value={data.bio || ""}
@@ -369,7 +369,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
             {currentType === "education" && (
                 <motion.div {...fadeUpConfig} className="space-y-6 py-8">
                     {sectionImageBanner}
-                    <h2 className={`text-sm uppercase font-black tracking-widest ${accentText}`}>
+                    <h2 className={`sticky top-[100px] z-30 py-4 backdrop-blur-xl bg-transparent text-2xl md:text-3xl uppercase font-black tracking-widest ${accentText}`}>
                         Educational Background
                     </h2>
                     
@@ -395,14 +395,14 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 
                                 <div className="flex flex-wrap justify-between items-start gap-4">
                                     <div className="space-y-1.5 w-full sm:w-auto flex-1">
-                                        <h3 className={`text-base font-bold uppercase tracking-wide break-words max-w-full ${textPrimary}`}>
+                                        <h3 className={`text-lg font-bold uppercase tracking-wide break-words max-w-full ${textPrimary}`}>
                                             <TextElement 
                                                 value={school.institution || ""}
                                                 placeholder="Institution Name"
                                                 onCommit={(v) => updateArrayItem("schools", i, "institution", v)}
                                             />
                                         </h3>
-                                        <p className={`text-sm font-medium break-words max-w-full ${textSecondary}`}>
+                                        <p className={`text-base font-medium break-words max-w-full ${textSecondary}`}>
                                             <TextElement 
                                                 value={school.degree || ""}
                                                 placeholder="Degree / Major"
@@ -410,7 +410,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                             />
                                         </p>
                                     </div>
-                                    <span className={`text-xs font-mono px-4 py-1.5 rounded-lg shrink-0 transition-colors max-w-full truncate ${badgeClass}`}>
+                                    <span className={`text-sm font-mono px-4 py-1.5 rounded-lg shrink-0 transition-colors max-w-full truncate ${badgeClass}`}>
                                         <TextElement 
                                             value={school.years || ""}
                                             placeholder="Years"
@@ -436,7 +436,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         <div className="pt-4">
                             <button 
                                 onClick={(e) => { e.stopPropagation(); addArrayItem('schools', { institution: "New Institution", degree: "New Degree", years: "Year - Year", score: "GPA: 0.0" }); }}
-                                className={`w-full py-4 rounded-xl border border-dashed text-sm font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex justify-center items-center gap-2 ${textPrimary} ${borderClass}`}
+                                className={`w-full py-4 rounded-xl border border-dashed text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex justify-center items-center gap-2 ${textPrimary} ${borderClass}`}
                             >
                                 + Add Education
                             </button>
@@ -449,7 +449,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
             {currentType === "skills" && (
                 <motion.div {...fadeUpConfig} className="space-y-8 py-10">
                     {sectionImageBanner}
-                    <h2 className={`text-sm uppercase font-black tracking-widest text-center mb-12 ${accentText}`}>
+                    <h2 className={`sticky top-[100px] z-30 py-4 backdrop-blur-xl bg-transparent text-2xl md:text-3xl uppercase font-black tracking-widest text-center mb-12 ${accentText}`}>
                         Core Expertise
                     </h2>
                     
@@ -526,7 +526,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         <div className="pt-12">
                             <button 
                                 onClick={(e) => { e.stopPropagation(); addArrayItem('items', { name: "New Skill", level: 50 }); }}
-                                className={`w-full max-w-5xl mx-auto py-4 rounded-xl border border-dashed text-sm font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex justify-center items-center ${textPrimary} ${borderClass}`}
+                                className={`w-full max-w-5xl mx-auto py-4 rounded-xl border border-dashed text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex justify-center items-center ${textPrimary} ${borderClass}`}
                             >
                                 + Add Skill
                             </button>
@@ -670,7 +670,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 </div>
 
                                 {!isPreview && (
-                                    <div className={`text-xs font-mono w-full ${textSecondary} flex items-center gap-3 p-3 rounded-xl ${trackBgLight} border ${borderClass}`}>
+                                    <div className={`text-sm font-mono w-full ${textSecondary} flex items-center gap-3 p-3 rounded-xl ${trackBgLight} border ${borderClass}`}>
                                         <span className="text-xl shrink-0">🔗</span>
                                         <div className="flex-1 truncate w-full">
                                             <TextElement 
@@ -708,12 +708,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         <div className="pt-10 w-full px-2 max-w-5xl mx-auto space-y-4">
                             <button 
                                 onClick={(e) => { e.stopPropagation(); addArrayItem('projects', { title: "New Project", desc: "Brief description of the project.", tags: ["React", "Tailwind CSS"], projectUrl: "" }); }}
-                                className={`w-full py-5 rounded-xl border border-dashed text-sm font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
+                                className={`w-full py-5 rounded-xl border border-dashed text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
                             >
                                 + Add Another Project
                             </button>
                             
-                            <div className={`text-xs font-mono w-full ${textSecondary} flex items-center gap-3 p-3 rounded-xl ${trackBgLight} border ${borderClass}`}>
+                            <div className={`text-sm font-mono w-full ${textSecondary} flex items-center gap-3 p-3 rounded-xl ${trackBgLight} border ${borderClass}`}>
                                 <span className="text-xl shrink-0">🐙</span>
                                 <div className="flex-1 truncate w-full">
                                     <TextElement 
@@ -813,7 +813,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     onChange={(e) => setCName(e.target.value)}
                                     placeholder="Your name"
                                     readOnly={!isPreview}
-                                    className={`w-full px-5 py-4 rounded-xl text-sm font-medium outline-none border transition-all duration-300 focus:-translate-y-1 focus:ring-2 focus:ring-blue-500/30 ${trackBgLight} focus:${trackBg} ${borderClass} ${textPrimary} ${placeholderClass} ${!isPreview ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    className={`w-full px-5 py-4 rounded-xl text-base font-medium outline-none border transition-all duration-300 focus:-translate-y-1 focus:ring-2 focus:ring-blue-500/30 ${trackBgLight} focus:${trackBg} ${borderClass} ${textPrimary} ${placeholderClass} ${!isPreview ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 />
                             </motion.div>
                             <motion.div variants={staggerItem} className="group/input">
@@ -824,7 +824,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     onChange={(e) => setCEmail(e.target.value)}
                                     placeholder="you@email.com"
                                     readOnly={!isPreview}
-                                    className={`w-full px-5 py-4 rounded-xl text-sm font-medium outline-none border transition-all duration-300 focus:-translate-y-1 focus:ring-2 focus:ring-blue-500/30 ${trackBgLight} focus:${trackBg} ${borderClass} ${textPrimary} ${placeholderClass} ${!isPreview ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    className={`w-full px-5 py-4 rounded-xl text-base font-medium outline-none border transition-all duration-300 focus:-translate-y-1 focus:ring-2 focus:ring-blue-500/30 ${trackBgLight} focus:${trackBg} ${borderClass} ${textPrimary} ${placeholderClass} ${!isPreview ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 />
                             </motion.div>
                             <motion.div variants={staggerItem} className="group/input">
@@ -835,7 +835,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     onChange={(e) => setCMessage(e.target.value)}
                                     placeholder="Tell me about your project…"
                                     readOnly={!isPreview}
-                                    className={`w-full px-5 py-4 rounded-xl text-sm font-medium outline-none border resize-none transition-all duration-300 focus:-translate-y-1 focus:ring-2 focus:ring-blue-500/30 ${trackBgLight} focus:${trackBg} ${borderClass} ${textPrimary} ${placeholderClass} ${!isPreview ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    className={`w-full px-5 py-4 rounded-xl text-base font-medium outline-none border resize-none transition-all duration-300 focus:-translate-y-1 focus:ring-2 focus:ring-blue-500/30 ${trackBgLight} focus:${trackBg} ${borderClass} ${textPrimary} ${placeholderClass} ${!isPreview ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 />
                             </motion.div>
                             
@@ -893,7 +893,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             <div className="pt-10 w-full px-2">
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); addArrayItem('items', { title: "New Position", company: "Company", dates: "YYYY - YYYY", description: "Brief description of responsibilities." }); }}
-                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-sm font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
+                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
                                 >
                                     + Add Another Experience
                                 </button>
@@ -935,7 +935,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             <div className="pt-10 w-full px-2">
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); addArrayItem('items', { title: "New Service", description: "Detailed description of what you offer." }); }}
-                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-sm font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
+                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
                                 >
                                     + Add Another Service
                                 </button>
@@ -964,7 +964,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     <div className="absolute top-6 right-6 text-6xl text-blue-500/20 font-serif leading-none">
                                         &quot;
                                     </div>
-                                    <p className={"text-base sm:text-lg italic leading-relaxed mb-8 relative z-10 " + textSecondary}>
+                                    <p className={"text-lg md:text-xl italic leading-relaxed mb-8 relative z-10 " + textSecondary}>
                                         <TextElement multiline value={item.quote} placeholder="A glowing recommendation from a client or colleague." onCommit={(v) => updateArrayItem('items', idx, 'quote', v)} />
                                     </p>
                                     <div className="flex items-center gap-4">
@@ -987,7 +987,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             <div className="pt-10 w-full px-2">
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); addArrayItem('items', { quote: "A glowing recommendation.", name: "Client Name", role: "Role & Company" }); }}
-                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-sm font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
+                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
                                 >
                                     + Add Another Testimonial
                                 </button>
@@ -1036,7 +1036,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             <div className="pt-10 w-full px-2">
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); addArrayItem('items', { name: "New Certification", issuer: "Issuing Organization", date: "Year/Date" }); }}
-                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-sm font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
+                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
                                 >
                                     + Add Another Certification
                                 </button>
@@ -1067,7 +1067,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             <div className="pt-10 w-full px-2">
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); addArrayItem('items', { metric: "50+", label: "Projects" }); }}
-                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-sm font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
+                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
                                 >
                                     + Add Another Stat
                                 </button>
@@ -1110,7 +1110,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             <div className="pt-10 w-full px-2">
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); addArrayItem('articles', { publisher: "Publisher", date: "Date", title: "Article Title", link: "" }); }}
-                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-sm font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
+                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
                                 >
                                     + Add Another Article
                                 </button>
