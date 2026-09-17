@@ -253,7 +253,7 @@ export default function CanvasContainer({
         <div className="w-full flex flex-col items-center relative animate-in fade-in duration-500"> 
 
             {/* Main Outer Container */}
-            <div className={`dark relative w-full min-h-[700px] transition-all duration-500 ease-out overflow-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
+            <div className={`dark relative w-full min-h-[700px] transition-all duration-500 ease-out overflow-x-clip [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
                 !isPreview ? `shadow-2xl rounded-[2rem] border ${currentTheme.border || 'border-slate-800/80'}` : 'min-h-screen'
             } ${
                 globalBgImage ? 'bg-[#0B0C10]/40 backdrop-blur-2xl' : 'bg-[#0B0C10] ' + (currentTheme.bodyBg || '')
@@ -275,35 +275,35 @@ export default function CanvasContainer({
                     />
                 ) : null}
 
-                {/* --- MAIN CONTENT WRAPPER --- */}
-                <div className="relative z-10 w-full p-4 sm:p-10 flex flex-col">
-                    
-                    {/* Navigation Header */}
-                    <div className="sticky top-6 z-40 flex justify-center w-full mb-12 pointer-events-none transition-all duration-500">
-                        <div className={`pointer-events-auto backdrop-blur-2xl ${currentTheme.cardBg || 'bg-black/20'} border ${currentTheme.border || 'border-slate-700/30'} px-6 py-3 rounded-full flex flex-wrap gap-2 md:gap-6 justify-center items-center text-xs select-none shadow-[0_8px_32px_rgba(0,0,0,0.12)] transition-all hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)]`}>
-                            <div className={`flex items-center gap-2 pr-4 border-r ${currentTheme.border || 'border-slate-700/30'}`}>
-                                <Sparkles className={`w-4 h-4 ${currentTheme.accentText ? '' : 'text-blue-400'}`} />
-                                <span className={`font-black tracking-widest uppercase text-[10px] text-center ${currentTheme.accentText || 'text-blue-400'}`}> 
-                                    {portfolioTheme ? portfolioTheme.replace('_', ' ') : 'Modern Glass'} 
-                                </span> 
-                            </div>
-                            <div className="flex flex-wrap justify-center gap-1 md:gap-2 opacity-90"> 
-                                {dynamicNavItems.map((navItem) => ( 
-                                    <button 
-                                        key={navItem} 
-                                        type="button" 
-                                        onClick={() => handleNavClick(navItem)} 
-                                        className={`bg-transparent px-4 py-1.5 rounded-full text-[11px] font-bold transition-all duration-300 whitespace-nowrap cursor-pointer ${currentTheme.textSecondary || 'text-slate-400'} hover:scale-105 active:scale-95`}
-                                        style={{ color: 'inherit' }}
-                                    > 
-                                        <span className={`opacity-70 hover:opacity-100 transition-opacity ${currentTheme.textPrimary || 'text-white'}`}>
-                                            {navItem}
-                                        </span>
-                                    </button>
-                                ))} 
-                            </div>
+                {/* --- FULL WIDTH NAVIGATION NAVBAR --- */}
+                <div className={`sticky top-0 z-50 w-full backdrop-blur-2xl ${currentTheme.cardBg || 'bg-black/20'} border-b ${currentTheme.border || 'border-slate-700/30'} shadow-lg transition-all duration-500`}>
+                    <div className="w-full px-6 py-4 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Sparkles className={`w-5 h-5 ${currentTheme.accentText ? '' : 'text-blue-400'}`} />
+                            <span className={`font-black tracking-widest uppercase text-sm md:text-base ${currentTheme.accentText || 'text-blue-400'}`}> 
+                                {portfolioTheme ? portfolioTheme.replace('_', ' ') : 'Modern Glass'} 
+                            </span> 
+                        </div>
+                        <div className="flex flex-wrap items-center justify-end gap-2 md:gap-6 opacity-90"> 
+                            {dynamicNavItems.map((navItem) => ( 
+                                <button 
+                                    key={navItem} 
+                                    type="button" 
+                                    onClick={() => handleNavClick(navItem)} 
+                                    className={`bg-transparent px-3 py-1.5 rounded-lg text-sm font-bold transition-all duration-300 whitespace-nowrap cursor-pointer ${currentTheme.textSecondary || 'text-slate-400'} hover:bg-white/10`}
+                                    style={{ color: 'inherit' }}
+                                > 
+                                    <span className={`opacity-80 hover:opacity-100 transition-opacity ${currentTheme.textPrimary || 'text-white'}`}>
+                                        {navItem}
+                                    </span>
+                                </button>
+                            ))} 
                         </div>
                     </div>
+                </div>
+
+                {/* --- MAIN CONTENT WRAPPER --- */}
+                <div className="relative z-10 w-full p-4 sm:p-10 flex flex-col">
 
                     {isPreview ? (
                         <div key={activePage} className="space-y-8 w-full animate-in slide-in-from-bottom-4 duration-700 ease-out">
