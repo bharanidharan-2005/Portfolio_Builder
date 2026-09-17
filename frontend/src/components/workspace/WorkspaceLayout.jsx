@@ -433,18 +433,7 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
             : "w-[375px] h-[812px] rounded-[3rem] ring-[14px] ring-slate-900";
     }
 
-    const [isFrontpageViewed, setIsFrontpageViewed] = useState(false);
-
-    if (isPublicPreview && !isFrontpageViewed && sections.length > 0) {
-        return (
-            <PortfolioFrontpage 
-                userData={userData}
-                sections={sections}
-                themeMode={themeMode}
-                onVisualize={() => setIsFrontpageViewed(true)}
-            />
-        );
-    }
+    // Splash screen has been removed to display the portfolio directly
 
     return (
         <div className={`h-screen w-full flex flex-col overflow-hidden select-none transition-colors duration-500 font-inter ${themeMode === 'dark' ? 'bg-[#0B0C10] text-slate-200' : 'bg-slate-50 text-slate-800'}`}>
