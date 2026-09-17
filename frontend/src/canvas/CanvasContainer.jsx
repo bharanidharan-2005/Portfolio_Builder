@@ -249,6 +249,10 @@ export default function CanvasContainer({
         return [...new Set(types)];
     }, [displaySections]);
 
+    const heroSectionData = displaySections.find(s => (s.section_type || '').toLowerCase().trim() === 'hero');
+    const heroName = heroSectionData?.content_data?.heading || 'DEV';
+    const initials = heroName.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
     return ( 
         <div className="w-full flex flex-col items-center relative animate-in fade-in duration-500"> 
 
@@ -278,13 +282,18 @@ export default function CanvasContainer({
                 {/* --- FULL WIDTH NAVIGATION NAVBAR --- */}
                 <div className={`sticky top-0 z-50 w-full backdrop-blur-2xl ${currentTheme.cardBg || 'bg-black/20'} border-b ${currentTheme.border || 'border-slate-700/30'} shadow-lg transition-all duration-500`}>
                     <div className="w-full px-6 py-4 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <Sparkles className={`w-5 h-5 ${currentTheme.accentText ? '' : 'text-blue-400'}`} />
-                            <span className={`font-black tracking-widest uppercase text-sm md:text-base ${currentTheme.accentText || 'text-blue-400'}`}> 
-                                {portfolioTheme ? portfolioTheme.replace('_', ' ') : 'Modern Glass'} 
+                        {/* Logo / Initials */}
+                        <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg shadow-inner ${currentTheme.accentBg || 'bg-blue-600'} text-white`}>
+                                {initials}
+                            </div>
+                            <span className={`font-black tracking-widest uppercase hidden sm:block text-sm md:text-base ${currentTheme.accentText || 'text-blue-400'}`}> 
+                                {heroName.split(' ')[0]} 
                             </span> 
                         </div>
-                        <div className="flex flex-wrap items-center justify-end gap-2 md:gap-6 opacity-90"> 
+
+                        {/* Navigation Links */}
+                        <div className="flex flex-wrap items-center justify-center gap-1 md:gap-4 opacity-90 hidden lg:flex"> 
                             {dynamicNavItems.map((navItem) => ( 
                                 <button 
                                     key={navItem} 
@@ -298,6 +307,16 @@ export default function CanvasContainer({
                                     </span>
                                 </button>
                             ))} 
+                        </div>
+
+                        {/* Right Side - Resume */}
+                        <div>
+                            <button 
+                                onClick={() => handleNavClick('resume')}
+                                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-md hover:shadow-lg ${currentTheme.accentBg || 'bg-blue-600'} text-white flex items-center gap-2`}
+                            >
+                                Resume
+                            </button>
                         </div>
                     </div>
                 </div>
