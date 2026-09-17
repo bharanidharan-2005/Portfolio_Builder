@@ -218,7 +218,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: false, amount: 0.1 }}
                                     transition={springTransition}
-                                    className={`font-black tracking-tight leading-tight w-full text-5xl sm:text-6xl lg:text-7xl break-words ${bgImage ? 'text-white' : textPrimary}`}
+                                    className={`font-black tracking-tight leading-tight w-full max-w-3xl text-4xl sm:text-5xl lg:text-6xl ${bgImage ? 'text-white' : textPrimary}`}
                                 >
                                     <TextElement
                                         value={data.heading || "YOUR NAME"}
@@ -284,35 +284,46 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     )}
                                 </div>
                                 
-                                {/* Dynamic Social & Project Links Dropdown */}
+                                {/* Sleek Side-by-Side Dropdowns */}
                                 {(heroLiveOptions.length > 0 || heroDesignOptions.length > 0) && (
-                                    <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 w-full mt-2">
-                                        {/* Social Links as minimal badges */}
-                                        {heroLiveOptions.map((link, i) => (
-                                            <motion.button
-                                                key={`social-${i}`}
-                                                whileHover={{ scale: 1.05 }}
-                                                onClick={(e) => { e.stopPropagation(); openExternal(link.url); }}
-                                                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border shadow-sm flex items-center gap-2 hover:bg-white/10 ${textSecondary} ${borderClass}`}
-                                            >
-                                                {link.label} ↗
-                                            </motion.button>
-                                        ))}
+                                    <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 w-full mt-2">
+                                        
+                                        {/* See Live Dropdown */}
+                                        {heroLiveOptions.length > 0 && (
+                                            <div className="group relative z-50">
+                                                <button className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg flex items-center gap-2 bg-[#0a0a0f] hover:bg-[#1a1a24] text-white">
+                                                    See Live ▾
+                                                </button>
+                                                <div className="absolute top-full left-0 mt-2 w-48 rounded-xl border border-slate-800 bg-[#0a0a0f]/95 backdrop-blur-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col p-2 overflow-hidden">
+                                                    {heroLiveOptions.map((link, i) => (
+                                                        <button
+                                                            key={`social-${i}`}
+                                                            onClick={(e) => { e.stopPropagation(); openExternal(link.url); }}
+                                                            className="text-left px-4 py-2.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition-all truncate flex items-center justify-between"
+                                                        >
+                                                            <span>{link.label}</span>
+                                                            <span className="opacity-50 text-[10px]">↗</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                         
                                         {/* Projects Dropdown */}
                                         {heroDesignOptions.length > 0 && (
                                             <div className="group relative z-50">
-                                                <button className={`px-5 py-2 rounded-lg text-xs font-bold transition-all border shadow-sm flex items-center gap-2 bg-slate-800/80 hover:bg-slate-700 text-white ${borderClass}`}>
-                                                    Live Projects ▾
+                                                <button className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg flex items-center gap-2 bg-[#0a0a0f] hover:bg-[#1a1a24] text-white">
+                                                    Projects ▾
                                                 </button>
-                                                <div className="absolute top-full left-0 mt-2 w-56 rounded-xl border border-slate-700 bg-slate-900/95 backdrop-blur-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col p-2 overflow-hidden">
+                                                <div className="absolute top-full left-0 mt-2 w-56 rounded-xl border border-slate-800 bg-[#0a0a0f]/95 backdrop-blur-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col p-2 overflow-hidden">
                                                     {heroDesignOptions.map((link, i) => (
                                                         <button
                                                             key={`proj-${i}`}
                                                             onClick={(e) => { e.stopPropagation(); openExternal(link.url); }}
-                                                            className="text-left px-4 py-3 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-blue-500/20 transition-all truncate"
+                                                            className="text-left px-4 py-2.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition-all truncate flex items-center justify-between"
                                                         >
-                                                            {link.label} ↗
+                                                            <span>{link.label}</span>
+                                                            <span className="opacity-50 text-[10px]">↗</span>
                                                         </button>
                                                     ))}
                                                 </div>

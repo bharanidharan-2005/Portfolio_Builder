@@ -66,8 +66,7 @@ const PremiumHero = ({ d, config }) => {
                             initial={{ opacity: 0, y: 15 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ type: "spring", stiffness: 50 }}
-                            className="font-black tracking-tight leading-tight w-full"
-                            className={`font-black tracking-tight leading-tight w-full text-5xl sm:text-6xl lg:text-7xl break-words`}
+                            className={`font-black tracking-tight leading-tight w-full text-4xl sm:text-5xl lg:text-6xl max-w-3xl`}
                         >
                             {d.name}
                         </motion.h1>
@@ -109,6 +108,7 @@ const PremiumHero = ({ d, config }) => {
                         <motion.button 
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
+                            onClick={() => alert("Please proceed to your main portfolio to download the dynamically generated PDF resume.")}
                             className="px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all bg-transparent hover:bg-white/10 border border-current shadow-sm hover:shadow-md flex items-center gap-2"
                         >
                             Download Resume <Download className="w-5 h-5" />
