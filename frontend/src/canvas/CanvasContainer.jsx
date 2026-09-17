@@ -222,16 +222,24 @@ export default function CanvasContainer({
                 const targetId = isPreview ? `preview-node-block-${foundSection.id}` : `live-node-block-${foundSection.id}`;
                 const targetElement = document.getElementById(targetId);
                 if (targetElement) {
-                    const scrollContainer = isPreview 
-                        ? (document.getElementById('preview-scroll-container') || window) 
-                        : (document.getElementById('workspace-scroll-container') || window);
-
-                    if (scrollContainer && scrollContainer.scrollTo) {
-                        const currentScroll = scrollContainer === window ? window.scrollY : scrollContainer.scrollTop;
-                        const topOffset = targetElement.getBoundingClientRect().top + currentScroll - 100;
-                        scrollContainer.scrollTo({ top: topOffset, behavior: 'smooth' });
+                    const getScrollContainer = () => {
+                        const p = document.getElementById('preview-scroll-container');
+                        if (p) return p;
+                        const w = document.getElementById('workspace-scroll-container');
+                        if (w) return w;
+                        return null;
+                    };
+                    
+                    const scrollContainer = getScrollContainer();
+                    
+                    if (scrollContainer) {
+                        const containerRect = scrollContainer.getBoundingClientRect();
+                        const elementRect = targetElement.getBoundingClientRect();
+                        const relativeTop = elementRect.top - containerRect.top;
+                        scrollContainer.scrollTo({ top: scrollContainer.scrollTop + relativeTop - 100, behavior: 'smooth' });
                     } else {
-                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        const topOffset = targetElement.getBoundingClientRect().top + window.scrollY - 100;
+                        window.scrollTo({ top: topOffset, behavior: 'smooth' });
                     }
                 }
             }, 50);

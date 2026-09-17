@@ -76,13 +76,13 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
     const TextElement = ({ value, placeholder, onCommit, multiline = false }) => {
         if (isPreview) {
             return (
-                <span className={`block w-full max-w-full break-words ${multiline ? "whitespace-pre-wrap" : "whitespace-normal"} [word-break:break-word]`}>
+                <span className={`block w-full max-w-full break-words ${multiline ? "whitespace-pre-wrap" : "whitespace-normal"} break-words`}>
                     {value || placeholder}
                 </span>
             );
         }
         return (
-            <div className="w-full max-w-full whitespace-normal [word-break:break-word]">
+            <div className="w-full max-w-full whitespace-normal break-words">
                 <EditableText value={value} placeholder={placeholder} onCommit={onCommit} multiline={multiline} />
             </div>
         );
