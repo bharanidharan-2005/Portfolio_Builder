@@ -32,6 +32,15 @@ const staggerItem = {
     show: { opacity: 1, y: 0, transition: springTransition }
 };
 
+export const getRoleImage = (subheading) => {
+    const role = (subheading || "").toLowerCase();
+    if (role.includes('civil') || role.includes('construct') || role.includes('architect')) return '/3d_civil.jpg';
+    if (role.includes('design') || role.includes('art') || role.includes('ui/ux') || role.includes('ux')) return '/3d_design.jpg';
+    if (role.includes('data') || role.includes('ai') || role.includes('machine learning') || role.includes('ml')) return '/3d_data.jpg';
+    if (role.includes('develop') || role.includes('software') || role.includes('engineer') || role.includes('program')) return '/3d_developer_workspace.jpg';
+    return '/3d_generic.jpg';
+};
+
 export default function RenderPageContent({ section, portfolioTheme, sections, onInlineEdit, isPreview = false }) {
     // Memoize the PDF document to prevent massive memory leaks and re-renders on scroll
     const pdfDocument = useMemo(() => <ResumePDF sections={sections} />, [sections]);
