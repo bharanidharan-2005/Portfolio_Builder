@@ -1,4 +1,4 @@
-import { PORTFOLIO_THEMES } from '../canvas/themes';
+import { PORTFOLIO_THEMES, PORTFOLIO_FONTS } from '../canvas/themes';
 import { notify } from '../toast';
 
 // HTML-escape user content before injecting it into the exported static site
@@ -170,15 +170,23 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
         }
     });
 
+    const fontId = (userData && userData.globalFont) || 'font-inter';
+    const fontObj = PORTFOLIO_FONTS.find(f => f.id === fontId) || PORTFOLIO_FONTS.find(f => f.id === 'font-inter');
+    const fontFamilyStyle = fontObj ? fontObj.style.fontFamily : "'Inter', sans-serif";
+
     const fullHtmlDocument = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Fonts for Portfolio Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=Fira+Code:wght@400;500;600;700&family=Geist:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Lora:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=Playfair+Display:wght@400;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Raleway:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Sora:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700&family=Urbanist:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <title>Portfolio Site</title>
 </head>
-<body class="${theme.bodyBg} min-h-screen p-6 md:p-12 font-sans selection:bg-blue-500/30">
+<body class="${theme.bodyBg} min-h-screen p-6 md:p-12 selection:bg-blue-500/30" style="font-family: ${fontFamilyStyle};">
     <main class="max-w-3xl mx-auto">${sectionsHtml}</main>
 </body>
 </html>`;

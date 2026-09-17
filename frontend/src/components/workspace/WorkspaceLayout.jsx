@@ -615,6 +615,7 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
                     sections={sections}
                     themeMode={themeMode}
                     globalBg={globalBg}
+                    globalFont={globalFont}
                     setTerminalLogs={setTerminalLogs}
                 />
             )}

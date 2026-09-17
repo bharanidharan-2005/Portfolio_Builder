@@ -18,6 +18,7 @@ export default function PreviewModal({
     sections,
     themeMode,
     globalBg,
+    globalFont,
     setTerminalLogs
 }) {
     if (!isOpen) return null;
@@ -150,6 +151,7 @@ export default function PreviewModal({
                                 portfolioTheme={currentTheme}
                                 themeMode={themeMode}
                                 globalBgImage={globalBg} 
+                                globalFont={globalFont}
                                 isPreview={true} 
                             />
                         </div>
