@@ -43,6 +43,38 @@ export const PORTFOLIO_THEMES = {
         border: 'border-[#FF00AA]/30',
         accentText: 'text-[#FF00AA] drop-shadow-[0_0_8px_rgba(255,0,170,0.5)]',
         accentBg: 'bg-[#FF00AA] shadow-[0_0_15px_rgba(255,0,170,0.8)]',
+    },
+    abstract_particles: {
+        id: 'abstract_particles',
+        name: '6. 3D Particles',
+        bodyBg: 'bg-black/80 bg-[url(/bg_3d_particles.jpg)] bg-cover bg-center bg-fixed bg-blend-multiply',
+        border: 'border-blue-500/20',
+        accentText: 'text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500',
+        accentBg: 'bg-gradient-to-r from-blue-400 to-purple-500',
+    },
+    cyber_platform: {
+        id: 'cyber_platform',
+        name: '7. 3D Cyber Platform',
+        bodyBg: 'bg-black/80 bg-[url(/bg_glow_platform.jpg)] bg-cover bg-center bg-fixed bg-blend-multiply',
+        border: 'border-cyan-500/30',
+        accentText: 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400',
+        accentBg: 'bg-gradient-to-r from-cyan-400 to-emerald-400',
+    },
+    dark_blocks: {
+        id: 'dark_blocks',
+        name: '8. 3D Dark Blocks',
+        bodyBg: 'bg-black/80 bg-[url(/bg_dark_blocks.jpg)] bg-cover bg-center bg-fixed bg-blend-multiply',
+        border: 'border-white/10',
+        accentText: 'text-slate-100',
+        accentBg: 'bg-slate-700',
+    },
+    vibrant_geo: {
+        id: 'vibrant_geo',
+        name: '9. 3D Vibrant Geo',
+        bodyBg: 'bg-black/80 bg-[url(/bg_abstract_geo.jpg)] bg-cover bg-center bg-fixed bg-blend-multiply',
+        border: 'border-fuchsia-500/30',
+        accentText: 'text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-rose-400',
+        accentBg: 'bg-gradient-to-r from-fuchsia-400 to-rose-400',
     }
 };
 
