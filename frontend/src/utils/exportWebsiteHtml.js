@@ -1,5 +1,6 @@
 import { PORTFOLIO_THEMES, PORTFOLIO_FONTS } from '../canvas/themes';
 import { notify } from '../toast';
+import { getRoleImage } from '../components/portfolio/PortfolioFrontpage';
 
 const escapeHtml = (value) => {
     if (value === null || value === undefined) return '';
@@ -26,7 +27,90 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
     const globalBg = (userData && userData.globalBg) ? escapeHtml(userData.globalBg) : '';
     const isDark = theme.bodyBg?.includes('black') || theme.bodyBg?.includes('#0');
 
-    // 1. Build Navigation Bar
+    // Extract Hero data for Frontpage (Scrape from inner content!)
+    const heroSec = activeSections.find(s => (s.section_type || '').toLowerCase().trim() === 'hero');
+    const heroData = heroSec?.content_data || {};
+    
+    const fullName = heroData.heading || 'Developer';
+    const frontName = escapeHtml(fullName);
+    const frontHeadline = escapeHtml(heroData.subheading || 'Professional Portfolio');
+    const frontBio = escapeHtml(heroData.text || '');
+    
+    const frontInitials = fullName.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    const frontFirstName = escapeHtml(fullName.split(' ')[0]);
+    const roleImageUrl = getRoleImage(heroData.subheading || "");
+
+    // 1. Build Frontpage Overlay
+    const frontpageHtml = `
+    <div id="frontpage-overlay" class="fixed inset-0 z-[100] flex flex-col ${theme.bodyBg} transition-opacity duration-700 ease-in-out" style="${globalBg ? `background-image: url('${globalBg}'); background-size: cover; background-position: center; background-attachment: fixed;` : ''}">
+        ${globalBg ? '<div class="absolute inset-0 bg-black/60 backdrop-blur-md z-0 pointer-events-none"></div>' : ''}
+        
+        <!-- Header -->
+        <header class="w-full relative z-10">
+            <div class="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between animate-fade-in-down">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg shadow-inner ${theme.accentBg || 'bg-blue-600'} text-white">
+                        ${frontInitials}
+                    </div>
+                    <span class="font-black tracking-widest uppercase hidden sm:block text-sm md:text-base ${theme.textPrimary}"> 
+                        ${frontFirstName}
+                    </span>
+                </div>
+                <div class="hidden lg:flex items-center gap-8 font-semibold text-sm ${theme.textSecondary}">
+                    <span class="hover:opacity-100 cursor-pointer transition-opacity">About</span>
+                    <span class="hover:opacity-100 cursor-pointer transition-opacity">Skills</span>
+                    <span class="hover:opacity-100 cursor-pointer transition-opacity">Projects</span>
+                    <span class="hover:opacity-100 cursor-pointer transition-opacity">Contact</span>
+                </div>
+                <button class="px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-lg text-white flex items-center gap-2 ${theme.accentBg || 'bg-blue-600'}">
+                    Resume
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Frontpage Split Content -->
+        <main class="flex-1 flex flex-col lg:flex-row items-center justify-center p-6 lg:p-12 xl:p-24 gap-12 lg:gap-20 max-w-7xl mx-auto w-full relative z-10">
+            <!-- Left Text Column -->
+            <div class="flex-1 w-full space-y-8 flex flex-col lg:items-start text-center lg:text-left items-center animate-fade-in-up">
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold border ${theme.border} bg-white/5 backdrop-blur-md shadow-sm">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="${theme.textSecondary}">Open to opportunities</span>
+                </div>
+                
+                <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-tight ${theme.textPrimary} drop-shadow-xl">
+                    ${frontName}
+                </h1>
+                
+                <p class="text-xl md:text-2xl font-bold ${theme.accentText}">
+                    ${frontHeadline}
+                </p>
+                
+                <p class="text-lg md:text-xl leading-relaxed w-full max-w-xl font-medium ${theme.textSecondary}">
+                    ${frontBio}
+                </p>
+
+                <div class="flex flex-wrap items-center gap-4 pt-4 justify-center lg:justify-start">
+                    <button onclick="dismissFrontpage()" class="px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all shadow-lg hover:shadow-2xl text-white flex items-center gap-2 ${theme.accentBg || 'bg-blue-600'} hover:scale-105 hover:-translate-y-1">
+                        View My Work &rarr;
+                    </button>
+                    <button class="px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all bg-transparent hover:bg-white/10 border ${theme.border} ${theme.textPrimary} shadow-sm hover:shadow-md flex items-center gap-2 hover:scale-105">
+                        Download Resume
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Visual Column -->
+            <div class="flex-1 w-full flex justify-center relative animate-fade-in-up" style="animation-delay: 0.2s">
+                <div class="relative w-[300px] h-[300px] md:w-[450px] md:h-[450px] lg:w-[500px] lg:h-[500px]">
+                    <div class="absolute inset-0 bg-blue-500/20 rounded-full blur-[100px] animate-pulse"></div>
+                    <img src="${roleImageUrl}" alt="Visual Role Representation" class="absolute inset-0 w-full h-full object-cover mix-blend-screen opacity-90 rounded-3xl drop-shadow-2xl hover:scale-105 transition-transform duration-700" />
+                </div>
+            </div>
+        </main>
+    </div>
+    `;
+
+    // 2. Build Navigation Bar (Inner Content)
     const navLinks = activeSections
         .filter(s => s.section_type !== 'hero' && s.section_type !== 'footer')
         .map(s => {
@@ -36,14 +120,19 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
         
     const navBarHtml = `
     <nav class="fixed top-0 w-full z-50 backdrop-blur-xl bg-black/20 border-b ${theme.border} py-4 px-6 md:px-12 flex justify-between items-center transition-all duration-300">
-        <div class="text-lg font-black tracking-widest">${escapeHtml(userData?.name || 'PORTFOLIO')}</div>
+        <div class="text-lg font-black tracking-widest flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm shadow-inner ${theme.accentBg || 'bg-blue-600'} text-white">
+                ${frontInitials}
+            </div>
+            ${frontFirstName}
+        </div>
         <ul class="hidden md:flex gap-8">
             ${navLinks}
         </ul>
-        <a href="#section-${activeSections[0]?.id || ''}" class="px-4 py-2 text-xs font-bold bg-white text-black rounded-full hover:scale-105 transition-transform">Back to Top</a>
+        <a href="#section-${activeSections[0]?.id || ''}" class="px-4 py-2 text-xs font-bold ${theme.accentBg || 'bg-white'} text-white rounded-full hover:scale-105 transition-transform">Back to Top</a>
     </nav>`;
 
-    // 2. Build Sections
+    // 3. Build Inner Sections
     let sectionsHtml = '';
     const bannerImg = (url) => url ? `<img src="${escapeHtml(url)}" alt="Banner" class="w-full h-48 md:h-64 object-cover rounded-3xl mb-8 shadow-2xl border ${theme.border}">` : '';
 
@@ -59,26 +148,45 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                 ? `style="background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('${bgImage}'); background-size: cover; background-position: center;"`
                 : '';
 
-            const liveMenuHtml = data.liveUrl ? `<a href="${escapeHtml(data.liveUrl)}" target="_blank" class="px-6 py-3 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all">View Live Site</a>` : '';
-            const designMenuHtml = data.designUrl ? `<a href="${escapeHtml(data.designUrl)}" target="_blank" class="px-6 py-3 rounded-xl font-bold border border-slate-600 hover:bg-white/10 transition-all">View Code/Design</a>` : '';
+            const liveMenuHtml = data.liveUrl ? `<a href="${escapeHtml(data.liveUrl)}" target="_blank" class="px-6 py-3 rounded-xl font-bold ${theme.accentBg || 'bg-blue-600'} text-white shadow-lg shadow-blue-500/20 transition-all hover:scale-105">View Live Site</a>` : '';
+            const designMenuHtml = data.designUrl ? `<a href="${escapeHtml(data.designUrl)}" target="_blank" class="px-6 py-3 rounded-xl font-bold border ${theme.border} ${theme.textPrimary} hover:bg-white/10 transition-all hover:scale-105">View Code/Design</a>` : '';
 
+            // Inner Hero uses Split Layout!
             sectionsHtml += `
-            <section class="min-h-[80vh] flex flex-col justify-center items-center text-center py-20 px-4 space-y-6 rounded-3xl mb-12 border ${theme.border} ${!bgImage ? theme.cardBg || 'bg-slate-900/50 backdrop-blur-md' : ''} shadow-2xl" ${bgInlineStyle}>
-                <div class="relative z-10 w-full max-w-4xl mx-auto space-y-6">
-                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold border ${theme.border} bg-black/50 backdrop-blur-md mb-4">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span>Open to opportunities</span>
+            <section class="py-12 sm:py-24 px-4 sm:px-10 relative rounded-3xl overflow-visible border ${theme.border} ${!bgImage ? theme.cardBg || 'bg-black/20 backdrop-blur-md' : ''} mb-12 shadow-2xl" ${bgInlineStyle}>
+                <div class="relative z-10 w-full max-w-7xl mx-auto flex flex-col-reverse lg:flex-row items-center gap-12 lg:gap-20">
+                    
+                    <!-- Left Column: Text -->
+                    <div class="flex-1 space-y-8 flex flex-col items-center lg:items-start text-center lg:text-left">
+                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold border ${theme.border} bg-white/5 backdrop-blur-md shadow-sm">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span class="${theme.textSecondary}">Open to opportunities</span>
+                        </div>
+                        
+                        <div class="space-y-4 w-full">
+                            <h1 class="font-black tracking-tight leading-tight w-full max-w-3xl text-3xl sm:text-4xl lg:text-5xl xl:text-6xl break-words ${bgImage ? 'text-white' : theme.textPrimary}">
+                                ${escapeHtml(data.heading) || 'YOUR NAME'}
+                            </h1>
+                            <p class="text-xl md:text-2xl font-bold w-full max-w-full ${theme.accentText}">
+                                ${escapeHtml(data.subheading) || 'Professional Headline'}
+                            </p>
+                            <p class="text-lg md:text-xl leading-relaxed w-full max-w-xl font-medium ${bgImage ? 'text-white/90' : theme.textSecondary}">
+                                ${escapeHtml(data.text) || 'Introduction...'}
+                            </p>
+                        </div>
+                        
+                        <div class="flex flex-wrap items-center gap-4 pt-4 w-full justify-center lg:justify-start">
+                            ${liveMenuHtml}
+                            ${designMenuHtml}
+                        </div>
                     </div>
-                    <h1 class="text-5xl md:text-7xl font-black tracking-tight leading-tight ${bgImage ? 'text-white' : theme.textPrimary} drop-shadow-xl">
-                        ${escapeHtml(data.heading) || 'YOUR NAME'}
-                    </h1>
-                    <p class="text-lg md:text-2xl font-medium max-w-2xl mx-auto leading-relaxed ${bgImage ? 'text-slate-300' : theme.accentText}">
-                        ${escapeHtml(data.subheading) || 'Professional Headline'}
-                    </p>
-                    <div class="flex flex-wrap justify-center gap-4 pt-8">
-                        ${liveMenuHtml}
-                        ${designMenuHtml}
+
+                    <!-- Right Column: Visual -->
+                    <div class="flex-1 w-full max-w-md lg:max-w-none relative aspect-square flex justify-center items-center">
+                        <div class="absolute inset-0 bg-gradient-to-tr from-blue-500/20 to-purple-500/20 rounded-full blur-[100px] animate-pulse"></div>
+                        <img src="${roleImageUrl}" alt="Hero Visual" class="absolute inset-0 w-full h-full object-cover mix-blend-screen opacity-90 rounded-3xl drop-shadow-2xl hover:scale-105 transition-transform duration-700" />
                     </div>
+                    
                 </div>
             </section>`;
         } else if (type === 'about') {
@@ -156,51 +264,6 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
         bgStyleStr = `background-image: url('${globalBg}'); background-size: cover; background-position: center; background-attachment: fixed;`;
     }
 
-    // Extract Hero data for Frontpage
-    const heroSec = activeSections.find(s => (s.section_type || '').toLowerCase().trim() === 'hero');
-    const heroData = heroSec?.content_data || {};
-    const frontName = escapeHtml(heroData.heading || userData?.name || 'Developer');
-    const frontHeadline = escapeHtml(heroData.subheading || 'Professional Portfolio');
-    const frontBio = escapeHtml(heroData.text || '');
-    const frontInitials = (userData?.name || 'DEV').split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
-    const frontFirstName = (userData?.name || 'Developer').split(' ')[0];
-
-    const frontpageHtml = `
-    <div id="frontpage-overlay" class="fixed inset-0 z-[100] flex flex-col ${theme.bodyBg} transition-opacity duration-700 ease-in-out" style="${bgStyleStr}">
-        ${globalBg ? '<div class="absolute inset-0 bg-black/60 backdrop-blur-md z-0 pointer-events-none"></div>' : ''}
-        
-        <header class="w-full relative z-10 p-6 md:p-8 flex items-center justify-between animate-fade-in-down">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg shadow-inner ${theme.accentBg || 'bg-blue-600'} text-white">
-                    ${escapeHtml(frontInitials)}
-                </div>
-                <span class="font-black tracking-widest uppercase hidden sm:block text-sm md:text-base ${theme.textPrimary}"> 
-                    ${escapeHtml(frontFirstName)} 
-                </span>
-            </div>
-        </header>
-
-        <main class="flex-1 flex flex-col items-center justify-center p-6 text-center z-10 max-w-4xl mx-auto space-y-8 animate-fade-in-up">
-            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold border ${theme.border} bg-white/5 backdrop-blur-md shadow-sm">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span class="${theme.textSecondary}">Open to opportunities</span>
-            </div>
-            
-            <h1 class="text-5xl md:text-7xl font-black tracking-tight leading-tight ${theme.textPrimary} drop-shadow-xl">
-                ${frontName}
-            </h1>
-            
-            <p class="text-xl md:text-2xl font-bold ${theme.accentText}">
-                ${frontHeadline}
-            </p>
-
-            <button onclick="dismissFrontpage()" class="mt-8 px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all shadow-lg hover:shadow-2xl text-white flex items-center gap-2 ${theme.accentBg || 'bg-blue-600'} hover:scale-105 hover:-translate-y-1">
-                View My Work &rarr;
-            </button>
-        </main>
-    </div>
-    `;
-
     const fullHtmlDocument = `<!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
@@ -211,7 +274,7 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=Fira+Code:wght@400;500;600;700&family=Geist:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Lora:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=Playfair+Display:wght@400;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Raleway:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Sora:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700&family=Urbanist:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>${escapeHtml(userData?.name || 'Portfolio')}</title>
+    <title>${frontName} | Portfolio</title>
     <style>
         body { font-family: ${fontFamilyStyle}; }
         /* Custom scrollbar */
@@ -224,16 +287,6 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
             opacity: 1;
             transform: translateY(0);
         }
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in-down { animation: fadeInDown 0.8s ease-out forwards; }
-        .animate-fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
     </style>
 </head>
 <body class="${theme.bodyBg} ${isDark ? 'text-slate-200' : 'text-slate-800'} min-h-screen selection:bg-blue-500/30 overflow-hidden" style="${bgStyleStr}">
