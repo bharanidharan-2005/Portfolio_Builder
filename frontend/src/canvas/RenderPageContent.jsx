@@ -10,13 +10,13 @@ import { HeroParticles } from "./HeroParticles";
 import { GitHubCalendar } from 'react-github-calendar';
 
 // --- Subdued Premium Animation Configurations ---
-const springTransition = { type: "spring", stiffness: 80, damping: 20 };
+const springTransition = { type: "spring", stiffness: 250, damping: 25 };
 
 const fadeUpConfig = {
     initial: { opacity: 0, y: 20, scale: 0.99 },
     whileInView: { opacity: 1, y: 0, scale: 1 },
     viewport: { once: false, margin: "-40px", amount: 0.1 },
-    transition: { ...springTransition, duration: 0.8 }
+    transition: { ...springTransition, duration: 0.4 }
 };
 
 const staggerContainer = {
@@ -149,7 +149,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
             initial={{ opacity: 0, scale: 0.98 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: false, amount: 0.1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
             src={bgImage}
             alt="Section header"
             className={`w-full h-32 md:h-40 object-cover rounded-2xl mb-6 border ${borderClass} shadow-lg`}
@@ -187,14 +187,14 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
             {currentType === "hero" && (
                 <motion.div 
                     {...fadeUpConfig}
-                    className={`py-12 sm:py-24 px-4 sm:px-10 relative rounded-3xl bg-transparent overflow-hidden`}
+                    className={`py-12 sm:py-24 px-4 sm:px-10 relative rounded-3xl bg-transparent overflow-visible`}
                     style={bgImage ? {
                         backgroundImage: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.8)), url('${bgImage}')`,
                         backgroundSize: "cover",
                         backgroundPosition: "center",
                     } : undefined}
                 >
-                    <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
                         {!bgImage && <HeroParticles isDark={themeDef.bodyBg?.includes('black') || themeDef.bodyBg?.includes('#0')} />}
                     </div>
                     
@@ -343,7 +343,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         >
                             <motion.div 
                                 animate={{ y: [-15, 15, -15], rotateZ: [-2, 2, -2] }}
-                                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                                 className="relative w-[300px] h-[300px] md:w-[450px] md:h-[450px] lg:w-[500px] lg:h-[500px]"
                             >
                                 <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-[100px]"></div>
@@ -778,7 +778,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                     {/* Ambient Animated Glow Orb */}
                     <motion.div 
                         animate={{ scale: [1, 1.05, 1], opacity: [0.1, 0.15, 0.1] }}
-                        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg h-full max-h-96 bg-blue-500 rounded-full blur-[120px] pointer-events-none z-0"
                     />
 

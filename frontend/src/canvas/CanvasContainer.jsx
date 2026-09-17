@@ -3,6 +3,8 @@ import { DndContext, PointerSensor, closestCenter, useSensor, useSensors } from 
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Undo2, Redo2, Layers, Sparkles } from 'lucide-react';
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import { ResumePDF } from '../components/ResumePDF';
 import RenderPageContent from './RenderPageContent';
 import { PORTFOLIO_THEMES, PORTFOLIO_FONTS } from './themes';
 
@@ -179,6 +181,7 @@ export default function CanvasContainer({
     const currentTheme = PORTFOLIO_THEMES[portfolioTheme] || {};
     const currentFontObj = PORTFOLIO_FONTS.find(f => f.id === globalFont) || PORTFOLIO_FONTS[0];
     const displaySections = sections || [];
+    const pdfDocument = useMemo(() => <ResumePDF sections={sections} />, [sections]);
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
@@ -219,7 +222,13 @@ export default function CanvasContainer({
                 const targetId = isPreview ? `preview-node-block-${foundSection.id}` : `live-node-block-${foundSection.id}`;
                 const targetElement = document.getElementById(targetId);
                 if (targetElement) {
-                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    const scrollContainer = document.getElementById('workspace-scroll-container') || window;
+                    const topOffset = targetElement.getBoundingClientRect().top + (scrollContainer.scrollTop || window.scrollY) - 100;
+                    if (scrollContainer.scrollTo) {
+                        scrollContainer.scrollTo({ top: topOffset, behavior: 'smooth' });
+                    } else {
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
                 }
             }, 50);
         }
@@ -311,18 +320,22 @@ export default function CanvasContainer({
 
                         {/* Right Side - Resume */}
                         <div>
-                            <button 
-                                onClick={() => {
-                                    if(isPreview) {
-                                        window.print();
-                                    } else {
-                                        alert("Please test Resume Download in the Live Preview.");
-                                    }
-                                }}
-                                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-md hover:shadow-lg ${currentTheme.accentBg || 'bg-blue-600'} text-white flex items-center gap-2`}
-                            >
-                                Print Resume
-                            </button>
+                            {isPreview ? (
+                                <PDFDownloadLink
+                                    document={pdfDocument}
+                                    fileName="Portfolio_Resume.pdf"
+                                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-md hover:shadow-lg ${currentTheme.accentBg || 'bg-blue-600'} text-white flex items-center gap-2`}
+                                >
+                                    {({ loading }) => (loading ? 'Preparing...' : 'Download Resume')}
+                                </PDFDownloadLink>
+                            ) : (
+                                <button 
+                                    onClick={() => alert("Please test Resume Download in the Live Preview.")}
+                                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-md hover:shadow-lg ${currentTheme.accentBg || 'bg-blue-600'} text-white flex items-center gap-2`}
+                                >
+                                    Download Resume
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
