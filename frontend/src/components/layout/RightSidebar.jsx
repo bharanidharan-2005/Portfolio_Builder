@@ -52,7 +52,9 @@ export default function RightSidebar({
     onUpdateGlobalBg,
     onAddSection,
     onDeploy,
-    onExportZip
+    onExportZip,
+    userData,
+    onTemplateChange
 }) {
     const isLight = themeMode === 'light';
     const [genTab, setGenTab] = useState("generate");
@@ -1370,6 +1372,60 @@ export default function RightSidebar({
         );
     };
 
+    const renderFrontpageTemplates = () => {
+        const templates = [
+            { id: "template1", name: "Minimalist Centered", icon: "✨" },
+            { id: "template2", name: "Split Screen", icon: "🌗" },
+            { id: "template3", name: "Glassmorphism", icon: "🧊" },
+            { id: "template4", name: "Neo-Brutalism", icon: "🏗️" },
+            { id: "template5", name: "Cyberpunk / Sci-Fi", icon: "🤖" },
+            { id: "template6", name: "Bento Box Grid", icon: "🍱" },
+            { id: "template7", name: "Elegant Serif", icon: "🖋️" },
+            { id: "template8", name: "Dark Gradient Mesh", icon: "🌌" },
+            { id: "template9", name: "Typography Hero", icon: "🔠" },
+            { id: "template10", name: "Card Flip 3D", icon: "🃏" },
+            { id: "template11", name: "Wave / Organic", icon: "🌊" },
+            { id: "template12", name: "Particle Network", icon: "⚛️" },
+            { id: "template13", name: "Retro Arcade", icon: "🕹️" },
+            { id: "template14", name: "Photography Focus", icon: "📸" },
+            { id: "template15", name: "3D Floating Elements", icon: "🧊" },
+        ];
+        
+        const currentTemplate = userData?.frontpageTemplate || "template1";
+
+        return (
+            <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500 ease-out pb-20">
+                <div className="flex items-center justify-between mb-4 border-b pb-4 border-slate-800/50">
+                    <span className={`text-[11px] font-black uppercase tracking-widest flex items-center gap-2 ${isLight ? 'text-slate-800' : 'text-slate-200'}`}> 
+                        <LayoutTemplate className="w-4 h-4 text-blue-500" /> Frontpage Templates
+                    </span>
+                </div>
+                <p className={`text-[10px] leading-relaxed mb-4 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                    Select a visually stunning introductory landing page for your generated portfolio.
+                </p>
+                <div className="grid grid-cols-1 gap-3">
+                    {templates.map(tpl => (
+                        <button
+                            key={tpl.id}
+                            onClick={() => onTemplateChange && onTemplateChange(tpl.id)}
+                            className={`p-4 rounded-2xl border flex items-center justify-between gap-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer group ${
+                                currentTemplate === tpl.id
+                                    ? (isLight ? 'bg-blue-50 border-blue-400 shadow-[0_4px_20px_rgba(37,99,235,0.15)] ring-2 ring-blue-500' : 'bg-blue-900/30 border-blue-500 shadow-[0_4px_20px_rgba(59,130,246,0.3)] ring-2 ring-blue-500')
+                                    : (isLight ? 'bg-white border-slate-200 hover:border-blue-300' : 'bg-[#15161D] border-slate-800 hover:border-blue-500/50')
+                            }`}
+                        >
+                            <div className="flex items-center gap-3">
+                                <span className="text-xl group-hover:scale-110 transition-transform duration-300">{tpl.icon}</span>
+                                <span className={`text-xs font-bold tracking-wide ${currentTemplate === tpl.id ? (isLight ? 'text-blue-700' : 'text-blue-400') : (isLight ? 'text-slate-700' : 'text-slate-300')}`}>{tpl.name}</span>
+                            </div>
+                            {currentTemplate === tpl.id && <CheckCircle2 className="w-4 h-4 text-blue-500" />}
+                        </button>
+                    ))}
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className={`h-full w-full flex flex-col transition-colors duration-500 ${isLight ? 'bg-slate-50/50 backdrop-blur-xl' : 'bg-[#0B0C10]/80 backdrop-blur-2xl'}`}>
             <div className="flex-1 flex flex-col overflow-y-auto p-6 custom-scrollbar">
@@ -1379,6 +1435,7 @@ export default function RightSidebar({
                 {activeTool === "palette" && renderPaletteStudio()}
                 {activeTool === "image" && renderImageCustomizer()}
                 {activeTool === "seo_pitch" && renderSeoAndPitch()}
+                {activeTool === "templates" && renderFrontpageTemplates()}
                 {activeTool === "export" && renderCodeExport()}
                 {activeTool === "activity_log" && renderActivityLog()}
                 {(activeTool === "structure" || (!activeTool && activeTool !== "activity_log")) && renderStructureBuilder()}

@@ -160,6 +160,7 @@ export default function LeftSidebar({
                             { id: "palette", icon: "🎨", name: "Palette Studio" },
                             { id: "image", icon: "🖼️", name: "Image Customizer" },
                             { id: "seo_pitch", icon: "✉️", name: "SEO & Cold Pitch" },
+                            { id: "templates", icon: "🖥️", name: "Frontpage Templates" },
                             { id: "export", icon: "</>", name: "Code Export" },
                         ].map((tool) => (
                             <button

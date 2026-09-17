@@ -182,7 +182,28 @@ export default function CanvasContainer({
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
-    const emptyNavPlaceholder = [];
+    const [scrollRotation, setScrollRotation] = useState(0);
+
+    useEffect(() => {
+        // Try both internal workspace scroll and window scroll (if deployed)
+        const scrollContainer = document.getElementById('workspace-scroll-container') || window;
+        
+        const handleScroll = () => {
+            const currentScroll = scrollContainer.scrollTop || window.scrollY;
+            const maxScroll = (scrollContainer.scrollHeight || document.body.scrollHeight) - (scrollContainer.clientHeight || window.innerHeight);
+            if (maxScroll <= 0) return;
+            
+            // Spin slowly as user scrolls down
+            const rotation = (currentScroll / maxScroll) * 360;
+            setScrollRotation(rotation);
+        };
+
+        scrollContainer.addEventListener('scroll', handleScroll);
+        // Initial setup
+        handleScroll();
+        
+        return () => scrollContainer.removeEventListener('scroll', handleScroll);
+    }, []);
 
     const handleNavClick = (navLabel) => {
         if (!displaySections.length) return;

@@ -6,7 +6,7 @@ import CanvasContainer from "../../canvas/CanvasContainer.jsx";
 import SettingsModal from "./SettingsModal.jsx";
 import HelpModal from "./HelpModal.jsx";
 import PreviewModal from "./PreviewModal.jsx";
-
+import PortfolioFrontpage from "../portfolio/PortfolioFrontpage.jsx";
 import { 
     X, Zap, Sparkles, Target, TrendingUp, 
     Palette, Image as ImageIcon, Share2, Code2, Layers, CheckCircle2,
@@ -433,6 +433,19 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
             : "w-[375px] h-[812px] rounded-[3rem] ring-[14px] ring-slate-900";
     }
 
+    const [isFrontpageViewed, setIsFrontpageViewed] = useState(false);
+
+    if (isPublicPreview && !isFrontpageViewed && sections.length > 0) {
+        return (
+            <PortfolioFrontpage 
+                userData={userData}
+                sections={sections}
+                themeMode={themeMode}
+                onVisualize={() => setIsFrontpageViewed(true)}
+            />
+        );
+    }
+
     return (
         <div className={`h-screen w-full flex flex-col overflow-hidden select-none transition-colors duration-500 font-inter ${themeMode === 'dark' ? 'bg-[#0B0C10] text-slate-200' : 'bg-slate-50 text-slate-800'}`}>
             
@@ -568,6 +581,7 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
                             setTerminalLogs={setTerminalLogs}
                             activeTheme={currentTheme}
                             onThemeChange={(newTheme) => setUserData({...userData, theme: newTheme })}
+                            onTemplateChange={(newTpl) => setUserData({...userData, frontpageTemplate: newTpl})}
                             sections={sections}
                             onUpdateSectionContent={handleUpdateSectionContent}
                             onUpdateGlobalBg={setGlobalBg}
