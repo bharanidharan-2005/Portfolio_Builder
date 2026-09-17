@@ -399,11 +399,15 @@ export default function WorkspaceLayout({ userData, setUserData, themeMode, onTo
 
     const triggerDeployment = async () => {
         setTerminalLogs(prev => [...prev, { type: "system", text: "[SYSTEM] Initiating secure backend deployment..." }]);
+        alert("Deploying your portfolio to Vercel edge... This may take up to 20 seconds.");
         const result = await deployAnimatedSite({ pages, activePage, userData });
         if (result.success) {
             setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Deployed successfully to ${result.data.projectUrl}` }]);
+            alert(`Deployed successfully! View it here: ${result.data.projectUrl}`);
+            window.open(result.data.projectUrl, '_blank');
         } else {
             setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] ${result.error}` }]);
+            alert(`Deployment Failed: ${result.error}`);
         }
     };
 

@@ -140,7 +140,7 @@ export default function PreviewModal({
                         </div>
                     )}
 
-                    <div className="flex-1 overflow-y-auto w-full h-full relative z-10 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                    <div id="preview-scroll-container" className="flex-1 overflow-y-auto w-full h-full relative z-10 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                         <div className={`pb-24 ${previewViewport === 'mobile' && !isLandscape ? 'pt-8 px-2' : previewViewport === 'mobile' && isLandscape ? 'pl-10 pr-4 pt-4' : 'pt-8 px-4'}`}>
                             <CanvasContainer 
                                 activePage={activePage}

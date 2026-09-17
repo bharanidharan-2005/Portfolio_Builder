@@ -222,16 +222,16 @@ export default function CanvasContainer({
                 const targetId = isPreview ? `preview-node-block-${foundSection.id}` : `live-node-block-${foundSection.id}`;
                 const targetElement = document.getElementById(targetId);
                 if (targetElement) {
-                    if (isPreview) {
-                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    const scrollContainer = isPreview 
+                        ? (document.getElementById('preview-scroll-container') || window) 
+                        : (document.getElementById('workspace-scroll-container') || window);
+
+                    if (scrollContainer && scrollContainer.scrollTo) {
+                        const currentScroll = scrollContainer === window ? window.scrollY : scrollContainer.scrollTop;
+                        const topOffset = targetElement.getBoundingClientRect().top + currentScroll - 100;
+                        scrollContainer.scrollTo({ top: topOffset, behavior: 'smooth' });
                     } else {
-                        const scrollContainer = document.getElementById('workspace-scroll-container');
-                        if (scrollContainer && scrollContainer.scrollTo) {
-                            const topOffset = targetElement.getBoundingClientRect().top + scrollContainer.scrollTop - 100;
-                            scrollContainer.scrollTo({ top: topOffset, behavior: 'smooth' });
-                        } else {
-                            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
                 }
             }, 50);
