@@ -1,8 +1,9 @@
 import { lazy, Suspense, useState } from 'react';
-import { 
-    ArrowRight, X, Loader2, User, Mail, KeyRound, 
+import { ArrowRight, X, Loader2, User, Mail, KeyRound, 
     ChevronDown, Layout, Code2, Paintbrush, Shield, Zap, Terminal, Globe 
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAppContext } from '../context/AppContext';
 import { API, setAuthTokens } from '../api';
 
 const ThreeBackground = lazy(() => import('./ThreeBackground'));
@@ -84,7 +85,9 @@ const FEATURES = [
     }
 ];
 
-export default function LandingPage({ onEnterWorkspace }) {
+export default function LandingPage() {
+    const navigate = useNavigate();
+    const { login } = useAppContext();
     const [showModal, setShowModal] = useState(false);
     const [authMode, setAuthMode] = useState("signup");
     const [stepState, setStepState] = useState("name");
@@ -168,14 +171,13 @@ export default function LandingPage({ onEnterWorkspace }) {
                 
                 if (authMode === "login") {
                     // Skip avatar step for login, immediately enter workspace
-                    if (onEnterWorkspace) {
-                        onEnterWorkspace({
-                            name: data.name || "Developer",
-                            email: formData.email,
-                            code: formData.code,
-                            theme: "modern_glass"
-                        });
-                    }
+                    login({
+                        name: data.name || "Developer",
+                        email: formData.email,
+                        code: formData.code,
+                        theme: "modern_glass"
+                    });
+                    navigate("/workspace");
                 } else {
                     // For signup, save the name and go to avatar selection
                     if (data.name) {
@@ -196,15 +198,14 @@ export default function LandingPage({ onEnterWorkspace }) {
 
     const handleAvatarSelect = (emoji) => {
         setFormData({ ...formData, avatar: emoji });
-        if (onEnterWorkspace) {
-            onEnterWorkspace({
-                name: formData.name || "Developer",
-                email: formData.email,
-                code: formData.code,
-                theme: "modern_glass",
-                avatar: emoji
-            });
-        }
+        login({
+            name: formData.name || "Developer",
+            email: formData.email,
+            code: formData.code,
+            theme: "modern_glass",
+            avatar: emoji
+        });
+        navigate("/workspace");
     };
 
     return (

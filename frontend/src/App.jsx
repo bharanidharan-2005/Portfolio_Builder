@@ -1,4 +1,7 @@
-import React, { useState, useEffect, Suspense, lazy } from "react";
+import React, { Suspense, lazy } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
+import { AppProvider, useAppContext } from "./context/AppContext";
+import { WorkspaceProvider } from "./context/WorkspaceContext";
 
 const LandingPage = lazy(() => import("./components/LandingPage.jsx"));
 const WorkspaceLayout = lazy(() => import("./components/workspace/WorkspaceLayout.jsx"));
@@ -35,19 +38,42 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-export default function App() {
-    // Check current URL path and hostname
-    const path = window.location.pathname;
-    const hostname = window.location.hostname;
+function ProtectedRoute({ children }) {
+    const { isAuthenticated } = useAppContext();
+    if (!isAuthenticated) {
+        return <Navigate to="/" replace />;
+    }
+    return children;
+}
+
+function PreviewRouteWrapper({ isSubdomainPreview, subdomainUsername }) {
+    const { username, token } = useParams();
+    const { themeMode } = useAppContext();
     
-    // Subdomain routing detection (e.g. username.aurabuild.io)
+    const publicUsername = isSubdomainPreview ? subdomainUsername : username;
+    const publicToken = isSubdomainPreview ? "public" : token;
+
+    return (
+        <div className={`min-h-screen ${themeMode === 'light' ? 'bg-slate-50' : 'bg-[#05050A]'}`}>
+            <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-bold text-slate-500">Loading Preview...</div>}>
+                <WorkspaceProvider isPublicPreview={true} previewUserData={{ name: publicUsername, code: publicToken }}>
+                    <WorkspaceLayout />
+                </WorkspaceProvider>
+            </Suspense>
+        </div>
+    );
+}
+
+function MainApp() {
+    const { themeMode, isAuthenticated } = useAppContext();
+
+    // Check hostname for subdomains
+    const hostname = window.location.hostname;
     const rootDomains = ['aurabuild.io', 'www.aurabuild.io', 'aurabuild.com', 'localhost', '127.0.0.1', 'vercel.app', 'onrender.com', 'netlify.app'];
     let subdomainUsername = null;
     
     if (!rootDomains.includes(hostname)) {
         const parts = hostname.split('.');
-        // Extract the first part as username if it is not just localhost
-        // If the domain is something like project-name.vercel.app, parts.slice(-2) is vercel.app
         if (parts.length >= 2 && !rootDomains.includes(parts.slice(-2).join('.'))) {
            subdomainUsername = parts[0];
         } else if (hostname.endsWith('.localhost')) {
@@ -56,107 +82,49 @@ export default function App() {
     }
     
     const isSubdomainPreview = !!subdomainUsername;
-    const isPreviewRoute = path.startsWith("/preview/") || isSubdomainPreview;
 
-    const [isAuthenticated, setIsAuthenticated] = useState(() => {
-        const isLoggedIn = localStorage.getItem("aurabuild_is_logged_in");
-        return !!isLoggedIn;
-    });
+    if (isSubdomainPreview) {
+        return <PreviewRouteWrapper isSubdomainPreview={true} subdomainUsername={subdomainUsername} />;
+    }
 
-    const [themeMode, setThemeMode] = useState("light");
-
-    const [userData, setUserData] = useState(() => {
-        const saved = localStorage.getItem("aurabuild_user");
-        if (saved) {
-            try { return JSON.parse(saved); } catch (e) {}
-        }
-        return {
-            name: "Developer",
-            email: "",
-            theme: "modern_glass"
-        };
-    });
-
-    useEffect(() => {
-        localStorage.setItem("aurabuild_user", JSON.stringify(userData));
-    }, [userData]);
-
-    const handleToggleTheme = () => {
-        setThemeMode(prev => prev === "light" ? "dark" : "light");
-    };
-
-    const handleLogout = () => {
-        localStorage.removeItem("aurabuild_is_logged_in");
-        setIsAuthenticated(false);
-        setUserData({
-            name: "Developer",
-            email: "",
-            theme: "modern_glass"
-        });
-        // Clear the URL path on logout
-        window.history.pushState({}, '', '/');
-    };
-
-    // -----------------------------------------------------------------
-    // ROUTE 1: PUBLIC PREVIEW (Bypasses Login)
-    // -----------------------------------------------------------------
-    if (isPreviewRoute) {
-        // Extract username and token from /preview/username/token OR subdomain
-        const pathParts = path.split("/");
-        const publicUsername = isSubdomainPreview ? subdomainUsername : pathParts[2];
-        const publicToken = isSubdomainPreview ? "public" : pathParts[3];
-
-        return (
+    return (
+        <BrowserRouter>
             <div className={`min-h-screen ${themeMode === 'light' ? 'bg-slate-50' : 'bg-[#05050A]'}`}>
-                {/* 
-                  We pass isPreviewMode={true} so the WorkspaceLayout knows 
-                  to hide the sidebars, top nav, and editing tools.
-                */}
-                <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-bold text-slate-500">Loading Preview...</div>}>
-                    <WorkspaceLayout 
-                        userData={{ name: publicUsername, code: publicToken }}
-                        themeMode={themeMode}
-                        isPreviewMode={true} 
-                    />
-                </Suspense>
+                <Routes>
+                    <Route path="/" element={
+                        isAuthenticated ? (
+                            <Navigate to="/workspace" replace />
+                        ) : (
+                            <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-bold text-slate-500">Loading AuraBuild...</div>}>
+                                <LandingPage />
+                            </Suspense>
+                        )
+                    } />
+                    <Route path="/workspace" element={
+                        <ProtectedRoute>
+                            <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-bold text-slate-500">Loading Workspace...</div>}>
+                                <WorkspaceProvider isPublicPreview={false}>
+                                    <WorkspaceLayout />
+                                </WorkspaceProvider>
+                            </Suspense>
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/preview/:username/:token" element={
+                        <PreviewRouteWrapper isSubdomainPreview={false} />
+                    } />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
             </div>
-        );
-    }
+        </BrowserRouter>
+    );
+}
 
-    // -----------------------------------------------------------------
-    // ROUTE 2: BUILDER LOGIN
-    // -----------------------------------------------------------------
-    if (!isAuthenticated) {
-        return (
-            <ErrorBoundary>
-                <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-bold text-slate-500">Loading AuraBuild...</div>}>
-                    <LandingPage onEnterWorkspace={(data) => {
-                        setUserData(prev => ({...prev, ...data }));
-                        localStorage.setItem("aurabuild_is_logged_in", "true");
-                        setIsAuthenticated(true);
-                    }} />
-                </Suspense>
-            </ErrorBoundary>
-        );
-    }
-
-    // -----------------------------------------------------------------
-    // ROUTE 3: FULL WORKSPACE EDITOR
-    // -----------------------------------------------------------------
+export default function App() {
     return (
         <ErrorBoundary>
-            <div className={`min-h-screen ${themeMode === 'light' ? 'bg-slate-50' : 'bg-[#05050A]'}`}>
-                <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-bold text-slate-500">Loading Workspace...</div>}>
-                    <WorkspaceLayout 
-                        userData={userData}
-                        setUserData={setUserData}
-                        themeMode={themeMode}
-                        onToggleTheme={handleToggleTheme}
-                        onLogout={handleLogout}
-                        isPreviewMode={false}
-                    />
-                </Suspense>
-            </div>
+            <AppProvider>
+                <MainApp />
+            </AppProvider>
         </ErrorBoundary>
     );
 }

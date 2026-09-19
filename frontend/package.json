@@ -24,6 +24,7 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-github-calendar": "^5.0.9",
+    "react-router-dom": "^7.18.4",
     "three": "^0.185.1"
   },
   "devDependencies": {
