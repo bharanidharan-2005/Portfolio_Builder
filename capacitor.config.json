@@ -1,5 +1,5 @@
 {
   "appId": "com.aurabuild.app",
   "appName": "Portfolio Builder",
-  "webDir": "dist"
+  "webDir": "frontend/dist"
 }
