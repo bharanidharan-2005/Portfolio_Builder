@@ -54,7 +54,7 @@ function PreviewRouteWrapper({ isSubdomainPreview, subdomainUsername }) {
     const publicToken = isSubdomainPreview ? "public" : token;
 
     return (
-        <div className={`min-h-screen ${themeMode === 'light' ? 'bg-slate-50' : 'bg-[#05050A]'}`}>
+        <div className={`min-h-screen ${themeMode === 'light' ? 'bg-slate-50' : 'bg-slate-950'}`}>
             <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-bold text-slate-500">Loading Preview...</div>}>
                 <WorkspaceProvider isPublicPreview={true} previewUserData={{ name: publicUsername, code: publicToken }}>
                     <WorkspaceLayout />
@@ -89,7 +89,7 @@ function MainApp() {
 
     return (
         <BrowserRouter>
-            <div className={`min-h-screen ${themeMode === 'light' ? 'bg-slate-50' : 'bg-[#05050A]'}`}>
+            <div className={`min-h-screen ${themeMode === 'light' ? 'bg-slate-50' : 'bg-slate-950'}`}>
                 <Routes>
                     <Route path="/" element={
                         isAuthenticated ? (

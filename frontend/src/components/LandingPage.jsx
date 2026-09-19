@@ -248,7 +248,7 @@ export default function LandingPage() {
     };
 
     return (
-        <div className="min-h-screen w-screen bg-[#05050A] text-slate-200 overflow-x-hidden font-sans relative">
+        <div className="min-h-screen w-screen bg-slate-950 text-slate-200 overflow-x-hidden font-sans relative">
             
             {/* FIXED BACKGROUND: Stays in place while content scrolls */}
             <div className="fixed inset-0 z-0 pointer-events-none">
@@ -313,12 +313,12 @@ export default function LandingPage() {
                                         <div className="w-3 h-3 rounded-full bg-amber-500/80"></div>
                                         <div className="w-3 h-3 rounded-full bg-emerald-500/80"></div>
                                     </div>
-                                    <div className="bg-[#05050A]/50 border border-slate-700/50 rounded-md px-4 py-1 flex items-center backdrop-blur-md">
+                                    <div className="bg-slate-950/50 border border-slate-700/50 rounded-md px-4 py-1 flex items-center backdrop-blur-md">
                                         <span className="text-[10px] text-slate-400 font-mono font-medium"> localhost:3000 / portfolio </span>
                                     </div>
                                     <div className="w-12"></div>
                                 </div>
-                                <div className="p-8 h-64 bg-[#05050A]/80">
+                                <div className="p-8 h-64 bg-slate-950/80">
                                     <div className="flex items-center gap-6 mb-8 border-b border-slate-800/50 pb-6">
                                         <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 shadow-lg shadow-purple-900/20"></div>
                                         <div className="space-y-2">
@@ -381,7 +381,7 @@ export default function LandingPage() {
                 </section>
 
                 {/* --- 2. FEATURES SECTION --- */}
-                <section className="py-24 px-6 lg:px-12 max-w-[90rem] mx-auto w-full relative z-10 border-t border-slate-800/50 bg-[#05050A]/40 backdrop-blur-sm">
+                <section className="py-24 px-6 lg:px-12 max-w-[90rem] mx-auto w-full relative z-10 border-t border-slate-800/50 bg-slate-950/40 backdrop-blur-sm">
                     <div className="text-center max-w-3xl mx-auto mb-16">
                         <h2 className="text-3xl md:text-4xl font-display font-black text-white mb-4">System Capabilities</h2>
                         <p className="text-slate-400 text-lg">AuraBuild isn't just a template. It's a complete engineering suite designed to manage and present your professional identity.</p>
@@ -443,7 +443,7 @@ export default function LandingPage() {
                 </section>
 
                 {/* --- 4. FOOTER --- */}
-                <footer className="border-t border-slate-800/60 bg-[#05050A]/90 backdrop-blur-lg pt-16 pb-8 relative z-10">
+                <footer className="border-t border-slate-800/60 bg-slate-950/90 backdrop-blur-lg pt-16 pb-8 relative z-10">
                     <div className="max-w-[90rem] mx-auto px-6 lg:px-12 flex flex-col items-center">
                         <div className="flex items-center gap-2 mb-8">
                             <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>

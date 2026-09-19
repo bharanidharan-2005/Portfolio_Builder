@@ -176,7 +176,9 @@ export default function CanvasContainer({
     onUndo,
     canUndo,
     onRedo,
-    canRedo
+    canRedo,
+    activeHighlightSection,
+    aiSuggestionPreview
 }) {
     const currentTheme = PORTFOLIO_THEMES[portfolioTheme] || {};
     const currentFontObj = PORTFOLIO_FONTS.find(f => f.id === globalFont) || PORTFOLIO_FONTS[0];
@@ -246,6 +248,13 @@ export default function CanvasContainer({
             }, 50);
         }
     };
+
+    // Auto-scroll when activeHighlightSection changes
+    useEffect(() => {
+        if (activeHighlightSection) {
+            handleNavClick(activeHighlightSection);
+        }
+    }, [activeHighlightSection]);
 
     const handleDragEnd = ({ active, over }) => {
         if (over && active.id !== over.id && onDropSection) {
@@ -383,7 +392,11 @@ export default function CanvasContainer({
                                             const isActive = section.id === activeSectionId;
                                             return ( 
                                                 <SortableSection key={section.id} section={section}> 
-                                                    {({ listeners, attributes, isDragging }) => ( 
+                                                    {({ listeners, attributes, isDragging }) => {
+                                                        const isHighlighted = activeHighlightSection && (String(section.id) === String(activeHighlightSection) || section.section_type === activeHighlightSection);
+                                                        const isDimmed = activeHighlightSection && !isHighlighted;
+                                                        
+                                                        return (
                                                         <div 
                                                             id={`live-node-block-${section.id}`} 
                                                             onClick={(e) => {
@@ -396,7 +409,7 @@ export default function CanvasContainer({
                                                                     : globalBgImage
                                                                         ? 'border-white/10 bg-black/20 hover:bg-black/30 backdrop-blur-sm z-10'
                                                                         : 'border-transparent hover:border-slate-700/50 bg-slate-900/30 hover:bg-slate-900/60 z-10'
-                                                            } ${isDragging ? 'border-dashed border-blue-400 bg-blue-900/20' : ''}`}
+                                                            } ${isDragging ? 'border-dashed border-blue-400 bg-blue-900/20' : ''} ${isDimmed ? 'opacity-30 scale-[0.98] grayscale-[30%]' : 'opacity-100'} ${isHighlighted ? 'ring-2 ring-blue-500/50 shadow-[0_0_40px_rgba(59,130,246,0.2)] z-40' : ''}`}
                                                         >
                                                             {/* Floating Action Menu */}
                                                             <div 
@@ -419,10 +432,11 @@ export default function CanvasContainer({
                                                                     sections={displaySections} 
                                                                     onInlineEdit={onInlineEdit} 
                                                                     isPreview={false}
+                                                                    aiSuggestionPreview={aiSuggestionPreview}
                                                                 /> 
                                                             </div>
                                                         </div>
-                                                    )} 
+                                                    )}} 
                                                 </SortableSection>
                                             );
                                         })

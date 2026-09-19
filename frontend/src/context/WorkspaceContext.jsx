@@ -29,6 +29,10 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
     
     const sectionsRef = useRef([]);
 
+    // --- AI Context State ---
+    const [activeHighlightSection, setActiveHighlightSection] = useState(null);
+    const [aiSuggestionPreview, setAiSuggestionPreview] = useState(null);
+
     // --- GLOBAL BACKGROUND & FONT STATE ---
     const [globalBg, setGlobalBg] = useState(() => {
         return userData?.globalBg || localStorage.getItem(`aurabuild_bg_${userData?.name || 'default'}`) || null;
@@ -73,13 +77,23 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
     const currentTheme = (userData && userData.theme) || localTheme;
 
     // --- Terminal & History State ---
-    const [terminalLogs, setTerminalLogs] = useState([
-        { type: "system", text: "// Studio Pipeline Activity Log" },
-        { type: "status", text: "Connecting to secure backend..." }
+    const [terminalLogsState, setTerminalLogsState] = useState([
+        { type: "system", text: "// Studio Pipeline Activity Log", timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
+        { type: "status", text: "Connecting to secure backend...", timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
     ]);
+
+    const setTerminalLogs = (updater) => {
+        setTerminalLogsState(prev => {
+            const newLogs = typeof updater === 'function' ? updater(prev) : updater;
+            return newLogs.map(log => log.timestamp ? log : { ...log, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+        });
+    };
+    
+    const terminalLogs = terminalLogsState;
 
     const [history, setHistory] = useState({ past: [], future: [] });
     const lastLoadedPage = useRef(null);
+
 
     useEffect(() => {
         sectionsRef.current = sections;
@@ -346,22 +360,41 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Duplicated section block.` }]);
     };
 
+
+
     const handleResumeParsed = (resData) => {
-        if (!resData) return;
-        
-        if (resData.sections && resData.sections.length > 0) {
-            setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Canvas instantly updated with new sections!` }]);
-            setHistory({ past: [], future: [] }); 
-            setSections(resData.sections);
-        } else {
-            setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Refreshing canvas with parsed data...` }]);
-            API.get('pages/').then(res => {
-                setPages(res.data);
-                const active = res.data.find(p => p.name === activePage) || res.data[0];
-                setHistory({ past: [], future: [] }); 
-                setSections(active.sections || []);
-            });
+        if (!resData || !resData.sections || resData.sections.length === 0) {
+            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] No recognizable sections found in resume.` }]);
+            return;
         }
+        
+        // INTERCEPT for review instead of immediately applying
+        setResumeReviewData(resData);
+    };
+
+    const handleApplyResumeData = (mode) => {
+        if (!resumeReviewData || !resumeReviewData.sections) return;
+        
+        const newSections = resumeReviewData.sections;
+        
+        if (mode === 'replace') {
+            setHistory({ past: [], future: [] }); 
+            setSections(newSections);
+            setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Canvas replaced with extracted sections!` }]);
+        } else if (mode === 'append') {
+            const currentSections = sectionsRef.current;
+            const updatedSections = [...currentSections, ...newSections];
+            setSections(updatedSections);
+            commitHistory(updatedSections, currentSections);
+            setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Extracted sections appended to canvas!` }]);
+        }
+        
+        setResumeReviewData(null);
+    };
+
+    const handleCancelResumeData = () => {
+        setResumeReviewData(null);
+        setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Resume extraction application cancelled.` }]);
     };
 
     const triggerDeployment = async () => {
@@ -400,6 +433,10 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         activePage,
         setActivePage,
         sections,
+        activeHighlightSection,
+        setActiveHighlightSection,
+        aiSuggestionPreview,
+        setAiSuggestionPreview,
         globalBg,
         setGlobalBg,
         globalFont,
@@ -417,6 +454,9 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         handleDeleteSection,
         handleDuplicateSection,
         handleResumeParsed,
+        resumeReviewData,
+        handleApplyResumeData,
+        handleCancelResumeData,
         triggerDeployment,
         handleExportZip,
     };

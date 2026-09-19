@@ -8,16 +8,22 @@ import { PORTFOLIO_THEMES } from "../../canvas/themes.js";
 export function TopNav({ 
     onDeploy, theme, setTheme, activeTheme, onThemeChange, 
     onToggleLeft, onToggleRight, userData, onLogout, onHelpClick,
-    isPreviewMode, onTogglePreview, onUndo, canUndo, onRedo, canRedo
+    isPreviewMode, onTogglePreview, onUndo, canUndo, onRedo, canRedo,
+    sections = []
 }) {
     const isLight = theme === 'light';
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isChecklistOpen, setIsChecklistOpen] = useState(false);
     const dropdownRef = useRef(null);
+    const checklistRef = useRef(null);
 
     useEffect(() => {
         function handleClickOutside(event) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setIsDropdownOpen(false);
+            }
+            if (checklistRef.current && !checklistRef.current.contains(event.target)) {
+                setIsChecklistOpen(false);
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
@@ -27,6 +33,26 @@ export function TopNav({
     const currentThemeId = activeTheme || 'modern_glass';
     const currentThemeData = PORTFOLIO_THEMES && PORTFOLIO_THEMES[currentThemeId];
     const currentThemeName = (currentThemeData && currentThemeData.name) || "Modern Glass";
+
+    // --- Quality Checklist Logic ---
+    const getQualityChecks = () => {
+        const hasHero = sections.some(s => s.section_type === 'hero');
+        const hasAbout = sections.some(s => s.section_type === 'about');
+        const hasProjects = sections.some(s => s.section_type === 'projects_grid');
+        const hasContact = sections.some(s => s.section_type === 'contact');
+        
+        const checks = [
+            { label: "Hero Header & Introduction", passed: hasHero },
+            { label: "About Me / Biography", passed: hasAbout },
+            { label: "Projects / Portfolio Grid", passed: hasProjects },
+            { label: "Contact Information", passed: hasContact }
+        ];
+        
+        const score = Math.round((checks.filter(c => c.passed).length / checks.length) * 100);
+        return { checks, score };
+    };
+    
+    const { checks, score } = getQualityChecks();
 
     return ( 
         <div className={`flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-6 py-2 sm:py-3 border-b w-full h-full transition-colors ${isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-white/[0.02] backdrop-blur-2xl border-white/10'}`}>
@@ -47,7 +73,40 @@ export function TopNav({
             {/* 2. CENTER SECTION - Global Canvas Settings (Theme & Save Status) */}
             <div className="flex-1 flex items-center justify-center gap-2 sm:gap-4">
                 
-                
+                {/* Quality Checklist Button */}
+                <div className="relative hidden md:block" ref={checklistRef}>
+                    <button 
+                        type="button" 
+                        onClick={() => setIsChecklistOpen(!isChecklistOpen)} 
+                        className={`flex items-center gap-2 border rounded-full px-3 py-1.5 transition-all cursor-pointer ${isLight ? 'bg-slate-50 border-slate-200 hover:bg-slate-100' : 'bg-slate-900 border-slate-800 hover:bg-slate-800'}`}
+                    >
+                        <Check className={`h-3.5 w-3.5 shrink-0 ${score === 100 ? 'text-emerald-500' : 'text-amber-500'}`} />
+                        <span className={`text-[11px] sm:text-sm font-medium ${isLight ? 'text-slate-700' : 'text-slate-200'}`}>
+                            Score: {score}%
+                        </span>
+                    </button>
+                    
+                    {isChecklistOpen && (
+                        <div className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[260px] rounded-2xl border shadow-2xl z-50 overflow-hidden ${isLight ? 'bg-white border-slate-200' : 'bg-[#0A0A0F]/95 backdrop-blur-xl border-white/10'}`}>
+                            <div className="p-4 border-b border-white/10">
+                                <h3 className={`text-sm font-bold ${isLight ? 'text-slate-800' : 'text-slate-100'}`}>Portfolio Quality</h3>
+                                <div className="w-full h-1.5 bg-slate-800 rounded-full mt-2 overflow-hidden">
+                                    <div className={`h-full rounded-full transition-all duration-500 ${score === 100 ? 'bg-emerald-500' : score > 50 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${score}%` }}></div>
+                                </div>
+                            </div>
+                            <div className="p-2">
+                                {checks.map((check, i) => (
+                                    <div key={i} className={`flex items-center gap-3 p-2 rounded-lg text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
+                                        <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${check.passed ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-slate-500 border border-slate-700'}`}>
+                                            {check.passed && <Check className="w-2.5 h-2.5" />}
+                                        </div>
+                                        <span>{check.label}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
 
                 {/* Theme Selector Dropdown */}
                 <div className="relative max-w-[160px] sm:max-w-[200px] w-full" ref={dropdownRef}>

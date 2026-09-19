@@ -7,6 +7,7 @@ import CanvasContainer from "../../canvas/CanvasContainer.jsx";
 import SettingsModal from "./SettingsModal.jsx";
 import HelpModal from "./HelpModal.jsx";
 import PreviewModal from "./PreviewModal.jsx";
+import ResumeReviewModal from "./ResumeReviewModal.jsx";
 import PortfolioFrontpage from "../portfolio/PortfolioFrontpage.jsx";
 import { Undo2, Redo2 } from "lucide-react";
 import SEOUpdater from "../../utils/SEOUpdater";
@@ -25,7 +26,8 @@ export default function WorkspaceLayout() {
         handleUndo, handleRedo, handleAddPage, handleDeletePage,
         handleUpdateSectionContent, handleDropSection, handleAddManualSection,
         handleDeleteSection, handleDuplicateSection, handleResumeParsed,
-        triggerDeployment, handleExportZip
+        resumeReviewData, handleApplyResumeData, handleCancelResumeData,
+        triggerDeployment, handleExportZip, activeHighlightSection, aiSuggestionPreview
     } = workspace;
 
     // 2. Local UI State (Only presentation logic remains here!)
@@ -58,14 +60,19 @@ export default function WorkspaceLayout() {
 
     // 4. Render Main Builder UI
     return (
-        <div className={`h-screen w-full flex flex-col overflow-hidden select-none transition-colors duration-500 font-inter relative ${themeMode === 'dark' ? 'bg-[#05050A] text-slate-200' : 'bg-slate-50 text-slate-800'}`}>
+        <div className={`h-screen w-full flex flex-col overflow-hidden select-none transition-colors duration-500 font-inter relative ${themeMode === 'dark' ? 'bg-slate-950 text-slate-200' : 'bg-slate-50 text-slate-800'}`}>
             {themeMode === 'dark' && (
-                <div className="fixed inset-0 z-0 pointer-events-none">
+                <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-slate-950">
                     <Suspense fallback={null}>
                         <ThreeBackground theme="dark" />
                     </Suspense>
-                    <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-900/10 blur-[120px] rounded-full" />
-                    <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-900/10 blur-[120px] rounded-full" />
+                    {/* Deep Space Gradients */}
+                    <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] bg-indigo-900/10 blur-[150px] rounded-full mix-blend-screen" />
+                    <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-purple-900/10 blur-[150px] rounded-full mix-blend-screen" />
+                    <div className="absolute top-[20%] left-[30%] w-[40%] h-[40%] bg-blue-900/5 blur-[120px] rounded-full mix-blend-screen" />
+                    
+                    {/* Subtle Starlight Grid overlay */}
+                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wMykiLz48L3N2Zz4=')] opacity-50"></div>
                 </div>
             )}
             
@@ -83,6 +90,7 @@ export default function WorkspaceLayout() {
                         onToggleLeft={() => setIsLeftOpen(!isLeftOpen)}
                         onToggleRight={() => setIsRightOpen(!isRightOpen)}
                         userData={userData}
+                        sections={sections}
                         onLogout={() => {}} // Logout handled internally by TopNav via AppContext
                         onHelpClick={() => setIsHelpModalOpen(true)} 
                         isPreviewMode={isInternalPreviewOpen}
@@ -180,6 +188,8 @@ export default function WorkspaceLayout() {
                                 canUndo={history.past.length > 0}
                                 canRedo={history.future.length > 0}
                                 isPreview={isPublicPreview || isInternalPreviewOpen} 
+                                activeHighlightSection={activeHighlightSection}
+                                aiSuggestionPreview={aiSuggestionPreview}
                             />
                         </div>
                     </div>
@@ -253,6 +263,15 @@ export default function WorkspaceLayout() {
                     onExportZip={handleExportZip}
                 />
             )}
+
+            {/* Resume Extraction Review Modal */}
+            <ResumeReviewModal
+                isOpen={!!resumeReviewData}
+                onClose={handleCancelResumeData}
+                resumeData={resumeReviewData}
+                onApply={handleApplyResumeData}
+                isLight={isLight}
+            />
         </div>
     );
 }

@@ -41,7 +41,7 @@ export const getRoleImage = (subheading) => {
     return '/3d_generic.jpg';
 };
 
-export default function RenderPageContent({ section, portfolioTheme, sections, onInlineEdit, isPreview = false }) {
+export default function RenderPageContent({ section, portfolioTheme, sections, onInlineEdit, isPreview = false, aiSuggestionPreview = null }) {
     // Memoize the PDF document to prevent massive memory leaks and re-renders on scroll
     const pdfDocument = useMemo(() => isPreview ? <ResumePDF sections={sections} /> : null, [sections, isPreview]);
     const [openMenu, setOpenMenu] = useState(null);
@@ -76,9 +76,10 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
     // --- SMART TEXT ROUTER ---
     const TextElement = ({ value, placeholder, onCommit, multiline = false }) => {
         if (isPreview) {
+            if (!value) return null; // Do not show placeholders on the live polished site
             return (
                 <span className={`block w-full max-w-full break-words ${multiline ? "whitespace-pre-wrap" : "whitespace-normal"} break-words`}>
-                    {value || placeholder}
+                    {value}
                 </span>
             );
         }
@@ -180,8 +181,30 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
         heroDesignOptions.push({ label: project.title || "Untitled Project", url: project.projectUrl });
     });
 
+    // Check if this section has an active AI Suggestion
+    const hasAiSuggestion = aiSuggestionPreview && String(aiSuggestionPreview.targetSectionId) === String(section.id);
+
     return (
         <div className={`w-full relative ${isPreview ? '' : 'group/section'} ${openMenu ? 'z-50' : 'z-10'}`}>
+            {/* AI Suggestion Overlay */}
+            {hasAiSuggestion && !isPreview && (
+                <div className="absolute inset-0 z-[100] pointer-events-none p-4 animate-in fade-in zoom-in-95 duration-500">
+                    <div className="w-full h-full rounded-[2rem] border-2 border-blue-500/50 bg-blue-900/10 backdrop-blur-[2px] flex items-center justify-center">
+                        <div className="bg-slate-900/95 border border-blue-500/50 shadow-2xl p-6 rounded-2xl pointer-events-auto max-w-lg text-center backdrop-blur-xl">
+                            <h4 className="text-blue-400 font-bold mb-2 flex items-center justify-center gap-2">
+                                <Sparkles className="w-4 h-4" /> AI Suggestion: {aiSuggestionPreview.actionTitle || "Content Update"}
+                            </h4>
+                            <p className="text-sm text-slate-300 mb-4 whitespace-pre-wrap text-left bg-black/40 p-3 rounded-lg border border-slate-700 max-h-40 overflow-y-auto custom-scrollbar">
+                                {aiSuggestionPreview.suggestedContent}
+                            </p>
+                            <div className="text-xs text-slate-500">
+                                Review in the Right Panel to Apply or Cancel
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* 1. HERO SECTION */}
             {currentType === "hero" && (
                 <motion.div 
@@ -1199,7 +1222,14 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             </div>
                         )}
                     </motion.div>
-                </div>
+            )}
+
+            {/* DEFAULT FALLBACK FOR UNKNOWN BLOCKS */}
+            {!["hero", "about", "education", "skills", "projects_grid", "github_activity", "contact", "services", "testimonials", "certifications", "stats", "articles"].includes(currentType) && (
+                <motion.div variants={staggerItem} className={`p-12 border ${borderClass} rounded-3xl ${cardBg} text-center`}>
+                    <p className={`text-sm ${textSecondary} mb-4 uppercase tracking-widest font-bold`}>[Empty {currentType} Block]</p>
+                    <p className={`text-xs ${textSecondary}`}>Select this block and use the Right Sidebar tools to populate data.</p>
+                </motion.div>
             )}
         </div>
     );

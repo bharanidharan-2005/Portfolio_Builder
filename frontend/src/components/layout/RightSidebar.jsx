@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { PORTFOLIO_THEMES, PORTFOLIO_FONTS } from "../../canvas/themes.js";
 import { API } from "../../api";
+import { useWorkspace } from "../../context/WorkspaceContext";
 
 const BROAD_JOB_CONCEPTS = [
     "React", "Node.js", "Python", "Java", "Django", "Flask", "AWS", "Docker", 
@@ -60,6 +61,7 @@ export default function RightSidebar({
     userData,
     onTemplateChange
 }) {
+    const { activeHighlightSection, setActiveHighlightSection, aiSuggestionPreview, setAiSuggestionPreview } = useWorkspace();
     const isLight = themeMode === 'light';
     const [genTab, setGenTab] = useState("generate");
     const [paletteTab, setPaletteTab] = useState("themes");
@@ -166,7 +168,14 @@ export default function RightSidebar({
                     if (promptLower.includes("short") || promptLower.includes("concise")) {
                         sub = sub.split('|')[0].trim();
                     }
-                    onUpdateSectionContent(sec.id, 'subheading', sub);
+                    setAiSuggestionPreview({
+                        targetSectionId: sec.id,
+                        actionTitle: "Refine Hero Subheading",
+                        key: "subheading",
+                        originalContent: data.subheading,
+                        suggestedContent: sub
+                    });
+                    setActiveHighlightSection(sec.id);
                     modifiedCount++;
                 } 
                 else if (sec.section_type === 'about' && data.bio) {
@@ -177,7 +186,14 @@ export default function RightSidebar({
                     if (promptLower.includes("formal")) {
                         bio = bio.replace(/I am a/gi, "Results-oriented professional operating as a");
                     }
-                    onUpdateSectionContent(sec.id, 'bio', bio);
+                    setAiSuggestionPreview({
+                        targetSectionId: sec.id,
+                        actionTitle: "Refine About Bio",
+                        key: "bio",
+                        originalContent: data.bio,
+                        suggestedContent: bio
+                    });
+                    setActiveHighlightSection(sec.id);
                     modifiedCount++;
                 }
             });
@@ -272,31 +288,39 @@ export default function RightSidebar({
             const skillsSec = sections.find(s => s.section_type === 'skills');
             const aboutSec = sections.find(s => s.section_type === 'about');
             
-            let updated = false;
-
-            if (skillsSec) {
-                const currentSkills = skillsSec.content_data?.skills || [];
-                const mergedSkills = Array.from(new Set([...currentSkills, ...missingKeywords]));
-                onUpdateSectionContent(skillsSec.id, 'skills', mergedSkills);
-                updated = true;
-            }
-
             if (aboutSec) {
                 const currentBio = aboutSec.content_data?.bio || "";
                 const injectSentence = ` Proficient in ${missingKeywords.join(', ')} for optimized workflows.`;
                 if (!currentBio.includes(missingKeywords[0])) {
-                    onUpdateSectionContent(aboutSec.id, 'bio', currentBio.trim() + injectSentence);
-                    updated = true;
+                    setAiSuggestionPreview({
+                        targetSectionId: aboutSec.id,
+                        actionTitle: "Inject Target Keywords",
+                        key: "bio",
+                        originalContent: currentBio,
+                        suggestedContent: currentBio.trim() + injectSentence
+                    });
+                    setActiveHighlightSection(aboutSec.id);
+                    return; // Only preview one section at a time
                 }
             }
-
-            if (updated) {
-                setMatchScore(100); 
-                setMissingKeywords([]); 
-                setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Injected missing concepts. Match score updated to 100%!` }]);
-            } else {
-                setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Add an About or Skills section to allow concept injection.` }]);
+            
+            if (skillsSec) {
+                const currentSkills = skillsSec.content_data?.items || [];
+                const newSkills = missingKeywords.map(kw => ({ name: kw, level: 75 }));
+                const mergedSkills = [...currentSkills, ...newSkills];
+                
+                setAiSuggestionPreview({
+                    targetSectionId: skillsSec.id,
+                    actionTitle: "Inject Target Keywords",
+                    key: "items",
+                    originalContent: "Current Skills",
+                    suggestedContent: mergedSkills
+                });
+                setActiveHighlightSection(skillsSec.id);
+                return;
             }
+
+            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Add an About or Skills section to allow concept injection.` }]);
         } catch (e) {
             setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Injection failed.` }]);
         } finally {
@@ -324,17 +348,35 @@ export default function RightSidebar({
                             }
                             return { ...p, description: desc };
                         });
-                        onUpdateSectionContent(sec.id, 'projects', updatedProjects);
+                        
+                        setAiSuggestionPreview({
+                            targetSectionId: sec.id,
+                            actionTitle: title,
+                            key: "projects",
+                            originalContent: "Projects Data",
+                            suggestedContent: updatedProjects
+                        });
+                        setActiveHighlightSection(sec.id);
                         modifiedCount++;
+                        return; // Only preview one at a time
                     }
                 } 
                 else if (title === "Quantify Metrics") {
-                    if (sec.section_type === 'about' && data.bio) {
+                    if (sec.section_type === 'about' && data.bio && modifiedCount === 0) {
                         let bio = data.bio;
                         if (!bio.includes("%") && !bio.includes("10k")) {
                             bio = bio.replace(/applications/i, "applications (serving 10k+ DAU)").replace(/efficiency/i, "efficiency by 40%");
-                            onUpdateSectionContent(sec.id, 'bio', bio);
+                            
+                            setAiSuggestionPreview({
+                                targetSectionId: sec.id,
+                                actionTitle: title,
+                                key: "bio",
+                                originalContent: data.bio,
+                                suggestedContent: bio
+                            });
+                            setActiveHighlightSection(sec.id);
                             modifiedCount++;
+                            return;
                         }
                     }
                     if (sec.section_type === 'hero' && data.subheading) {
@@ -366,14 +408,30 @@ export default function RightSidebar({
                         return newText;
                     };
                     
-                    if (sec.section_type === 'about' && data.bio) {
-                        onUpdateSectionContent(sec.id, 'bio', optimizeText(data.bio));
+                    if (sec.section_type === 'about' && data.bio && modifiedCount === 0) {
+                        setAiSuggestionPreview({
+                            targetSectionId: sec.id,
+                            actionTitle: title,
+                            key: "bio",
+                            originalContent: data.bio,
+                            suggestedContent: optimizeText(data.bio)
+                        });
+                        setActiveHighlightSection(sec.id);
                         modifiedCount++;
+                        return;
                     }
-                    if (sec.section_type === 'projects_grid' && data.projects) {
+                    if (sec.section_type === 'projects_grid' && data.projects && modifiedCount === 0) {
                         const updated = data.projects.map(p => ({ ...p, description: optimizeText(p.description) }));
-                        onUpdateSectionContent(sec.id, 'projects', updated);
+                        setAiSuggestionPreview({
+                            targetSectionId: sec.id,
+                            actionTitle: title,
+                            key: "projects",
+                            originalContent: "Projects Data",
+                            suggestedContent: updated
+                        });
+                        setActiveHighlightSection(sec.id);
                         modifiedCount++;
+                        return;
                     }
                 } 
                 else if (title === "Grammar & Tone Corrector") {
@@ -385,13 +443,29 @@ export default function RightSidebar({
                         return res.charAt(0).toUpperCase() + res.slice(1);
                     };
 
-                    if (sec.section_type === 'about' && data.bio) {
-                        onUpdateSectionContent(sec.id, 'bio', fixGrammar(data.bio));
+                    if (sec.section_type === 'about' && data.bio && modifiedCount === 0) {
+                        setAiSuggestionPreview({
+                            targetSectionId: sec.id,
+                            actionTitle: title,
+                            key: "bio",
+                            originalContent: data.bio,
+                            suggestedContent: fixGrammar(data.bio)
+                        });
+                        setActiveHighlightSection(sec.id);
                         modifiedCount++;
+                        return;
                     }
-                    if (sec.section_type === 'hero' && data.subheading) {
-                        onUpdateSectionContent(sec.id, 'subheading', fixGrammar(data.subheading).replace(/\.$/, ''));
+                    if (sec.section_type === 'hero' && data.subheading && modifiedCount === 0) {
+                        setAiSuggestionPreview({
+                            targetSectionId: sec.id,
+                            actionTitle: title,
+                            key: "subheading",
+                            originalContent: data.subheading,
+                            suggestedContent: fixGrammar(data.subheading).replace(/\.$/, '')
+                        });
+                        setActiveHighlightSection(sec.id);
                         modifiedCount++;
+                        return;
                     }
                 }
             });
@@ -651,7 +725,7 @@ export default function RightSidebar({
                         <select
                             value={selectedAiSection}
                             onChange={(e) => setSelectedAiSection(e.target.value)}
-                            className={`w-full text-xs font-semibold p-3.5 rounded-xl border outline-none cursor-pointer transition-all duration-300 focus:ring-2 focus:ring-blue-500/50 ${isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-[#15161D] border-slate-800 text-slate-200'}`}
+                            className={`w-full text-xs font-semibold p-3.5 rounded-xl border outline-none cursor-pointer transition-all duration-300 focus:ring-2 focus:ring-blue-500/50 ${isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-900/40 backdrop-blur-md border-slate-800 text-slate-200'}`}
                         >
                             <option value="all">Entire Canvas (All Blocks)</option>
                             {(sections || []).map((sec) => (
@@ -669,19 +743,53 @@ export default function RightSidebar({
                             value={refinePrompt}
                             onChange={(e) => setRefinePrompt(e.target.value)}
                             placeholder="e.g., Make the tone more executive, concise, or focused on leadership..."
-                            className={`w-full text-xs p-3.5 rounded-xl border outline-none resize-none transition-all duration-300 focus:ring-2 focus:ring-blue-500/50 ${isLight ? 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400' : 'bg-[#15161D] border-slate-800 text-slate-200 placeholder-slate-500'}`}
+                            className={`w-full text-xs p-3.5 rounded-xl border outline-none resize-none transition-all duration-300 focus:ring-2 focus:ring-blue-500/50 ${isLight ? 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400' : 'bg-slate-900/40 backdrop-blur-md border-slate-800 text-slate-200 placeholder-slate-500'}`}
                         />
                     </div>
 
                     <button
-                        disabled={isProcessing || !refinePrompt.trim()}
+                        disabled={isProcessing || !refinePrompt.trim() || aiSuggestionPreview}
                         onClick={handleRefineSection}
                         className={`w-full py-3.5 rounded-xl text-xs font-bold transition-all duration-300 shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-95 ${
-                            isProcessing || !refinePrompt.trim() ? 'bg-blue-900/30 text-blue-300/50 cursor-not-allowed border border-blue-900/20 shadow-none' : 'bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white shadow-blue-900/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]'
+                            isProcessing || !refinePrompt.trim() || aiSuggestionPreview ? 'bg-blue-900/30 text-blue-300/50 cursor-not-allowed border border-blue-900/20 shadow-none' : 'bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white shadow-blue-900/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]'
                         }`}
                     >
-                        {isProcessing ? <><Loader2 className="w-4 h-4 animate-spin" /> Rewriting Canvas...</> : <><Edit3 className="w-4 h-4" /> Mutate Target Content</>}
+                        {isProcessing ? <><Loader2 className="w-4 h-4 animate-spin" /> Rewriting Canvas...</> : <><Edit3 className="w-4 h-4" /> Preview Mutation</>}
                     </button>
+
+                    {aiSuggestionPreview && aiSuggestionPreview.actionTitle.includes("Refine") && (
+                        <div className="mt-4 p-4 rounded-xl border border-blue-500/50 bg-blue-900/10 animate-in fade-in slide-in-from-top-2">
+                            <h4 className="text-[10px] font-black uppercase text-blue-400 mb-2">Review Suggested Changes</h4>
+                            <div className="text-xs text-slate-300 mb-4 bg-black/40 p-2 rounded max-h-32 overflow-y-auto">
+                                <strong>Before:</strong> {aiSuggestionPreview.originalContent}
+                                <br/><br/>
+                                <strong>After:</strong> {aiSuggestionPreview.suggestedContent}
+                            </div>
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={() => {
+                                        onUpdateSectionContent(aiSuggestionPreview.targetSectionId, aiSuggestionPreview.key, aiSuggestionPreview.suggestedContent);
+                                        setAiSuggestionPreview(null);
+                                        setActiveHighlightSection(null);
+                                        setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Refinement applied successfully.` }]);
+                                    }}
+                                    className="flex-1 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition-colors"
+                                >
+                                    Apply
+                                </button>
+                                <button 
+                                    onClick={() => {
+                                        setAiSuggestionPreview(null);
+                                        setActiveHighlightSection(null);
+                                        setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Refinement cancelled.` }]);
+                                    }}
+                                    className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-xs font-bold transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -694,7 +802,7 @@ export default function RightSidebar({
                             type="text" 
                             id="gh-username"
                             placeholder="e.g. torvalds"
-                            className={`w-full text-xs p-3.5 rounded-xl border outline-none transition-all duration-300 focus:ring-2 focus:ring-blue-500/50 ${isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-[#15161D] border-slate-800 text-slate-200'}`}
+                            className={`w-full text-xs p-3.5 rounded-xl border outline-none transition-all duration-300 focus:ring-2 focus:ring-blue-500/50 ${isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-900/40 backdrop-blur-md border-slate-800 text-slate-200'}`}
                         />
                     </div>
                     <button
@@ -755,7 +863,7 @@ export default function RightSidebar({
                             key={i}
                             disabled={isProcessing}
                             onClick={() => executeAiAction(bp.title, `[SUCCESS] ${bp.title} executed. Portfolio is structurally sound.`)}
-                            className={`w-full flex items-center gap-3 p-3.5 rounded-2xl border transition-all duration-300 text-left cursor-pointer group hover:-translate-y-0.5 ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''} ${isLight ? 'bg-white border-slate-200 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/10' : 'bg-[#15161D] border-slate-800 hover:border-blue-500 hover:bg-slate-800 hover:shadow-lg hover:shadow-blue-900/20'}`}
+                            className={`w-full flex items-center gap-3 p-3.5 rounded-2xl border transition-all duration-300 text-left cursor-pointer group hover:-translate-y-0.5 ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''} ${isLight ? 'bg-white border-slate-200 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/10' : 'bg-slate-900/40 backdrop-blur-md border-slate-800 hover:border-blue-500 hover:bg-slate-800 hover:shadow-lg hover:shadow-blue-900/20'}`}
                         >
                             <bp.icon className={`w-4 h-4 shrink-0 transition-colors ${isLight ? 'text-blue-500 group-hover:text-blue-600' : 'text-blue-400 group-hover:text-blue-300'}`} />
                             <div className="flex-1">
@@ -787,7 +895,7 @@ export default function RightSidebar({
                 value={jdInput}
                 onChange={(e) => setJdInput(e.target.value)}
                 placeholder="Paste Target Job Description here..."
-                className={`w-full text-xs p-4 rounded-2xl border outline-none resize-none transition-all duration-300 focus:ring-2 focus:ring-emerald-500/50 ${isLight ? 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400' : 'bg-[#15161D] border-slate-800 text-slate-200 placeholder-slate-500'}`}
+                className={`w-full text-xs p-4 rounded-2xl border outline-none resize-none transition-all duration-300 focus:ring-2 focus:ring-emerald-500/50 ${isLight ? 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400' : 'bg-slate-900/40 backdrop-blur-md border-slate-800 text-slate-200 placeholder-slate-500'}`}
             />
 
             <button
@@ -830,6 +938,43 @@ export default function RightSidebar({
                     )}
                 </div>
             )}
+
+            {aiSuggestionPreview && aiSuggestionPreview.actionTitle === "Inject Target Keywords" && (
+                <div className="mt-4 p-4 rounded-xl border border-emerald-500/50 bg-emerald-900/10 animate-in fade-in slide-in-from-top-2">
+                    <h4 className="text-[10px] font-black uppercase text-emerald-400 mb-2">Review Keyword Injection</h4>
+                    <div className="text-xs text-slate-300 mb-4 bg-black/40 p-2 rounded max-h-32 overflow-y-auto">
+                        <strong>Before:</strong> {typeof aiSuggestionPreview.originalContent === 'object' ? JSON.stringify(aiSuggestionPreview.originalContent) : aiSuggestionPreview.originalContent}
+                        <br/><br/>
+                        <strong>After:</strong> {typeof aiSuggestionPreview.suggestedContent === 'object' ? "Skills Updated!" : aiSuggestionPreview.suggestedContent}
+                    </div>
+                    <div className="flex gap-2">
+                        <button 
+                            onClick={() => {
+                                onUpdateSectionContent(aiSuggestionPreview.targetSectionId, aiSuggestionPreview.key, aiSuggestionPreview.suggestedContent);
+                                setAiSuggestionPreview(null);
+                                setActiveHighlightSection(null);
+                                setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Keywords injected successfully.` }]);
+                                // Re-evaluate logic would ideally go here. 
+                                setMatchScore(100); 
+                                setMissingKeywords([]); 
+                            }}
+                            className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-colors"
+                        >
+                            Apply
+                        </button>
+                        <button 
+                            onClick={() => {
+                                setAiSuggestionPreview(null);
+                                setActiveHighlightSection(null);
+                                setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Injection cancelled.` }]);
+                            }}
+                            className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-xs font-bold transition-colors"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 
@@ -853,7 +998,7 @@ export default function RightSidebar({
                         key={i}
                         disabled={isProcessing}
                         onClick={() => handleImpactAction(bp.title)}
-                        className={`w-full flex items-start gap-3 p-3.5 rounded-2xl border transition-all duration-300 text-left cursor-pointer group hover:-translate-y-0.5 ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''} ${isLight ? 'bg-white border-slate-200 hover:border-orange-400 hover:shadow-lg hover:shadow-orange-500/10' : 'bg-[#15161D] border-slate-800 hover:border-orange-500 hover:bg-slate-800 hover:shadow-lg hover:shadow-orange-900/20'}`}
+                        className={`w-full flex items-start gap-3 p-3.5 rounded-2xl border transition-all duration-300 text-left cursor-pointer group hover:-translate-y-0.5 ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''} ${isLight ? 'bg-white border-slate-200 hover:border-orange-400 hover:shadow-lg hover:shadow-orange-500/10' : 'bg-slate-900/40 backdrop-blur-md border-slate-800 hover:border-orange-500 hover:bg-slate-800 hover:shadow-lg hover:shadow-orange-900/20'}`}
                     >
                         <bp.icon className={`w-4 h-4 mt-0.5 shrink-0 transition-colors ${isLight ? 'text-orange-500 group-hover:text-orange-600' : 'text-orange-400 group-hover:text-orange-300'}`} />
                         <div>
@@ -863,6 +1008,40 @@ export default function RightSidebar({
                     </button>
                 ))}
             </div>
+
+            {aiSuggestionPreview && !aiSuggestionPreview.actionTitle.includes("Refine") && (
+                <div className="mt-4 p-4 rounded-xl border border-orange-500/50 bg-orange-900/10 animate-in fade-in slide-in-from-top-2">
+                    <h4 className="text-[10px] font-black uppercase text-orange-400 mb-2">Review Impact Changes</h4>
+                    <div className="text-xs text-slate-300 mb-4 bg-black/40 p-2 rounded max-h-32 overflow-y-auto">
+                        <strong>Before:</strong> {typeof aiSuggestionPreview.originalContent === 'object' ? JSON.stringify(aiSuggestionPreview.originalContent) : aiSuggestionPreview.originalContent}
+                        <br/><br/>
+                        <strong>After:</strong> {typeof aiSuggestionPreview.suggestedContent === 'object' ? "Projects updated!" : aiSuggestionPreview.suggestedContent}
+                    </div>
+                    <div className="flex gap-2">
+                        <button 
+                            onClick={() => {
+                                onUpdateSectionContent(aiSuggestionPreview.targetSectionId, aiSuggestionPreview.key, aiSuggestionPreview.suggestedContent);
+                                setAiSuggestionPreview(null);
+                                setActiveHighlightSection(null);
+                                setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Impact applied successfully.` }]);
+                            }}
+                            className="flex-1 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-xs font-bold transition-colors"
+                        >
+                            Apply
+                        </button>
+                        <button 
+                            onClick={() => {
+                                setAiSuggestionPreview(null);
+                                setActiveHighlightSection(null);
+                                setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Impact cancelled.` }]);
+                            }}
+                            className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-xs font-bold transition-colors"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 
@@ -901,7 +1080,7 @@ export default function RightSidebar({
                                 value={vibeInput}
                                 onChange={(e) => setVibeInput(e.target.value)}
                                 placeholder="e.g. Cyberpunk dark, clean minimal..."
-                                className={`flex-1 text-xs px-4 py-3.5 rounded-xl border outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-300 ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#15161D] border-slate-800'}`}
+                                className={`flex-1 text-xs px-4 py-3.5 rounded-xl border outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-300 ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-900/40 backdrop-blur-md border-slate-800'}`}
                             />
                             <button 
                                 disabled={isProcessing || !vibeInput.trim()}
@@ -928,7 +1107,7 @@ export default function RightSidebar({
                                         className={`w-full flex items-center justify-between p-4 rounded-2xl border text-xs font-bold text-left transition-all duration-300 cursor-pointer group hover:-translate-y-0.5 ${
                                             isSelected 
                                                 ? (isLight ? 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-400 text-purple-700 shadow-lg ring-2 ring-purple-400/20' : 'bg-gradient-to-r from-purple-900/20 to-pink-900/20 border-purple-500 text-purple-400 ring-2 ring-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.15)]') 
-                                                : (isLight ? 'bg-white border-slate-200 text-slate-700 hover:border-purple-300 hover:shadow-md' : 'bg-[#15161D] border-slate-800 text-slate-300 hover:border-purple-500/50 hover:bg-slate-800 hover:shadow-lg')
+                                                : (isLight ? 'bg-white border-slate-200 text-slate-700 hover:border-purple-300 hover:shadow-md' : 'bg-slate-900/40 backdrop-blur-md border-slate-800 text-slate-300 hover:border-purple-500/50 hover:bg-slate-800 hover:shadow-lg')
                                         }`}
                                     >
                                         <span className="tracking-wide"> {theme.name} </span> 
@@ -958,7 +1137,7 @@ export default function RightSidebar({
                                         className={`w-full flex items-center justify-between p-4 rounded-2xl border text-xs font-bold text-left transition-all duration-300 cursor-pointer group hover:-translate-y-0.5 ${
                                             isSelected 
                                                 ? (isLight ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-400 text-blue-700 shadow-lg ring-2 ring-blue-400/20' : 'bg-gradient-to-r from-blue-900/20 to-indigo-900/20 border-blue-500 text-blue-400 ring-2 ring-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.15)]') 
-                                                : (isLight ? 'bg-white border-slate-200 text-slate-700 hover:border-blue-300 hover:shadow-md' : 'bg-[#15161D] border-slate-800 text-slate-300 hover:border-blue-500/50 hover:bg-slate-800 hover:shadow-lg')
+                                                : (isLight ? 'bg-white border-slate-200 text-slate-700 hover:border-blue-300 hover:shadow-md' : 'bg-slate-900/40 backdrop-blur-md border-slate-800 text-slate-300 hover:border-blue-500/50 hover:bg-slate-800 hover:shadow-lg')
                                         }`}
                                         style={font.style}
                                     >
@@ -1012,11 +1191,11 @@ export default function RightSidebar({
                         </>
                     ) : (
                         <div className="space-y-4">
-                            <div className={`p-3 rounded-xl border ${isLight ? 'bg-white border-slate-200' : 'bg-[#15161D] border-slate-800'}`}>
+                            <div className={`p-3 rounded-xl border ${isLight ? 'bg-white border-slate-200' : 'bg-slate-900/40 backdrop-blur-md border-slate-800'}`}>
                                 <h4 className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Title Tag</h4>
                                 <p className={`text-xs ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>{seoData.title_tag}</p>
                             </div>
-                            <div className={`p-3 rounded-xl border ${isLight ? 'bg-white border-slate-200' : 'bg-[#15161D] border-slate-800'}`}>
+                            <div className={`p-3 rounded-xl border ${isLight ? 'bg-white border-slate-200' : 'bg-slate-900/40 backdrop-blur-md border-slate-800'}`}>
                                 <h4 className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Meta Description</h4>
                                 <p className={`text-xs leading-relaxed ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>{seoData.meta_description}</p>
                             </div>
@@ -1049,7 +1228,7 @@ export default function RightSidebar({
                         value={pitchTarget}
                         onChange={(e) => setPitchTarget(e.target.value)}
                         placeholder="e.g. Hiring Manager at Google"
-                        className={`w-full text-xs px-4 py-3.5 rounded-xl border outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-300 ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#15161D] border-slate-800'}`}
+                        className={`w-full text-xs px-4 py-3.5 rounded-xl border outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-300 ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-900/40 backdrop-blur-md border-slate-800'}`}
                     />
                     <button 
                         disabled={!pitchTarget.trim() || isProcessing}
@@ -1117,7 +1296,7 @@ export default function RightSidebar({
                 <select
                     value={selectedTargetSection}
                     onChange={(e) => setSelectedTargetSection(e.target.value)}
-                    className={`w-full text-xs font-semibold p-3.5 rounded-xl border outline-none cursor-pointer transition-all duration-300 focus:ring-2 focus:ring-blue-500/50 ${isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-[#15161D] border-slate-800 text-slate-200'}`}
+                    className={`w-full text-xs font-semibold p-3.5 rounded-xl border outline-none cursor-pointer transition-all duration-300 focus:ring-2 focus:ring-blue-500/50 ${isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-900/40 backdrop-blur-md border-slate-800 text-slate-200'}`}
                 >
                     <option value="global_bg">Entire Portfolio (Global Background)</option>
                     {(sections && sections.length > 0) ? (
@@ -1137,7 +1316,7 @@ export default function RightSidebar({
                             value={imagePrompt}
                             onChange={(e) => setImagePrompt(e.target.value)}
                             placeholder="e.g. Glowing neural network connections..."
-                            className={`w-full text-xs p-4 rounded-xl border outline-none resize-none transition-all duration-300 focus:ring-2 focus:ring-blue-500/50 ${isLight ? 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400' : 'bg-[#15161D] border-slate-800 text-slate-200 placeholder-slate-500'}`}
+                            className={`w-full text-xs p-4 rounded-xl border outline-none resize-none transition-all duration-300 focus:ring-2 focus:ring-blue-500/50 ${isLight ? 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400' : 'bg-slate-900/40 backdrop-blur-md border-slate-800 text-slate-200 placeholder-slate-500'}`}
                         />
                     </div>
 
@@ -1243,11 +1422,16 @@ export default function RightSidebar({
                     <span className="ml-2 text-[10px] uppercase tracking-widest">Studio Terminal v2.1</span>
                 </div>
                 {terminalLogs && terminalLogs.map((log, i) => (
-                    <div key={i} className={`flex items-start gap-3 animate-in fade-in slide-in-from-bottom-1 duration-300 ${
+                    <div key={i} className={`flex flex-col gap-1 animate-in fade-in slide-in-from-bottom-1 duration-300 ${
                         log.type === 'system' ? 'opacity-70' : log.type === 'success' ? 'text-emerald-400 font-bold' : log.type === 'error' ? 'text-red-400 font-bold' : log.type === 'user' ? (isLight ? 'text-blue-600 font-bold' : 'text-orange-400 font-bold') : 'italic opacity-50'
                     }`}>
-                        <span className="opacity-50 select-none mt-0.5">{">"}</span>
-                        <span className="leading-relaxed whitespace-pre-wrap">{log.text}</span>
+                        <div className="flex items-start gap-3">
+                            <span className="opacity-50 select-none mt-0.5">{">"}</span>
+                            <span className="leading-relaxed whitespace-pre-wrap flex-1">{log.text}</span>
+                        </div>
+                        {log.timestamp && (
+                            <span className="text-[9px] opacity-40 ml-5 font-sans tracking-widest uppercase">{log.timestamp}</span>
+                        )}
                     </div>
                 ))}
             </div>
@@ -1364,7 +1548,7 @@ export default function RightSidebar({
                             <button
                                 key={block.type}
                                 onClick={() => onAddSection && onAddSection(block.type)}
-                                className={`p-5 rounded-2xl border flex flex-col items-center justify-center gap-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer group ${isLight ? 'bg-white border-slate-200 hover:border-blue-400 hover:bg-blue-50/50 text-slate-700' : 'bg-[#15161D] border-slate-800 hover:border-blue-500 hover:bg-slate-800 text-slate-300 shadow-[0_4px_20px_rgba(0,0,0,0.1)]'}`}
+                                className={`p-5 rounded-2xl border flex flex-col items-center justify-center gap-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer group ${isLight ? 'bg-white border-slate-200 hover:border-blue-400 hover:bg-blue-50/50 text-slate-700' : 'bg-slate-900/40 backdrop-blur-md border-slate-800 hover:border-blue-500 hover:bg-slate-800 text-slate-300 shadow-[0_4px_20px_rgba(0,0,0,0.1)]'}`}
                             >
                                 <span className="text-2xl group-hover:scale-110 transition-transform duration-300">{block.icon}</span>
                                 <span className="text-[10px] font-bold tracking-wide">{block.label}</span>
@@ -1415,7 +1599,7 @@ export default function RightSidebar({
                             className={`p-4 rounded-2xl border flex items-center justify-between gap-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer group ${
                                 currentTemplate === tpl.id
                                     ? (isLight ? 'bg-blue-50 border-blue-400 shadow-[0_4px_20px_rgba(37,99,235,0.15)] ring-2 ring-blue-500' : 'bg-blue-900/30 border-blue-500 shadow-[0_4px_20px_rgba(59,130,246,0.3)] ring-2 ring-blue-500')
-                                    : (isLight ? 'bg-white border-slate-200 hover:border-blue-300' : 'bg-[#15161D] border-slate-800 hover:border-blue-500/50')
+                                    : (isLight ? 'bg-white border-slate-200 hover:border-blue-300' : 'bg-slate-900/40 backdrop-blur-md border-slate-800 hover:border-blue-500/50')
                             }`}
                         >
                             <div className="flex items-center gap-3">
@@ -1465,7 +1649,7 @@ export default function RightSidebar({
                 </div>
 
                 {/* AI Chat Input */}
-                <form onSubmit={handleSendMessage} className={`relative flex items-center w-full border rounded-2xl overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-orange-500/50 focus-within:border-transparent shadow-md ${isLight ? 'bg-white border-slate-300' : 'bg-[#15161D] border-slate-700'}`}>
+                <form onSubmit={handleSendMessage} className={`relative flex items-center w-full border rounded-2xl overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-orange-500/50 focus-within:border-transparent shadow-md ${isLight ? 'bg-white border-slate-300' : 'bg-slate-900/40 backdrop-blur-md border-slate-700'}`}>
                     <div className={`pl-4 ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
                         <Paperclip className="w-4 h-4 cursor-pointer hover:text-orange-500 transition-colors" />
                     </div>
