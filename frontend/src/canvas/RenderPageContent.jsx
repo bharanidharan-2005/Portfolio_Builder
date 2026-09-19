@@ -172,8 +172,6 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
 
     const heroLiveOptions = [];
     if (data.liveUrl) heroLiveOptions.push({ label: "Live Website", url: data.liveUrl });
-    if (data.linkedin) heroLiveOptions.push({ label: "LinkedIn", url: data.linkedin });
-    if (data.github) heroLiveOptions.push({ label: "GitHub", url: data.github });
 
     const heroDesignOptions = [];
     if (data.designUrl) heroDesignOptions.push({ label: "Design Repository", url: data.designUrl });
@@ -248,7 +246,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     transition={{ ...springTransition, delay: 0.15 }}
                                     className={`text-lg md:text-xl leading-relaxed w-full max-w-xl font-medium ${bgImage ? 'text-white/90' : textSecondary}`}
                                 >
-                                    Building intelligent applications with Python, AI, data, and modern web technologies.
+                                    <TextElement 
+                                        multiline
+                                        value={data.description || ""}
+                                        placeholder="Introduction ..."
+                                        onCommit={(v) => updateScalar("description", v)}
+                                    />
                                 </motion.p>
                             </div>
 
@@ -291,22 +294,52 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                         {/* See Live Dropdown */}
                                         {heroLiveOptions.length > 0 && (
                                             <div className="group relative z-50">
-                                                <button className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg flex items-center gap-2 bg-[#0a0a0f] hover:bg-[#1a1a24] text-white">
-                                                    See Live ▾
+                                                <button 
+                                                    onClick={(e) => {
+                                                        if(heroLiveOptions.length === 1) {
+                                                            e.stopPropagation(); 
+                                                            openExternal(heroLiveOptions[0].url);
+                                                        }
+                                                    }}
+                                                    className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg flex items-center gap-2 bg-[#0a0a0f] hover:bg-[#1a1a24] text-white"
+                                                >
+                                                    See Live {heroLiveOptions.length > 1 ? '▾' : '↗'}
                                                 </button>
-                                                <div className="absolute top-full left-0 mt-2 w-48 rounded-xl border border-slate-800 bg-[#0a0a0f]/95 backdrop-blur-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col p-2 max-h-60 overflow-y-auto custom-scrollbar">
-                                                    {heroLiveOptions.map((link, i) => (
-                                                        <button
-                                                            key={`social-${i}`}
-                                                            onClick={(e) => { e.stopPropagation(); openExternal(link.url); }}
-                                                            className="text-left px-4 py-2.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition-all truncate flex items-center justify-between"
-                                                        >
-                                                            <span>{link.label}</span>
-                                                            <span className="opacity-50 text-[10px]">↗</span>
-                                                        </button>
-                                                    ))}
-                                                </div>
+                                                {heroLiveOptions.length > 1 && (
+                                                    <div className="absolute top-full left-0 mt-2 w-48 rounded-xl border border-slate-800 bg-[#0a0a0f]/95 backdrop-blur-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col p-2 max-h-60 overflow-y-auto custom-scrollbar">
+                                                        {heroLiveOptions.map((link, i) => (
+                                                            <button
+                                                                key={`social-${i}`}
+                                                                onClick={(e) => { e.stopPropagation(); openExternal(link.url); }}
+                                                                className="text-left px-4 py-2.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition-all truncate flex items-center justify-between"
+                                                            >
+                                                                <span>{link.label}</span>
+                                                                <span className="opacity-50 text-[10px]">↗</span>
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
+                                        )}
+                                        
+                                        {/* GitHub Button */}
+                                        {data.github && (
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); openExternal(data.github); }}
+                                                className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg flex items-center gap-2 bg-[#0a0a0f] hover:bg-[#1a1a24] text-white"
+                                            >
+                                                GitHub ↗
+                                            </button>
+                                        )}
+                                        
+                                        {/* LinkedIn Button */}
+                                        {data.linkedin && (
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); openExternal(data.linkedin); }}
+                                                className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg flex items-center gap-2 bg-[#0a0a0f] hover:bg-[#1a1a24] text-white"
+                                            >
+                                                LinkedIn ↗
+                                            </button>
                                         )}
                                         
                                         {/* Projects Dropdown */}

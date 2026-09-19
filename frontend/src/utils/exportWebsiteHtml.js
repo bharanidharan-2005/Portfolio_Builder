@@ -39,7 +39,7 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
     const fullName = heroData.heading || 'Developer';
     const frontName = escapeHtml(fullName);
     const frontHeadline = escapeHtml(heroData.subheading || 'Professional Portfolio');
-    const frontBio = escapeHtml(heroData.text || '');
+    const frontBio = escapeHtml(heroData.description || heroData.text || '');
     
     const frontInitials = fullName.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
     const frontFirstName = escapeHtml(fullName.split(' ')[0]);
@@ -87,8 +87,8 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                     ${frontHeadline}
                 </p>
                 
-                <p class="text-lg md:text-xl leading-relaxed w-full max-w-xl font-medium ${theme.textSecondary}">
-                    ${frontBio}
+                <p class="text-lg md:text-xl leading-relaxed w-full max-w-xl font-medium ${theme.textSecondary} ${!frontBio ? 'opacity-60 italic' : ''}">
+                    ${frontBio || 'Introduction...'}
                 </p>
 
                 <div class="flex flex-wrap items-center gap-4 pt-4 justify-center lg:justify-start">
@@ -149,8 +149,9 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                 ? `style="background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('${bgImage}'); background-size: cover; background-position: center;"`
                 : '';
 
-            const liveMenuHtml = data.liveUrl ? `<a href="${escapeHtml(data.liveUrl)}" target="_blank" class="px-5 py-2.5 rounded-xl font-bold border border-white/5 shadow-lg bg-[#0a0a0f] hover:bg-[#1a1a24] text-white transition-all hover:scale-105 hover:-translate-y-1">See Live &nearr;</a>` : `<a href="#" class="px-5 py-2.5 rounded-xl font-bold border border-white/5 shadow-lg bg-[#0a0a0f] hover:bg-[#1a1a24] text-white transition-all hover:scale-105 hover:-translate-y-1">See Live ▾</a>`;
-            const designMenuHtml = data.designUrl ? `<a href="${escapeHtml(data.designUrl)}" target="_blank" class="px-5 py-2.5 rounded-xl font-bold border border-white/5 shadow-lg bg-[#0a0a0f] hover:bg-[#1a1a24] text-white transition-all hover:scale-105 hover:-translate-y-1">Design Repo &nearr;</a>` : `<a href="#" class="px-5 py-2.5 rounded-xl font-bold border border-white/5 shadow-lg bg-[#0a0a0f] hover:bg-[#1a1a24] text-white transition-all hover:scale-105 hover:-translate-y-1">GitHub</a>`;
+            const liveMenuHtml = data.liveUrl ? `<a href="${escapeHtml(data.liveUrl)}" target="_blank" class="px-5 py-2.5 rounded-xl font-bold border border-white/5 shadow-lg bg-[#0a0a0f] hover:bg-[#1a1a24] text-white transition-all hover:scale-105 hover:-translate-y-1">See Live &nearr;</a>` : '';
+            const githubMenuHtml = data.github ? `<a href="${escapeHtml(data.github)}" target="_blank" class="px-5 py-2.5 rounded-xl font-bold border border-white/5 shadow-lg bg-[#0a0a0f] hover:bg-[#1a1a24] text-white transition-all hover:scale-105 hover:-translate-y-1">GitHub &nearr;</a>` : '';
+            const linkedinMenuHtml = data.linkedin ? `<a href="${escapeHtml(data.linkedin)}" target="_blank" class="px-5 py-2.5 rounded-xl font-bold border border-white/5 shadow-lg bg-[#0a0a0f] hover:bg-[#1a1a24] text-white transition-all hover:scale-105 hover:-translate-y-1">LinkedIn &nearr;</a>` : '';
 
             sectionsHtml += `
             <section class="py-16 sm:py-24 px-6 sm:px-12 relative rounded-3xl overflow-visible border ${theme.border} ${!bgImage ? theme.cardBg || 'bg-black/40 backdrop-blur-xl' : ''} mb-16 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)]" ${bgInlineStyle}>
@@ -168,8 +169,8 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                             <p class="text-xl md:text-2xl font-bold w-full ${theme.accentText}">
                                 ${escapeHtml(data.subheading) || 'Professional Headline'}
                             </p>
-                            <p class="text-lg leading-relaxed w-full max-w-xl font-medium ${bgImage ? 'text-white/80' : theme.textSecondary}">
-                                ${escapeHtml(data.text) || 'Introduction...'}
+                            <p class="text-lg leading-relaxed w-full max-w-xl font-medium ${bgImage ? 'text-white/80' : theme.textSecondary} ${!(data.description || data.text) ? 'opacity-60 italic' : ''}">
+                                ${escapeHtml(data.description || data.text) || 'Introduction...'}
                             </p>
                         </div>
                         
@@ -185,7 +186,8 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                             
                             <div class="flex flex-wrap items-center justify-center lg:justify-start gap-3 w-full mt-2">
                                 ${liveMenuHtml}
-                                ${designMenuHtml}
+                                ${githubMenuHtml}
+                                ${linkedinMenuHtml}
                                 <a href="#section-${activeSections.find(s=>s.section_type==='projects_grid')?.id||''}" class="px-5 py-2.5 rounded-xl font-bold border border-white/5 shadow-lg bg-[#0a0a0f] hover:bg-[#1a1a24] text-white transition-all hover:scale-105 hover:-translate-y-1">Projects &nearr;</a>
                             </div>
                         </div>
@@ -313,6 +315,18 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=Fira+Code:wght@400;500;600;700&family=Geist:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Lora:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=Playfair+Display:wght@400;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Raleway:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Sora:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700&family=Urbanist:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3242/3242120.png">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW setup skipped for local file'));
+        });
+      }
+    </script>
     <title>${frontName} | Portfolio</title>
     <style>
         body { font-family: ${fontFamilyStyle}; }

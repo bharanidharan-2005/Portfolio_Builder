@@ -72,7 +72,7 @@ export default function EditableText({
 
     return (
         <Tag
-            className={`${className} block w-full max-w-full rounded cursor-text transition-colors hover:bg-black/5 hover:ring-2 hover:ring-black/5 hover:outline-none`}
+            className={`${className} block w-full max-w-full rounded cursor-text transition-colors hover:bg-black/5 hover:ring-2 hover:ring-black/5 hover:outline-none ${!value ? 'opacity-60 italic' : ''}`}
             onDoubleClick={(e) => {
                 e.stopPropagation();
                 beginEdit();

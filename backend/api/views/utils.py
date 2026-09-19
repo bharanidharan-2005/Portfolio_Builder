@@ -186,7 +186,17 @@ class DeploymentView(APIView):
         try:
             payload = {
                 'name': f'portfolio-{__import__("uuid").uuid4().hex[:8]}', 
-                'files': [{'file': 'index.html', 'data': html_content}],
+                'files': [
+                    {'file': 'index.html', 'data': html_content},
+                    {
+                        'file': 'manifest.json',
+                        'data': '{\n  "name": "My Portfolio",\n  "short_name": "Portfolio",\n  "start_url": "/",\n  "display": "standalone",\n  "background_color": "#000000",\n  "theme_color": "#000000",\n  "icons": [\n    {\n      "src": "https://cdn-icons-png.flaticon.com/512/3242/3242120.png",\n      "sizes": "512x512",\n      "type": "image/png"\n    }\n  ]\n}'
+                    },
+                    {
+                        'file': 'sw.js',
+                        'data': "self.addEventListener('install', (e) => {\n  e.waitUntil(caches.open('portfolio-v1').then((cache) => cache.addAll(['/', '/index.html'])));\n});\nself.addEventListener('fetch', (e) => {\n  e.respondWith(caches.match(e.request).then((response) => response || fetch(e.request)));\n});"
+                    }
+                ],
                 'projectSettings': {
                     'framework': None,
                     'buildCommand': None,
@@ -203,8 +213,13 @@ class DeploymentView(APIView):
             )
             if resp.status_code >= 400:
                 logger.warning("Vercel deployment rejected: %s", resp.text[:300])
+                err_msg = f'Vercel rejected the deployment ({resp.status_code}). '
+                if resp.status_code == 403:
+                    err_msg += 'Your VERCEL_TOKEN is invalid, expired, or lacks permissions. Please check your token.'
+                else:
+                    err_msg += 'Check your token/project configuration.'
                 return Response(
-                    {'error': f'Vercel rejected the deployment ({resp.status_code}). Check your token/project configuration.'},
+                    {'error': err_msg},
                     status=502,
                 )
             data = resp.json()

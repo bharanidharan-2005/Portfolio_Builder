@@ -74,7 +74,7 @@ return ( <
                         <
                         div className = "space-y-1.5" >
                         <
-                        label className = "text-[10px] uppercase tracking-wider font-bold text-slate-500" > LinkedIn URL(See Live menu) < /label> <
+                        label className = "text-[10px] uppercase tracking-wider font-bold text-slate-500" > LinkedIn URL < /label> <
                         input type = "text"
                         placeholder = "https://linkedin.com/in/..."
                         className = "w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all shadow-sm"
@@ -86,7 +86,7 @@ return ( <
                         div > <
                         div className = "space-y-1.5" >
                         <
-                        label className = "text-[10px] uppercase tracking-wider font-bold text-slate-500" > GitHub URL(See Live menu) < /label> <
+                        label className = "text-[10px] uppercase tracking-wider font-bold text-slate-500" > GitHub URL < /label> <
                         input type = "text"
                         placeholder = "https://github.com/..."
                         className = "w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all shadow-sm"
@@ -456,7 +456,7 @@ return ( <
                         <
                         div className = "space-y-1.5" >
                         <
-                        label className = "text-[10px] uppercase tracking-wider font-bold text-slate-500" > LinkedIn URL(See Live menu) < /label> <
+                        label className = "text-[10px] uppercase tracking-wider font-bold text-slate-500" > LinkedIn URL < /label> <
                         input type = "text"
                         placeholder = "https://linkedin.com/in/..."
                         className = "w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all shadow-sm"
@@ -468,7 +468,7 @@ return ( <
                         div > <
                         div className = "space-y-1.5" >
                         <
-                        label className = "text-[10px] uppercase tracking-wider font-bold text-slate-500" > GitHub URL(See Live menu) < /label> <
+                        label className = "text-[10px] uppercase tracking-wider font-bold text-slate-500" > GitHub URL < /label> <
                         input type = "text"
                         placeholder = "https://github.com/..."
                         className = "w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all shadow-sm"
