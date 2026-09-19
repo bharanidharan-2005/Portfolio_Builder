@@ -46,6 +46,12 @@ export function AppProvider({ children }) {
         });
     };
 
+    const socialLogin = (userData, accessToken, refreshToken) => {
+        setUserData(prev => ({ ...prev, ...userData }));
+        localStorage.setItem("aurabuild_is_logged_in", "true");
+        setIsAuthenticated(true);
+    };
+
     const value = {
         isAuthenticated,
         themeMode,
@@ -53,6 +59,7 @@ export function AppProvider({ children }) {
         setUserData,
         toggleTheme,
         login,
+        socialLogin,
         logout
     };
 

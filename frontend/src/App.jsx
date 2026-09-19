@@ -119,12 +119,19 @@ function MainApp() {
     );
 }
 
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
 export default function App() {
+    // In production, you would configure this in your .env file
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "placeholder-google-client-id.apps.googleusercontent.com";
+
     return (
         <ErrorBoundary>
-            <AppProvider>
-                <MainApp />
-            </AppProvider>
+            <GoogleOAuthProvider clientId={googleClientId}>
+                <AppProvider>
+                    <MainApp />
+                </AppProvider>
+            </GoogleOAuthProvider>
         </ErrorBoundary>
     );
 }

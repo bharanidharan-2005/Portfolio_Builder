@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+    
+    <!-- Cool Blue/Purple Gradient -->
+    <linearGradient id="primary" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#3B82F6" />
+    </linearGradient>
+    
+    <!-- Pink/Purple Gradient -->
+    <linearGradient id="secondary" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#EC4899" />
+      <stop offset="100%" stop-color="#8B5CF6" />
+    </linearGradient>
+
+    <!-- Deep Glow Effect -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="60" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  
+  <!-- Sleek Dark Background -->
+  <rect width="1024" height="1024" fill="url(#bg)" />
+  
+  <g transform="translate(512, 512)" filter="url(#glow)">
+    <!-- Back layer (Pink/Purple) -->
+    <rect x="-240" y="-240" width="480" height="480" rx="120" fill="url(#secondary)" opacity="0.6" transform="rotate(45)" />
+    
+    <!-- Middle layer (Blue/Purple) -->
+    <rect x="-180" y="-180" width="360" height="360" rx="90" fill="url(#primary)" opacity="0.85" transform="rotate(25)" />
+    
+    <!-- Front layer (White Glass) -->
+    <rect x="-120" y="-120" width="240" height="240" rx="60" fill="#FFFFFF" opacity="0.95" />
+    
+    <!-- Inner Spark/Code Icon -->
+    <path d="M-40,0 L-10,-40 L-10,-20 L30,-20 L30,20 L-10,20 L-10,40 Z" fill="url(#primary)" transform="rotate(-25)" />
+  </g>
+</svg>
