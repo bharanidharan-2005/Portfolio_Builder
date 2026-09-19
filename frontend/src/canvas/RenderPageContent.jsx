@@ -59,18 +59,19 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
     // --- Dynamic Theme Integration ---
     const themeDef = PORTFOLIO_THEMES[portfolioTheme] || PORTFOLIO_THEMES.modern_glass || {};
     
-    const borderClass = themeDef.border || "border-slate-700";
-    const innerBorderClass = (themeDef.border || "").split(' ').find(c => c.startsWith('border-')) || "border-white/10";
+    const borderClass = themeDef.border || "border-white/5";
+    const innerBorderClass = (themeDef.border || "").split(' ').find(c => c.startsWith('border-')) || "border-white/5";
     
-    const accentText = themeDef.accentText || "text-blue-400";
-    const accentBg = themeDef.accentBg || accentText.replace('text-transparent', '').replace('bg-clip-text', '').replace(/text-/g, 'bg-').trim();
+    // Subdued premium aesthetic defaults
+    const accentText = themeDef.accentText || "text-blue-400"; // Focus on solid colors
+    const accentBg = themeDef.accentBg || "bg-blue-600";
     const textPrimary = themeDef.textPrimary || "text-slate-50"; 
-    const textSecondary = themeDef.textSecondary || "text-slate-300";
-    const placeholderClass = themeDef.placeholderClass || "placeholder-slate-500";
-    const cardBg = themeDef.cardBg || "bg-black/40 backdrop-blur-xl"; 
-    const trackBg = themeDef.trackBg || "bg-black/40";
-    const trackBgLight = themeDef.trackBgLight || "bg-black/20";
-    const badgeClass = `${themeDef.badgeBg || trackBg} ${themeDef.badgeText || 'text-slate-200'} border ${innerBorderClass} shadow-sm backdrop-blur-md`;
+    const textSecondary = themeDef.textSecondary || "text-slate-400";
+    const placeholderClass = themeDef.placeholderClass || "placeholder-slate-600";
+    const cardBg = themeDef.cardBg || "bg-white/[0.02] backdrop-blur-2xl"; 
+    const trackBg = themeDef.trackBg || "bg-white/[0.03]";
+    const trackBgLight = themeDef.trackBgLight || "bg-white/[0.01]";
+    const badgeClass = `${themeDef.badgeBg || trackBg} ${themeDef.badgeText || 'text-slate-300'} border ${innerBorderClass} shadow-sm backdrop-blur-md font-mono text-xs`;
 
     // --- SMART TEXT ROUTER ---
     const TextElement = ({ value, placeholder, onCommit, multiline = false }) => {
@@ -216,7 +217,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: false, amount: 0.1 }}
                                     transition={springTransition}
-                                    className={`font-black tracking-tight leading-tight w-full max-w-3xl text-3xl sm:text-4xl lg:text-5xl xl:text-6xl break-words ${bgImage ? 'text-white' : textPrimary}`}
+                                    className={`font-display font-black tracking-tight leading-[1.05] w-full max-w-3xl text-4xl sm:text-5xl lg:text-6xl xl:text-7xl break-words ${bgImage ? 'text-white' : textPrimary}`}
                                 >
                                     <TextElement
                                         value={data.heading || "YOUR NAME"}
@@ -244,7 +245,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     whileInView={{ opacity: 1, y: 0 }} 
                                     viewport={{ once: false, amount: 0.1 }}
                                     transition={{ ...springTransition, delay: 0.15 }}
-                                    className={`text-lg md:text-xl leading-relaxed w-full max-w-xl font-medium ${bgImage ? 'text-white/90' : textSecondary}`}
+                                    className={`text-lg md:text-xl leading-relaxed w-full max-w-2xl font-medium ${bgImage ? 'text-white/90' : textSecondary}`}
                                 >
                                     <TextElement 
                                         multiline
@@ -271,7 +272,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                             const projectsSection = document.getElementById('preview-node-block-' + (sections.find(s => s.section_type === 'projects_grid')?.id || ''));
                                             if (projectsSection) projectsSection.scrollIntoView({ behavior: 'smooth' });
                                         }}
-                                        className={`px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all shadow-lg hover:shadow-xl ${accentBg} text-white flex items-center gap-2`}
+                                        className={`px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all shadow-lg hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:-translate-y-1 ${accentBg} text-white flex items-center gap-2`}
                                     >
                                         View My Work &rarr;
                                     </motion.button>
@@ -280,7 +281,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                         <PDFDownloadLink
                                             document={pdfDocument}
                                             fileName={`${data.heading?.replace(/\s+/g, '_') || 'Portfolio'}_Resume.pdf`}
-                                            className={`px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all bg-transparent hover:bg-white/5 border shadow-sm hover:shadow-md ${textPrimary} ${borderClass}`}
+                                            className={`px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all hover:bg-white/5 border border-white/10 shadow-sm hover:shadow-md hover:-translate-y-1 ${textPrimary} ${borderClass}`}
                                         >
                                             {({ blob, url, loading, error }) => (loading ? 'Preparing...' : 'Download Resume')}
                                         </PDFDownloadLink>
@@ -416,7 +417,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         <div className={`flex-[1_1_300px] space-y-5 w-full text-center min-[600px]:text-left`}>
                             <motion.h2 
                             initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: false }}
-                            className={`text-3xl sm:text-4xl uppercase font-black tracking-widest mb-10 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500`}
+                            className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest mb-10 ${textPrimary}`}
                         >
                             About Me
                         
@@ -440,7 +441,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                     {sectionImageBanner}
                     <motion.h2 
                             initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: false }}
-                            className={`text-3xl sm:text-4xl uppercase font-black tracking-widest mb-10 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500`}
+                            className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest mb-10 ${textPrimary}`}
                         >
                             Educational Background
                         
@@ -451,55 +452,60 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         initial="hidden"
                         whileInView="show"
                         viewport={{ once: false, margin: "-20px", amount: 0.1 }}
-                        className="space-y-4"
+                        className="space-y-0 relative border-l-2 ml-4 md:ml-8" style={{ borderColor: 'rgba(255,255,255,0.1)' }}
                     >
                         {(data.schools || []).map((school, i) => (
                             <motion.div 
                                 variants={staggerItem}
                                 key={i}
-                                className={`relative group p-6 rounded-2xl border transition-all ${cardBg} ${borderClass} ${!isPreview ? 'hover:shadow-md' : ''}`}
+                                className={`relative group pl-8 md:pl-12 py-6 transition-all`}
                             >
-                                {!isPreview && (
-                                    <button 
-                                        onClick={(e) => { e.stopPropagation(); removeArrayItem('schools', i); }}
-                                        className="absolute -top-3 -right-3 w-7 h-7 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-20"
-                                    >✕</button>
-                                )}
+                                {/* Timeline Node */}
+                                <div className={`absolute left-0 top-10 -translate-x-1/2 w-4 h-4 rounded-full border-2 ${borderClass} bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]`}></div>
                                 
-                                <div className="flex flex-wrap justify-between items-start gap-4">
-                                    <div className="space-y-1.5 w-full sm:w-auto flex-1">
-                                        <h3 className={`text-lg font-bold uppercase tracking-wide break-words max-w-full ${textPrimary}`}>
+                                <div className={`relative p-6 rounded-2xl border transition-all ${cardBg} ${borderClass} ${!isPreview ? 'hover:shadow-md' : ''}`}>
+                                    {!isPreview && (
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); removeArrayItem('schools', i); }}
+                                            className="absolute -top-3 -right-3 w-7 h-7 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-20"
+                                        >✕</button>
+                                    )}
+                                    
+                                    <div className="flex flex-wrap justify-between items-start gap-4">
+                                        <div className="space-y-1.5 w-full sm:w-auto flex-1">
+                                            <h3 className={`text-lg font-display font-bold uppercase tracking-wide break-words max-w-full ${textPrimary}`}>
+                                                <TextElement 
+                                                    value={school.institution || ""}
+                                                    placeholder="Institution Name"
+                                                    onCommit={(v) => updateArrayItem("schools", i, "institution", v)}
+                                                />
+                                            </h3>
+                                            <p className={`text-base font-medium break-words max-w-full ${textSecondary}`}>
+                                                <TextElement 
+                                                    value={school.degree || ""}
+                                                    placeholder="Degree / Major"
+                                                    onCommit={(v) => updateArrayItem("schools", i, "degree", v)}
+                                                />
+                                            </p>
+                                        </div>
+                                        <span className={`text-sm font-mono px-4 py-1.5 rounded-lg shrink-0 transition-colors max-w-full truncate ${badgeClass}`}>
                                             <TextElement 
-                                                value={school.institution || ""}
-                                                placeholder="Institution Name"
-                                                onCommit={(v) => updateArrayItem("schools", i, "institution", v)}
+                                                value={school.years || ""}
+                                                placeholder="Years"
+                                                onCommit={(v) => updateArrayItem("schools", i, "years", v)}
                                             />
-                                        </h3>
-                                        <p className={`text-base font-medium break-words max-w-full ${textSecondary}`}>
-                                            <TextElement 
-                                                value={school.degree || ""}
-                                                placeholder="Degree / Major"
-                                                onCommit={(v) => updateArrayItem("schools", i, "degree", v)}
-                                            />
-                                        </p>
+                                        </span>
                                     </div>
-                                    <span className={`text-sm font-mono px-4 py-1.5 rounded-lg shrink-0 transition-colors max-w-full truncate ${badgeClass}`}>
-                                        <TextElement 
-                                            value={school.years || ""}
-                                            placeholder="Years"
-                                            onCommit={(v) => updateArrayItem("schools", i, "years", v)}
-                                        />
-                                    </span>
-                                </div>
-                                <div className={`mt-4 pt-4 border-t flex items-center gap-2 text-sm overflow-hidden ${innerBorderClass}`}>
-                                    <span className={`shrink-0 ${textSecondary}`}>Performance:</span>
-                                    <span className={`font-mono font-bold truncate max-w-full ${accentText}`}>
-                                        <TextElement 
-                                            value={school.score || ""}
-                                            placeholder="GPA / Score"
-                                            onCommit={(v) => updateArrayItem("schools", i, "score", v)}
-                                        />
-                                    </span>
+                                    <div className={`mt-4 pt-4 border-t flex items-center gap-2 text-sm overflow-hidden ${innerBorderClass}`}>
+                                        <span className={`shrink-0 ${textSecondary}`}>Performance:</span>
+                                        <span className={`font-mono font-bold truncate max-w-full ${accentText}`}>
+                                            <TextElement 
+                                                value={school.score || ""}
+                                                placeholder="GPA / Score"
+                                                onCommit={(v) => updateArrayItem("schools", i, "score", v)}
+                                            />
+                                        </span>
+                                    </div>
                                 </div>
                             </motion.div>
                         ))}
@@ -524,7 +530,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                     {sectionImageBanner}
                     <motion.h2 
                             initial={{ opacity: 0, y: -20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
-                            className={`text-3xl sm:text-4xl uppercase font-black tracking-widest text-center mb-14 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500`}
+                            className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center mb-14 ${textPrimary}`}
                         >
                             Core Expertise
                         
@@ -618,7 +624,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                     {sectionImageBanner}
                     <motion.h2 
                             initial={{ opacity: 0, y: -20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
-                            className={`text-3xl sm:text-4xl uppercase font-black tracking-widest text-center mb-14 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500`}
+                            className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center mb-14 ${textPrimary}`}
                         >
                             {data.title || "Showcase of Innovations"}
                         
@@ -821,7 +827,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             initial={{ opacity: 0, y: -15 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: false, amount: 0.1 }}
-                            className={`text-sm uppercase font-black tracking-widest mb-6 ${accentText}`}
+                            className={`text-sm uppercase font-display font-black tracking-widest mb-6 ${accentText}`}
                         >
                             Get In Touch
                         </motion.h2>

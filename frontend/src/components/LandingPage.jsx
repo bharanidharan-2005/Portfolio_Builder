@@ -273,7 +273,7 @@ export default function LandingPage() {
                                 AuraBuild Studio 1.0
                             </div>
 
-                            <h1 className="text-5xl md:text-6xl lg:text-[5rem] font-black tracking-tight leading-[1.05] text-white">
+                            <h1 className="text-5xl md:text-6xl lg:text-[5rem] font-display font-black tracking-tight leading-[1.05] text-white">
                                 Engineer your <br />
                                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-emerald-400">
                                     digital legacy.
@@ -313,8 +313,8 @@ export default function LandingPage() {
                                         <div className="w-3 h-3 rounded-full bg-amber-500/80"></div>
                                         <div className="w-3 h-3 rounded-full bg-emerald-500/80"></div>
                                     </div>
-                                    <div className="bg-[#05050A] border border-slate-800 rounded-md px-4 py-1 flex items-center">
-                                        <span className="text-[10px] text-slate-500 font-medium"> localhost:3000 / portfolio </span>
+                                    <div className="bg-[#05050A]/50 border border-slate-700/50 rounded-md px-4 py-1 flex items-center backdrop-blur-md">
+                                        <span className="text-[10px] text-slate-400 font-mono font-medium"> localhost:3000 / portfolio </span>
                                     </div>
                                     <div className="w-12"></div>
                                 </div>
@@ -383,7 +383,7 @@ export default function LandingPage() {
                 {/* --- 2. FEATURES SECTION --- */}
                 <section className="py-24 px-6 lg:px-12 max-w-[90rem] mx-auto w-full relative z-10 border-t border-slate-800/50 bg-[#05050A]/40 backdrop-blur-sm">
                     <div className="text-center max-w-3xl mx-auto mb-16">
-                        <h2 className="text-3xl md:text-4xl font-black text-white mb-4">System Capabilities</h2>
+                        <h2 className="text-3xl md:text-4xl font-display font-black text-white mb-4">System Capabilities</h2>
                         <p className="text-slate-400 text-lg">AuraBuild isn't just a template. It's a complete engineering suite designed to manage and present your professional identity.</p>
                     </div>
 
@@ -407,7 +407,7 @@ export default function LandingPage() {
                 <section className="py-24 px-6 lg:px-12 max-w-[90rem] mx-auto w-full relative z-10 border-t border-slate-800/50">
                     <div className="flex flex-col lg:flex-row items-center gap-16">
                         <div className="lg:w-1/3 space-y-6 text-center lg:text-left">
-                            <h2 className="text-3xl md:text-4xl font-black text-white">The Deployment Pipeline</h2>
+                            <h2 className="text-3xl md:text-4xl font-display font-black text-white">The Deployment Pipeline</h2>
                             <p className="text-slate-400 text-lg">From zero to a fully deployed portfolio in under three minutes. No complicated hosting setups required.</p>
                         </div>
                         
@@ -446,8 +446,8 @@ export default function LandingPage() {
                 <footer className="border-t border-slate-800/60 bg-[#05050A]/90 backdrop-blur-lg pt-16 pb-8 relative z-10">
                     <div className="max-w-[90rem] mx-auto px-6 lg:px-12 flex flex-col items-center">
                         <div className="flex items-center gap-2 mb-8">
-                            <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                            <span className="text-lg font-black tracking-widest uppercase text-white">AuraBuild Studio</span>
+                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+                            <span className="text-lg font-display font-black tracking-widest uppercase text-white">AuraBuild Studio</span>
                         </div>
                         
                         <div className="flex gap-6 mb-12 text-sm font-medium text-slate-400">
@@ -478,10 +478,10 @@ export default function LandingPage() {
                         </button>
 
                         <div className="flex flex-col items-center gap-3 mb-8 mt-2">
-                            <div className="w-16 h-16 flex items-center justify-center drop-shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+                            <div className="w-16 h-16 flex items-center justify-center drop-shadow-[0_0_20px_rgba(59,130,246,0.3)]">
                                 <img src="/logo.svg" alt="AuraBuild Logo" className="w-full h-full object-contain" />
                             </div>
-                            <h2 className="font-bold text-white text-xl tracking-tight">
+                            <h2 className="font-display font-bold text-white text-xl tracking-tight">
                                 {authMode === "signup" ? "Initialize Workspace" : "Access Workspace"}
                             </h2>
                         </div>

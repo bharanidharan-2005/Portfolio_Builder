@@ -10,6 +10,9 @@ import PreviewModal from "./PreviewModal.jsx";
 import PortfolioFrontpage from "../portfolio/PortfolioFrontpage.jsx";
 import { Undo2, Redo2 } from "lucide-react";
 import SEOUpdater from "../../utils/SEOUpdater";
+import { lazy, Suspense } from 'react';
+
+const ThreeBackground = lazy(() => import('../ThreeBackground.jsx'));
 
 export default function WorkspaceLayout() {
     // 1. Consume ALL state and logic from our new WorkspaceContext
@@ -55,7 +58,17 @@ export default function WorkspaceLayout() {
 
     // 4. Render Main Builder UI
     return (
-        <div className={`h-screen w-full flex flex-col overflow-hidden select-none transition-colors duration-500 font-inter ${themeMode === 'dark' ? 'bg-[#0B0C10] text-slate-200' : 'bg-slate-50 text-slate-800'}`}>
+        <div className={`h-screen w-full flex flex-col overflow-hidden select-none transition-colors duration-500 font-inter relative ${themeMode === 'dark' ? 'bg-[#05050A] text-slate-200' : 'bg-slate-50 text-slate-800'}`}>
+            {themeMode === 'dark' && (
+                <div className="fixed inset-0 z-0 pointer-events-none">
+                    <Suspense fallback={null}>
+                        <ThreeBackground theme="dark" />
+                    </Suspense>
+                    <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-900/10 blur-[120px] rounded-full" />
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-900/10 blur-[120px] rounded-full" />
+                </div>
+            )}
+            
             <SEOUpdater pages={pages} userData={userData} isPublicPreview={isPublicPreview} />
 
             {/* Top Navigation */}
@@ -98,7 +111,7 @@ export default function WorkspaceLayout() {
 
                 {/* LEFT SIDEBAR */}
                 {!isPublicPreview && (
-                    <aside className={`absolute lg:relative group h-full shrink-0 transition-all duration-300 ease-in-out w-16 hover:w-64 overflow-hidden z-40 shadow-2xl ${isLeftOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${isLight ? 'bg-white border-r border-slate-200' : 'bg-[#0B0C10] border-r border-slate-800'}`}>
+                    <aside className={`absolute lg:relative group h-full shrink-0 transition-all duration-300 ease-in-out w-16 hover:w-64 overflow-hidden z-40 shadow-2xl ${isLeftOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${isLight ? 'bg-white border-r border-slate-200' : 'bg-white/[0.02] backdrop-blur-2xl border-r border-white/10'}`}>
                         <LeftSidebar 
                             pages={pages}
                             activePage={activePage}
@@ -122,7 +135,7 @@ export default function WorkspaceLayout() {
                 )}
 
                 {/* CENTER: CLEAN LIVE PREVIEW CANVAS */}
-                <main className={`flex-1 h-full flex flex-col relative z-10 ${isLight ? 'bg-slate-100/50' : 'bg-[#08080C]'}`}>
+                <main className={`flex-1 h-full flex flex-col relative z-10 ${isLight ? 'bg-slate-100/50' : 'bg-transparent'}`}>
                     
                     {/* FLOATING HISTORY TOOLBAR */}
                     {!isPublicPreview && (history.past.length > 0 || history.future.length > 0) && (
@@ -174,7 +187,7 @@ export default function WorkspaceLayout() {
 
                 {/* RIGHT SIDEBAR */}
                 {!isPublicPreview && (
-                    <aside className={`absolute right-0 lg:relative h-full w-80 shrink-0 border-l transition-transform duration-300 ease-in-out z-40 shadow-2xl ${isRightOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'} ${isLight ? 'bg-white border-slate-200' : 'bg-[#0B0C10] border-slate-800'}`}>
+                    <aside className={`absolute right-0 lg:relative h-full w-80 shrink-0 border-l transition-transform duration-300 ease-in-out z-40 shadow-2xl ${isRightOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'} ${isLight ? 'bg-white border-slate-200' : 'bg-white/[0.02] backdrop-blur-2xl border-white/10'}`}>
                         <RightSidebar 
                             userData={userData}
                             activeSectionId={activeSectionId}

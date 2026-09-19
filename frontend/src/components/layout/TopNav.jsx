@@ -29,7 +29,7 @@ export function TopNav({
     const currentThemeName = (currentThemeData && currentThemeData.name) || "Modern Glass";
 
     return ( 
-        <div className={`flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-6 py-2 sm:py-3 border-b w-full h-full transition-colors ${isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#0B0C10] border-slate-800'}`}>
+        <div className={`flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-6 py-2 sm:py-3 border-b w-full h-full transition-colors ${isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-white/[0.02] backdrop-blur-2xl border-white/10'}`}>
             
             {/* 1. LEFT SECTION - Logo & Mobile Menu */}
             <div className="flex items-center gap-2 sm:gap-3">
@@ -62,7 +62,7 @@ export function TopNav({
                     </button>
 
                     {isDropdownOpen && ( 
-                        <div className={`absolute top-full left-0 sm:left-1/2 sm:-translate-x-1/2 mt-2 w-[220px] rounded-xl border shadow-2xl z-50 overflow-hidden ${isLight ? 'bg-white border-slate-200' : 'bg-slate-800 border-slate-700'}`}>
+                        <div className={`absolute top-full left-0 sm:left-1/2 sm:-translate-x-1/2 mt-2 w-[220px] rounded-xl border shadow-2xl z-50 overflow-hidden ${isLight ? 'bg-white border-slate-200' : 'bg-[#0A0A0F]/95 backdrop-blur-xl border-white/10'}`}>
                             <div className="max-h-64 overflow-y-auto py-1 custom-scrollbar"> 
                                 {PORTFOLIO_THEMES && Object.entries(PORTFOLIO_THEMES).map(([themeKey, themeOption]) => {
                                     const isSelected = currentThemeId === themeKey;
@@ -149,7 +149,7 @@ export function TopNav({
                     
                     {/* Dynamic Avatar Badge */}
                     <div 
-                        className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-lg sm:text-xl rounded-full shadow-sm border ${isLight ? 'bg-white border-slate-200' : 'bg-[#0B0C10] border-slate-700'}`}
+                        className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-lg sm:text-xl rounded-full shadow-sm border ${isLight ? 'bg-white border-slate-200' : 'bg-white/5 border-white/10'}`}
                         title="Profile Settings (Open in Sidebar)"
                     >
                         {userData?.avatar || "🐱"}
