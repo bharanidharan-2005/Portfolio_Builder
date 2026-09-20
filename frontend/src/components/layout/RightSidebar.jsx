@@ -61,7 +61,13 @@ export default function RightSidebar({
     userData,
     onTemplateChange
 }) {
-    const { activeHighlightSection, setActiveHighlightSection, aiSuggestionPreview, setAiSuggestionPreview } = useWorkspace();
+    const { 
+        activeHighlightSection, setActiveHighlightSection, 
+        aiSuggestionPreview, setAiSuggestionPreview,
+        heroCustomImage, setHeroCustomImage,
+        customFontSize, setCustomFontSize,
+        customAccentColor, setCustomAccentColor
+    } = useWorkspace();
     const isLight = themeMode === 'light';
     const [genTab, setGenTab] = useState("generate");
     const [paletteTab, setPaletteTab] = useState("themes");
@@ -650,6 +656,9 @@ export default function RightSidebar({
             } else {
                 setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Global background handler missing.` }]);
             }
+        } else if (selectedTargetSection === "hero_side_image") {
+            setHeroCustomImage(url);
+            setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Hero side image applied!` }]);
         } else {
             if (onUpdateSectionContent) {
                 onUpdateSectionContent(selectedTargetSection, "backgroundImage", url);
@@ -1122,8 +1131,46 @@ export default function RightSidebar({
 
             {paletteTab === "fonts" && (
                 <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                    
+                    {/* NEW: Global Typography Controls */}
+                    <div className="space-y-4 mb-6 pb-6 border-b border-slate-700/50">
+                        <label className={`block text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}> Typography Controls </label>
+                        
+                        <div className="space-y-2">
+                            <span className="text-[11px] font-semibold text-slate-500">Base Font Size</span>
+                            <div className="flex gap-2">
+                                {["sm", "base", "lg", "xl"].map(size => (
+                                    <button 
+                                        key={size}
+                                        onClick={() => setCustomFontSize(size)}
+                                        className={`flex-1 py-2 rounded-xl text-xs font-bold capitalize transition-all ${customFontSize === size ? 'bg-blue-500 text-white shadow-md' : (isLight ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-slate-800 text-slate-400 hover:bg-slate-700')}`}
+                                    >
+                                        {size}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        
+                        <div className="space-y-2 pt-2">
+                            <span className="text-[11px] font-semibold text-slate-500">Custom Accent Color</span>
+                            <div className="flex gap-2">
+                                {["#3b82f6", "#8b5cf6", "#ec4899", "#10b981", "#f59e0b", null].map((color, i) => (
+                                    <button 
+                                        key={i}
+                                        onClick={() => setCustomAccentColor(color)}
+                                        className={`w-8 h-8 rounded-full border-2 transition-all ${customAccentColor === color ? 'border-white scale-110 shadow-lg' : 'border-transparent hover:scale-105'}`}
+                                        style={{ backgroundColor: color || (isLight ? '#e2e8f0' : '#1e293b') }}
+                                        title={color ? "Set accent color" : "Reset to default"}
+                                    >
+                                        {!color && <span className="text-[10px] text-slate-400">↺</span>}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="space-y-3">
-                        <label className={`block text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}> Typography Engine </label>
+                        <label className={`block text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}> Font Family Engine </label>
                         <div className="grid grid-cols-1 gap-3 pb-6">
                             {PORTFOLIO_FONTS && PORTFOLIO_FONTS.map((font) => {
                                 const isSelected = activeFont === font.id;
@@ -1299,6 +1346,7 @@ export default function RightSidebar({
                     className={`w-full text-xs font-semibold p-3.5 rounded-xl border outline-none cursor-pointer transition-all duration-300 focus:ring-2 focus:ring-blue-500/50 ${isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-900/40 backdrop-blur-md border-slate-800 text-slate-200'}`}
                 >
                     <option value="global_bg">Entire Portfolio (Global Background)</option>
+                    <option value="hero_side_image">Hero Section Side Image</option>
                     {(sections && sections.length > 0) ? (
                         sections.map((sec) => (
                             <option key={sec.id} value={sec.id}> {(sec.section_type || '').toUpperCase().replace('_', ' ')} (ID: {sec.id}) </option>

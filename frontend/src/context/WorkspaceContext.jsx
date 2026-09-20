@@ -43,6 +43,10 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         return userData?.globalFont || localStorage.getItem(`aurabuild_font_${userData?.name || 'default'}`) || 'font-inter';
     });
 
+    const [heroCustomImage, setHeroCustomImage] = useState(null);
+    const [customFontSize, setCustomFontSize] = useState("base"); // base, sm, lg, xl
+    const [customAccentColor, setCustomAccentColor] = useState(null);
+
     useEffect(() => {
         if (globalBg) {
             localStorage.setItem(`aurabuild_bg_${userData?.name || 'default'}`, globalBg);
@@ -442,6 +446,12 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         setGlobalBg,
         globalFont,
         setGlobalFont,
+        heroCustomImage,
+        setHeroCustomImage,
+        customFontSize,
+        setCustomFontSize,
+        customAccentColor,
+        setCustomAccentColor,
         terminalLogs,
         setTerminalLogs,
         history,

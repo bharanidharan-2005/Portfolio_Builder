@@ -8,6 +8,7 @@ import { PDFDownloadLink } from '@react-pdf/renderer';
 import { ResumePDF } from "../components/ResumePDF";
 import { HeroParticles } from "./HeroParticles";
 import { GitHubCalendar } from 'react-github-calendar';
+import { useWorkspace } from "../context/WorkspaceContext";
 
 // --- Subdued Premium Animation Configurations ---
 const springTransition = { type: "spring", stiffness: 250, damping: 25 };
@@ -56,15 +57,37 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
     const data = section.content_data || {};
     const bgImage = data.backgroundImage || null;
 
+    // Optional: consume WorkspaceContext if inside workspace
+    let customImage = null;
+    let customFontSz = "base";
+    let customAccent = null;
+    try {
+        const workspace = useWorkspace();
+        customImage = workspace.heroCustomImage;
+        customFontSz = workspace.customFontSize;
+        customAccent = workspace.customAccentColor;
+    } catch(e) {
+        // Fallback for public viewing where context might not exist
+    }
+
     // --- Dynamic Theme Integration ---
     const themeDef = PORTFOLIO_THEMES[portfolioTheme] || PORTFOLIO_THEMES.modern_glass || {};
     
+    // Apply Font Size Modifier
+    const fontSizeMap = {
+        "sm": "text-sm",
+        "base": "text-base",
+        "lg": "text-lg",
+        "xl": "text-xl"
+    };
+    const fontSzClass = fontSizeMap[customFontSz] || "text-base";
+
     const borderClass = themeDef.border || "border-white/5";
     const innerBorderClass = (themeDef.border || "").split(' ').find(c => c.startsWith('border-')) || "border-white/5";
     
     // Subdued premium aesthetic defaults
-    const accentText = themeDef.accentText || "text-blue-400"; // Focus on solid colors
-    const accentBg = themeDef.accentBg || "bg-blue-600";
+    const accentText = customAccent ? `text-[${customAccent}]` : (themeDef.accentText || "text-blue-400"); // Focus on solid colors
+    const accentBg = customAccent ? `bg-[${customAccent}]` : (themeDef.accentBg || "bg-blue-600");
     const textPrimary = themeDef.textPrimary || "text-slate-50"; 
     const textSecondary = themeDef.textSecondary || "text-slate-400";
     const placeholderClass = themeDef.placeholderClass || "placeholder-slate-600";
@@ -174,6 +197,8 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
 
     const heroLiveOptions = [];
     if (data.liveUrl) heroLiveOptions.push({ label: "Live Website", url: data.liveUrl });
+    if (data.github) heroLiveOptions.push({ label: "GitHub", url: data.github });
+    if (data.linkedin) heroLiveOptions.push({ label: "LinkedIn", url: data.linkedin });
 
     const heroDesignOptions = [];
     if (data.designUrl) heroDesignOptions.push({ label: "Design Repository", url: data.designUrl });
@@ -234,7 +259,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 <span className={textSecondary}>Open to opportunities</span>
                             </motion.div>
 
-                            <div className="space-y-4 w-full">
+                            <div className={`space-y-4 w-full ${fontSzClass}`}>
                                 <motion.h1
                                     initial={{ opacity: 0, y: 15 }}
                                     whileInView={{ opacity: 1, y: 0 }}
@@ -346,26 +371,6 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                             </div>
                                         )}
                                         
-                                        {/* GitHub Button */}
-                                        {data.github && (
-                                            <button 
-                                                onClick={(e) => { e.stopPropagation(); openExternal(data.github); }}
-                                                className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg flex items-center gap-2 bg-[#0a0a0f] hover:bg-[#1a1a24] text-white"
-                                            >
-                                                GitHub ↗
-                                            </button>
-                                        )}
-                                        
-                                        {/* LinkedIn Button */}
-                                        {data.linkedin && (
-                                            <button 
-                                                onClick={(e) => { e.stopPropagation(); openExternal(data.linkedin); }}
-                                                className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg flex items-center gap-2 bg-[#0a0a0f] hover:bg-[#1a1a24] text-white"
-                                            >
-                                                LinkedIn ↗
-                                            </button>
-                                        )}
-                                        
                                         {/* Projects Dropdown */}
                                         {heroDesignOptions.length > 0 && (
                                             <div className="group relative z-50">
@@ -405,7 +410,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             >
                                 <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-[100px]"></div>
                                 <img 
-                                    src={getRoleImage(data.subheading || "")} 
+                                    src={customImage || getRoleImage(data.subheading || "")} 
                                     alt="3D Workspace" 
                                     className="absolute inset-0 w-full h-full object-cover mix-blend-screen opacity-90 hover:opacity-100 transition-opacity duration-500 rounded-3xl"
                                     style={{ filter: "drop-shadow(0 0 30px rgba(59,130,246,0.3))" }}

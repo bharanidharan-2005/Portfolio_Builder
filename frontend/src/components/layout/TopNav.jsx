@@ -48,11 +48,10 @@ export function TopNav({
             { label: "Contact Information", passed: hasContact }
         ];
         
-        const score = Math.round((checks.filter(c => c.passed).length / checks.length) * 100);
-        return { checks, score };
+        return { checks };
     };
     
-    const { checks, score } = getQualityChecks();
+    const { checks } = getQualityChecks();
 
     return ( 
         <div className={`flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-6 py-2 sm:py-3 border-b w-full h-full transition-colors ${isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-white/[0.02] backdrop-blur-2xl border-white/10'}`}>
@@ -80,9 +79,9 @@ export function TopNav({
                         onClick={() => setIsChecklistOpen(!isChecklistOpen)} 
                         className={`flex items-center gap-2 border rounded-full px-3 py-1.5 transition-all cursor-pointer ${isLight ? 'bg-slate-50 border-slate-200 hover:bg-slate-100' : 'bg-slate-900 border-slate-800 hover:bg-slate-800'}`}
                     >
-                        <Check className={`h-3.5 w-3.5 shrink-0 ${score === 100 ? 'text-emerald-500' : 'text-amber-500'}`} />
+                        <Check className={`h-3.5 w-3.5 shrink-0 ${checks.every(c => c.passed) ? 'text-emerald-500' : 'text-amber-500'}`} />
                         <span className={`text-[11px] sm:text-sm font-medium ${isLight ? 'text-slate-700' : 'text-slate-200'}`}>
-                            Score: {score}%
+                            Checklist
                         </span>
                     </button>
                     
@@ -90,9 +89,6 @@ export function TopNav({
                         <div className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[260px] rounded-2xl border shadow-2xl z-50 overflow-hidden ${isLight ? 'bg-white border-slate-200' : 'bg-[#0A0A0F]/95 backdrop-blur-xl border-white/10'}`}>
                             <div className="p-4 border-b border-white/10">
                                 <h3 className={`text-sm font-bold ${isLight ? 'text-slate-800' : 'text-slate-100'}`}>Portfolio Quality</h3>
-                                <div className="w-full h-1.5 bg-slate-800 rounded-full mt-2 overflow-hidden">
-                                    <div className={`h-full rounded-full transition-all duration-500 ${score === 100 ? 'bg-emerald-500' : score > 50 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${score}%` }}></div>
-                                </div>
                             </div>
                             <div className="p-2">
                                 {checks.map((check, i) => (
