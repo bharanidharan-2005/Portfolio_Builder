@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useContext } from "react";
 import { notify } from "../toast";
 import { sendContactForm } from "../utils/contactUtils";
 import EditableText from "./EditableText";
@@ -8,7 +8,7 @@ import { PDFDownloadLink } from '@react-pdf/renderer';
 import { ResumePDF } from "../components/ResumePDF";
 import { HeroParticles } from "./HeroParticles";
 import { GitHubCalendar } from 'react-github-calendar';
-import { useWorkspace } from "../context/WorkspaceContext";
+import { WorkspaceContext } from "../context/WorkspaceContext";
 
 // --- Subdued Premium Animation Configurations ---
 const springTransition = { type: "spring", stiffness: 250, damping: 25 };
@@ -51,24 +51,16 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
     const [cMessage, setCMessage] = useState("");
     const [cSending, setCSending] = useState(false);
 
+    const workspace = useContext(WorkspaceContext);
+    const customImage = workspace?.heroCustomImage || null;
+    const customFontSz = workspace?.customFontSize || "base";
+    const customAccent = workspace?.customAccentColor || null;
+    
     if (!section) return null;
 
     const currentType = (section.section_type || "").toLowerCase().trim();
     const data = section.content_data || {};
     const bgImage = data.backgroundImage || null;
-
-    // Optional: consume WorkspaceContext if inside workspace
-    let customImage = null;
-    let customFontSz = "base";
-    let customAccent = null;
-    try {
-        const workspace = useWorkspace();
-        customImage = workspace.heroCustomImage;
-        customFontSz = workspace.customFontSize;
-        customAccent = workspace.customAccentColor;
-    } catch(e) {
-        // Fallback for public viewing where context might not exist
-    }
 
     // --- Dynamic Theme Integration ---
     const themeDef = PORTFOLIO_THEMES[portfolioTheme] || PORTFOLIO_THEMES.modern_glass || {};
@@ -412,7 +404,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 <img 
                                     src={customImage || getRoleImage(data.subheading || "")} 
                                     alt="3D Workspace" 
-                                    className="absolute inset-0 w-full h-full object-cover mix-blend-screen opacity-90 hover:opacity-100 transition-opacity duration-500 rounded-3xl"
+                                    className={`absolute inset-0 w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-500 rounded-3xl ${!customImage ? 'mix-blend-screen' : 'shadow-2xl'}`}
                                     style={{ filter: "drop-shadow(0 0 30px rgba(59,130,246,0.3))" }}
                                 />
                             </motion.div>
