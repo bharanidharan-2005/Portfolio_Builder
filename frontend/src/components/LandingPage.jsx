@@ -221,7 +221,15 @@ export default function LandingPage() {
                     token: credentialResponse.credential
                 })
             });
-            const data = await response.json();
+            let data;
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                data = await response.json();
+            } else {
+                const text = await response.text();
+                throw new Error(`Server returned non-JSON response (${response.status}): ` + text.substring(0, 100));
+            }
+
             if (response.ok && data.success) {
                 socialLogin({
                     name: data.user.username,
@@ -233,8 +241,8 @@ export default function LandingPage() {
                 alert("Google login failed: " + (data.error || "Unknown error"));
             }
         } catch (err) {
-            console.error(err);
-            alert("Failed to connect to server");
+            console.error("Login fetch error:", err);
+            alert(`Failed to connect to server: ${err.message}. (Is the backend URL correct in Vercel?)`);
         } finally {
             setIsLoading(false);
         }

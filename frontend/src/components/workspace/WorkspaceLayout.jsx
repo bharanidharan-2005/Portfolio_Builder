@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useWorkspace } from "../../context/WorkspaceContext";
+import { useAppContext } from "../../context/AppContext";
 import { TopNav } from "../layout/TopNav.jsx";
 import LeftSidebar from "../LeftSidebar.jsx";
 import RightSidebar from "../layout/RightSidebar.jsx"; 
@@ -18,6 +19,7 @@ const ThreeBackground = lazy(() => import('../ThreeBackground.jsx'));
 export default function WorkspaceLayout() {
     // 1. Consume ALL state and logic from our new WorkspaceContext
     const workspace = useWorkspace();
+    const { logout } = useAppContext();
     const {
         isPublicPreview, userData, setUserData, themeMode, currentTheme,
         pages, activePage, setActivePage, sections,
@@ -91,7 +93,7 @@ export default function WorkspaceLayout() {
                         onToggleRight={() => setIsRightOpen(!isRightOpen)}
                         userData={userData}
                         sections={sections}
-                        onLogout={() => {}} // Logout handled internally by TopNav via AppContext
+                        onLogout={logout}
                         onHelpClick={() => setIsHelpModalOpen(true)} 
                         isPreviewMode={isInternalPreviewOpen}
                         onTogglePreview={() => setIsInternalPreviewOpen(!isInternalPreviewOpen)}
@@ -258,7 +260,7 @@ export default function WorkspaceLayout() {
                     userData={userData} 
                     setUserData={setUserData} 
                     themeMode={themeMode}
-                    onLogout={() => {}} // AppContext handles this
+                    onLogout={logout}
                     onDeploy={triggerDeployment}
                     onExportZip={handleExportZip}
                 />

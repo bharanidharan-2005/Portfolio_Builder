@@ -285,3 +285,29 @@ class MeView(APIView):
             'email': request.user.email,
             'workspace_code': workspace_code,
         })
+
+class LogoutView(APIView):
+    """
+    Log out the user by clearing the HttpOnly cookies containing the JWT tokens.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        response = Response({"success": True, "message": "Successfully logged out."})
+        
+        # Clear access token cookie
+        auth_cookie_name = settings.SIMPLE_JWT.get('AUTH_COOKIE', 'access_token')
+        response.delete_cookie(
+            auth_cookie_name,
+            samesite=settings.SIMPLE_JWT.get('AUTH_COOKIE_SAMESITE', 'Lax'),
+            domain=settings.SIMPLE_JWT.get('AUTH_COOKIE_DOMAIN', None)
+        )
+        
+        # Clear refresh token cookie
+        response.delete_cookie(
+            'refresh_token',
+            samesite=settings.SIMPLE_JWT.get('AUTH_COOKIE_SAMESITE', 'Lax'),
+            domain=settings.SIMPLE_JWT.get('AUTH_COOKIE_DOMAIN', None)
+        )
+        
+        return response

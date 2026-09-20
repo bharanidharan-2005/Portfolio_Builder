@@ -33,7 +33,14 @@ export default function GithubCallback() {
                     })
                 });
                 
-                const data = await response.json();
+                let data;
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`Server returned non-JSON response (${response.status}): ` + text.substring(0, 100));
+                }
                 
                 if (response.ok && data.success) {
                     socialLogin({
@@ -47,9 +54,9 @@ export default function GithubCallback() {
                     setTimeout(() => navigate('/'), 3000);
                 }
             } catch (err) {
-                console.error(err);
-                setError("Failed to connect to server. Please check your backend connection.");
-                setTimeout(() => navigate('/'), 3000);
+                console.error("Login fetch error:", err);
+                setError(`Failed to connect to server: ${err.message}.`);
+                setTimeout(() => navigate('/'), 4000);
             }
         };
 

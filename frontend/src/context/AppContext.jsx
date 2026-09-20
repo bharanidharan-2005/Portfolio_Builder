@@ -36,7 +36,21 @@ export function AppProvider({ children }) {
         setIsAuthenticated(true);
     };
 
-    const logout = () => {
+    const logout = async () => {
+        try {
+            // Call the backend to clear HttpOnly cookies
+            const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://aurabuild-backend.onrender.com/api/'}auth/logout/`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+            });
+            if (!response.ok) {
+                console.warn("Logout endpoint returned non-200 status", response.status);
+            }
+        } catch (error) {
+            console.error("Failed to connect to logout endpoint", error);
+        }
+        
         localStorage.removeItem("aurabuild_is_logged_in");
         setIsAuthenticated(false);
         setUserData({
