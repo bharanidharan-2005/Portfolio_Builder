@@ -83,12 +83,18 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                             onClick={async () => {
                                 setIsLoggingOut(true);
                                 try {
-                                    if (onLogout) await onLogout();
+                                    // 1. Call backend to destroy HttpOnly cookies
+                                    await API.post('auth/logout/');
                                 } catch (e) {
-                                    console.error("Logout error", e);
+                                    console.warn("Backend logout failed or was blocked, forcing local logout", e);
+                                } finally {
+                                    // 2. Destroy all local storage traces
+                                    localStorage.removeItem("aurabuild_is_logged_in");
+                                    localStorage.removeItem("aurabuild_user");
+                                    
+                                    // 3. Force hard redirect to landing page (wipes all React state)
+                                    window.location.href = "/";
                                 }
-                                // Fallback failsafe redirect if onLogout fails
-                                window.location.href = "/";
                             }}
                             disabled={isLoggingOut}
                             className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer text-red-500 ${isLight ? 'hover:bg-red-50' : 'hover:bg-red-500/10'} ${isLoggingOut ? 'opacity-50 cursor-not-allowed' : ''}`}

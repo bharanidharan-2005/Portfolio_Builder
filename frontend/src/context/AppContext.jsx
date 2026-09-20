@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import { API } from '../api';
 
 const AppContext = createContext();
 
@@ -39,14 +40,7 @@ export function AppProvider({ children }) {
     const logout = async () => {
         try {
             // Call the backend to clear HttpOnly cookies
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://aurabuild-backend.onrender.com/api/'}auth/logout/`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-            });
-            if (!response.ok) {
-                console.warn("Logout endpoint returned non-200 status", response.status);
-            }
+            await API.post('auth/logout/');
         } catch (error) {
             console.error("Failed to connect to logout endpoint", error);
         }
