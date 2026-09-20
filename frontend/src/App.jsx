@@ -5,6 +5,7 @@ import { WorkspaceProvider } from "./context/WorkspaceContext";
 
 const LandingPage = lazy(() => import("./components/LandingPage.jsx"));
 const WorkspaceLayout = lazy(() => import("./components/workspace/WorkspaceLayout.jsx"));
+const GithubCallback = lazy(() => import("./components/GithubCallback.jsx"));
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -111,6 +112,11 @@ function MainApp() {
                     } />
                     <Route path="/preview/:username/:token" element={
                         <PreviewRouteWrapper isSubdomainPreview={false} />
+                    } />
+                    <Route path="/github/callback" element={
+                        <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-bold text-slate-500">Authenticating...</div>}>
+                            <GithubCallback />
+                        </Suspense>
                     } />
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
