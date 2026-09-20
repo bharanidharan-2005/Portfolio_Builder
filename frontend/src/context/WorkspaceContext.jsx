@@ -32,6 +32,7 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
     // --- AI Context State ---
     const [activeHighlightSection, setActiveHighlightSection] = useState(null);
     const [aiSuggestionPreview, setAiSuggestionPreview] = useState(null);
+    const [resumeReviewData, setResumeReviewData] = useState(null);
 
     // --- GLOBAL BACKGROUND & FONT STATE ---
     const [globalBg, setGlobalBg] = useState(() => {
