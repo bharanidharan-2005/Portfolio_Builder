@@ -22,11 +22,13 @@ from .views import (
     AISEOAnalyticsAPIView,
     PublicPortfolioAPIView,
 )
+from .views.social_auth import SocialLoginView
 
 urlpatterns = [
     # Authentication & JWT Tokens
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('auth/social/', SocialLoginView.as_view(), name='social_login'),
 
     # Pages & Sections CRUD
     path('pages/', PageListAPIView.as_view(), name='page-list'),
