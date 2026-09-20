@@ -4,7 +4,7 @@ import { useAppContext } from './AppContext';
 import { DEFAULT_BLOCK_DATA, SECTION_ORDER_WEIGHTS } from '../utils/constants';
 import { deployAnimatedSite } from '../utils/deploymentUtils';
 
-const WorkspaceContext = createContext(null);
+export const WorkspaceContext = createContext(null);
 
 export const useWorkspace = () => {
     const context = useContext(WorkspaceContext);

@@ -4,7 +4,8 @@ import {
     CheckCircle2, Loader2, TrendingUp, Wand2, 
     LayoutTemplate, PenTool, Activity, Link2, ShieldCheck, 
     GraduationCap, Mail, Crosshair, BarChart, 
-    Share2, Send, Copy, Edit3, Download
+    Share2, Send, Copy, Edit3, Download,
+    ChevronDown, Check
 } from "lucide-react";
 import { PORTFOLIO_THEMES, PORTFOLIO_FONTS } from "../../canvas/themes.js";
 import { API } from "../../api";
@@ -41,6 +42,97 @@ const UNSPLASH_GALLERY = [
     { id: 'abs5', url: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?q=80&w=2070', label: 'Blue Science' },
     { id: 'nat1', url: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=2070', label: 'Starry Mountains' }
 ];
+
+const CustomDropdown = ({ value, onChange, options, isLight }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    let selectedLabel = "Select...";
+    for (const opt of options) {
+        if (opt.options) {
+            const sub = opt.options.find(o => String(o.value) === String(value));
+            if (sub) { selectedLabel = sub.label; break; }
+        } else if (String(opt.value) === String(value)) {
+            selectedLabel = opt.label;
+            break;
+        }
+    }
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className={`w-full text-xs font-semibold p-3.5 rounded-xl border outline-none cursor-pointer transition-all duration-300 flex justify-between items-center ${
+                    isOpen ? 'ring-2 ring-blue-500/50' : ''
+                } ${isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-900/40 backdrop-blur-md border-slate-800 text-slate-200 hover:bg-slate-800/50'}`}
+            >
+                <span className="truncate">{selectedLabel}</span>
+                <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            <div className={`absolute z-50 w-full mt-2 rounded-xl border shadow-2xl overflow-hidden transition-all duration-300 origin-top ${
+                isOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 pointer-events-none'
+            } ${isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-700/50 backdrop-blur-xl'}`}>
+                <div className="max-h-64 overflow-y-auto custom-scrollbar p-1.5">
+                    {options.map((opt, i) => {
+                        if (opt.options) {
+                            return (
+                                <div key={i} className="mb-2 last:mb-0">
+                                    <div className={`px-3 py-2 text-[10px] font-bold tracking-widest uppercase ${isLight ? 'text-slate-500' : 'text-slate-400 border-b border-slate-800/50 mb-1 bg-slate-900/50 rounded-lg'}`}>
+                                        {opt.label}
+                                    </div>
+                                    <div className="space-y-0.5">
+                                        {opt.options.map(subOpt => (
+                                            <button
+                                                key={subOpt.value}
+                                                type="button"
+                                                onClick={() => { onChange(subOpt.value); setIsOpen(false); }}
+                                                className={`w-full text-left px-3 py-2.5 text-xs font-medium rounded-lg transition-colors flex items-center justify-between ${
+                                                    String(value) === String(subOpt.value)
+                                                    ? (isLight ? 'bg-blue-50 text-blue-600' : 'bg-blue-500/20 text-blue-400')
+                                                    : (isLight ? 'text-slate-700 hover:bg-slate-100' : 'text-slate-300 hover:bg-white/5')
+                                                }`}
+                                            >
+                                                <span className="truncate">{subOpt.label}</span>
+                                                {String(value) === String(subOpt.value) && <Check className="w-4 h-4" />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        }
+                        return (
+                            <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => { onChange(opt.value); setIsOpen(false); }}
+                                className={`w-full text-left px-3 py-2.5 text-xs font-medium rounded-lg transition-colors flex items-center justify-between mb-0.5 last:mb-0 ${
+                                    String(value) === String(opt.value)
+                                    ? (isLight ? 'bg-blue-50 text-blue-600' : 'bg-blue-500/20 text-blue-400')
+                                    : (isLight ? 'text-slate-700 hover:bg-slate-100' : 'text-slate-300 hover:bg-white/5')
+                                }`}
+                            >
+                                <span className="truncate">{opt.label}</span>
+                                {String(value) === String(opt.value) && <Check className="w-4 h-4" />}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+        </div>
+    );
+};
 
 export default function RightSidebar({ 
     activeSectionId,
@@ -734,18 +826,18 @@ export default function RightSidebar({
                 <div className="space-y-5 animate-in slide-in-from-right-2 duration-300">
                     <div className="space-y-2">
                         <label className={`block text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}> Target Canvas Block </label>
-                        <select
+                        <CustomDropdown
                             value={selectedAiSection}
-                            onChange={(e) => setSelectedAiSection(e.target.value)}
-                            className={`w-full text-xs font-semibold p-3.5 rounded-xl border outline-none cursor-pointer transition-all duration-300 focus:ring-2 focus:ring-blue-500/50 ${isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-900/40 backdrop-blur-md border-slate-800 text-slate-200'}`}
-                        >
-                            <option value="all">Entire Canvas (All Blocks)</option>
-                            {(sections || []).map((sec) => (
-                                <option key={sec.id} value={sec.id}>
-                                    {(sec.section_type || '').toUpperCase().replace('_', ' ')} (ID: {sec.id})
-                                </option>
-                            ))}
-                        </select>
+                            onChange={setSelectedAiSection}
+                            isLight={isLight}
+                            options={[
+                                { value: "all", label: "Entire Canvas (All Blocks)" },
+                                ...(sections || []).map(sec => ({
+                                    value: sec.id,
+                                    label: `${(sec.section_type || '').toUpperCase().replace('_', ' ')} (ID: ${sec.id})`
+                                }))
+                            ]}
+                        />
                     </div>
 
                     <div className="space-y-2">
@@ -1343,23 +1435,27 @@ export default function RightSidebar({
 
             <div className="space-y-2">
                 <label className={`block text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}> Target Canvas Block </label>
-                <select
+                <CustomDropdown
                     value={selectedTargetSection}
-                    onChange={(e) => setSelectedTargetSection(e.target.value)}
-                    className={`w-full text-xs font-semibold p-3.5 rounded-xl border outline-none cursor-pointer transition-all duration-300 focus:ring-2 focus:ring-blue-500/50 ${isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-900/40 backdrop-blur-md border-slate-800 text-slate-200'}`}
-                >
-                    <option value="global_bg">Entire Portfolio (Global Background)</option>
-                    {(sections && sections.length > 0) ? (
-                        sections.map((sec) => (
-                            <optgroup key={`group-${sec.id}`} label={`${(sec.section_type || '').toUpperCase().replace('_', ' ')} (ID: ${sec.id})`}>
-                                <option value={sec.id}> Background Image </option>
-                                {sec.section_type === 'hero' && (
-                                    <option value={`hero_side_${sec.id}`}> Side Image </option>
-                                )}
-                            </optgroup>
-                        ))
-                    ) : null}
-                </select>
+                    onChange={setSelectedTargetSection}
+                    isLight={isLight}
+                    options={[
+                        { value: "global_bg", label: "Entire Portfolio (Global Background)" },
+                        ...((sections && sections.length > 0) ? sections.map(sec => {
+                            const groupLabel = `${(sec.section_type || '').toUpperCase().replace('_', ' ')} (ID: ${sec.id})`;
+                            const groupOptions = [
+                                { value: sec.id, label: 'Background Image' }
+                            ];
+                            if (sec.section_type === 'hero') {
+                                groupOptions.push({ value: `hero_side_${sec.id}`, label: 'Side Image' });
+                            }
+                            return {
+                                label: groupLabel,
+                                options: groupOptions
+                            };
+                        }) : [])
+                    ]}
+                />
             </div>
 
             {imageTab === "ai" ? (
