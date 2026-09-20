@@ -109,7 +109,7 @@ export default function RightSidebar({
 
     useEffect(() => {
         if (sections && sections.length > 0) {
-            const isValid = selectedTargetSection === "global_bg" || sections.some(sec => String(sec.id) === String(selectedTargetSection));
+            const isValid = selectedTargetSection === "global_bg" || selectedTargetSection === "hero_side_image" || sections.some(sec => String(sec.id) === String(selectedTargetSection));
             if (!isValid) {
                 setSelectedTargetSection("global_bg");
             }
