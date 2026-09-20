@@ -1222,6 +1222,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             </div>
                         )}
                     </motion.div>
+                </div>
             )}
 
             {/* DEFAULT FALLBACK FOR UNKNOWN BLOCKS */}
