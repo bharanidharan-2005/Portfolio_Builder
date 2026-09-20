@@ -6,10 +6,10 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
     const isLight = themeMode === 'light';
     const [activeTab, setActiveTab] = useState("account");
     
-    // Track inputs locally inside the modal
     const [localName, setLocalName] = useState(userData?.name || "Developer");
     const [localAvatar, setLocalAvatar] = useState(userData?.avatar || "🐱");
     const [isSaving, setIsSaving] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     // Keep it synced if user data loads slightly after the modal mounts
     useEffect(() => {
@@ -80,10 +80,21 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
 
                     <div className={`mt-auto pt-4 border-t ${isLight ? 'border-slate-200' : 'border-slate-800'}`}>
                         <button 
-                            onClick={onLogout} 
-                            className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer text-red-500 ${isLight ? 'hover:bg-red-50' : 'hover:bg-red-500/10'}`}
+                            onClick={async () => {
+                                setIsLoggingOut(true);
+                                try {
+                                    if (onLogout) await onLogout();
+                                } catch (e) {
+                                    console.error("Logout error", e);
+                                }
+                                // Fallback failsafe redirect if onLogout fails
+                                window.location.href = "/";
+                            }}
+                            disabled={isLoggingOut}
+                            className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer text-red-500 ${isLight ? 'hover:bg-red-50' : 'hover:bg-red-500/10'} ${isLoggingOut ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            <LogOut className="w-4 h-4" /> Logout Session
+                            {isLoggingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
+                            {isLoggingOut ? 'Logging out...' : 'Logout Session'}
                         </button>
                     </div>
                 </div>
