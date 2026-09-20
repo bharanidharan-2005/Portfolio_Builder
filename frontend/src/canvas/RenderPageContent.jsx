@@ -52,7 +52,6 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
     const [cSending, setCSending] = useState(false);
 
     const workspace = useContext(WorkspaceContext);
-    const customImage = workspace?.heroCustomImage || null;
     const customFontSz = workspace?.customFontSize || "base";
     const customAccent = workspace?.customAccentColor || null;
     
@@ -61,6 +60,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
     const currentType = (section.section_type || "").toLowerCase().trim();
     const data = section.content_data || {};
     const bgImage = data.backgroundImage || null;
+    const customSideImage = data.customSideImage || null;
 
     // --- Dynamic Theme Integration ---
     const themeDef = PORTFOLIO_THEMES[portfolioTheme] || PORTFOLIO_THEMES.modern_glass || {};
@@ -402,9 +402,9 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             >
                                 <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-[100px]"></div>
                                 <img 
-                                    src={customImage || getRoleImage(data.subheading || "")} 
+                                    src={customSideImage || getRoleImage(data.subheading || "")} 
                                     alt="3D Workspace" 
-                                    className={`absolute inset-0 w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-500 rounded-3xl ${!customImage ? 'mix-blend-screen' : 'shadow-2xl'}`}
+                                    className={`absolute inset-0 w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-500 rounded-3xl ${!customSideImage ? 'mix-blend-screen' : 'shadow-2xl'}`}
                                     style={{ filter: "drop-shadow(0 0 30px rgba(59,130,246,0.3))" }}
                                 />
                             </motion.div>

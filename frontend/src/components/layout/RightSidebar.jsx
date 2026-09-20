@@ -109,7 +109,7 @@ export default function RightSidebar({
 
     useEffect(() => {
         if (sections && sections.length > 0) {
-            const isValid = selectedTargetSection === "global_bg" || selectedTargetSection === "hero_side_image" || sections.some(sec => String(sec.id) === String(selectedTargetSection));
+            const isValid = selectedTargetSection === "global_bg" || String(selectedTargetSection).startsWith("hero_side_") || sections.some(sec => String(sec.id) === String(selectedTargetSection));
             if (!isValid) {
                 setSelectedTargetSection("global_bg");
             }
@@ -656,9 +656,12 @@ export default function RightSidebar({
             } else {
                 setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Global background handler missing.` }]);
             }
-        } else if (selectedTargetSection === "hero_side_image") {
-            setHeroCustomImage(url);
-            setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Hero side image applied!` }]);
+        } else if (String(selectedTargetSection).startsWith("hero_side_")) {
+            const secId = String(selectedTargetSection).replace("hero_side_", "");
+            if (onUpdateSectionContent) {
+                onUpdateSectionContent(secId, "customSideImage", url);
+                setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Hero side image applied!` }]);
+            }
         } else {
             if (onUpdateSectionContent) {
                 onUpdateSectionContent(selectedTargetSection, "backgroundImage", url);
@@ -1346,10 +1349,14 @@ export default function RightSidebar({
                     className={`w-full text-xs font-semibold p-3.5 rounded-xl border outline-none cursor-pointer transition-all duration-300 focus:ring-2 focus:ring-blue-500/50 ${isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-900/40 backdrop-blur-md border-slate-800 text-slate-200'}`}
                 >
                     <option value="global_bg">Entire Portfolio (Global Background)</option>
-                    <option value="hero_side_image">Hero Section Side Image</option>
                     {(sections && sections.length > 0) ? (
                         sections.map((sec) => (
-                            <option key={sec.id} value={sec.id}> {(sec.section_type || '').toUpperCase().replace('_', ' ')} (ID: {sec.id}) </option>
+                            <optgroup key={`group-${sec.id}`} label={`${(sec.section_type || '').toUpperCase().replace('_', ' ')} (ID: ${sec.id})`}>
+                                <option value={sec.id}> Background Image </option>
+                                {sec.section_type === 'hero' && (
+                                    <option value={`hero_side_${sec.id}`}> Side Image </option>
+                                )}
+                            </optgroup>
                         ))
                     ) : null}
                 </select>
