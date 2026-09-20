@@ -52,12 +52,16 @@ export function AppProvider({ children }) {
         }
         
         localStorage.removeItem("aurabuild_is_logged_in");
+        localStorage.removeItem("aurabuild_user");
         setIsAuthenticated(false);
         setUserData({
             name: "Developer",
             email: "",
             theme: "modern_glass"
         });
+        
+        // Force a hard reload to the landing page to guarantee all memory/state is cleared
+        window.location.href = "/";
     };
 
     const socialLogin = (userData, accessToken, refreshToken) => {
