@@ -12,13 +12,14 @@ from django.conf import settings
 
 class SocialLoginView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = [] # Disable default authentication to bypass CSRF on this endpoint
 
     def post(self, request):
         provider = request.data.get('provider')
-        token = request.data.get('token')
+        token = request.data.get('token') or request.data.get('code')
 
         if not provider or not token:
-            return Response({'error': 'Provider and token are required'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Provider and token/code are required'}, status=status.HTTP_400_BAD_REQUEST)
 
         email = None
         first_name = ""
@@ -105,9 +106,9 @@ class SocialLoginView(APIView):
 
         except ValueError as e:
             # Invalid token
-            return Response({'error': f'Invalid token: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': f'Invalid token: {repr(e)}'}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'error': f'Internal server error during auth: {repr(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # 3. Create or retrieve user
         try:
