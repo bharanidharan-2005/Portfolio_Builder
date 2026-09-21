@@ -753,7 +753,7 @@ export default function RightSidebar({
             const secId = String(selectedTargetSection).replace("hero_side_", "");
             if (onUpdateSectionContent) {
                 onUpdateSectionContent(secId, "customSideImage", url);
-                setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Hero side image applied!` }]);
+                setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Side image applied!` }]);
             }
         } else {
             if (onUpdateSectionContent) {
@@ -1447,7 +1447,7 @@ export default function RightSidebar({
                             const groupOptions = [
                                 { value: sec.id, label: 'Background Image' }
                             ];
-                            if (sec.section_type === 'hero') {
+                            if (sec.section_type === 'hero' || sec.section_type === 'about') {
                                 groupOptions.push({ value: `hero_side_${sec.id}`, label: 'Side Image' });
                             }
                             return {

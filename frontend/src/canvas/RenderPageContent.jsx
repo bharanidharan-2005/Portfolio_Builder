@@ -415,9 +415,17 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
 
             {/* 2. ABOUT SECTION */}
             {currentType === "about" && (
-                <motion.div {...fadeUpConfig} className="py-12">
-                    <div className="flex flex-wrap justify-center items-center gap-10">
-                        {bgImage && (
+                <motion.div {...fadeUpConfig} className="py-12 relative rounded-[2.5rem] overflow-hidden">
+                    {/* Background Layer */}
+                    {bgImage && (
+                        <div className="absolute inset-0 z-0 pointer-events-none rounded-[2.5rem] overflow-hidden">
+                            <div className={`absolute inset-0 z-10 backdrop-blur-[4px] ${isLight ? 'bg-white/80' : 'bg-[#0B0C10]/80'}`}></div>
+                            <img src={bgImage} alt="About Background" className="w-full h-full object-cover" />
+                        </div>
+                    )}
+                    
+                    <div className="flex flex-wrap justify-center items-center gap-10 relative z-10 px-6">
+                        {customSideImage && (
                             <motion.div 
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 whileInView={{ opacity: 1, scale: 1 }}
@@ -427,7 +435,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             >
                                 <div className={`absolute inset-0 rounded-2xl md:rounded-full blur-lg opacity-40 bg-gradient-to-tr from-blue-500 to-purple-500 group-hover:opacity-60 transition-opacity duration-500`}></div>
                                 <img 
-                                    src={bgImage} 
+                                    src={customSideImage} 
                                     alt="Profile" 
                                     className={`relative w-full h-full object-cover rounded-2xl md:rounded-[3rem] border-4 ${borderClass} shadow-xl transition-transform duration-500 group-hover:scale-[1.02]`}
                                     loading="lazy"
