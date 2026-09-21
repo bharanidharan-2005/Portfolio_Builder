@@ -260,11 +260,11 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                                             className={`relative p-5 rounded-2xl flex flex-col items-center justify-center gap-3 border-2 transition-all cursor-pointer text-left h-[160px] overflow-hidden group ${themeSetting === "system" ? 'border-blue-500 bg-blue-500/5 shadow-md shadow-blue-500/10' : (isLight ? 'border-slate-200 hover:border-slate-300 hover:bg-slate-50' : 'border-slate-800 hover:border-slate-700 hover:bg-slate-800/50')}`}
                                         >
                                             {/* AuraBrand Background for System */}
-                                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-blue-500/5 to-purple-500/10 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                                            <div className={`absolute inset-0 bg-gradient-to-br from-violet-500/15 via-indigo-500/10 to-blue-500/15 transition-opacity ${themeSetting === "system" ? 'opacity-100' : 'opacity-30 group-hover:opacity-70'}`}></div>
                                             
                                             {themeSetting === "system" && <div className="absolute top-3 right-3 bg-blue-500 text-white rounded-full p-0.5 z-10"><CheckCircle2 className="w-4 h-4" /></div>}
                                             
-                                            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white/10 backdrop-blur-md shadow-sm border border-white/20 text-blue-500 relative z-10">
+                                            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-violet-500 to-blue-500 shadow-md border border-white/20 text-white relative z-10">
                                                 <Sparkles className="w-6 h-6" />
                                             </div>
                                             <div className="text-center relative z-10">
