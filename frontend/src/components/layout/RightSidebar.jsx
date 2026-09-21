@@ -1573,19 +1573,42 @@ export default function RightSidebar({
                     <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
                     <span className="ml-2 text-[10px] uppercase tracking-widest">Studio Terminal v2.1</span>
                 </div>
-                {terminalLogs && terminalLogs.map((log, i) => (
-                    <div key={i} className={`flex flex-col gap-1 animate-in fade-in slide-in-from-bottom-1 duration-300 ${
-                        log.type === 'system' ? 'opacity-70' : log.type === 'success' ? 'text-emerald-400 font-bold' : log.type === 'error' ? 'text-red-400 font-bold' : log.type === 'user' ? (isLight ? 'text-blue-600 font-bold' : 'text-orange-400 font-bold') : 'italic opacity-50'
-                    }`}>
-                        <div className="flex items-start gap-3">
-                            <span className="opacity-50 select-none mt-0.5">{">"}</span>
-                            <span className="leading-relaxed whitespace-pre-wrap flex-1">{log.text}</span>
+                {terminalLogs && terminalLogs.map((log, i) => {
+                    const urlRegex = /(https?:\/\/[^\s]+)/g;
+                    const parts = log.text.split(urlRegex);
+                    
+                    return (
+                        <div key={i} className={`flex flex-col gap-1 animate-in fade-in slide-in-from-bottom-1 duration-300 ${
+                            log.type === 'system' ? 'opacity-70' : log.type === 'success' ? 'text-emerald-400 font-bold' : log.type === 'error' ? 'text-red-400 font-bold' : log.type === 'user' ? (isLight ? 'text-blue-600 font-bold' : 'text-orange-400 font-bold') : 'italic opacity-50'
+                        }`}>
+                            <div className="flex items-start gap-3">
+                                <span className="opacity-50 select-none mt-0.5">{">"}</span>
+                                <span className="leading-relaxed whitespace-pre-wrap flex-1 break-all">
+                                    {parts.map((part, index) => {
+                                        if (part.match(urlRegex)) {
+                                            return (
+                                                <span key={index} className="inline-flex items-center gap-1.5 break-all">
+                                                    <a href={part} target="_blank" rel="noopener noreferrer" className="underline hover:text-white transition-colors">{part}</a>
+                                                    <button 
+                                                        onClick={(e) => { e.preventDefault(); navigator.clipboard.writeText(part); alert("Copied to clipboard!"); }}
+                                                        className="p-1 rounded-md bg-white/10 hover:bg-white/20 transition-all cursor-pointer inline-flex items-center"
+                                                        title="Copy URL"
+                                                    >
+                                                        <Copy className="w-3 h-3 text-slate-300" />
+                                                    </button>
+                                                </span>
+                                            );
+                                        }
+                                        return <span key={index}>{part}</span>;
+                                    })}
+                                </span>
+                            </div>
+                            {log.timestamp && (
+                                <span className="text-[9px] opacity-40 ml-5 font-sans tracking-widest uppercase">{log.timestamp}</span>
+                            )}
                         </div>
-                        {log.timestamp && (
-                            <span className="text-[9px] opacity-40 ml-5 font-sans tracking-widest uppercase">{log.timestamp}</span>
-                        )}
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );

@@ -257,14 +257,14 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                                         {/* System Theme Card */}
                                         <button 
                                             onClick={() => setThemeSetting("system")}
-                                            className={`relative p-5 rounded-2xl flex flex-col items-center justify-center gap-3 border-2 transition-all cursor-pointer text-left h-[160px] overflow-hidden group ${themeSetting === "system" ? 'border-blue-500 bg-blue-500/5 shadow-md shadow-blue-500/10' : (isLight ? 'border-slate-200 hover:border-slate-300 hover:bg-slate-50' : 'border-slate-800 hover:border-slate-700 hover:bg-slate-800/50')}`}
+                                            className={`relative p-5 rounded-2xl flex flex-col items-center justify-center gap-3 border-2 transition-all cursor-pointer text-left h-[160px] overflow-hidden group ${themeSetting === "system" ? 'border-indigo-500 bg-indigo-500/5 shadow-md shadow-indigo-500/10' : (isLight ? 'border-slate-200 hover:border-slate-300 hover:bg-slate-50' : 'border-slate-800 hover:border-slate-700 hover:bg-slate-800/50')}`}
                                         >
                                             {/* AuraBrand Background for System */}
-                                            <div className={`absolute inset-0 bg-gradient-to-br from-violet-500/15 via-indigo-500/10 to-blue-500/15 transition-opacity ${themeSetting === "system" ? 'opacity-100' : 'opacity-30 group-hover:opacity-70'}`}></div>
+                                            <div className={`absolute inset-0 bg-gradient-to-br from-[#7B61FF]/20 via-[#4A6DF5]/15 to-[#0066FF]/20 transition-opacity ${themeSetting === "system" ? 'opacity-100' : 'opacity-30 group-hover:opacity-70'}`}></div>
                                             
-                                            {themeSetting === "system" && <div className="absolute top-3 right-3 bg-blue-500 text-white rounded-full p-0.5 z-10"><CheckCircle2 className="w-4 h-4" /></div>}
+                                            {themeSetting === "system" && <div className="absolute top-3 right-3 bg-indigo-500 text-white rounded-full p-0.5 z-10"><CheckCircle2 className="w-4 h-4" /></div>}
                                             
-                                            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-violet-500 to-blue-500 shadow-md border border-white/20 text-white relative z-10">
+                                            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-[#7B61FF] via-[#4A6DF5] to-[#0066FF] shadow-[0_4px_20px_rgba(74,109,245,0.4)] border border-white/30 text-white relative z-10">
                                                 <Sparkles className="w-6 h-6" />
                                             </div>
                                             <div className="text-center relative z-10">

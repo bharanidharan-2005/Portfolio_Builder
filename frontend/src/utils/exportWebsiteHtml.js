@@ -239,7 +239,10 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
             const itemsHtml = (data.items || []).map((s, i) => `
                 <div class="stagger-item stagger-fade-up p-6 md:p-8 rounded-3xl transition-all duration-500 w-full md:w-[70%] border shadow-md ${theme.border} bg-white/5 hover:bg-white/10 hover:shadow-[0_20px_40px_rgba(0,0,0,0.3)] hover:-translate-y-2 hover:border-white/20 ${i % 2 === 0 ? 'self-start' : 'self-end'} group" style="transition-delay: ${(i%4)*0.1}s">
                     <div class="flex justify-between items-center text-lg font-bold mb-4">
-                        <span class="tracking-wide ${theme.textPrimary} group-hover:text-white transition-colors">${escapeHtml(s.name)}</span>
+                        <div class="flex items-center gap-3">
+                            ${s.customIcon ? `<img src="${s.customIcon}" alt="${escapeHtml(s.name)}" class="w-8 h-8 object-contain drop-shadow-lg" />` : ''}
+                            <span class="tracking-wide ${theme.textPrimary} group-hover:text-white transition-colors">${escapeHtml(s.name)}</span>
+                        </div>
                         <span class="${theme.accentText} font-mono text-sm px-4 py-2 rounded-xl border ${theme.border} bg-black/40 shadow-inner group-hover:bg-black/60 transition-colors">${escapeHtml(s.level)}%</span>
                     </div>
                     <div class="h-4 w-full rounded-full bg-black/50 overflow-hidden shadow-inner border ${theme.border}">
@@ -252,7 +255,15 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
             const projectsHtml = (data.projects || []).map((p, i) => `
                 <div class="group relative flex flex-col lg:flex-row items-center gap-10 rounded-[2.5rem] border ${theme.border} bg-white/5 overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-all duration-700 hover:bg-white/10 p-10 hover:-translate-y-3 hover:border-white/20">
                     <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-1 transition-all duration-700 group-hover:w-full ${theme.accentBg || 'bg-blue-500'} shadow-[0_0_15px_rgba(59,130,246,0.8)]"></div>
-                    <div class="flex-1 space-y-8">
+                    
+                    ${p.projectImage ? `
+                    <div class="w-full lg:w-2/5 shrink-0 relative aspect-video rounded-2xl overflow-hidden shadow-xl border ${theme.border} group-hover:border-white/30 transition-all duration-500 stagger-custom-left" style="transition-delay: ${(i*0.2) + 0.1}s">
+                        <div class="absolute inset-0 bg-blue-500/20 group-hover:opacity-0 transition-opacity z-10 mix-blend-overlay"></div>
+                        <img src="${p.projectImage}" alt="${escapeHtml(p.title)}" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" />
+                    </div>
+                    ` : ''}
+                    
+                    <div class="flex-1 space-y-8 ${p.projectImage ? 'lg:pl-6' : ''}">
                         <h3 class="text-3xl sm:text-4xl font-black ${theme.textPrimary} stagger-custom-left group-hover:text-white transition-colors" style="transition-delay: ${(i*0.2) + 0.1}s">${escapeHtml(p.title)}</h3>
                         <!-- FIX: Use p.desc instead of p.description to pull the exact project data! -->
                         <p class="text-lg sm:text-xl text-slate-400 leading-relaxed font-medium stagger-custom-right group-hover:text-slate-300 transition-colors" style="transition-delay: ${(i*0.2) + 0.2}s">${escapeHtml(p.desc)}</p>
