@@ -725,22 +725,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             <div 
                                 key={i}
                                 id={`project-card-${i}`}
-                                onMouseMove={(e) => {
-                                    if (isPreview) return; // Keep it clean in edit mode or apply only in preview? 
-                                    // Actually, it's nice to have everywhere. Let's apply everywhere.
-                                    const card = e.currentTarget;
-                                    const rect = card.getBoundingClientRect();
-                                    const x = e.clientX - rect.left;
-                                    const y = e.clientY - rect.top;
-                                    const rotateX = ((y - (rect.height / 2)) / (rect.height / 2)) * -5; 
-                                    const rotateY = ((x - (rect.width / 2)) / (rect.width / 2)) * 5;
-                                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
-                                }}
-                                style={{ transition: "transform 0.1s ease-out" }}
-                                className={`relative group p-8 md:p-10 rounded-[2rem] border flex flex-col space-y-6 shadow-md backdrop-blur-xl w-full overflow-hidden ${cardBg} ${borderClass} ${!isPreview ? 'hover:shadow-[0_20px_40px_rgb(0,0,0,0.2)] hover:border-white/20 z-10 hover:z-20' : ''}`}
+                                className={`relative group p-6 md:p-8 rounded-[2rem] border flex flex-col md:flex-row gap-6 md:gap-8 items-stretch shadow-md backdrop-blur-xl w-full overflow-hidden ${cardBg} ${borderClass} ${!isPreview ? 'hover:shadow-[0_20px_40px_rgb(0,0,0,0.2)] hover:border-white/20 z-10 hover:z-20' : ''}`}
                             >
                                 <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 transition-all duration-500 group-hover:w-full bg-current ${accentText}`}></div>
 
@@ -751,84 +736,117 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     >✕</button>
                                 )}
 
-                                <motion.h3 
-                                    initial={{ opacity: 0, x: -30 }}
-                                    whileInView={{ opacity: 1, x: 0 }}
-                                    viewport={{ once: false, amount: 0.1 }}
-                                    transition={{ duration: 0.6, ease: "easeOut" }}
-                                    className={`text-2xl md:text-3xl font-black uppercase tracking-wide break-words w-full transition-colors group-hover:text-white ${textPrimary}`}
-                                >
-                                    <TextElement 
-                                        value={project.title || ""}
-                                        placeholder="Project Name"
-                                        onCommit={(v) => updateArrayItem("projects", i, "title", v)}
-                                    />
-                                </motion.h3>
-                                
-                                <motion.div 
-                                    initial={{ opacity: 0, x: 30 }}
-                                    whileInView={{ opacity: 1, x: 0 }}
-                                    viewport={{ once: false, amount: 0.1 }}
-                                    transition={{ duration: 0.6, ease: "easeOut" }}
-                                    className={`text-base leading-relaxed break-words w-full font-medium ${textSecondary}`}
-                                >
-                                    <TextElement 
-                                        multiline 
-                                        value={project.desc || ""}
-                                        placeholder="Describe the project in detail, highlighting your role and the impact."
-                                        onCommit={(v) => updateArrayItem("projects", i, "desc", v)}
-                                    />
-                                </motion.div>
+                                {/* LEFT: PROJECT IMAGE */}
+                                <div className={`w-full md:w-[45%] relative group/image shrink-0 rounded-[1.5rem] overflow-hidden ${trackBgLight} border ${borderClass} min-h-[220px] md:min-h-[280px] flex items-center justify-center`}>
+                                    {project.projectImage ? (
+                                        <img src={project.projectImage} alt={project.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover/image:scale-[1.03]" />
+                                    ) : (
+                                        <div className={`flex flex-col items-center justify-center opacity-30 ${textPrimary}`}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="mb-3"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+                                            <span className="text-xs uppercase tracking-widest font-bold">Project Preview</span>
+                                        </div>
+                                    )}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-50 group-hover/image:opacity-30 transition-opacity pointer-events-none"></div>
+                                    
+                                    {!isPreview && (
+                                        <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover/image:opacity-100 transition-opacity z-10 cursor-pointer">
+                                            <span className="text-[10px] text-white font-bold uppercase tracking-widest bg-black/50 px-3 py-1.5 rounded-lg mb-2">Upload Image</span>
+                                            <input 
+                                                type="file" 
+                                                accept="image/*"
+                                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                                title="Upload Project Image"
+                                                onChange={(e) => {
+                                                    const file = e.target.files[0];
+                                                    if (file) {
+                                                        if (file.size > 2 * 1024 * 1024) {
+                                                            notify("File is too large (max 2MB).", "error");
+                                                            return;
+                                                        }
+                                                        const reader = new FileReader();
+                                                        reader.onload = (ev) => {
+                                                            updateArrayItem("projects", i, "projectImage", ev.target.result);
+                                                        };
+                                                        reader.readAsDataURL(file);
+                                                    }
+                                                }}
+                                            />
+                                            {project.projectImage && (
+                                                <button 
+                                                    onClick={(e) => { 
+                                                        e.preventDefault();
+                                                        e.stopPropagation(); 
+                                                        updateArrayItem("projects", i, "projectImage", null); 
+                                                    }}
+                                                    className="absolute top-3 right-3 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-[10px] hover:bg-red-600 z-20 shadow-md"
+                                                    title="Remove Image"
+                                                >✕</button>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
 
-                                {project.projectUrl && project.projectUrl.trim() !== "" && (
-                                    <div className="pt-2">
-                                        <motion.button 
-                                            initial={{ scale: 0.9, opacity: 0 }}
-                                            whileInView={{ scale: 1, opacity: 1 }}
-                                            viewport={{ once: false, amount: 0.1 }}
-                                            animate={{ 
-                                                scale: [1, 1.03, 1], 
-                                                opacity: [1, 0.85, 1],
-                                                boxShadow: [
-                                                    "0 0 0px rgba(59,130,246,0)", 
-                                                    "0 0 15px rgba(59,130,246,0.5)", 
-                                                    "0 0 0px rgba(59,130,246,0)"
-                                                ] 
-                                            }}
-                                            transition={{ 
-                                                scale: { repeat: Infinity, duration: 2.5, ease: "easeInOut" },
-                                                opacity: { repeat: Infinity, duration: 2.5, ease: "easeInOut" },
-                                                boxShadow: { repeat: Infinity, duration: 2.5, ease: "easeInOut" }
-                                            }}
-                                            onClick={(e) => { e.stopPropagation(); openExternal(project.projectUrl); }}
-                                            className={`inline-flex items-center justify-center px-8 py-3.5 rounded-xl text-sm font-bold transition-all border shadow-sm ${badgeClass}`}
-                                        >
-                                            View Live ↗
-                                        </motion.button>
+                                {/* RIGHT: CONTENT */}
+                                <div className="w-full md:w-[55%] flex flex-col py-2 relative z-10">
+                                    <div className={`text-xs font-bold uppercase tracking-widest mb-3 ${accentText}`}>
+                                        {isPreview ? (
+                                            project.category && <span>{project.category}</span>
+                                        ) : (
+                                            <TextElement 
+                                                value={project.category || ""}
+                                                placeholder="Category (e.g. Full Stack)"
+                                                onCommit={(v) => updateArrayItem("projects", i, "category", v)}
+                                            />
+                                        )}
                                     </div>
-                                )}
 
-                                <div className="pt-6 border-t border-dashed flex flex-col gap-5 mt-auto w-full" style={{ borderColor: 'inherit' }}>
-                                    <motion.div 
-                                        initial={{ opacity: 0, y: 30 }}
-                                        whileInView={{ opacity: 1, y: 0 }}
+                                    <motion.h3 
+                                        initial={{ opacity: 0, x: -20 }}
+                                        whileInView={{ opacity: 1, x: 0 }}
                                         viewport={{ once: false, amount: 0.1 }}
-                                        transition={{ type: "spring", stiffness: 200, damping: 18 }}
-                                        className="flex flex-wrap gap-2.5"
+                                        transition={{ duration: 0.5, ease: "easeOut" }}
+                                        className={`text-xl md:text-2xl font-black uppercase tracking-wide break-words w-full transition-colors group-hover:text-white ${textPrimary}`}
                                     >
+                                        <TextElement 
+                                            value={project.title || ""}
+                                            placeholder="Project Name"
+                                            onCommit={(v) => updateArrayItem("projects", i, "title", v)}
+                                        />
+                                    </motion.h3>
+                                    
+                                    <motion.div 
+                                        initial={{ opacity: 0, x: 20 }}
+                                        whileInView={{ opacity: 1, x: 0 }}
+                                        viewport={{ once: false, amount: 0.1 }}
+                                        transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
+                                        className={`mt-4 text-sm md:text-base leading-relaxed break-words w-full font-medium ${textSecondary}`}
+                                    >
+                                        <TextElement 
+                                            multiline 
+                                            value={project.desc || ""}
+                                            placeholder="Describe the project in detail, highlighting your role and the impact."
+                                            onCommit={(v) => updateArrayItem("projects", i, "desc", v)}
+                                        />
+                                    </motion.div>
+
+                                    <div className="mt-6 flex flex-wrap gap-2.5">
                                         {(project.tags || []).length > 0 ? (
-                                            (project.tags || []).map((tag, tIdx) => (
-                                                <span key={tIdx} className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider border ${trackBg} shadow-inner break-words transition-colors hover:brightness-110 ${textPrimary} ${borderClass}`}>
-                                                    {tag}
-                                                </span>
-                                            ))
+                                            (project.tags || []).map((tag, tIdx) => {
+                                                const iconUrl = getSkillIconUrl(tag);
+                                                return (
+                                                    <span key={tIdx} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-wider border ${trackBg} shadow-inner break-words transition-colors hover:brightness-110 ${textPrimary} ${borderClass}`}>
+                                                        {iconUrl && <img src={iconUrl} className="w-3.5 h-3.5 object-contain" alt="" />}
+                                                        {tag}
+                                                    </span>
+                                                );
+                                            })
                                         ) : (
                                             isPreview ? null : <span className={`text-xs italic opacity-50 ${textSecondary}`}>No tools added yet.</span>
                                         )}
-                                    </motion.div>
+                                    </div>
                                     
                                     {!isPreview && (
-                                        <div className={`text-xs flex items-center gap-3 opacity-50 hover:opacity-100 transition-opacity w-full ${textSecondary}`}>
+                                        <div className={`mt-3 text-xs flex items-center gap-3 opacity-50 hover:opacity-100 transition-opacity w-full ${textSecondary}`}>
                                             <span className="shrink-0 font-bold">✎ Edit Tools:</span>
                                             <div className={`flex-1 ${trackBgLight} px-4 py-2 rounded-xl border border-transparent hover:border-slate-500/30 transition-colors w-full overflow-hidden`}>
                                                 <TextElement 
@@ -839,20 +857,75 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                             </div>
                                         </div>
                                     )}
-                                </div>
 
-                                {!isPreview && (
-                                    <div className={`text-sm font-mono w-full ${textSecondary} flex items-center gap-3 p-3 rounded-xl ${trackBgLight} border ${borderClass}`}>
-                                        <span className="text-xl shrink-0">🔗</span>
-                                        <div className="flex-1 truncate w-full">
-                                            <TextElement 
-                                                value={project.projectUrl || ""}
-                                                placeholder="Paste Live URL (e.g., https://my-project.com)"
-                                                onCommit={(v) => updateArrayItem("projects", i, "projectUrl", v)}
-                                            />
-                                        </div>
+                                    <div className="mt-8 flex flex-wrap gap-3 mt-auto pt-4 border-t border-dashed" style={{ borderColor: 'inherit' }}>
+                                        {project.projectUrl && project.projectUrl.trim() !== "" && (
+                                            <motion.button 
+                                                initial={{ scale: 0.9, opacity: 0 }}
+                                                whileInView={{ scale: 1, opacity: 1 }}
+                                                viewport={{ once: false, amount: 0.1 }}
+                                                animate={{ 
+                                                    scale: [1, 1.02, 1], 
+                                                    opacity: [1, 0.9, 1],
+                                                    boxShadow: [
+                                                        "0 0 0px rgba(59,130,246,0)", 
+                                                        "0 0 10px rgba(59,130,246,0.3)", 
+                                                        "0 0 0px rgba(59,130,246,0)"
+                                                    ] 
+                                                }}
+                                                transition={{ 
+                                                    scale: { repeat: Infinity, duration: 3, ease: "easeInOut" },
+                                                    opacity: { repeat: Infinity, duration: 3, ease: "easeInOut" },
+                                                    boxShadow: { repeat: Infinity, duration: 3, ease: "easeInOut" }
+                                                }}
+                                                onClick={(e) => { e.stopPropagation(); openExternal(project.projectUrl); }}
+                                                className={`inline-flex items-center justify-center px-6 py-2.5 rounded-xl text-sm font-bold transition-all border shadow-sm ${badgeClass}`}
+                                            >
+                                                Live Demo ↗
+                                            </motion.button>
+                                        )}
+                                        {project.githubUrl && project.githubUrl.trim() !== "" && (
+                                            <motion.button 
+                                                initial={{ scale: 0.9, opacity: 0 }}
+                                                whileInView={{ scale: 1, opacity: 1 }}
+                                                viewport={{ once: false, amount: 0.1 }}
+                                                whileHover={{ scale: 1.03 }}
+                                                onClick={(e) => { e.stopPropagation(); openExternal(project.githubUrl); }}
+                                                className={`inline-flex items-center justify-center px-6 py-2.5 rounded-xl text-sm font-bold transition-all border shadow-sm ${trackBg} ${textPrimary} ${borderClass} hover:bg-white/5`}
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="mr-2" viewBox="0 0 16 16">
+                                                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8"/>
+                                                </svg>
+                                                GitHub ↗
+                                            </motion.button>
+                                        )}
                                     </div>
-                                )}
+
+                                    {!isPreview && (
+                                        <div className="flex flex-col gap-2 mt-4">
+                                            <div className={`text-xs font-mono w-full ${textSecondary} flex items-center gap-3 p-2 rounded-xl ${trackBgLight} border ${borderClass}`}>
+                                                <span className="text-xs shrink-0 font-bold">🔗 Live:</span>
+                                                <div className="flex-1 truncate w-full">
+                                                    <TextElement 
+                                                        value={project.projectUrl || ""}
+                                                        placeholder="Paste Live URL"
+                                                        onCommit={(v) => updateArrayItem("projects", i, "projectUrl", v)}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className={`text-xs font-mono w-full ${textSecondary} flex items-center gap-3 p-2 rounded-xl ${trackBgLight} border ${borderClass}`}>
+                                                <span className="text-xs shrink-0 font-bold">🐙 Git:</span>
+                                                <div className="flex-1 truncate w-full">
+                                                    <TextElement 
+                                                        value={project.githubUrl || ""}
+                                                        placeholder="Paste GitHub Repo URL"
+                                                        onCommit={(v) => updateArrayItem("projects", i, "githubUrl", v)}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -879,7 +952,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                     {!isPreview && (
                         <div className="pt-10 w-full px-2 max-w-5xl mx-auto space-y-4">
                             <button 
-                                onClick={(e) => { e.stopPropagation(); addArrayItem('projects', { title: "New Project", desc: "Brief description of the project.", tags: ["React", "Tailwind CSS"], projectUrl: "" }); }}
+                                onClick={(e) => { e.stopPropagation(); addArrayItem('projects', { title: "New Project", desc: "Brief description of the project.", tags: ["React", "Tailwind CSS"], projectUrl: "", githubUrl: "", category: "New Category", projectImage: null }); }}
                                 className={`w-full py-5 rounded-xl border border-dashed text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
                             >
                                 + Add Another Project
