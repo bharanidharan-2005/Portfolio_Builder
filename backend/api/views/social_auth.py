@@ -110,60 +110,66 @@ class SocialLoginView(APIView):
         except Exception as e:
             return Response({'error': f'Internal server error during auth: {repr(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        # 3. Create or retrieve user
         try:
-            user = User.objects.get(email=email)
-            # Ensure the username matches the email (since we use email as username)
-            if user.username != email:
-                user.username = email
-                user.save()
-        except User.DoesNotExist:
-            # Create a new user if one doesn't exist
-            # Generate a random password since they login via OAuth
-            user = User.objects.create_user(
-                username=email, 
-                email=email, 
-                password=User.objects.make_random_password()
+            # 3. Create or retrieve user
+            try:
+                # Handle potential case-sensitivity issues by getting first match
+                user = User.objects.filter(email__iexact=email).first()
+                if user:
+                    if user.username != email:
+                        user.username = email
+                        user.save()
+                else:
+                    # Create a new user if one doesn't exist
+                    # Generate a random password since they login via OAuth
+                    user = User.objects.create_user(
+                        username=email, 
+                        email=email, 
+                        password=User.objects.make_random_password()
+                    )
+                    if first_name:
+                        user.first_name = first_name
+                    if last_name:
+                        user.last_name = last_name
+                    user.save()
+            except Exception as db_err:
+                return Response({'error': f'Database error creating/fetching user: {repr(db_err)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            # 4. Generate JWT tokens
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            refresh_token = str(refresh)
+
+            # 5. Set HTTPOnly cookies
+            response = Response({
+                'success': True,
+                'user': {
+                    'id': user.id,
+                    'email': user.email,
+                    'username': user.username
+                }
+            })
+            
+            cookie_max_age = 3600 * 24 * 7 # 7 days
+            
+            response.set_cookie(
+                key=settings.SIMPLE_JWT['AUTH_COOKIE'],
+                value=access_token,
+                expires=cookie_max_age,
+                secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+                httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
+                samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
             )
-            if first_name:
-                user.first_name = first_name
-            if last_name:
-                user.last_name = last_name
-            user.save()
+            
+            response.set_cookie(
+                key='refresh_token',
+                value=refresh_token,
+                expires=cookie_max_age,
+                secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+                httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
+                samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
+            )
 
-        # 4. Generate JWT tokens
-        refresh = RefreshToken.for_user(user)
-        access_token = str(refresh.access_token)
-        refresh_token = str(refresh)
-
-        # 5. Set HTTPOnly cookies
-        response = Response({
-            'success': True,
-            'user': {
-                'id': user.id,
-                'email': user.email,
-                'username': user.username
-            }
-        })
-        
-        cookie_max_age = 3600 * 24 * 7 # 7 days
-        
-        response.set_cookie(
-            key=settings.SIMPLE_JWT['AUTH_COOKIE'],
-            value=access_token,
-            expires=cookie_max_age,
-            secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
-            httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
-            samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
-        )
-        
-        response.set_cookie(
-            key='refresh_token',
-            value=refresh_token,
-            expires=cookie_max_age,
-            secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
-            httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
-            samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
-        )
-
-        return response
+            return response
+        except Exception as outer_err:
+            return Response({'error': f'Fatal error in token generation: {repr(outer_err)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
