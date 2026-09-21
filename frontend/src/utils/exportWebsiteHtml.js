@@ -1,6 +1,7 @@
 import { PORTFOLIO_THEMES, PORTFOLIO_FONTS } from '../canvas/themes';
 import { notify } from '../toast';
 import { getRoleImage } from '../components/portfolio/PortfolioFrontpage';
+import { getSkillIconUrl } from './skillIcons';
 
 const escapeHtml = (value) => {
     if (value === null || value === undefined) return '';
@@ -29,6 +30,34 @@ const getTechIconHtml = (techName) => {
     let normalized = String(techName).toLowerCase().replace(/[^a-z0-9+#-]/g, '');
     normalized = nameMap[normalized] || normalized;
     return `<img src="https://cdn.simpleicons.org/${normalized}/white" alt="" class="w-4 h-4 inline-block mr-1.5 opacity-80 group-hover:opacity-100 transition-opacity drop-shadow-md" onerror="this.outerHTML='<span class=\\'w-1.5 h-1.5 rounded-full bg-blue-400 inline-block mr-1.5\\'></span>'" />`;
+};
+
+const getFallbackIconSvg = (skillName) => {
+    const key = String(skillName || "").toLowerCase().trim();
+    const wrapper = (path) => `<svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 opacity-80 group-hover:opacity-100 transition-opacity drop-shadow-md text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
+
+    if (key.includes('ai') || key.includes('machine learning') || key.includes('deep learning') || key.includes('rag') || key.includes('generative')) {
+        return wrapper('<path d="M12 4.5a2.5 2.5 0 0 0-4.96-.46 2.5 2.5 0 0 0-1.98 3 2.5 2.5 0 0 0-1.32 4.24 3 3 0 0 0 .34 5.58 2.5 2.5 0 0 0 2.96 3.08 2.5 2.5 0 0 0 4.91.05L12 20V4.5Z"/><path d="M16 8V5c0-1.1.9-2 2-2"/><path d="M12 13h4"/><path d="M12 17h6"/><path d="M21 9V7"/><path d="M21 14v-2"/><path d="M21 19v-2"/>');
+    }
+    if (key.includes('database') || key.includes('sql') || key.includes('data')) {
+        return wrapper('<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/>');
+    }
+    if (key.includes('api') || key.includes('rest') || key.includes('network') || key.includes('backend') || key.includes('server')) {
+        return wrapper('<rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/>');
+    }
+    if (key.includes('frontend') || key.includes('ui') || key.includes('ux') || key.includes('design') || key.includes('web')) {
+        return wrapper('<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="9" x2="9" y1="21" y2="9"/>');
+    }
+    if (key.includes('devops') || key.includes('cloud') || key.includes('deploy') || key.includes('ci/cd') || key.includes('pipeline')) {
+        return wrapper('<rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/>');
+    }
+    if (key.includes('system') || key.includes('architecture') || key.includes('infrastructure')) {
+        return wrapper('<path d="M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z"/><path d="M12 19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3V19Z"/><path d="M7 10.5 11.03 8.1a2 2 0 0 1 1.94 0L17 10.5l-5 3-5-3Z"/>');
+    }
+    if (key.includes('script') || key.includes('code') || key.includes('programming')) {
+        return wrapper('<path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m5 12-3 3 3 3"/><path d="m9 18 3-3-3-3"/>');
+    }
+    return wrapper('<path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/>');
 };
 
 export function buildPortfolioHtml({ pages, activePage, selectedSection, localContent, userData }) {
@@ -162,9 +191,35 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                 ? `style="background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('${bgImage}'); background-size: cover; background-position: center;"`
                 : '';
 
-            const liveMenuHtml = data.liveUrl ? `<a href="${escapeHtml(data.liveUrl)}" target="_blank" class="px-5 py-2.5 rounded-xl font-bold border border-white/5 shadow-lg bg-[#0a0a0f] hover:bg-[#1a1a24] text-white transition-all hover:scale-105 hover:-translate-y-1">See Live &nearr;</a>` : '';
-            const githubMenuHtml = data.github ? `<a href="${escapeHtml(data.github)}" target="_blank" class="px-5 py-2.5 rounded-xl font-bold border border-white/5 shadow-lg bg-[#0a0a0f] hover:bg-[#1a1a24] text-white transition-all hover:scale-105 hover:-translate-y-1">GitHub &nearr;</a>` : '';
-            const linkedinMenuHtml = data.linkedin ? `<a href="${escapeHtml(data.linkedin)}" target="_blank" class="px-5 py-2.5 rounded-xl font-bold border border-white/5 shadow-lg bg-[#0a0a0f] hover:bg-[#1a1a24] text-white transition-all hover:scale-105 hover:-translate-y-1">LinkedIn &nearr;</a>` : '';
+            const heroLiveOptions = [];
+            if (data.liveUrl) heroLiveOptions.push({ label: "Live Website", url: data.liveUrl });
+            if (data.github) heroLiveOptions.push({ label: "GitHub", url: data.github });
+            if (data.linkedin) heroLiveOptions.push({ label: "LinkedIn", url: data.linkedin });
+
+            const pg = activeSections.find((s) => { const st = (s.section_type || "").toLowerCase().trim(); return st === "projects_grid" || st === "projects"; });
+            const heroProjects = (pg && pg.content_data && pg.content_data.projects) ? pg.content_data.projects : [];
+            
+            const heroDesignOptions = [];
+            if (data.designUrl) heroDesignOptions.push({ label: "Design Repository", url: data.designUrl });
+            heroProjects.forEach((project) => {
+                heroDesignOptions.push({ label: project.title || "Untitled Project", url: project.projectUrl });
+            });
+
+            let seeLiveDropdown = '';
+            if (heroLiveOptions.length > 0) {
+                if (heroLiveOptions.length === 1) {
+                    seeLiveDropdown = `<a href="${escapeHtml(heroLiveOptions[0].url)}" target="_blank" class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg flex items-center gap-2 bg-[#0a0a0f] hover:bg-[#1a1a24] text-white">See Live &nearr;</a>`;
+                } else {
+                    const links = heroLiveOptions.map(l => `<a href="${escapeHtml(l.url)}" target="_blank" class="text-left px-4 py-2.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition-all truncate flex items-center justify-between"><span>${escapeHtml(l.label)}</span><span class="opacity-50 text-[10px]">&nearr;</span></a>`).join('');
+                    seeLiveDropdown = `<div class="group relative z-50"><button class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg flex items-center gap-2 bg-[#0a0a0f] hover:bg-[#1a1a24] text-white">See Live ▾</button><div class="absolute top-full left-0 mt-2 w-48 rounded-xl border border-slate-800 bg-[#0a0a0f]/95 backdrop-blur-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col p-2 max-h-60 overflow-y-auto custom-scrollbar text-left">${links}</div></div>`;
+                }
+            }
+
+            let projectsDropdown = '';
+            if (heroDesignOptions.length > 0) {
+                const links = heroDesignOptions.map(l => `<a href="${escapeHtml(l.url)}" target="_blank" class="text-left px-4 py-2.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition-all truncate flex items-center justify-between"><span>${escapeHtml(l.label)}</span><span class="opacity-50 text-[10px]">&nearr;</span></a>`).join('');
+                projectsDropdown = `<div class="group relative z-50"><button class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg flex items-center gap-2 bg-[#0a0a0f] hover:bg-[#1a1a24] text-white">Projects ▾</button><div class="absolute top-full left-0 mt-2 w-56 rounded-xl border border-slate-800 bg-[#0a0a0f]/95 backdrop-blur-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col p-2 max-h-60 overflow-y-auto custom-scrollbar text-left">${links}</div></div>`;
+            }
 
             sectionsHtml += `
             <section class="py-16 sm:py-24 px-6 sm:px-12 relative rounded-3xl overflow-visible border ${theme.border} ${!bgImage ? theme.cardBg || 'bg-black/40 backdrop-blur-xl' : ''} mb-16 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)]" ${bgInlineStyle}>
@@ -198,10 +253,8 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                             </div>
                             
                             <div class="flex flex-wrap items-center justify-center lg:justify-start gap-3 w-full mt-2">
-                                ${liveMenuHtml}
-                                ${githubMenuHtml}
-                                ${linkedinMenuHtml}
-                                <a href="#section-${activeSections.find(s=>s.section_type==='projects_grid')?.id||''}" class="px-5 py-2.5 rounded-xl font-bold border border-white/5 shadow-lg bg-[#0a0a0f] hover:bg-[#1a1a24] text-white transition-all hover:scale-105 hover:-translate-y-1">Projects &nearr;</a>
+                                ${seeLiveDropdown}
+                                ${projectsDropdown}
                             </div>
                         </div>
                     </div>
@@ -253,7 +306,11 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                 <div class="stagger-item stagger-fade-up p-6 md:p-8 rounded-3xl transition-all duration-500 w-full md:w-[70%] border shadow-md ${theme.border} bg-white/5 hover:bg-white/10 hover:shadow-[0_20px_40px_rgba(0,0,0,0.3)] hover:-translate-y-2 hover:border-white/20 ${i % 2 === 0 ? 'self-start' : 'self-end'} group" style="transition-delay: ${(i%4)*0.1}s">
                     <div class="flex justify-between items-center text-lg font-bold mb-4">
                         <div class="flex items-center gap-3">
-                            ${s.customIcon ? `<img src="${s.customIcon}" alt="${escapeHtml(s.name)}" class="w-8 h-8 object-contain drop-shadow-lg" />` : ''}
+                            ${(() => {
+                                const url = s.customIcon || getSkillIconUrl(s.name);
+                                if (url) return `<img src="${url}" alt="${escapeHtml(s.name)}" class="w-8 h-8 object-contain drop-shadow-lg" />`;
+                                return getFallbackIconSvg(s.name);
+                            })()}
                             <span class="tracking-wide ${theme.textPrimary} group-hover:text-white transition-colors">${escapeHtml(s.name)}</span>
                         </div>
                         <span class="${theme.accentText} font-mono text-sm px-4 py-2 rounded-xl border ${theme.border} bg-black/40 shadow-inner group-hover:bg-black/60 transition-colors">${escapeHtml(s.level)}%</span>
