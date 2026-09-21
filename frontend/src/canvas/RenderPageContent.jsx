@@ -9,6 +9,7 @@ import { ResumePDF } from "../components/ResumePDF";
 import { HeroParticles } from "./HeroParticles";
 import { GitHubCalendar } from 'react-github-calendar';
 import { WorkspaceContext } from "../context/WorkspaceContext";
+import { getSkillIconUrl, getFallbackLucideIcon } from "../utils/skillIcons";
 
 // --- Subdued Premium Animation Configurations ---
 const springTransition = { type: "spring", stiffness: 250, damping: 25 };
@@ -586,14 +587,75 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                         >✕</button>
                                     )}
 
-                                    <div className="flex justify-between items-center text-lg font-bold">
-                                        <span className={`break-words max-w-full tracking-wide ${textPrimary}`}>
-                                            <TextElement 
-                                                value={skill.name || ""}
-                                                placeholder="Skill Name"
-                                                onCommit={(v) => updateArrayItem("items", i, "name", v)}
-                                            />
-                                        </span>
+                                    <div className="flex justify-between items-center text-lg font-bold gap-4">
+                                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                                            {(() => {
+                                                const iconUrl = skill.customIcon || getSkillIconUrl(skill.name);
+                                                const FallbackIcon = getFallbackLucideIcon(skill.name);
+                                                
+                                                return (
+                                                    <div className={`relative shrink-0 flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl border ${borderClass} bg-slate-900/40 backdrop-blur-md shadow-inner overflow-hidden group/icon transition-all duration-300 ${!isPreview ? 'hover:scale-105 hover:shadow-[0_0_15px_rgba(59,130,246,0.3)] cursor-pointer' : ''}`}>
+                                                        {iconUrl ? (
+                                                            <img 
+                                                                src={iconUrl} 
+                                                                alt={skill.name} 
+                                                                className="w-5 h-5 md:w-6 md:h-6 object-contain" 
+                                                                onError={(e) => {
+                                                                    e.target.style.display = 'none';
+                                                                    e.target.nextSibling.style.display = 'block';
+                                                                }} 
+                                                            />
+                                                        ) : null}
+                                                        <FallbackIcon className="w-4 h-4 md:w-5 md:h-5 text-slate-400" style={{ display: iconUrl ? 'none' : 'block' }} />
+                                                        
+                                                        {/* Edit Mode Overlay */}
+                                                        {!isPreview && (
+                                                            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover/icon:opacity-100 transition-opacity">
+                                                                <span className="text-[8px] text-white font-bold uppercase tracking-widest text-center leading-none">Edit</span>
+                                                                <input 
+                                                                    type="file" 
+                                                                    accept="image/*"
+                                                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                                                    title="Upload Custom Icon"
+                                                                    onChange={(e) => {
+                                                                        const file = e.target.files[0];
+                                                                        if (file) {
+                                                                            if (file.size > 2 * 1024 * 1024) {
+                                                                                notify("File is too large (max 2MB).", "error");
+                                                                                return;
+                                                                            }
+                                                                            const reader = new FileReader();
+                                                                            reader.onload = (ev) => {
+                                                                                updateArrayItem("items", i, "customIcon", ev.target.result);
+                                                                            };
+                                                                            reader.readAsDataURL(file);
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                {skill.customIcon && (
+                                                                    <button 
+                                                                        onClick={(e) => { 
+                                                                            e.preventDefault();
+                                                                            e.stopPropagation(); 
+                                                                            updateArrayItem("items", i, "customIcon", null); 
+                                                                        }}
+                                                                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] hover:bg-red-600 z-10 shadow-md"
+                                                                        title="Remove Custom Icon"
+                                                                    >✕</button>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })()}
+                                            <span className={`break-words truncate tracking-wide ${textPrimary}`}>
+                                                <TextElement 
+                                                    value={skill.name || ""}
+                                                    placeholder="Skill Name"
+                                                    onCommit={(v) => updateArrayItem("items", i, "name", v)}
+                                                />
+                                            </span>
+                                        </div>
                                         <span className={`${accentText} font-mono text-sm flex items-center shrink-0 ${trackBg} px-4 py-2 rounded-xl border ${borderClass} shadow-inner`}>
                                             <TextElement 
                                                 value={String(skill.level || 50)}
