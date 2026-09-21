@@ -88,20 +88,21 @@ const CustomDropdown = ({ value, onChange, options, isLight }) => {
                     {options.map((opt, i) => {
                         if (opt.options) {
                             return (
-                                <div key={i} className="mb-2 last:mb-0">
-                                    <div className={`px-3 py-2 text-[10px] font-bold tracking-widest uppercase ${isLight ? 'text-slate-500' : 'text-slate-400 border-b border-slate-800/50 mb-1 bg-slate-900/50 rounded-lg'}`}>
+                                <div key={i} className={`mb-3 last:mb-0 rounded-lg overflow-hidden border ${isLight ? 'border-slate-200' : 'border-slate-700/50'}`}>
+                                    <div className={`px-3 py-2.5 text-[11px] font-black tracking-widest uppercase flex items-center gap-2 ${isLight ? 'text-slate-700 bg-slate-100 border-b border-slate-200' : 'text-slate-200 bg-slate-800/80 border-b border-slate-700/50'}`}>
+                                        <div className={`w-1.5 h-1.5 rounded-full ${isLight ? 'bg-slate-400' : 'bg-slate-500'}`}></div>
                                         {opt.label}
                                     </div>
-                                    <div className="space-y-0.5">
+                                    <div className={`p-1 space-y-0.5 ${isLight ? 'bg-white' : 'bg-slate-900/30'}`}>
                                         {opt.options.map(subOpt => (
                                             <button
                                                 key={subOpt.value}
                                                 type="button"
                                                 onClick={() => { onChange(subOpt.value); setIsOpen(false); }}
-                                                className={`w-full text-left px-3 py-2.5 text-xs font-medium rounded-lg transition-colors flex items-center justify-between ${
+                                                className={`w-full text-left pl-6 pr-3 py-2 text-xs font-medium rounded-md transition-colors flex items-center justify-between ${
                                                     String(value) === String(subOpt.value)
-                                                    ? (isLight ? 'bg-blue-50 text-blue-600' : 'bg-blue-500/20 text-blue-400')
-                                                    : (isLight ? 'text-slate-700 hover:bg-slate-100' : 'text-slate-300 hover:bg-white/5')
+                                                    ? (isLight ? 'bg-blue-50 text-blue-700 font-bold' : 'bg-blue-500/20 text-blue-400 font-bold')
+                                                    : (isLight ? 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200')
                                                 }`}
                                             >
                                                 <span className="truncate">{subOpt.label}</span>
