@@ -1,86 +1,115 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Link } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Link, Font } from '@react-pdf/renderer';
 
+// Use standard Helvetica which is built into react-pdf and ATS-friendly
 const styles = StyleSheet.create({
   page: {
     padding: 40,
     backgroundColor: '#ffffff',
-    color: '#333333',
+    fontFamily: 'Helvetica',
+    color: '#000000',
+    lineHeight: 1.4,
   },
   header: {
-    marginBottom: 20,
+    marginBottom: 16,
+    paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#dddddd',
-    paddingBottom: 10,
+    borderBottomColor: '#cccccc',
   },
   name: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 4,
-    color: '#111111',
+    fontSize: 22,
+    fontFamily: 'Helvetica-Bold',
+    marginBottom: 2,
+    color: '#000000',
   },
   headline: {
-    fontSize: 12,
-    color: '#555555',
-    marginBottom: 8,
+    fontSize: 11,
+    color: '#333333',
+    marginBottom: 6,
   },
   contactRow: {
     flexDirection: 'row',
-    gap: 10,
-    fontSize: 10,
-    color: '#666666',
+    flexWrap: 'wrap',
+    gap: 8,
+    fontSize: 9,
+    color: '#555555',
+  },
+  link: {
+    color: '#0056b3',
+    textDecoration: 'none',
   },
   section: {
-    marginBottom: 16,
+    marginBottom: 14,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#111111',
+    fontSize: 11,
+    fontFamily: 'Helvetica-Bold',
     textTransform: 'uppercase',
+    color: '#000000',
+    marginBottom: 6,
+    paddingBottom: 2,
     borderBottomWidth: 1,
     borderBottomColor: '#eeeeee',
-    paddingBottom: 4,
+  },
+  aboutText: {
+    fontSize: 9.5,
+    color: '#222222',
   },
   item: {
-    marginBottom: 12,
+    marginBottom: 10,
   },
   itemHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'baseline',
-    marginBottom: 4,
+    alignItems: 'flex-start',
+    marginBottom: 2,
   },
   itemTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#222222',
-  },
-  itemDate: {
     fontSize: 10,
-    color: '#666666',
+    fontFamily: 'Helvetica-Bold',
+    color: '#000000',
+  },
+  itemSubtitleRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 3,
   },
   itemSubtitle: {
-    fontSize: 11,
-    color: '#444444',
-    marginBottom: 4,
+    fontSize: 9.5,
+    color: '#333333',
+    fontFamily: 'Helvetica-Oblique',
   },
-  itemDesc: {
-    fontSize: 10,
-    lineHeight: 1.5,
+  itemDate: {
+    fontSize: 9,
     color: '#555555',
   },
-  skills: {
+  itemDesc: {
+    fontSize: 9.5,
+    color: '#333333',
+    marginTop: 2,
+  },
+  techText: {
+    fontSize: 8.5,
+    color: '#555555',
+    marginTop: 2,
+    fontFamily: 'Helvetica-Oblique',
+  },
+  projectLinks: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 2,
+    fontSize: 8.5,
+  },
+  skillsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 4,
   },
-  skillBadge: {
-    fontSize: 9,
-    backgroundColor: '#f4f4f5',
-    padding: '3 6',
-    borderRadius: 4,
+  skillText: {
+    fontSize: 9.5,
+    color: '#222222',
   }
 });
 
@@ -91,43 +120,105 @@ export const ResumePDF = ({ sections = [] }) => {
   const education = sections.find(s => s.section_type === 'education')?.content_data || {};
   const skills = sections.find(s => s.section_type === 'skills')?.content_data || {};
   const projects = sections.find(s => s.section_type === 'projects_grid')?.content_data || {};
-  
+  const experience = sections.find(s => s.section_type === 'experience')?.content_data || {}; // Future proofing
+
+  // Safely join skills
+  const skillsArray = Array.isArray(skills.items) ? skills.items : [];
+  const skillsList = skillsArray.filter(s => s?.name).map(s => s.name).join(' • ');
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.name}>{hero.heading || 'Your Name'}</Text>
-          <Text style={styles.headline}>{hero.subheading || 'Professional Headline'}</Text>
+          <Text style={styles.name}>{hero.heading || 'Professional Resume'}</Text>
+          {hero.subheading && <Text style={styles.headline}>{hero.subheading}</Text>}
+          
           <View style={styles.contactRow}>
             {hero.email && <Text>{hero.email}</Text>}
-            {hero.linkedin && <Link src={hero.linkedin}>LinkedIn</Link>}
-            {hero.github && <Link src={hero.github}>GitHub</Link>}
-            {hero.liveUrl && <Link src={hero.liveUrl}>Website</Link>}
+            {hero.phone && <Text>{hero.phone}</Text>}
+            {hero.location && <Text>{hero.location}</Text>}
+            
+            {hero.linkedin && (
+              <Link style={styles.link} src={hero.linkedin}>
+                LinkedIn
+              </Link>
+            )}
+            {hero.github && (
+              <Link style={styles.link} src={hero.github}>
+                GitHub
+              </Link>
+            )}
+            {hero.liveUrl && (
+              <Link style={styles.link} src={hero.liveUrl}>
+                Portfolio
+              </Link>
+            )}
           </View>
         </View>
 
-        {/* About */}
+        {/* Professional Summary (About) */}
         {about.bio && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>About</Text>
-            <Text style={styles.itemDesc}>{about.bio}</Text>
+            <Text style={styles.sectionTitle}>Professional Summary</Text>
+            <Text style={styles.aboutText}>{about.bio}</Text>
           </View>
         )}
 
-        {/* Experience / Projects (mapped to Projects for now as it's the primary content) */}
-        {projects.projects && projects.projects.length > 0 && (
+        {/* Experience */}
+        {experience.items && experience.items.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Projects & Experience</Text>
-            {projects.projects.map((proj, i) => (
-              <View key={i} style={styles.item}>
+            <Text style={styles.sectionTitle}>Experience</Text>
+            {experience.items.map((exp, i) => (
+              <View key={`exp-${i}`} style={styles.item}>
                 <View style={styles.itemHeader}>
-                  <Text style={styles.itemTitle}>{proj.title}</Text>
+                  <Text style={styles.itemTitle}>{exp.company || exp.title}</Text>
+                  {exp.duration && <Text style={styles.itemDate}>{exp.duration}</Text>}
                 </View>
-                <Text style={styles.itemDesc}>{proj.description}</Text>
+                {exp.role && <Text style={styles.itemSubtitle}>{exp.role}</Text>}
+                {exp.description && <Text style={styles.itemDesc}>{exp.description}</Text>}
               </View>
             ))}
+          </View>
+        )}
+
+        {/* Projects */}
+        {projects.projects && projects.projects.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Projects</Text>
+            {projects.projects.map((proj, i) => {
+              if (!proj.title) return null; // Skip empty
+              
+              return (
+                <View key={`proj-${i}`} style={styles.item}>
+                  <View style={styles.itemHeader}>
+                    <Text style={styles.itemTitle}>{proj.title}</Text>
+                  </View>
+                  
+                  {proj.desc && <Text style={styles.itemDesc}>{proj.desc}</Text>}
+                  
+                  {proj.tags && proj.tags.length > 0 && (
+                    <Text style={styles.techText}>
+                      Technologies: {proj.tags.join(', ')}
+                    </Text>
+                  )}
+                  
+                  <View style={styles.projectLinks}>
+                    {proj.githubUrl && (
+                      <Link style={styles.link} src={proj.githubUrl}>
+                        GitHub
+                      </Link>
+                    )}
+                    {proj.projectUrl && (
+                      <Link style={styles.link} src={proj.projectUrl}>
+                        Live Demo
+                      </Link>
+                    )}
+                  </View>
+                </View>
+              );
+            })}
           </View>
         )}
 
@@ -136,26 +227,25 @@ export const ResumePDF = ({ sections = [] }) => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Education</Text>
             {education.schools.map((edu, i) => (
-              <View key={i} style={styles.item}>
+              <View key={`edu-${i}`} style={styles.item}>
                 <View style={styles.itemHeader}>
                   <Text style={styles.itemTitle}>{edu.institution}</Text>
-                  <Text style={styles.itemDate}>{edu.years}</Text>
+                  {edu.years && <Text style={styles.itemDate}>{edu.years}</Text>}
                 </View>
-                <Text style={styles.itemSubtitle}>{edu.degree} {edu.score ? `| ${edu.score}` : ''}</Text>
+                <View style={styles.itemSubtitleRow}>
+                  {edu.degree && <Text style={styles.itemSubtitle}>{edu.degree}</Text>}
+                  {edu.score && <Text style={styles.itemDate}> | {edu.score}</Text>}
+                </View>
               </View>
             ))}
           </View>
         )}
 
         {/* Skills */}
-        {skills.items && skills.items.length > 0 && (
+        {skillsList && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Skills</Text>
-            <View style={styles.skills}>
-              {skills.items.map((skill, i) => (
-                <Text key={i} style={styles.skillBadge}>{skill.name}</Text>
-              ))}
-            </View>
+            <Text style={styles.skillText}>{skillsList}</Text>
           </View>
         )}
 
