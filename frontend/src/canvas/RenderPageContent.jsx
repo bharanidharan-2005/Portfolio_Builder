@@ -833,9 +833,14 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                         {(project.tags || []).length > 0 ? (
                                             (project.tags || []).map((tag, tIdx) => {
                                                 const iconUrl = getSkillIconUrl(tag);
+                                                const FallbackIcon = getFallbackLucideIcon(tag);
                                                 return (
                                                     <span key={tIdx} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-wider border ${trackBg} shadow-inner break-words transition-colors hover:brightness-110 ${textPrimary} ${borderClass}`}>
-                                                        {iconUrl && <img src={iconUrl} className="w-3.5 h-3.5 object-contain" alt="" />}
+                                                        {iconUrl ? (
+                                                            <img src={iconUrl} className="w-3.5 h-3.5 object-contain" alt="" />
+                                                        ) : (
+                                                            <FallbackIcon className="w-3.5 h-3.5 opacity-80" />
+                                                        )}
                                                         {tag}
                                                     </span>
                                                 );
