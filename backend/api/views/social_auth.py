@@ -122,10 +122,11 @@ class SocialLoginView(APIView):
                 else:
                     # Create a new user if one doesn't exist
                     # Generate a random password since they login via OAuth
+                    import uuid
                     user = User.objects.create_user(
                         username=email, 
                         email=email, 
-                        password=User.objects.make_random_password()
+                        password=uuid.uuid4().hex
                     )
                     if first_name:
                         user.first_name = first_name
