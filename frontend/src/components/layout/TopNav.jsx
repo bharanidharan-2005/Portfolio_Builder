@@ -174,17 +174,6 @@ export function TopNav({
                     <HelpCircle className="h-4 w-4" /> 
                 </button>
 
-                {/* Theme Toggle Button */}
-                <button 
-                    type="button"
-                    onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-                    className={`p-1.5 sm:p-2 rounded-full transition-colors cursor-pointer hidden sm:block ${isLight ? 'text-slate-500 hover:text-slate-800 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
-                    title="Toggle UI Theme" 
-                >
-                    {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />} 
-                </button>
-
-                <div className={`hidden sm:block h-5 w-[1px] mx-1 ${isLight ? 'bg-slate-200' : 'bg-slate-700'}`}></div>
 
                 {/* Deploy Button */}
                 <button 

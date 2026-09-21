@@ -9,7 +9,41 @@ export function AppProvider({ children }) {
         return !!isLoggedIn;
     });
 
+    const [themeSetting, setThemeSetting] = useState(() => {
+        return localStorage.getItem("aurabuild_workspace_theme") || "system";
+    });
+
     const [themeMode, setThemeMode] = useState("light");
+
+    useEffect(() => {
+        localStorage.setItem("aurabuild_workspace_theme", themeSetting);
+        
+        const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+        
+        const updateThemeMode = () => {
+            if (themeSetting === "system") {
+                setThemeMode(mediaQuery.matches ? "dark" : "light");
+            } else {
+                setThemeMode(themeSetting);
+            }
+        };
+
+        updateThemeMode();
+
+        const listener = (e) => {
+            if (themeSetting === "system") {
+                setThemeMode(e.matches ? "dark" : "light");
+            }
+        };
+
+        if (mediaQuery.addEventListener) {
+            mediaQuery.addEventListener("change", listener);
+            return () => mediaQuery.removeEventListener("change", listener);
+        } else {
+            mediaQuery.addListener(listener);
+            return () => mediaQuery.removeListener(listener);
+        }
+    }, [themeSetting]);
 
     const [userData, setUserData] = useState(() => {
         const saved = localStorage.getItem("aurabuild_user");
@@ -28,7 +62,7 @@ export function AppProvider({ children }) {
     }, [userData]);
 
     const toggleTheme = () => {
-        setThemeMode(prev => prev === "light" ? "dark" : "light");
+        setThemeSetting(prev => prev === "light" ? "dark" : "light");
     };
 
     const login = (data) => {
@@ -67,6 +101,8 @@ export function AppProvider({ children }) {
     const value = {
         isAuthenticated,
         themeMode,
+        themeSetting,
+        setThemeSetting,
         userData,
         setUserData,
         toggleTheme,

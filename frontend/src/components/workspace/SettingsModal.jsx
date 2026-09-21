@@ -1,8 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, User, Shield, HardDrive, Download, AlertTriangle, Trash2, Loader2, CheckCircle2, ExternalLink, LogOut, Globe } from "lucide-react";
 import { API } from "../../api"; 
+import { useAppContext } from "../../context/AppContext";
+import { Palette, Sun, Moon, Sparkles } from "lucide-react";
 
 export default function SettingsModal({ isOpen, onClose, userData, setUserData, themeMode, onLogout, onDeploy, onExportZip }) {
+    const { themeSetting, setThemeSetting } = useAppContext();
     const isLight = themeMode === 'light';
     const [activeTab, setActiveTab] = useState("account");
     
@@ -74,6 +77,10 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                         <Shield className="w-4 h-4" /> Workspace
                     </button>
                     
+                    <button onClick={() => setActiveTab("appearance")} className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${activeTab === "appearance" ? (isLight ? 'bg-blue-100 text-blue-700 shadow-sm' : 'bg-blue-900/40 text-blue-400 ring-1 ring-blue-500/20') : (isLight ? 'text-slate-600 hover:bg-slate-200' : 'text-slate-400 hover:bg-slate-800')}`}>
+                        <Palette className="w-4 h-4" /> Appearance
+                    </button>
+
                     <button onClick={() => setActiveTab("data")} className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${activeTab === "data" ? (isLight ? 'bg-blue-100 text-blue-700 shadow-sm' : 'bg-blue-900/40 text-blue-400 ring-1 ring-blue-500/20') : (isLight ? 'text-slate-600 hover:bg-slate-200' : 'text-slate-400 hover:bg-slate-800')}`}>
                         <HardDrive className="w-4 h-4" /> Data & Privacy
                     </button>
@@ -201,6 +208,70 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                                                 Visit <ExternalLink className="w-3 h-3" />
                                             </button>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === "appearance" && (
+                            <div className="space-y-6 animate-in slide-in-from-right-4 duration-300 h-full flex flex-col">
+                                <div>
+                                    <h3 className={`text-xl font-bold mb-1 uppercase tracking-widest ${isLight ? 'text-slate-800' : 'text-slate-100'}`}>Appearance</h3>
+                                    <p className={`text-sm ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Customize how your AuraBuild workspace looks.</p>
+                                </div>
+                                
+                                <div className="space-y-4 pt-2">
+                                    <h4 className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>Theme</h4>
+                                    
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        {/* Light Theme Card */}
+                                        <button 
+                                            onClick={() => setThemeSetting("light")}
+                                            className={`relative p-5 rounded-2xl flex flex-col items-center justify-center gap-3 border-2 transition-all cursor-pointer text-left h-[160px] ${themeSetting === "light" ? 'border-blue-500 bg-blue-500/5 shadow-md shadow-blue-500/10' : (isLight ? 'border-slate-200 hover:border-slate-300 hover:bg-slate-50' : 'border-slate-800 hover:border-slate-700 hover:bg-slate-800/50')}`}
+                                        >
+                                            {themeSetting === "light" && <div className="absolute top-3 right-3 bg-blue-500 text-white rounded-full p-0.5"><CheckCircle2 className="w-4 h-4" /></div>}
+                                            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white shadow-sm border border-slate-200 text-slate-700">
+                                                <Sun className="w-6 h-6" />
+                                            </div>
+                                            <div className="text-center">
+                                                <div className={`font-bold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>Light</div>
+                                                <div className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Clean workspace</div>
+                                            </div>
+                                        </button>
+
+                                        {/* Dark Theme Card */}
+                                        <button 
+                                            onClick={() => setThemeSetting("dark")}
+                                            className={`relative p-5 rounded-2xl flex flex-col items-center justify-center gap-3 border-2 transition-all cursor-pointer text-left h-[160px] ${themeSetting === "dark" ? 'border-blue-500 bg-blue-500/5 shadow-md shadow-blue-500/10' : (isLight ? 'border-slate-200 hover:border-slate-300 hover:bg-slate-50' : 'border-slate-800 hover:border-slate-700 hover:bg-slate-800/50')}`}
+                                        >
+                                            {themeSetting === "dark" && <div className="absolute top-3 right-3 bg-blue-500 text-white rounded-full p-0.5"><CheckCircle2 className="w-4 h-4" /></div>}
+                                            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-slate-900 shadow-sm border border-slate-700 text-slate-200">
+                                                <Moon className="w-6 h-6" />
+                                            </div>
+                                            <div className="text-center">
+                                                <div className={`font-bold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>Dark</div>
+                                                <div className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Dark workspace</div>
+                                            </div>
+                                        </button>
+
+                                        {/* System Theme Card */}
+                                        <button 
+                                            onClick={() => setThemeSetting("system")}
+                                            className={`relative p-5 rounded-2xl flex flex-col items-center justify-center gap-3 border-2 transition-all cursor-pointer text-left h-[160px] overflow-hidden group ${themeSetting === "system" ? 'border-blue-500 bg-blue-500/5 shadow-md shadow-blue-500/10' : (isLight ? 'border-slate-200 hover:border-slate-300 hover:bg-slate-50' : 'border-slate-800 hover:border-slate-700 hover:bg-slate-800/50')}`}
+                                        >
+                                            {/* AuraBrand Background for System */}
+                                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-blue-500/5 to-purple-500/10 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                                            
+                                            {themeSetting === "system" && <div className="absolute top-3 right-3 bg-blue-500 text-white rounded-full p-0.5 z-10"><CheckCircle2 className="w-4 h-4" /></div>}
+                                            
+                                            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white/10 backdrop-blur-md shadow-sm border border-white/20 text-blue-500 relative z-10">
+                                                <Sparkles className="w-6 h-6" />
+                                            </div>
+                                            <div className="text-center relative z-10">
+                                                <div className={`font-bold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>System</div>
+                                                <div className={`text-[10px] sm:text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Follow device</div>
+                                            </div>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
