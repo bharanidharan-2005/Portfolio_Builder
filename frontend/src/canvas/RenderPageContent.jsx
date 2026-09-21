@@ -419,7 +419,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                     {/* Background Layer */}
                     {bgImage && (
                         <div className="absolute inset-0 z-0 pointer-events-none rounded-[2.5rem] overflow-hidden">
-                            <div className={`absolute inset-0 z-10 backdrop-blur-[4px] ${isLight ? 'bg-white/80' : 'bg-[#0B0C10]/80'}`}></div>
+                            <div className="absolute inset-0 z-10 backdrop-blur-[4px] bg-[#0B0C10]/80"></div>
                             <img src={bgImage} alt="About Background" className="w-full h-full object-cover" />
                         </div>
                     )}
