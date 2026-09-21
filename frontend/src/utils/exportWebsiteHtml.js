@@ -18,6 +18,18 @@ const getAbsoluteUrl = (url) => {
     return 'https://portfolio-builder-one-brown.vercel.app' + (url.startsWith('/') ? '' : '/') + url;
 };
 
+const getTechIconHtml = (techName) => {
+    if (!techName) return '';
+    const nameMap = {
+        'reactjs': 'react', 'node': 'nodedotjs', 'nodejs': 'nodedotjs', 'js': 'javascript', 
+        'ts': 'typescript', 'sql': 'postgresql', 'postgres': 'postgresql', 'cpp': 'cplusplus',
+        'c#': 'csharp', 'vue': 'vuedotjs', 'vuejs': 'vuedotjs', 'aws': 'amazonaws'
+    };
+    let normalized = String(techName).toLowerCase().replace(/[^a-z0-9+#-]/g, '');
+    normalized = nameMap[normalized] || normalized;
+    return `<img src="https://cdn.simpleicons.org/${normalized}/white" alt="" class="w-4 h-4 inline-block mr-1.5 opacity-80 group-hover:opacity-100 transition-opacity drop-shadow-md" onerror="this.outerHTML='<span class=\\'w-1.5 h-1.5 rounded-full bg-blue-400 inline-block mr-1.5\\'></span>'" />`;
+};
+
 export function buildPortfolioHtml({ pages, activePage, selectedSection, localContent, userData }) {
     if (!pages || pages.length === 0) {
         notify("No data structure sections found to build.", 'error');
@@ -268,7 +280,7 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                         <!-- FIX: Use p.desc instead of p.description to pull the exact project data! -->
                         <p class="text-lg sm:text-xl text-slate-400 leading-relaxed font-medium stagger-custom-right group-hover:text-slate-300 transition-colors" style="transition-delay: ${(i*0.2) + 0.2}s">${escapeHtml(p.desc)}</p>
                         <div class="flex flex-wrap gap-3 pt-4 stagger-custom-up" style="transition-delay: ${(i*0.2) + 0.3}s">
-                            ${escapeHtml(p.tags).split(',').map(tag => `<span class="px-5 py-2.5 text-xs font-mono font-bold rounded-xl bg-black/40 border ${theme.border} ${theme.accentText} shadow-sm group-hover:shadow-md transition-shadow">${tag.trim()}</span>`).join('')}
+                            ${escapeHtml(p.tags).split(',').map(tag => `<span class="px-5 py-2.5 text-xs font-mono font-bold rounded-xl bg-black/40 border ${theme.border} ${theme.accentText} shadow-sm group-hover:shadow-md transition-shadow flex items-center">${getTechIconHtml(tag.trim())} ${tag.trim()}</span>`).join('')}
                         </div>
                         ${p.projectUrl ? `<div class="pt-8 stagger-fade-up" style="transition-delay: ${(i*0.2) + 0.4}s"><a href="${escapeHtml(p.projectUrl)}" target="_blank" class="inline-flex px-8 py-4 text-sm font-bold rounded-xl ${theme.accentBg || 'bg-blue-600'} text-white hover:scale-110 hover:-translate-y-2 transition-all shadow-lg hover:shadow-[0_15px_30px_rgba(59,130,246,0.4)]">View Project &rarr;</a></div>` : ''}
                     </div>
@@ -318,7 +330,7 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
     }
 
     const fullHtmlDocument = `<!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en" class="scroll-smooth ${isDark ? 'dark' : ''}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -396,7 +408,7 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
         .animate-fade-in-right { animation: fadeInRight 1.2s cubic-bezier(0.19, 1, 0.22, 1) forwards; }
     </style>
 </head>
-<body class="${theme.bodyBg} ${isDark ? 'text-slate-200' : 'text-slate-800'} min-h-screen selection:bg-blue-500/30 overflow-hidden" style="${bgStyleStr}">
+<body class="${theme.bodyBg} ${isDark ? 'text-slate-200' : 'text-slate-800'} min-h-screen selection:bg-blue-500/30 overflow-hidden" style="font-family: ${fontFamilyStyle}; ${bgStyleStr}">
     
     ${frontpageHtml}
 
@@ -423,6 +435,15 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
             }, { threshold: 0.1, rootMargin: "0px 0px -100px 0px" });
 
             document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
+
+            // Fix hash navigation on direct page load
+            if (window.location.hash && window.location.hash.length > 1) {
+                const overlay = document.getElementById('frontpage-overlay');
+                if (overlay) {
+                    overlay.style.display = 'none';
+                    document.body.classList.remove('overflow-hidden');
+                }
+            }
         });
 
         function dismissFrontpage() {
