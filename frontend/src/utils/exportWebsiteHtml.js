@@ -15,7 +15,8 @@ const escapeHtml = (value) => {
 const getAbsoluteUrl = (url) => {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
-    return 'https://portfolio-builder-one-brown.vercel.app' + (url.startsWith('/') ? '' : '/') + url;
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://aurabuild.io';
+    return baseUrl + (url.startsWith('/') ? '' : '/') + url;
 };
 
 const getTechIconHtml = (techName) => {
@@ -43,7 +44,7 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
     const activeSections = (targetPage && targetPage.sections) || pages[0].sections || [];
 
     const globalBg = (userData && userData.globalBg) ? getAbsoluteUrl(userData.globalBg) : '';
-    const isDark = theme.bodyBg?.includes('black') || theme.bodyBg?.includes('#0');
+    const isDark = theme.bodyBg?.includes('black') || theme.bodyBg?.includes('#0') || /bg-(slate|gray|zinc|neutral|stone)-9/.test(theme.bodyBg) || theme.bodyBg?.includes('dark:');
 
     const heroSec = activeSections.find(s => (s.section_type || '').toLowerCase().trim() === 'hero');
     const heroData = heroSec?.content_data || {};
@@ -338,6 +339,11 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=Fira+Code:wght@400;500;600;700&family=Geist:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Lora:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=Playfair+Display:wght@400;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Raleway:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Sora:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700&family=Urbanist:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+      }
+    </script>
     <link rel="manifest" href="/manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">

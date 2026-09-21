@@ -25,10 +25,10 @@ const BROAD_JOB_CONCEPTS = [
 
 const UNSPLASH_GALLERY = [
     { id: 'particles_3d', url: 'PARTICLES_3D', label: '✨ Interactive Particles' },
-    { id: 'abs_particles', url: '/bg_3d_particles.jpg', label: '3D Particles' },
-    { id: 'abs_platform', url: '/bg_glow_platform.jpg', label: 'Cyber Platform' },
-    { id: 'abs_blocks', url: '/bg_dark_blocks.jpg', label: 'Dark Blocks' },
-    { id: 'abs_geo', url: '/bg_abstract_geo.jpg', label: 'Vibrant Geo' },
+    { id: 'abs_particles', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1920&q=80', label: '3D Particles' },
+    { id: 'abs_platform', url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=1920&q=80', label: 'Cyber Platform' },
+    { id: 'abs_blocks', url: 'https://images.unsplash.com/photo-1605810230434-7631ac76ec81?auto=format&fit=crop&w=1920&q=80', label: 'Dark Blocks' },
+    { id: 'abs_geo', url: 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?auto=format&fit=crop&w=1920&q=80', label: 'Vibrant Geo' },
     { id: 'tech1', url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070', label: 'Tech Nodes' },
     { id: 'tech2', url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070', label: 'Circuit Board' },
     { id: 'space1', url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072', label: 'Global Network' },
