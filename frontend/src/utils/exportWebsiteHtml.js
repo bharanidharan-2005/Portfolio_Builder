@@ -22,14 +22,12 @@ const getAbsoluteUrl = (url) => {
 
 const getTechIconHtml = (techName) => {
     if (!techName) return '';
-    const nameMap = {
-        'reactjs': 'react', 'node': 'nodedotjs', 'nodejs': 'nodedotjs', 'js': 'javascript', 
-        'ts': 'typescript', 'sql': 'postgresql', 'postgres': 'postgresql', 'cpp': 'cplusplus',
-        'c#': 'csharp', 'vue': 'vuedotjs', 'vuejs': 'vuedotjs', 'aws': 'amazonaws'
-    };
-    let normalized = String(techName).toLowerCase().replace(/[^a-z0-9+#-]/g, '');
-    normalized = nameMap[normalized] || normalized;
-    return `<img src="https://cdn.simpleicons.org/${normalized}/white" alt="" class="w-4 h-4 inline-block mr-1.5 opacity-80 group-hover:opacity-100 transition-opacity drop-shadow-md" onerror="this.outerHTML='<span class=\\'w-1.5 h-1.5 rounded-full bg-blue-400 inline-block mr-1.5\\'></span>'" />`;
+    const url = getSkillIconUrl(techName);
+    if (url) {
+        return `<img src="${url}" alt="" class="w-4 h-4 object-contain inline-block mr-1.5 drop-shadow-md" />`;
+    }
+    const fallbackSvg = getFallbackIconSvg(techName);
+    return fallbackSvg.replace('w-7 h-7', 'w-4 h-4 inline-block mr-1.5');
 };
 
 const getFallbackIconSvg = (skillName) => {
@@ -60,6 +58,24 @@ const getFallbackIconSvg = (skillName) => {
     return wrapper('<path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/>');
 };
 
+const FRONT_PAGE_TEMPLATES = {
+    template1: { bgClass: 'bg-[#05050A]', textClass: 'text-white', accentClass: 'text-blue-400', buttonClass: 'bg-blue-600', layoutDir: 'lg:flex-row', visual: 'Image' },
+    template2: { bgClass: 'bg-slate-950', textClass: 'text-white', accentClass: 'text-emerald-400', buttonClass: 'bg-emerald-600', layoutDir: 'lg:flex-row-reverse', visual: 'Code' },
+    template3: { bgClass: 'bg-[#0f172a]', textClass: 'text-slate-100', accentClass: 'text-purple-400', buttonClass: 'bg-purple-600', layoutDir: 'lg:flex-row', visual: 'Sphere' },
+    template4: { bgClass: 'bg-zinc-950', textClass: 'text-zinc-100', accentClass: 'text-rose-400', buttonClass: 'bg-rose-600', layoutDir: 'lg:flex-row', visual: 'Icons' },
+    template5: { bgClass: 'bg-[#1e1e2e]', textClass: 'text-[#cdd6f4]', accentClass: 'text-[#89b4fa]', buttonClass: 'bg-[#89b4fa]', layoutDir: 'lg:flex-row-reverse', visual: 'Image' },
+    template6: { bgClass: 'bg-[#0B0C10]', textClass: 'text-[#C5C6C7]', accentClass: 'text-[#66FCF1]', buttonClass: 'bg-[#45A29E]', layoutDir: 'lg:flex-row', visual: 'Code' },
+    template7: { bgClass: 'bg-black', textClass: 'text-gray-200', accentClass: 'text-yellow-400', buttonClass: 'bg-yellow-600', layoutDir: 'lg:flex-row-reverse', visual: 'Sphere' },
+    template8: { bgClass: 'bg-indigo-950', textClass: 'text-indigo-100', accentClass: 'text-indigo-400', buttonClass: 'bg-indigo-600', layoutDir: 'lg:flex-row', visual: 'Icons' },
+    template9: { bgClass: 'bg-[#121212]', textClass: 'text-[#E0E0E0]', accentClass: 'text-[#BB86FC]', buttonClass: 'bg-[#BB86FC]', layoutDir: 'lg:flex-row', visual: 'Image' },
+    template10: { bgClass: 'bg-slate-900', textClass: 'text-slate-200', accentClass: 'text-cyan-400', buttonClass: 'bg-cyan-600', layoutDir: 'lg:flex-row-reverse', visual: 'Code' },
+    template11: { bgClass: 'bg-[#282c34]', textClass: 'text-[#abb2bf]', accentClass: 'text-[#61afef]', buttonClass: 'bg-[#61afef]', layoutDir: 'lg:flex-row', visual: 'Icons' },
+    template12: { bgClass: 'bg-gray-950', textClass: 'text-gray-100', accentClass: 'text-orange-400', buttonClass: 'bg-orange-600', layoutDir: 'lg:flex-row-reverse', visual: 'Sphere' },
+    template13: { bgClass: 'bg-[#1a1a1a]', textClass: 'text-[#f2f2f2]', accentClass: 'text-[#ff6b6b]', buttonClass: 'bg-[#ff6b6b]', layoutDir: 'lg:flex-row', visual: 'Image' },
+    template14: { bgClass: 'bg-[#0d1117]', textClass: 'text-[#c9d1d9]', accentClass: 'text-[#58a6ff]', buttonClass: 'bg-[#1f6feb]', layoutDir: 'lg:flex-row-reverse', visual: 'Code' },
+    template15: { bgClass: 'bg-[#11111b]', textClass: 'text-[#cdd6f4]', accentClass: 'text-[#f38ba8]', buttonClass: 'bg-[#f38ba8]', layoutDir: 'lg:flex-row', visual: 'Icons' }
+};
+
 export function buildPortfolioHtml({ pages, activePage, selectedSection, localContent, userData }) {
     if (!pages || pages.length === 0) {
         notify("No data structure sections found to build.", 'error');
@@ -87,67 +103,106 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
     const frontFirstName = escapeHtml(fullName.split(' ')[0]);
     const roleImageUrl = getAbsoluteUrl(getRoleImage(heroData.subheading || ""));
 
+    const templateKey = userData?.frontpageTemplate || 'template1';
+    const tplConfig = FRONT_PAGE_TEMPLATES[templateKey] || FRONT_PAGE_TEMPLATES.template1;
+
+    let rightVisualHtml = '';
+    if (tplConfig.visual === 'Code') {
+        rightVisualHtml = `
+            <div class="relative w-full max-w-md h-[400px]">
+                <div class="absolute top-10 right-10 w-64 h-40 bg-slate-800/80 backdrop-blur-xl border border-slate-700 rounded-2xl p-4 shadow-2xl animate-[float_6s_ease-in-out_infinite]">
+                    <div class="w-full h-2 bg-slate-700 rounded mb-4"></div>
+                    <div class="w-3/4 h-2 bg-blue-500 rounded mb-2"></div>
+                    <div class="w-1/2 h-2 bg-emerald-500 rounded mb-2"></div>
+                    <div class="w-5/6 h-2 bg-purple-500 rounded mb-2"></div>
+                </div>
+                <div class="absolute bottom-10 left-0 w-56 h-48 bg-slate-900/90 backdrop-blur-xl border border-slate-700 rounded-2xl p-4 shadow-2xl animate-[float_7s_ease-in-out_infinite_reverse]">
+                    <div class="w-full h-2 bg-slate-700 rounded mb-2 mt-4"></div>
+                    <div class="w-2/3 h-2 bg-slate-700 rounded mb-2"></div>
+                    <div class="w-full h-2 bg-emerald-500/50 rounded mb-2"></div>
+                </div>
+            </div>`;
+    } else if (tplConfig.visual === 'Sphere') {
+        rightVisualHtml = `
+            <div class="relative w-full max-w-md h-[400px] flex items-center justify-center perspective-[1000px]">
+                <div class="w-64 h-64 border border-blue-500/30 rounded-full flex items-center justify-center preserve-3d animate-[spin_20s_linear_infinite]">
+                    <div class="w-48 h-48 border border-purple-500/40 rounded-full preserve-3d animate-[spin_15s_linear_infinite_reverse]"></div>
+                </div>
+            </div>`;
+    } else if (tplConfig.visual === 'Icons') {
+        rightVisualHtml = `
+            <div class="relative w-full max-w-md h-[400px] flex items-center justify-center">
+                <div class="absolute inset-0 bg-gradient-to-tr from-blue-500/20 to-purple-500/20 rounded-full blur-[80px]"></div>
+                <div class="absolute top-[15%] left-[10%] p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl animate-[float_4s_ease-in-out_infinite]"></div>
+                <div class="absolute top-[30%] left-[25%] p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl animate-[float_5s_ease-in-out_infinite_reverse]"></div>
+                <div class="absolute top-[45%] left-[40%] p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl animate-[float_6s_ease-in-out_infinite]"></div>
+            </div>`;
+    } else {
+        rightVisualHtml = `
+            <div class="relative w-[250px] h-[250px] sm:w-[350px] sm:h-[350px] lg:w-[500px] lg:h-[500px] animate-[float_8s_ease-in-out_infinite]">
+                <div class="absolute inset-0 bg-blue-500/20 rounded-full blur-[100px] animate-pulse"></div>
+                <img src="${roleImageUrl}" alt="Hero Visual" class="absolute inset-0 w-full h-full object-cover mix-blend-screen opacity-90 rounded-3xl drop-shadow-2xl hover:scale-105 transition-transform duration-700 hover:rotate-2" />
+            </div>`;
+    }
+
     // 1. Build Frontpage Overlay
     const frontpageHtml = `
-    <div id="frontpage-overlay" class="fixed inset-0 z-[100] flex flex-col ${theme.bodyBg} transition-opacity duration-1000 ease-in-out" style="${globalBg ? `background-image: url('${globalBg}'); background-size: cover; background-position: center; background-attachment: fixed;` : ''}">
+    <div id="frontpage-overlay" class="fixed inset-0 z-[100] flex flex-col ${tplConfig.bgClass} ${tplConfig.textClass} transition-opacity duration-1000 ease-in-out" style="${globalBg ? `background-image: url('${globalBg}'); background-size: cover; background-position: center; background-attachment: fixed;` : ''}">
         ${globalBg ? '<div class="absolute inset-0 bg-black/60 backdrop-blur-md z-0 pointer-events-none"></div>' : ''}
         
         <header class="w-full relative z-10 animate-fade-in-down" style="animation-delay: 0.1s">
             <div class="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg shadow-inner ${theme.accentBg || 'bg-blue-600'} text-white">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg shadow-inner ${tplConfig.buttonClass} text-white">
                         ${frontInitials}
                     </div>
-                    <span class="font-black tracking-widest uppercase hidden sm:block text-sm md:text-base ${theme.textPrimary}"> 
+                    <span class="font-black tracking-widest uppercase hidden sm:block text-sm md:text-base"> 
                         ${frontFirstName}
                     </span>
                 </div>
-                <div class="hidden lg:flex items-center gap-8 font-semibold text-sm ${theme.textSecondary}">
+                <div class="hidden lg:flex items-center gap-8 font-semibold text-sm opacity-80">
                     <span class="hover:opacity-100 cursor-pointer transition-opacity">About</span>
                     <span class="hover:opacity-100 cursor-pointer transition-opacity">Skills</span>
                     <span class="hover:opacity-100 cursor-pointer transition-opacity">Projects</span>
                     <span class="hover:opacity-100 cursor-pointer transition-opacity">Contact</span>
                 </div>
-                <button onclick="dismissFrontpage()" class="px-6 py-2.5 rounded-lg text-sm font-bold transition-all shadow-lg text-white flex items-center gap-2 ${theme.accentBg || 'bg-blue-600'} hover:scale-105 hover:-translate-y-1">
+                <button onclick="dismissFrontpage()" class="px-6 py-2.5 rounded-lg text-sm font-bold transition-all shadow-lg text-white flex items-center gap-2 ${tplConfig.buttonClass} hover:scale-105 hover:-translate-y-1">
                     Resume
                 </button>
             </div>
         </header>
 
-        <main class="flex-1 flex flex-col lg:flex-row items-center justify-center p-6 lg:p-12 xl:p-24 gap-12 lg:gap-20 max-w-7xl mx-auto w-full relative z-10">
-            <div class="flex-1 w-full space-y-8 flex flex-col lg:items-start text-center lg:text-left items-center animate-fade-in-left" style="animation-delay: 0.2s">
-                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold border ${theme.border} bg-white/5 backdrop-blur-md shadow-sm">
+        <main class="flex-1 flex flex-col ${tplConfig.layoutDir} items-center justify-center p-6 lg:p-12 xl:p-24 gap-12 lg:gap-20 max-w-7xl mx-auto w-full relative z-10">
+            <div class="flex-1 w-full space-y-8 flex flex-col ${tplConfig.layoutDir.includes('row-reverse') ? 'lg:items-end text-center lg:text-right' : 'lg:items-start text-center lg:text-left'} items-center animate-fade-in-left" style="animation-delay: 0.2s">
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold border border-white/10 bg-white/5 backdrop-blur-md shadow-sm">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span class="${theme.textSecondary}">Open to opportunities</span>
+                    <span class="opacity-90">Open to opportunities</span>
                 </div>
                 
-                <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-tight ${theme.textPrimary} drop-shadow-xl hover:scale-[1.01] transition-transform duration-500">
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight w-full max-w-3xl drop-shadow-xl hover:scale-[1.01] transition-transform duration-500">
                     ${frontName}
                 </h1>
                 
-                <p class="text-xl md:text-2xl font-bold ${theme.accentText}">
+                <p class="text-xl md:text-2xl font-bold w-full ${tplConfig.accentClass}">
                     ${frontHeadline}
                 </p>
                 
-                <p class="text-lg md:text-xl leading-relaxed w-full max-w-xl font-medium ${theme.textSecondary} ${!frontBio ? 'opacity-60 italic' : ''}">
+                <p class="text-lg md:text-xl leading-relaxed w-full max-w-xl font-medium opacity-80 ${!frontBio ? 'opacity-60 italic' : ''}">
                     ${frontBio || 'Introduction...'}
                 </p>
 
-                <div class="flex flex-wrap items-center gap-4 pt-4 justify-center lg:justify-start">
-                    <button onclick="dismissFrontpage()" class="px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all shadow-lg shadow-blue-500/20 hover:shadow-2xl hover:shadow-blue-500/40 text-white flex items-center gap-2 ${theme.accentBg || 'bg-blue-600'} hover:scale-110 hover:-translate-y-1">
+                <div class="flex flex-wrap items-center gap-4 pt-4 w-full ${tplConfig.layoutDir.includes('row-reverse') ? 'justify-center lg:justify-end' : 'justify-center lg:justify-start'}">
+                    <button onclick="dismissFrontpage()" class="px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all shadow-lg hover:shadow-2xl hover:shadow-blue-500/40 text-white flex items-center gap-2 ${tplConfig.buttonClass} hover:scale-110 hover:-translate-y-1">
                         View My Work &rarr;
                     </button>
-                    <button onclick="dismissFrontpage()" class="px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all bg-transparent hover:bg-white/10 border ${theme.border} ${theme.textPrimary} shadow-sm hover:shadow-md flex items-center gap-2 hover:scale-110 hover:-translate-y-1">
+                    <button onclick="dismissFrontpage()" class="px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all bg-transparent hover:bg-white/10 border border-current shadow-sm hover:shadow-md flex items-center gap-2 hover:scale-110 hover:-translate-y-1">
                         Download Resume
                     </button>
                 </div>
             </div>
 
             <div class="flex-1 w-full flex justify-center relative animate-fade-in-right" style="animation-delay: 0.4s">
-                <div class="relative w-[250px] h-[250px] sm:w-[350px] sm:h-[350px] lg:w-[500px] lg:h-[500px] animate-float">
-                    <div class="absolute inset-0 bg-blue-500/20 rounded-full blur-[80px] animate-pulse"></div>
-                    <img src="${roleImageUrl}" alt="Hero Visual" class="absolute inset-0 w-full h-full object-cover mix-blend-screen opacity-90 rounded-3xl drop-shadow-2xl hover:scale-105 transition-transform duration-700 hover:rotate-2" />
-                </div>
+                ${rightVisualHtml}
             </div>
         </main>
     </div>
@@ -222,37 +277,37 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
             }
 
             sectionsHtml += `
-            <section class="py-16 sm:py-24 px-6 sm:px-12 relative rounded-3xl overflow-visible border ${theme.border} ${!bgImage ? theme.cardBg || 'bg-black/40 backdrop-blur-xl' : ''} mb-16 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)]" ${bgInlineStyle}>
-                <div class="relative z-10 w-full max-w-7xl mx-auto flex flex-col-reverse lg:flex-row items-center gap-12 lg:gap-20">
-                    <div class="flex-1 space-y-8 flex flex-col items-center lg:items-start text-center lg:text-left stagger-item stagger-fade-left">
-                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold border ${theme.border} bg-white/5 backdrop-blur-md shadow-sm">
+            <section class="py-16 sm:py-24 px-6 sm:px-12 relative rounded-3xl overflow-visible border ${theme.border} ${!bgImage ? tplConfig.bgClass : ''} mb-16 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)]" ${bgInlineStyle}>
+                <div class="relative z-10 w-full max-w-7xl mx-auto flex flex-col ${tplConfig.layoutDir} items-center gap-12 lg:gap-20">
+                    <div class="flex-1 space-y-8 flex flex-col items-center ${tplConfig.layoutDir.includes('row-reverse') ? 'lg:items-end text-center lg:text-right' : 'lg:items-start text-center lg:text-left'} stagger-item stagger-fade-left">
+                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold border border-white/10 bg-white/5 backdrop-blur-md shadow-sm">
                             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span class="${theme.textSecondary}">Open to opportunities</span>
+                            <span class="${tplConfig.textClass} opacity-90">Open to opportunities</span>
                         </div>
                         
                         <div class="space-y-4 w-full">
-                            <h1 class="font-black tracking-tight leading-tight w-full max-w-3xl text-4xl sm:text-5xl lg:text-6xl break-words ${bgImage ? 'text-white' : theme.textPrimary}">
+                            <h1 class="font-black tracking-tight leading-tight w-full max-w-3xl text-4xl sm:text-5xl lg:text-6xl break-words ${bgImage ? 'text-white' : tplConfig.textClass}">
                                 ${escapeHtml(data.heading) || 'YOUR NAME'}
                             </h1>
-                            <p class="text-xl md:text-2xl font-bold w-full ${theme.accentText}">
+                            <p class="text-xl md:text-2xl font-bold w-full ${tplConfig.accentClass}">
                                 ${escapeHtml(data.subheading) || 'Professional Headline'}
                             </p>
-                            <p class="text-lg leading-relaxed w-full max-w-xl font-medium ${bgImage ? 'text-white/80' : theme.textSecondary} ${!(data.description || data.text) ? 'opacity-60 italic' : ''}">
+                            <p class="text-lg leading-relaxed w-full max-w-xl font-medium ${bgImage ? 'text-white/80' : `${tplConfig.textClass} opacity-80`} ${!(data.description || data.text) ? 'opacity-60 italic' : ''}">
                                 ${escapeHtml(data.description || data.text) || 'Introduction...'}
                             </p>
                         </div>
                         
-                        <div class="flex flex-col items-center lg:items-start gap-6 pt-4 w-full">
-                            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 w-full">
-                                <button onclick="document.getElementById('section-${activeSections.find(s=>s.section_type==='projects_grid')?.id||''}').scrollIntoView({behavior:'smooth'})" class="px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all shadow-lg hover:shadow-[0_20px_40px_rgba(59,130,246,0.3)] ${theme.accentBg || 'bg-blue-600'} text-white flex items-center gap-2 hover:scale-110 hover:-translate-y-2">
+                        <div class="flex flex-col items-center ${tplConfig.layoutDir.includes('row-reverse') ? 'lg:items-end' : 'lg:items-start'} gap-6 pt-4 w-full">
+                            <div class="flex flex-wrap items-center justify-center ${tplConfig.layoutDir.includes('row-reverse') ? 'lg:justify-end' : 'lg:justify-start'} gap-4 w-full">
+                                <button onclick="document.getElementById('section-${activeSections.find(s=>s.section_type==='projects_grid')?.id||''}').scrollIntoView({behavior:'smooth'})" class="px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all shadow-lg hover:shadow-[0_20px_40px_rgba(59,130,246,0.3)] ${tplConfig.buttonClass} text-white flex items-center gap-2 hover:scale-110 hover:-translate-y-2">
                                     View My Work &rarr;
                                 </button>
-                                <button class="px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all bg-transparent hover:bg-white/10 border shadow-sm hover:shadow-lg hover:shadow-white/10 ${theme.textPrimary} ${theme.border} hover:scale-110 hover:-translate-y-2">
+                                <button class="px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all bg-transparent hover:bg-white/10 border shadow-sm hover:shadow-lg hover:shadow-white/10 ${tplConfig.textClass} border-current hover:scale-110 hover:-translate-y-2">
                                     Download Resume
                                 </button>
                             </div>
                             
-                            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-3 w-full mt-2">
+                            <div class="flex flex-wrap items-center justify-center ${tplConfig.layoutDir.includes('row-reverse') ? 'lg:justify-end' : 'lg:justify-start'} gap-3 w-full mt-2">
                                 ${seeLiveDropdown}
                                 ${projectsDropdown}
                             </div>
@@ -260,8 +315,7 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                     </div>
 
                     <div class="flex-1 w-full max-w-md lg:max-w-none relative aspect-square flex justify-center items-center stagger-item stagger-fade-right animate-float" style="transition-delay: 0.2s">
-                        <div class="absolute inset-0 bg-gradient-to-tr from-blue-500/20 to-purple-500/20 rounded-full blur-[80px] animate-pulse"></div>
-                        <img src="${roleImageUrl}" alt="Hero Visual" class="absolute inset-0 w-full h-full object-cover mix-blend-screen opacity-90 rounded-3xl drop-shadow-2xl hover:scale-110 transition-transform duration-700 hover:rotate-6" />
+                        ${rightVisualHtml.replace('max-w-md h-[400px]', 'max-w-full h-full').replace('w-[250px] h-[250px]', 'w-full h-full')}
                     </div>
                 </div>
             </section>`;
