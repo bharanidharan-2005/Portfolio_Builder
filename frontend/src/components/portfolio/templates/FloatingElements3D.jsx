@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Download, Box, Sphere, Hexagon, Triangle } from 'lucide-react';
+import { ArrowRight, Download, Box, Globe, Hexagon, Triangle } from 'lucide-react';
 import { getRoleImage } from '../PortfolioFrontpage';
 
 const FloatingElements3D = ({ d }) => {
@@ -24,7 +24,7 @@ const FloatingElements3D = ({ d }) => {
                     transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
                     className="absolute bottom-[20%] right-[15%] w-32 h-32 bg-purple-500 rounded-full shadow-[10px_10px_30px_rgba(168,85,247,0.3),-10px_-10px_30px_rgba(255,255,255,0.8)] border border-purple-400/20 backdrop-blur-md flex items-center justify-center opacity-70"
                 >
-                    <Sphere className="w-12 h-12 text-white" />
+                    <Globe className="w-12 h-12 text-white" />
                 </motion.div>
                 
                 <motion.div 

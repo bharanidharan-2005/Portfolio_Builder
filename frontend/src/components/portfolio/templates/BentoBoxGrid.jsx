@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Download, Mail, Github, Linkedin, MapPin, Briefcase } from 'lucide-react';
+import { ArrowRight, Download, Mail, GitBranch, Link, MapPin, Briefcase } from 'lucide-react';
 import { getRoleImage } from '../PortfolioFrontpage';
 
 const BentoBoxGrid = ({ d }) => {
@@ -79,11 +79,11 @@ const BentoBoxGrid = ({ d }) => {
                 {/* Socials Box */}
                 <motion.div variants={item} className="col-span-1 md:col-span-1 row-span-1 bg-white rounded-3xl p-6 flex flex-col justify-center gap-4 shadow-sm border border-zinc-200">
                     <a href="#" className="flex items-center gap-3 p-3 rounded-2xl hover:bg-zinc-100 transition-colors">
-                        <Github className="w-5 h-5 text-zinc-700" />
+                        <GitBranch className="w-5 h-5 text-zinc-700" />
                         <span className="font-semibold text-zinc-700 text-sm">GitHub</span>
                     </a>
                     <a href="#" className="flex items-center gap-3 p-3 rounded-2xl hover:bg-zinc-100 transition-colors">
-                        <Linkedin className="w-5 h-5 text-blue-600" />
+                        <Link className="w-5 h-5 text-blue-600" />
                         <span className="font-semibold text-zinc-700 text-sm">LinkedIn</span>
                     </a>
                 </motion.div>

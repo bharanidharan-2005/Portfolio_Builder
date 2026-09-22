@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Download, Github, Linkedin, Mail } from 'lucide-react';
+import { ArrowRight, Download, GitBranch, Link, Mail } from 'lucide-react';
 import { getRoleImage } from '../PortfolioFrontpage';
 
 const CardFlip3D = ({ d }) => {
@@ -52,10 +52,10 @@ const CardFlip3D = ({ d }) => {
                     
                     <div className="flex gap-6 mb-12">
                         <a href="#" className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors">
-                            <Github className="w-8 h-8" />
+                            <GitBranch className="w-8 h-8" />
                         </a>
                         <a href="#" className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors">
-                            <Linkedin className="w-8 h-8" />
+                            <Link className="w-8 h-8" />
                         </a>
                         <a href="#" className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors">
                             <Mail className="w-8 h-8" />
