@@ -37,8 +37,8 @@ const PortfolioFrontpage = ({ userData, sections, themeMode, onVisualize }) => {
     const lastName = name.split(' ').slice(1).join(' ');
     const initials = name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
-    const d = { name, headline, bio, firstName, lastName, initials, onVisualize };
-
+    const roleImage = getRoleImage(headline);
+    const d = { name, headline, bio, firstName, lastName, initials, roleImage, onVisualize };
     switch (templateId) {
         case 'template1': return <MinimalistCentered d={d} />;
         case 'template2': return <SplitScreen d={d} />;

@@ -1,10 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Download, GitBranch, Link, Mail } from 'lucide-react';
-import { getRoleImage } from '../PortfolioFrontpage';
 
 const CardFlip3D = ({ d }) => {
-    const roleImage = getRoleImage(d.headline);
+    const roleImage = d.roleImage;
     
     return (
         <div className="min-h-screen w-full bg-slate-100 flex items-center justify-center p-4 sm:p-8 perspective-1000">

@@ -4,7 +4,7 @@ import { ArrowRight, Download, Mail, GitBranch, Link, MapPin, Briefcase } from '
 import { getRoleImage } from '../PortfolioFrontpage';
 
 const BentoBoxGrid = ({ d }) => {
-    const roleImage = getRoleImage(d.headline);
+    const roleImage = d.roleImage;
     
     const item = {
         hidden: { opacity: 0, scale: 0.95 },

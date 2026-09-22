@@ -25,7 +25,13 @@ const MinimalistCentered = ({ d }) => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.7, ease: "easeOut" }}
+                    className="flex flex-col items-center"
                 >
+                    {d.roleImage && (
+                        <div className="w-24 h-24 mb-6 rounded-full overflow-hidden border border-slate-200 shadow-sm">
+                            <img src={d.roleImage} alt={d.name} className="w-full h-full object-cover" />
+                        </div>
+                    )}
                     <span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400 mb-6 block">Portfolio &mdash; {new Date().getFullYear()}</span>
                     <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-[1.1] text-slate-900 mb-8">
                         {d.name}

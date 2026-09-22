@@ -54,7 +54,13 @@ const ParticleNetwork = ({ d }) => {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 1, ease: "easeOut" }}
+                    className="flex flex-col items-center"
                 >
+                    {d.roleImage && (
+                        <div className="w-28 h-28 mb-6 rounded-full overflow-hidden border-2 border-blue-500/50 shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+                            <img src={d.roleImage} alt={d.name} className="w-full h-full object-cover" />
+                        </div>
+                    )}
                     <span className="px-4 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-400 text-xs font-bold uppercase tracking-widest mb-8 inline-block">
                         System Online
                     </span>

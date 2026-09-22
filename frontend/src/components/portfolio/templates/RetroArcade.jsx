@@ -35,6 +35,12 @@ const RetroArcade = ({ d }) => {
                     transition={{ duration: 0.5 }}
                     className="bg-[#220044] border-4 border-[#ff00ff] p-8 sm:p-12 shadow-[0_0_30px_#ff00ff]"
                 >
+                    {d.roleImage && (
+                        <div className="w-32 h-32 mx-auto mb-6 border-4 border-[#00ffff] shadow-[0_0_15px_#00ffff] p-1 bg-[#110022]">
+                            <img src={d.roleImage} alt={d.name} className="w-full h-full object-cover grayscale sepia hue-rotate-[-50deg] saturate-200" style={{ imageRendering: 'pixelated' }} />
+                        </div>
+                    )}
+                    
                     <h2 className="text-2xl font-bold text-[#ffff00] mb-4 uppercase tracking-widest animate-pulse">
                         Ready Player One
                     </h2>

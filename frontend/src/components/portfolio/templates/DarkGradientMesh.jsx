@@ -30,7 +30,13 @@ const DarkGradientMesh = ({ d }) => {
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 1, ease: "easeOut" }}
+                    className="flex flex-col items-center"
                 >
+                    {d.roleImage && (
+                        <div className="w-32 h-32 mb-8 rounded-full overflow-hidden border-2 border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                            <img src={d.roleImage} alt={d.name} className="w-full h-full object-cover" />
+                        </div>
+                    )}
                     <h1 className="text-6xl md:text-8xl lg:text-9xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white via-white/80 to-white/40 mb-6">
                         {d.name}
                     </h1>

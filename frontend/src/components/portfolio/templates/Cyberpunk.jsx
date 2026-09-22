@@ -29,6 +29,18 @@ const Cyberpunk = ({ d }) => {
                     <div className="w-4 h-4 bg-pink-500 animate-pulse shadow-[0_0_10px_#ec4899]"></div>
                     <span className="text-cyan-400 font-bold tracking-widest text-sm drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]">CONNECTION ESTABLISHED</span>
                 </div>
+
+                {d.roleImage && (
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.4, delay: 0.1 }}
+                        className="w-32 h-32 mb-6 border-2 border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)] relative p-1"
+                    >
+                        <div className="absolute inset-0 bg-cyan-400/20 mix-blend-overlay z-10 pointer-events-none"></div>
+                        <img src={d.roleImage} alt={d.name} className="w-full h-full object-cover grayscale contrast-125" />
+                    </motion.div>
+                )}
                 
                 <motion.h1 
                     initial={{ opacity: 0, x: -50 }}

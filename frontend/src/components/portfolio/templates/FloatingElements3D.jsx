@@ -1,10 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Download, Box, Globe, Hexagon, Triangle } from 'lucide-react';
-import { getRoleImage } from '../PortfolioFrontpage';
 
 const FloatingElements3D = ({ d }) => {
-    const roleImage = getRoleImage(d.headline);
+    const roleImage = d.roleImage;
     
     return (
         <div className="min-h-screen w-full bg-slate-50 text-slate-900 relative overflow-hidden flex flex-col font-sans">

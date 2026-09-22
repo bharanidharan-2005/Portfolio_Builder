@@ -36,7 +36,13 @@ const Glassmorphism = ({ d }) => {
                 {/* Internal Card Shine Effect */}
                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/20 to-transparent opacity-50 pointer-events-none"></div>
                 
-                <span className="px-6 py-2 rounded-full bg-white/10 border border-white/20 text-xs font-bold uppercase tracking-widest text-white mb-8">
+                {d.roleImage && (
+                    <div className="w-28 h-28 mb-8 rounded-full border-4 border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.2)] overflow-hidden bg-white/10 backdrop-blur-md z-10 relative">
+                        <img src={d.roleImage} alt={d.name} className="w-full h-full object-cover" />
+                    </div>
+                )}
+
+                <span className="px-6 py-2 rounded-full bg-white/10 border border-white/20 text-xs font-bold uppercase tracking-widest text-white mb-8 relative z-10">
                     Welcome to my space
                 </span>
                 

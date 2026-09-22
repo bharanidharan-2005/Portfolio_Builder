@@ -1,10 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Download } from 'lucide-react';
-import { getRoleImage } from '../PortfolioFrontpage';
 
 const PhotographyFocus = ({ d }) => {
-    const roleImage = getRoleImage(d.headline);
+    const roleImage = d.roleImage;
     
     return (
         <div className="min-h-screen w-full bg-white text-black relative flex flex-col font-serif">

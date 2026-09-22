@@ -47,6 +47,11 @@ const TypographyHero = ({ d }) => {
                         transition={{ duration: 0.8, delay: 0.3 }}
                         className="max-w-sm"
                     >
+                        {d.roleImage && (
+                            <div className="w-full h-48 mb-6 overflow-hidden">
+                                <img src={d.roleImage} alt={d.name} className="w-full h-full object-cover grayscale" />
+                            </div>
+                        )}
                         <p className="text-xl font-bold mb-4">{d.headline}</p>
                         <p className="text-sm font-medium text-gray-600 mb-6">{d.bio}</p>
                         

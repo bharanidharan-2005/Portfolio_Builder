@@ -1,10 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Download } from 'lucide-react';
-import { getRoleImage } from '../PortfolioFrontpage';
 
 const ElegantSerif = ({ d }) => {
-    const roleImage = getRoleImage(d.headline);
+    const roleImage = d.roleImage;
     
     return (
         <div className="min-h-screen w-full bg-[#f8f5f2] text-[#2c2c2c] relative overflow-hidden flex flex-col font-serif">

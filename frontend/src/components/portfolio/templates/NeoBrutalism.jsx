@@ -26,7 +26,7 @@ const NeoBrutalism = ({ d }) => {
                 <div className="absolute top-10 right-10 w-24 h-24 bg-[#ff5e5e] border-4 border-black rounded-full shadow-[8px_8px_0_0_rgba(0,0,0,1)] hidden lg:block animate-[bounce_4s_infinite]"></div>
                 <div className="absolute bottom-20 left-10 w-32 h-16 bg-[#5698f4] border-4 border-black shadow-[8px_8px_0_0_rgba(0,0,0,1)] hidden lg:block transform -rotate-12"></div>
 
-                <div className="flex-1 w-full flex flex-col items-start bg-white border-4 border-black p-8 sm:p-12 shadow-[12px_12px_0_0_rgba(0,0,0,1)] relative">
+                <div className="flex-1 w-full flex flex-col items-start bg-white border-4 border-black p-8 sm:p-12 shadow-[12px_12px_0_0_rgba(0,0,0,1)] relative z-20">
                     <motion.div 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -77,6 +77,25 @@ const NeoBrutalism = ({ d }) => {
                         </button>
                     </motion.div>
                 </div>
+                
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.6, delay: 0.3 }}
+                    className="flex-1 w-full max-w-md hidden lg:block z-20"
+                >
+                    <div className="relative w-full aspect-[4/5] bg-white border-4 border-black shadow-[12px_12px_0_0_rgba(0,0,0,1)] p-4 transform rotate-3 hover:rotate-0 transition-transform duration-300">
+                        <div className="w-full h-full border-4 border-black overflow-hidden relative">
+                            {d.roleImage ? (
+                                <img src={d.roleImage} alt={d.headline} className="w-full h-full object-cover filter grayscale hover:grayscale-0 transition-all duration-500" />
+                            ) : (
+                                <div className="w-full h-full bg-[#4ade80] flex items-center justify-center">
+                                    <span className="text-9xl font-black">?</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </motion.div>
             </main>
         </div>
     );

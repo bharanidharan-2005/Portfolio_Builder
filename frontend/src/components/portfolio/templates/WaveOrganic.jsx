@@ -1,10 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Download } from 'lucide-react';
-import { getRoleImage } from '../PortfolioFrontpage';
 
 const WaveOrganic = ({ d }) => {
-    const roleImage = getRoleImage(d.headline);
+    const roleImage = d.roleImage;
     
     return (
         <div className="min-h-screen w-full bg-[#fcf9f2] text-[#4a5d23] relative overflow-hidden flex flex-col font-sans">
