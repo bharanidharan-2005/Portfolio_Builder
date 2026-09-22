@@ -11,6 +11,24 @@ import { PORTFOLIO_THEMES, PORTFOLIO_FONTS } from "../../canvas/themes.js";
 import { API } from "../../api";
 import { useWorkspace } from "../../context/WorkspaceContext";
 
+const FRONT_PAGE_TEMPLATES = [
+    { id: 'template1', name: 'Tech Core', bgClass: 'bg-[#05050A]', accentClass: 'text-blue-400', buttonClass: 'bg-blue-600', visual: 'Image' },
+    { id: 'template2', name: 'Emerald Code', bgClass: 'bg-slate-950', accentClass: 'text-emerald-400', buttonClass: 'bg-emerald-600', visual: 'Code' },
+    { id: 'template3', name: 'Purple Sphere', bgClass: 'bg-[#0f172a]', accentClass: 'text-purple-400', buttonClass: 'bg-purple-600', visual: 'Sphere' },
+    { id: 'template4', name: 'Rose Float', bgClass: 'bg-zinc-950', accentClass: 'text-rose-400', buttonClass: 'bg-rose-600', visual: 'Icons' },
+    { id: 'template5', name: 'Macchiato', bgClass: 'bg-[#1e1e2e]', accentClass: 'text-[#89b4fa]', buttonClass: 'bg-[#89b4fa]', visual: 'Image' },
+    { id: 'template6', name: 'Cyber Neon', bgClass: 'bg-[#0B0C10]', accentClass: 'text-[#66FCF1]', buttonClass: 'bg-[#45A29E]', visual: 'Code' },
+    { id: 'template7', name: 'Bumblebee', bgClass: 'bg-black', accentClass: 'text-yellow-400', buttonClass: 'bg-yellow-600', visual: 'Sphere' },
+    { id: 'template8', name: 'Indigo Deep', bgClass: 'bg-indigo-950', accentClass: 'text-indigo-400', buttonClass: 'bg-indigo-600', visual: 'Icons' },
+    { id: 'template9', name: 'Amethyst', bgClass: 'bg-[#121212]', accentClass: 'text-[#BB86FC]', buttonClass: 'bg-[#BB86FC]', visual: 'Image' },
+    { id: 'template10', name: 'Cyan Abstract', bgClass: 'bg-slate-900', accentClass: 'text-cyan-400', buttonClass: 'bg-cyan-600', visual: 'Code' },
+    { id: 'template11', name: 'One Dark', bgClass: 'bg-[#282c34]', accentClass: 'text-[#61afef]', buttonClass: 'bg-[#61afef]', visual: 'Icons' },
+    { id: 'template12', name: 'Orange Geo', bgClass: 'bg-gray-950', accentClass: 'text-orange-400', buttonClass: 'bg-orange-600', visual: 'Sphere' },
+    { id: 'template13', name: 'Crimson', bgClass: 'bg-[#1a1a1a]', accentClass: 'text-[#ff6b6b]', buttonClass: 'bg-[#ff6b6b]', visual: 'Image' },
+    { id: 'template14', name: 'Dim Blue', bgClass: 'bg-[#0d1117]', accentClass: 'text-[#58a6ff]', buttonClass: 'bg-[#1f6feb]', visual: 'Code' },
+    { id: 'template15', name: 'Mocha Pink', bgClass: 'bg-[#11111b]', accentClass: 'text-[#f38ba8]', buttonClass: 'bg-[#f38ba8]', visual: 'Icons' }
+];
+
 const BROAD_JOB_CONCEPTS = [
     "React", "Node.js", "Python", "Java", "Django", "Flask", "AWS", "Docker", 
     "Kubernetes", "SQL", "PostgreSQL", "MongoDB", "GraphQL", "TypeScript", 
@@ -1157,7 +1175,7 @@ export default function RightSidebar({
             </div>
             
             <div className={`flex rounded-xl p-1.5 border shadow-inner transition-colors duration-300 ${isLight ? 'bg-slate-200/50 border-slate-300' : 'bg-slate-900/90 border-slate-800'}`}>
-                {["themes", "fonts"].map((tab) => (
+                {["themes", "frontpage", "fonts"].map((tab) => (
                     <button
                         key={tab}
                         onClick={() => setPaletteTab(tab)}
@@ -1217,6 +1235,48 @@ export default function RightSidebar({
                                     >
                                         <span className="tracking-wide"> {theme.name} </span> 
                                         {isSelected && <CheckCircle2 className="w-4 h-4 shrink-0 animate-in zoom-in" />}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {paletteTab === "frontpage" && (
+                <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                    <div className="space-y-3">
+                        <label className={`block text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}> Hero Section Templates </label>
+                        <p className={`text-[10px] leading-relaxed mb-4 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Select a premium hero design. This dictates the first impression of your deployed portfolio.</p>
+                        
+                        <div className="grid grid-cols-2 gap-3 pb-6 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
+                            {FRONT_PAGE_TEMPLATES.map((tpl) => {
+                                const isSelected = (userData?.frontpageTemplate || 'template1') === tpl.id;
+                                return (
+                                    <button
+                                        key={tpl.id}
+                                        onClick={() => {
+                                            if (onTemplateChange) onTemplateChange(tpl.id);
+                                            setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Applied ${tpl.name} frontpage template.` }]);
+                                        }}
+                                        className={`flex flex-col rounded-xl overflow-hidden border text-left transition-all duration-300 cursor-pointer group hover:-translate-y-0.5 ${
+                                            isSelected 
+                                                ? 'border-purple-500 ring-2 ring-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.2)]' 
+                                                : (isLight ? 'border-slate-200 hover:border-purple-300' : 'border-slate-800 hover:border-purple-500/50')
+                                        }`}
+                                    >
+                                        <div className={`h-24 w-full ${tpl.bgClass} flex flex-col items-center justify-center relative overflow-hidden`}>
+                                            <div className={`w-8 h-2 rounded-full ${tpl.buttonClass} mb-2 shadow-lg`}></div>
+                                            <div className="flex gap-2">
+                                                <div className="w-12 h-1.5 rounded-full bg-white/20"></div>
+                                                <div className="w-8 h-1.5 rounded-full bg-white/20"></div>
+                                            </div>
+                                            <span className={`absolute bottom-2 right-2 text-[8px] font-black uppercase opacity-50 ${tpl.accentClass}`}>{tpl.visual}</span>
+                                        </div>
+                                        <div className={`p-2.5 w-full flex items-center justify-between ${isLight ? 'bg-white' : 'bg-slate-900/60 backdrop-blur-sm'}`}>
+                                            <span className={`text-[10px] font-bold truncate ${isLight ? 'text-slate-700' : 'text-slate-300'}`}> {tpl.name} </span> 
+                                            {isSelected && <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-purple-500 animate-in zoom-in" />}
+                                        </div>
                                     </button>
                                 );
                             })}
@@ -1737,21 +1797,21 @@ export default function RightSidebar({
 
     const renderFrontpageTemplates = () => {
         const templates = [
-            { id: "template1", name: "Minimalist Centered", icon: "✨" },
-            { id: "template2", name: "Split Screen", icon: "🌗" },
-            { id: "template3", name: "Glassmorphism", icon: "🧊" },
-            { id: "template4", name: "Neo-Brutalism", icon: "🏗️" },
-            { id: "template5", name: "Cyberpunk / Sci-Fi", icon: "🤖" },
-            { id: "template6", name: "Bento Box Grid", icon: "🍱" },
-            { id: "template7", name: "Elegant Serif", icon: "🖋️" },
-            { id: "template8", name: "Dark Gradient Mesh", icon: "🌌" },
-            { id: "template9", name: "Typography Hero", icon: "🔠" },
-            { id: "template10", name: "Card Flip 3D", icon: "🃏" },
-            { id: "template11", name: "Wave / Organic", icon: "🌊" },
-            { id: "template12", name: "Particle Network", icon: "⚛️" },
-            { id: "template13", name: "Retro Arcade", icon: "🕹️" },
-            { id: "template14", name: "Photography Focus", icon: "📸" },
-            { id: "template15", name: "3D Floating Elements", icon: "🧊" },
+            { id: "template1", name: "Minimalist Centered", visual: <div className="w-full h-20 bg-[#05050A] flex flex-col items-center justify-center gap-1"><div className="w-16 h-1.5 bg-white/80 rounded"></div><div className="w-10 h-1.5 bg-blue-500 rounded"></div></div> },
+            { id: "template2", name: "Split Screen", visual: <div className="w-full h-20 flex"><div className="flex-1 bg-slate-900 flex flex-col items-end justify-center pr-2 gap-1"><div className="w-8 h-1 bg-white/80 rounded"></div><div className="w-6 h-1 bg-emerald-400 rounded"></div></div><div className="flex-1 bg-emerald-500/20 relative"><div className="absolute inset-2 bg-emerald-500/40 rounded-sm"></div></div></div> },
+            { id: "template3", name: "Glassmorphism", visual: <div className="w-full h-20 bg-slate-900 relative flex items-center justify-center overflow-hidden"><div className="absolute w-12 h-12 bg-purple-500/50 rounded-full blur-md"></div><div className="w-16 h-10 bg-white/10 backdrop-blur-sm border border-white/20 rounded-md flex flex-col items-center justify-center gap-1"><div className="w-8 h-1 bg-white/80 rounded"></div></div></div> },
+            { id: "template4", name: "Neo-Brutalism", visual: <div className="w-full h-20 bg-yellow-400 flex items-center justify-center"><div className="w-16 h-10 bg-white border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] flex flex-col items-start justify-center pl-2 gap-1"><div className="w-8 h-1 bg-black rounded-none"></div></div></div> },
+            { id: "template5", name: "Cyberpunk / Sci-Fi", visual: <div className="w-full h-20 bg-[#0B0C10] relative flex items-center justify-center overflow-hidden"><div className="absolute inset-x-0 bottom-2 h-[1px] bg-cyan-500/50"></div><div className="w-16 h-8 border border-pink-500/50 bg-pink-500/10 flex items-center justify-center skew-x-[-10deg]"><div className="w-8 h-1 bg-cyan-400 rounded-sm shadow-[0_0_5px_rgba(34,211,238,1)]"></div></div></div> },
+            { id: "template6", name: "Bento Box Grid", visual: <div className="w-full h-20 bg-slate-100 p-2 grid grid-cols-2 grid-rows-2 gap-1"><div className="col-span-1 row-span-2 bg-white rounded-md border border-slate-200"></div><div className="bg-blue-500 rounded-md"></div><div className="bg-white rounded-md border border-slate-200"></div></div> },
+            { id: "template7", name: "Elegant Serif", visual: <div className="w-full h-20 bg-[#F5F5F0] flex flex-col items-center justify-center gap-1 border-y border-slate-300"><div className="w-12 h-1.5 bg-slate-800 rounded-none"></div><div className="w-16 h-0.5 bg-slate-400 rounded-none"></div></div> },
+            { id: "template8", name: "Dark Gradient Mesh", visual: <div className="w-full h-20 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-purple-900 via-slate-900 to-black flex items-center justify-center"><div className="w-12 h-2 bg-white/80 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)]"></div></div> },
+            { id: "template9", name: "Typography Hero", visual: <div className="w-full h-20 bg-white flex items-center justify-center"><div className="font-black text-slate-900 text-xs tracking-tighter scale-150 transform">HELLO.</div></div> },
+            { id: "template10", name: "Card Flip 3D", visual: <div className="w-full h-20 bg-slate-900 flex items-center justify-center perspective-[500px]"><div className="w-12 h-16 bg-blue-600 rounded-md transform rotate-y-[30deg] rotate-x-[15deg] shadow-xl border border-blue-400/50"></div></div> },
+            { id: "template11", name: "Wave / Organic", visual: <div className="w-full h-20 bg-slate-50 relative overflow-hidden"><div className="absolute inset-x-0 bottom-0 h-10 bg-blue-500 rounded-t-[100%]"></div><div className="absolute top-4 left-1/2 -translate-x-1/2 w-8 h-1.5 bg-slate-800 rounded-full"></div></div> },
+            { id: "template12", name: "Particle Network", visual: <div className="w-full h-20 bg-black relative flex items-center justify-center"><div className="absolute w-1 h-1 bg-cyan-400 rounded-full top-3 left-4"></div><div className="absolute w-1 h-1 bg-cyan-400 rounded-full bottom-4 right-6"></div><div className="absolute w-1 h-1 bg-cyan-400 rounded-full top-5 right-4"></div><div className="w-8 h-8 rounded-full border border-cyan-500/30"></div></div> },
+            { id: "template13", name: "Retro Arcade", visual: <div className="w-full h-20 bg-[#2b00ff] flex flex-col items-center justify-center gap-2"><div className="w-14 h-2 bg-[#ff00a0] rounded-none shadow-[2px_2px_0px_#000]"></div><div className="w-8 h-1.5 bg-[#00ff00] rounded-none shadow-[2px_2px_0px_#000]"></div></div> },
+            { id: "template14", name: "Photography Focus", visual: <div className="w-full h-20 bg-slate-800 relative flex"><div className="flex-1 bg-slate-400"></div><div className="absolute inset-x-4 top-1/2 -translate-y-1/2 h-8 bg-white/90 backdrop-blur-sm flex items-center justify-center"><div className="w-10 h-1 bg-black/80 rounded-sm"></div></div></div> },
+            { id: "template15", name: "3D Floating Elements", visual: <div className="w-full h-20 bg-slate-900 relative flex items-center justify-center"><div className="w-10 h-10 bg-rose-500 rounded-xl transform rotate-12 absolute -ml-6 -mt-2"></div><div className="w-10 h-10 bg-blue-500 rounded-full absolute ml-6 mt-4 opacity-80"></div><div className="w-14 h-8 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg absolute z-10 flex items-center justify-center"><div className="w-6 h-1 bg-white/80 rounded"></div></div></div> },
         ];
         
         const currentTemplate = userData?.frontpageTemplate || "template1";
@@ -1766,22 +1826,22 @@ export default function RightSidebar({
                 <p className={`text-[10px] leading-relaxed mb-4 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                     Select a visually stunning introductory landing page for your generated portfolio.
                 </p>
-                <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                     {templates.map(tpl => (
                         <button
                             key={tpl.id}
                             onClick={() => onTemplateChange && onTemplateChange(tpl.id)}
-                            className={`p-4 rounded-2xl border flex items-center justify-between gap-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer group ${
+                            className={`rounded-2xl border overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer group ${
                                 currentTemplate === tpl.id
-                                    ? (isLight ? 'bg-blue-50 border-blue-400 shadow-[0_4px_20px_rgba(37,99,235,0.15)] ring-2 ring-blue-500' : 'bg-blue-900/30 border-blue-500 shadow-[0_4px_20px_rgba(59,130,246,0.3)] ring-2 ring-blue-500')
-                                    : (isLight ? 'bg-white border-slate-200 hover:border-blue-300' : 'bg-slate-900/40 backdrop-blur-md border-slate-800 hover:border-blue-500/50')
+                                    ? (isLight ? 'border-blue-500 shadow-[0_4px_20px_rgba(37,99,235,0.2)] ring-2 ring-blue-500' : 'border-blue-500 shadow-[0_4px_20px_rgba(59,130,246,0.4)] ring-2 ring-blue-500')
+                                    : (isLight ? 'border-slate-200 hover:border-blue-300 bg-white' : 'border-slate-800 hover:border-blue-500/50 bg-slate-900/40')
                             }`}
                         >
-                            <div className="flex items-center gap-3">
-                                <span className="text-xl group-hover:scale-110 transition-transform duration-300">{tpl.icon}</span>
-                                <span className={`text-xs font-bold tracking-wide ${currentTemplate === tpl.id ? (isLight ? 'text-blue-700' : 'text-blue-400') : (isLight ? 'text-slate-700' : 'text-slate-300')}`}>{tpl.name}</span>
+                            {tpl.visual}
+                            <div className={`p-3 w-full flex items-center justify-between ${currentTemplate === tpl.id ? (isLight ? 'bg-blue-50' : 'bg-blue-900/30') : ''}`}>
+                                <span className={`text-[10px] font-bold tracking-wide truncate ${currentTemplate === tpl.id ? (isLight ? 'text-blue-700' : 'text-blue-400') : (isLight ? 'text-slate-700' : 'text-slate-300')}`}>{tpl.name}</span>
+                                {currentTemplate === tpl.id && <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0" />}
                             </div>
-                            {currentTemplate === tpl.id && <CheckCircle2 className="w-4 h-4 text-blue-500" />}
                         </button>
                     ))}
                 </div>
