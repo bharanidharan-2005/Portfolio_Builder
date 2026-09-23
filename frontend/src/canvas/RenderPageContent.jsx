@@ -484,8 +484,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         className="space-y-0 relative border-l-2 ml-4 md:ml-8" style={{ borderColor: 'rgba(255,255,255,0.1)' }}
                     >
                         {(data.schools || []).length === 0 && isPreview && (
-                            <div className={`p-8 text-center rounded-2xl border ${borderClass} ${cardBg} w-full max-w-2xl mx-auto my-8`}>
-                                <p className={`text-base font-medium ${textSecondary}`}>Education details will appear here once added.</p>
+                            <div className={`p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full max-w-2xl mx-auto my-8 shadow-sm`}>
+                                <div className="w-16 h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                                </div>
+                                <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>No Education Added</h3>
+                                <p className={`text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
                             </div>
                         )}
                         {(data.schools || []).map((school, i) => (
@@ -572,8 +576,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                     
                     <div className="flex flex-col gap-6 pt-2 w-full max-w-5xl mx-auto px-2">
                         {(data.items || []).length === 0 && isPreview && (
-                            <div className={`p-8 text-center rounded-2xl border ${borderClass} ${cardBg} w-full`}>
-                                <p className={`text-base font-medium ${textSecondary}`}>Skills will appear here once added.</p>
+                            <div className={`p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
+                                <div className="w-16 h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>
+                                </div>
+                                <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>No Skills Added</h3>
+                                <p className={`text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
                             </div>
                         )}
                         {(data.items || []).map((skill, i) => {
@@ -732,15 +740,19 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                     
                     <div className="flex flex-col gap-10 w-full max-w-5xl mx-auto px-2">
                         {(data.projects || []).length === 0 && isPreview && (
-                            <div className={`p-8 text-center rounded-2xl border ${borderClass} ${cardBg} w-full`}>
-                                <p className={`text-base font-medium ${textSecondary}`}>Projects will appear here once added.</p>
+                            <div className={`p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
+                                <div className="w-16 h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+                                </div>
+                                <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>No Projects Yet</h3>
+                                <p className={`text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
                             </div>
                         )}
                         {(data.projects || []).map((project, i) => (
                             <div 
                                 key={i}
                                 id={`project-card-${i}`}
-                                className={`relative group p-6 md:p-8 rounded-[2rem] border flex flex-col md:flex-row gap-6 md:gap-8 items-stretch shadow-md backdrop-blur-xl w-full overflow-hidden ${cardBg} ${borderClass} ${!isPreview ? 'hover:shadow-[0_20px_40px_rgb(0,0,0,0.2)] hover:border-white/20 z-10 hover:z-20' : ''}`}
+                                className={`relative group p-6 md:p-8 rounded-[2rem] border flex flex-col md:flex-row gap-6 md:gap-8 items-stretch shadow-md backdrop-blur-xl w-full overflow-hidden transition-all duration-300 ${cardBg} ${borderClass} hover:shadow-[0_20px_40px_rgb(0,0,0,0.2)] hover:border-white/20 z-10 hover:z-20`}
                             >
                                 <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 transition-all duration-500 group-hover:w-full bg-current ${accentText}`}></div>
 
@@ -756,9 +768,10 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     {project.projectImage ? (
                                         <img src={project.projectImage} alt={project.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover/image:scale-[1.03]" />
                                     ) : (
-                                        <div className={`flex flex-col items-center justify-center opacity-30 ${textPrimary}`}>
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="mb-3"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
-                                            <span className="text-xs uppercase tracking-widest font-bold">Project Preview</span>
+                                        <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-transparent flex flex-col items-center justify-center opacity-60 transition-opacity group-hover/image:opacity-100">
+                                            <div className="w-16 h-16 mb-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shadow-lg backdrop-blur-md">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={textPrimary}><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+                                            </div>
                                         </div>
                                     )}
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-50 group-hover/image:opacity-30 transition-opacity pointer-events-none"></div>
@@ -1134,8 +1147,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         </motion.h2>
                         <div className="relative border-l-2 border-slate-700/30 ml-3 md:ml-0 md:space-y-12 space-y-8">
                             {(data.items || []).length === 0 && isPreview && (
-                                <div className={`p-8 text-center rounded-2xl border ${borderClass} ${cardBg} w-full max-w-2xl mx-auto my-8`}>
-                                    <p className={`text-base font-medium ${textSecondary}`}>Work experience will appear here once added.</p>
+                                <div className={`p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full max-w-2xl mx-auto my-8 shadow-sm`}>
+                                    <div className="w-16 h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                                    </div>
+                                    <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>No Experience Listed</h3>
+                                    <p className={`text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
                                 </div>
                             )}
                             {(data.items || []).map((item, idx) => (
@@ -1188,8 +1205,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         </motion.h2>
                         <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {(data.items || []).length === 0 && isPreview && (
-                                <div className={`col-span-full p-8 text-center rounded-2xl border ${borderClass} ${cardBg} w-full`}>
-                                    <p className={`text-base font-medium ${textSecondary}`}>Services will appear here once added.</p>
+                                <div className={`col-span-full p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
+                                    <div className="w-16 h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                                    </div>
+                                    <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>No Services Listed</h3>
+                                    <p className={`text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
                                 </div>
                             )}
                             {(data.items || []).map((item, idx) => (
@@ -1235,8 +1256,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         </motion.h2>
                         <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {(data.items || []).length === 0 && isPreview && (
-                                <div className={`col-span-full p-8 text-center rounded-2xl border ${borderClass} ${cardBg} w-full`}>
-                                    <p className={`text-base font-medium ${textSecondary}`}>Testimonials will appear here once added.</p>
+                                <div className={`col-span-full p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
+                                    <div className="w-16 h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                    </div>
+                                    <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>No Testimonials</h3>
+                                    <p className={`text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
                                 </div>
                             )}
                             {(data.items || []).map((item, idx) => (
@@ -1292,8 +1317,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         </motion.h2>
                         <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="flex flex-col gap-4">
                             {(data.items || []).length === 0 && isPreview && (
-                                <div className={`p-8 text-center rounded-2xl border ${borderClass} ${cardBg} w-full`}>
-                                    <p className={`text-base font-medium ${textSecondary}`}>Certifications will appear here once added.</p>
+                                <div className={`p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
+                                    <div className="w-16 h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+                                    </div>
+                                    <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>No Certifications</h3>
+                                    <p className={`text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
                                 </div>
                             )}
                             {(data.items || []).map((item, idx) => (
@@ -1338,8 +1367,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                     <motion.div {...fadeUpConfig} className="max-w-6xl mx-auto">
                         <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-2 md:grid-cols-4 gap-6">
                             {(data.items || []).length === 0 && isPreview && (
-                                <div className={`col-span-full p-8 text-center rounded-2xl border ${borderClass} ${cardBg} w-full`}>
-                                    <p className={`text-base font-medium ${textSecondary}`}>Stats will appear here once added.</p>
+                                <div className={`col-span-full p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
+                                    <div className="w-16 h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                                    </div>
+                                    <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>No Stats Available</h3>
+                                    <p className={`text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
                                 </div>
                             )}
                             {(data.items || []).map((item, idx) => (
@@ -1382,8 +1415,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         </motion.h2>
                         <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {(data.articles || []).length === 0 && isPreview && (
-                                <div className={`col-span-full p-8 text-center rounded-2xl border ${borderClass} ${cardBg} w-full`}>
-                                    <p className={`text-base font-medium ${textSecondary}`}>Articles will appear here once added.</p>
+                                <div className={`col-span-full p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
+                                    <div className="w-16 h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                                    </div>
+                                    <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>No Articles Yet</h3>
+                                    <p className={`text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
                                 </div>
                             )}
                             {(data.articles || []).map((item, idx) => (

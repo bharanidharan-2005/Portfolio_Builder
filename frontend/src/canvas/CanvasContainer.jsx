@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Undo2, Redo2, Layers, Sparkles } from 'lucide-react';
+import { Undo2, Redo2, Layers, Sparkles, Menu, X } from 'lucide-react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { ResumePDF } from '../components/ResumePDF';
 import RenderPageContent from './RenderPageContent';
@@ -211,6 +211,7 @@ export default function CanvasContainer({
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
     const [scrollRotation, setScrollRotation] = useState(0);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     useEffect(() => {
         // Try both internal workspace scroll and window scroll (if deployed)
@@ -397,8 +398,8 @@ export default function CanvasContainer({
                             )}
                         </div>
 
-                        {/* Right Side - Resume */}
-                        <div>
+                        {/* Right Side - Resume & Mobile Toggle */}
+                        <div className="flex items-center gap-4">
                             {isPreview ? (
                                 <PDFDownloadLink
                                     document={pdfDocument}
@@ -415,8 +416,37 @@ export default function CanvasContainer({
                                     Download Resume
                                 </button>
                             )}
+
+                            {/* Mobile Menu Toggle Button */}
+                            <button 
+                                className="lg:hidden p-2 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            >
+                                {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                            </button>
                         </div>
                     </div>
+
+                    {/* Mobile Dropdown Menu */}
+                    {isMobileMenuOpen && (
+                        <div className="lg:hidden absolute top-full left-0 w-full border-b border-slate-800/50 bg-slate-900/95 backdrop-blur-3xl shadow-2xl overflow-hidden animate-in slide-in-from-top-2 duration-300 z-50">
+                            <div className="flex flex-col py-4 px-6 gap-2">
+                                {dynamicNavItems.map((navItem) => (
+                                    <button
+                                        key={`mobile-${navItem.id}`}
+                                        type="button"
+                                        onClick={() => {
+                                            handleNavClick(navItem.label);
+                                            setIsMobileMenuOpen(false);
+                                        }}
+                                        className={`w-full text-left px-4 py-3 rounded-xl font-bold transition-all ${currentTheme.textPrimary || 'text-white'} hover:bg-white/10 active:bg-white/20`}
+                                    >
+                                        {navItem.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* --- MAIN CONTENT WRAPPER --- */}
