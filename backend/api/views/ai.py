@@ -81,42 +81,59 @@ def get_groq_client():
 
 def generate_text_with_fallback(clients, prompt):
     """
-    Bulletproof Fast Failover: Attempts generation using Groq's fast inference models.
+    Bulletproof Fast Failover: Attempts generation using Groq's fast inference models, 
+    with fallback to Gemini.
     """
-    client = get_groq_client()
-    models_to_try = [
-        'groq/compound',
-        'qwen/qwen3.8-27b',
-        'openai/gpt-oss-120b',
-    ]
-    
     last_error = None
-    for model in models_to_try:
-        try:
-            logger.info("Attempting AI generation with model: %s", model)
-            chat_completion = client.chat.completions.create(
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    }
-                ],
-                model=model,
-                temperature=0.7,
-            )
-            # Create a mock response object to keep compatibility with existing `res.text` expectations
-            class MockResponse:
-                def __init__(self, text):
-                    self.text = text
-            return MockResponse(chat_completion.choices[0].message.content)
-        except Exception as e:
-            last_error = e
-            error_str = str(e).lower()
-            logger.warning("Model %s failed (%s). Falling back immediately...", model, error_str[:50])
-            continue
-            
-    # Only crashes if EVERY single model failed
-    raise last_error
+    try:
+        client = get_groq_client()
+        models_to_try = [
+            'llama3-8b-8192',
+            'llama3-70b-8192',
+            'mixtral-8x7b-32768',
+        ]
+        
+        for model in models_to_try:
+            try:
+                logger.info("Attempting AI generation with model: %s", model)
+                chat_completion = client.chat.completions.create(
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": prompt,
+                        }
+                    ],
+                    model=model,
+                    temperature=0.7,
+                )
+                class MockResponse:
+                    def __init__(self, text):
+                        self.text = text
+                return MockResponse(chat_completion.choices[0].message.content)
+            except Exception as e:
+                last_error = e
+                error_str = str(e).lower()
+                logger.warning("Model %s failed (%s). Falling back immediately...", model, error_str[:50])
+                continue
+    except Exception as e:
+        last_error = e
+
+    # Fallback to Gemini
+    try:
+        logger.info("Groq failed or key missing. Falling back to Gemini.")
+        if not clients:
+            clients = get_gemini_clients()
+        gemini_client = clients[0]
+        response = gemini_client.models.generate_content(
+            model=TEXT_MODEL,
+            contents=[prompt],
+        )
+        class MockResponse:
+            def __init__(self, text):
+                self.text = text
+        return MockResponse(response.text)
+    except Exception as e:
+        raise Exception(f"AI generation failed completely. Last Groq error: {last_error} | Gemini error: {e}")
 
 def extract_clean_json_payload(raw_text):
     try:
