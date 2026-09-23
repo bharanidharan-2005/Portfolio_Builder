@@ -325,9 +325,9 @@ Choose ONE of the following formats based on the user's intent:
             user = request.user if request.user.is_authenticated else None
             AISessionLog.objects.create(
                 user=user,
-                action_type="copilot",
-                input_tokens=prompt,
-                output_tokens=str(action_data)[:500]
+                change_type="copilot",
+                description=f"Prompt: {prompt[:100]}...\nOutput: {str(action_data)[:200]}",
+                status="applied"
             )
 
             return Response({'success': True, 'action': action_data})
