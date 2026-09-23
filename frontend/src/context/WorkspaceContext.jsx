@@ -33,6 +33,8 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
     const [activeHighlightSection, setActiveHighlightSection] = useState(null);
     const [aiSuggestionPreview, setAiSuggestionPreview] = useState(null);
     const [resumeReviewData, setResumeReviewData] = useState(null);
+    const [selectedSection, setSelectedSection] = useState(null);
+    const [localContent, setLocalContent] = useState({});
 
     // --- GLOBAL BACKGROUND & FONT STATE ---
     const [globalBg, setGlobalBg] = useState(() => {
@@ -402,9 +404,24 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
     };
 
     const triggerDeployment = async () => {
+        // Ensure theme, globalBg, and globalFont are synced to userData and backend before deployment
+        if (userData?.theme) {
+            await API.patch('portfolio-settings/', { theme: userData.theme }).catch(() => {});
+        }
+        if (globalBg) {
+            localStorage.setItem(`aurabuild_bg_${userData?.name || 'default'}`, globalBg);
+            if (setUserData) setUserData(prev => ({ ...prev, globalBg }));
+            await API.patch('portfolio-settings/', { globalBg: globalBg || "" }).catch(() => {});
+        }
+        if (globalFont) {
+            localStorage.setItem(`aurabuild_font_${userData?.name || 'default'}`, globalFont);
+            if (setUserData) setUserData(prev => ({ ...prev, globalFont }));
+            await API.patch('portfolio-settings/', { globalFont }).catch(() => {});
+        }
+        
         setTerminalLogs(prev => [...prev, { type: "system", text: "[SYSTEM] Initiating secure backend deployment..." }]);
         alert("Deploying your portfolio to Vercel edge... This may take up to 20 seconds.");
-        const result = await deployAnimatedSite({ pages, activePage, userData });
+        const result = await deployAnimatedSite({ pages, activePage, selectedSection, localContent, userData });
         if (result.success) {
             setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Deployed successfully to ${result.data.projectUrl}` }]);
             alert(`Deployed successfully! View it here: ${result.data.projectUrl}`);
@@ -467,6 +484,8 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         handleCancelResumeData,
         triggerDeployment,
         handleExportZip,
+        selectedSection,
+        localContent,
     };
 
     return (

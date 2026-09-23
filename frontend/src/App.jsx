@@ -68,18 +68,21 @@ function PreviewRouteWrapper({ isSubdomainPreview, subdomainUsername }) {
 function MainApp() {
     const { themeMode, isAuthenticated } = useAppContext();
 
-    // Check hostname for subdomains
     const hostname = window.location.hostname;
-    const rootDomains = ['aurabuild.io', 'www.aurabuild.io', 'aurabuild.com', 'localhost', '127.0.0.1', 'vercel.app', 'onrender.com', 'netlify.app'];
     let subdomainUsername = null;
     
-    if (!rootDomains.includes(hostname)) {
-        const parts = hostname.split('.');
-        if (parts.length >= 2 && !rootDomains.includes(parts.slice(-2).join('.'))) {
-           subdomainUsername = parts[0];
-        } else if (hostname.endsWith('.localhost')) {
-           subdomainUsername = parts[0];
+    // Only enable subdomain previews on official domains where wildcard routing is configured
+    const officialDomains = ['aurabuild.io', 'aurabuild.com'];
+    
+    for (const domain of officialDomains) {
+        if (hostname.endsWith('.' + domain) && hostname !== 'www.' + domain) {
+            subdomainUsername = hostname.replace('.' + domain, '').replace('www.', '');
+            break;
         }
+    }
+    
+    if (hostname.endsWith('.localhost')) {
+        subdomainUsername = hostname.replace('.localhost', '');
     }
     
     const isSubdomainPreview = !!subdomainUsername;

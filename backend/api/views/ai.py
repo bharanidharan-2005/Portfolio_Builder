@@ -88,7 +88,6 @@ def generate_text_with_fallback(clients, prompt):
         'groq/compound',
         'qwen/qwen3.8-27b',
         'openai/gpt-oss-120b',
-        'groq/compound-mini'
     ]
     
     last_error = None
