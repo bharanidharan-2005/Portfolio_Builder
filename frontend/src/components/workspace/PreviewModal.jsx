@@ -2,6 +2,7 @@ import {
     X, Monitor, Smartphone, Tablet as TabletIcon, ExternalLink, Copy, LayoutTemplate
 } from "lucide-react";
 import CanvasContainer from "../../canvas/CanvasContainer.jsx";
+import { PORTFOLIO_THEMES } from "../../canvas/themes.js";
 
 export default function PreviewModal({
     isOpen,
@@ -82,11 +83,11 @@ export default function PreviewModal({
                             onChange={(e) => setUserData({...userData, theme: e.target.value})}
                             className={`bg-transparent text-xs font-semibold outline-none cursor-pointer ${isLight ? 'text-slate-700' : 'text-slate-200'}`}
                         >
-                            <option value="modern_glass" className="bg-slate-900 text-slate-100 font-semibold py-1">Modern Glass</option>
-                            <option value="developer_pro" className="bg-slate-900 text-slate-100 font-semibold py-1">Developer Pro</option>
-                            <option value="creative_aurora" className="bg-slate-900 text-slate-100 font-semibold py-1">Creative Aurora</option>
-                            <option value="minimal_executive" className="bg-slate-900 text-slate-100 font-semibold py-1">Minimal Executive</option>
-                            <option value="cyber_neon" className="bg-slate-900 text-slate-100 font-semibold py-1">Cyber Neon</option>
+                            {Object.values(PORTFOLIO_THEMES).map(theme => (
+                                <option key={theme.id} value={theme.id} className="bg-slate-900 text-slate-100 font-semibold py-1">
+                                    {theme.name.replace(/^\d+\.\s*/, '')}
+                                </option>
+                            ))}
                         </select>
                     </div>
                     
