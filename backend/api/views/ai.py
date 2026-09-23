@@ -34,7 +34,7 @@ from .utils import *
 # -----------------------------------------------------------------
 # 1. GEMINI CLIENT HELPERS
 # -----------------------------------------------------------------
-TEXT_MODEL = 'gemini-1.5-flash-latest'
+TEXT_MODEL = 'gemini-3.5-flash'
 
 class AICreditThrottle(UserRateThrottle):
     scope = 'ai'
@@ -554,9 +554,9 @@ class PortfolioReviewAPIView(APIView):
 # 10. CUSTOM IMAGE GENERATION
 # -----------------------------------------------------------------
 IMAGE_MODELS = [
-    'gemini-3.6-flash',
-    'gemini-2.0-flash-exp',
-    'gemini-2.0-flash',
+    'gemini-3.1-flash-image',
+    'gemini-3-pro-image',
+    'gemini-2.5-flash-image',
 ]
 
 IMAGEN_MODEL = 'imagen-3.0-generate-002'
