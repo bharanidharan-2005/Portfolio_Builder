@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState } from 'react';
 import { ArrowRight, X, Loader2, User, Mail, KeyRound, 
-    ChevronDown, Layout, Code2, Paintbrush, Shield, Zap, Terminal, Globe 
+    ChevronDown, Layout, Code2, Paintbrush, Shield, Zap, Terminal, Globe, Sun, Moon 
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
@@ -272,7 +272,16 @@ export default function LandingPage() {
                 
                 {/* --- 1. HERO SECTION --- */}
                 <section className="min-h-screen flex flex-col justify-center p-6 lg:p-12 max-w-[90rem] mx-auto w-full relative">
-                    <header className="absolute top-0 left-0 w-full p-6 lg:p-8 flex justify-end"></header>
+                    <header className="absolute top-0 left-0 w-full p-6 lg:p-8 flex justify-end z-50">
+                        <div className="flex items-center gap-1.5 bg-[#0B0C10]/80 backdrop-blur-md border border-slate-700/80 rounded-full px-2 py-1.5 shadow-lg">
+                            <button onClick={() => toggleTheme('light')} className="p-2 rounded-full text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition-colors" title="Light Theme">
+                                <Sun className="w-5 h-5" />
+                            </button>
+                            <button onClick={() => toggleTheme('dark')} className="p-2 rounded-full text-slate-400 hover:text-blue-400 hover:bg-slate-800 transition-colors" title="Dark Theme">
+                                <Moon className="w-5 h-5" />
+                            </button>
+                        </div>
+                    </header>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center w-full mt-10">
                         <main className="space-y-8 animate-fade-in text-center lg:text-left z-20">
@@ -311,14 +320,7 @@ export default function LandingPage() {
                                 </div>
                             </div>
                             
-                            {/* Theme Selector */}
-                            <div className="pt-4 flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Theme</span>
-                                <div className="flex items-center gap-1.5 bg-[#0B0C10] border border-slate-700 rounded-full px-3 py-1.5">
-                                    <button onClick={() => toggleTheme('light')} className="rounded-lg px-2 py-1 text-xs font-bold text-slate-400 hover:text-slate-200 transition-colors theme-btn" aria-label="Light theme">Light</button>
-                                    <button onClick={() => toggleTheme('dark')} className="rounded-lg px-2 py-1 text-xs font-bold text-slate-400 hover:text-slate-200 transition-colors theme-btn" aria-label="Dark theme">Dark</button>
-                                </div>
-                            </div>
+
                         </main>
 
                         {/* Floating Editor Graphic */}
