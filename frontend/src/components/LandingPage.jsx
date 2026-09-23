@@ -88,7 +88,7 @@ const FEATURES = [
 
 export default function LandingPage() {
     const navigate = useNavigate();
-    const { login, socialLogin, toggleTheme } = useAppContext();
+    const { login, socialLogin, setThemeSetting, themeMode } = useAppContext();
     const [showModal, setShowModal] = useState(false);
     const [authMode, setAuthMode] = useState("signup");
     const [stepState, setStepState] = useState("name");
@@ -256,12 +256,12 @@ export default function LandingPage() {
     };
 
     return (
-        <div className="min-h-screen w-screen bg-slate-950 text-slate-200 overflow-x-hidden font-sans relative">
+        <div className={`min-h-screen w-screen overflow-x-hidden font-sans relative ${themeMode === "light" ? "bg-slate-50 text-slate-900" : "bg-slate-950 text-slate-200"}`}>
             
             {/* FIXED BACKGROUND: Stays in place while content scrolls */}
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <Suspense fallback={null}>
-                    <ThreeBackground theme="dark" />
+                    <ThreeBackground theme={themeMode} />
                 </Suspense>
                 <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-900/20 blur-[120px] rounded-full" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-900/20 blur-[120px] rounded-full" />
@@ -273,11 +273,11 @@ export default function LandingPage() {
                 {/* --- 1. HERO SECTION --- */}
                 <section className="min-h-screen flex flex-col justify-center p-6 lg:p-12 max-w-[90rem] mx-auto w-full relative">
                     <header className="absolute top-0 left-0 w-full p-6 lg:p-8 flex justify-end z-50">
-                        <div className="flex items-center gap-1.5 bg-[#0B0C10]/80 backdrop-blur-md border border-slate-700/80 rounded-full px-2 py-1.5 shadow-lg">
-                            <button onClick={() => toggleTheme('light')} className="p-2 rounded-full text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition-colors" title="Light Theme">
+                        <div className={`flex items-center gap-1.5 backdrop-blur-md border rounded-full px-2 py-1.5 shadow-lg ${themeMode === "light" ? "bg-white/80 border-slate-300/80" : "bg-[#0B0C10]/80 border-slate-700/80"}`}>
+                            <button onClick={() => setThemeSetting('light')} className={`p-2 rounded-full transition-colors ${themeMode === 'light' ? 'text-amber-500 bg-amber-500/10' : 'text-slate-400 hover:text-amber-400 hover:bg-slate-800'}`} title="Light Theme">
                                 <Sun className="w-5 h-5" />
                             </button>
-                            <button onClick={() => toggleTheme('dark')} className="p-2 rounded-full text-slate-400 hover:text-blue-400 hover:bg-slate-800 transition-colors" title="Dark Theme">
+                            <button onClick={() => setThemeSetting('dark')} className={`p-2 rounded-full transition-colors ${themeMode === 'dark' ? 'text-blue-400 bg-blue-500/10' : 'text-slate-400 hover:text-blue-400 hover:bg-slate-800'}`} title="Dark Theme">
                                 <Moon className="w-5 h-5" />
                             </button>
                         </div>
@@ -290,14 +290,14 @@ export default function LandingPage() {
                                 AuraBuild Studio 1.0
                             </div>
 
-                            <h1 className="text-5xl md:text-6xl lg:text-[5rem] font-display font-black tracking-tight leading-[1.05] text-white">
+                            <h1 className={`text-5xl md:text-6xl lg:text-[5rem] font-display font-black tracking-tight leading-[1.05] ${themeMode === "light" ? "text-slate-900" : "text-white"}`}>
                                 Engineer your <br />
                                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-emerald-400">
                                     digital legacy.
                                 </span>
                             </h1>
 
-                            <p className="text-slate-400 text-lg md:text-xl leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium">
+                            <p className={`text-lg md:text-xl leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium ${themeMode === "light" ? "text-slate-600" : "text-slate-400"}`}>
                                 Bypass the boilerplate. Generate a stunning, high-performance engineering portfolio in minutes. Customize your environment, integrate your repositories, and deploy instantly.
                             </p>
 
@@ -306,7 +306,7 @@ export default function LandingPage() {
                                     Initialize Workspace <ArrowRight className="w-4 h-4" />
                                 </button>
 
-                                <button onClick={() => openModal("login")} className="px-8 py-4 text-sm bg-[#0B0C10]/50 backdrop-blur-sm border border-slate-700 text-white font-bold rounded-full transition-all duration-300 hover:bg-slate-800 hover:border-slate-500 flex items-center gap-2 w-full sm:w-auto justify-center cursor-pointer">
+                                <button onClick={() => openModal("login")} className={`px-8 py-4 text-sm backdrop-blur-sm border font-bold rounded-full transition-all duration-300 flex items-center gap-2 w-full sm:w-auto justify-center cursor-pointer ${themeMode === "light" ? "bg-white/50 border-slate-300 text-slate-900 hover:bg-slate-100 hover:border-slate-400" : "bg-[#0B0C10]/50 border-slate-700 text-white hover:bg-slate-800 hover:border-slate-500"}`}>
                                     Log in
                                 </button>
                             </div>
@@ -400,22 +400,22 @@ export default function LandingPage() {
                 </section>
 
                 {/* --- 2. FEATURES SECTION --- */}
-                <section className="py-24 px-6 lg:px-12 max-w-[90rem] mx-auto w-full relative z-10 border-t border-slate-800/50 bg-slate-950/40 backdrop-blur-sm">
+                <section className={`py-24 px-6 lg:px-12 max-w-[90rem] mx-auto w-full relative z-10 border-t backdrop-blur-sm ${themeMode === "light" ? "border-slate-200/50 bg-slate-50/40" : "border-slate-800/50 bg-slate-950/40"}`}>
                     <div className="text-center max-w-3xl mx-auto mb-16">
-                        <h2 className="text-3xl md:text-4xl font-display font-black text-white mb-4">System Capabilities</h2>
-                        <p className="text-slate-400 text-lg">AuraBuild isn't just a template. It's a complete engineering suite designed to manage and present your professional identity.</p>
+                        <h2 className={`text-3xl md:text-4xl font-display font-black mb-4 ${themeMode === "light" ? "text-slate-900" : "text-white"}`}>System Capabilities</h2>
+                        <p className={`text-lg ${themeMode === "light" ? "text-slate-600" : "text-slate-400"}`}>AuraBuild isn't just a template. It's a complete engineering suite designed to manage and present your professional identity.</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {FEATURES.map((feature, idx) => {
                             const Icon = feature.icon;
                             return (
-                                <div key={idx} className="bg-[#0B0C10]/80 backdrop-blur-md border border-slate-800 rounded-2xl p-8 hover:-translate-y-1 hover:border-purple-500/50 transition-all duration-300 group shadow-lg">
+                                <div key={idx} className={`backdrop-blur-md border rounded-2xl p-8 hover:-translate-y-1 hover:border-purple-500/50 transition-all duration-300 group shadow-lg ${themeMode === "light" ? "bg-white/80 border-slate-200" : "bg-[#0B0C10]/80 border-slate-800"}`}>
                                     <div className="w-12 h-12 bg-slate-900 rounded-xl border border-slate-800 flex items-center justify-center mb-6 group-hover:bg-purple-900/20 group-hover:border-purple-500/30 transition-colors">
                                         <Icon className="w-5 h-5 text-slate-400 group-hover:text-purple-400" />
                                     </div>
-                                    <h3 className="text-xl font-bold text-white mb-3">{feature.title}</h3>
-                                    <p className="text-slate-400 text-sm leading-relaxed">{feature.desc}</p>
+                                    <h3 className={`text-xl font-bold mb-3 ${themeMode === "light" ? "text-slate-900" : "text-white"}`}>{feature.title}</h3>
+                                    <p className={`text-sm leading-relaxed ${themeMode === "light" ? "text-slate-600" : "text-slate-400"}`}>{feature.desc}</p>
                                 </div>
                             );
                         })}
@@ -423,11 +423,11 @@ export default function LandingPage() {
                 </section>
 
                 {/* --- 3. HOW IT WORKS SECTION --- */}
-                <section className="py-24 px-6 lg:px-12 max-w-[90rem] mx-auto w-full relative z-10 border-t border-slate-800/50">
+                <section className={`py-24 px-6 lg:px-12 max-w-[90rem] mx-auto w-full relative z-10 border-t ${themeMode === "light" ? "border-slate-200/50" : "border-slate-800/50"}`}>
                     <div className="flex flex-col lg:flex-row items-center gap-16">
                         <div className="lg:w-1/3 space-y-6 text-center lg:text-left">
-                            <h2 className="text-3xl md:text-4xl font-display font-black text-white">The Deployment Pipeline</h2>
-                            <p className="text-slate-400 text-lg">From zero to a fully deployed portfolio in under three minutes. No complicated hosting setups required.</p>
+                            <h2 className={`text-3xl md:text-4xl font-display font-black ${themeMode === "light" ? "text-slate-900" : "text-white"}`}>The Deployment Pipeline</h2>
+                            <p className={`text-lg ${themeMode === "light" ? "text-slate-600" : "text-slate-400"}`}>From zero to a fully deployed portfolio in under three minutes. No complicated hosting setups required.</p>
                         </div>
                         
                         <div className="lg:w-2/3 grid grid-cols-1 sm:grid-cols-3 gap-8 relative">
@@ -438,7 +438,7 @@ export default function LandingPage() {
                                 <div className="w-24 h-24 rounded-full bg-[#0B0C10] border-2 border-slate-800 flex items-center justify-center shadow-xl">
                                     <Terminal className="w-8 h-8 text-blue-400" />
                                 </div>
-                                <h4 className="text-white font-bold text-lg">1. Initialize</h4>
+                                <h4 className={`font-bold text-lg ${themeMode === "light" ? "text-slate-900" : "text-white"}`}>1. Initialize</h4>
                                 <p className="text-slate-500 text-sm">Secure your workspace via email code and enter the builder.</p>
                             </div>
                             
@@ -446,7 +446,7 @@ export default function LandingPage() {
                                 <div className="w-24 h-24 rounded-full bg-[#0B0C10] border-2 border-purple-500/50 flex items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.15)]">
                                     <Layout className="w-8 h-8 text-purple-400" />
                                 </div>
-                                <h4 className="text-white font-bold text-lg">2. Construct</h4>
+                                <h4 className={`font-bold text-lg ${themeMode === "light" ? "text-slate-900" : "text-white"}`}>2. Construct</h4>
                                 <p className="text-slate-500 text-sm">Inject your projects, configure themes, and format your data.</p>
                             </div>
                             
@@ -454,7 +454,7 @@ export default function LandingPage() {
                                 <div className="w-24 h-24 rounded-full bg-[#0B0C10] border-2 border-slate-800 flex items-center justify-center shadow-xl">
                                     <Globe className="w-8 h-8 text-emerald-400" />
                                 </div>
-                                <h4 className="text-white font-bold text-lg">3. Launch</h4>
+                                <h4 className={`font-bold text-lg ${themeMode === "light" ? "text-slate-900" : "text-white"}`}>3. Launch</h4>
                                 <p className="text-slate-500 text-sm">Export your build or deploy to a live custom URL instantly.</p>
                             </div>
                         </div>
@@ -462,11 +462,11 @@ export default function LandingPage() {
                 </section>
 
                 {/* --- 4. FOOTER --- */}
-                <footer className="border-t border-slate-800/60 bg-slate-950/90 backdrop-blur-lg pt-16 pb-8 relative z-10">
+                <footer className={`border-t backdrop-blur-lg pt-16 pb-8 relative z-10 ${themeMode === "light" ? "border-slate-200/60 bg-white/90" : "border-slate-800/60 bg-slate-950/90"}`}>
                     <div className="max-w-[90rem] mx-auto px-6 lg:px-12 flex flex-col items-center">
                         <div className="flex items-center gap-2 mb-8">
                             <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
-                            <span className="text-lg font-display font-black tracking-widest uppercase text-white">AuraBuild Studio</span>
+                            <span className={`text-lg font-display font-black tracking-widest uppercase ${themeMode === "light" ? "text-slate-900" : "text-white"}`}>AuraBuild Studio</span>
                         </div>
                         
                         <div className="flex gap-6 mb-12 text-sm font-medium text-slate-400">
