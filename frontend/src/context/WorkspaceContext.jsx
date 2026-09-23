@@ -444,6 +444,23 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         }
     };
 
+    const handleResetWorkspace = async () => {
+        if (!window.confirm("Are you sure you want to clear the canvas? This action cannot be undone.")) return;
+        const currentSections = sectionsRef.current;
+        sectionsRef.current = [];
+        commitHistory([], currentSections);
+        
+        // Clear from database
+        for (const sec of currentSections) {
+            if (/^\d+$/.test(String(sec.id))) {
+                try {
+                    await API.delete(`sections/${sec.id}/`);
+                } catch (e) {}
+            }
+        }
+        setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Workspace canvas reset.` }]);
+    };
+
     const value = {
         isPublicPreview,
         userData,
@@ -484,6 +501,7 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         handleCancelResumeData,
         triggerDeployment,
         handleExportZip,
+        handleResetWorkspace,
         selectedSection,
         localContent,
     };

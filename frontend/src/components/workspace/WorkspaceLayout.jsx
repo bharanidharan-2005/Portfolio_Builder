@@ -29,7 +29,7 @@ export default function WorkspaceLayout() {
         handleUpdateSectionContent, handleDropSection, handleAddManualSection,
         handleDeleteSection, handleDuplicateSection, handleResumeParsed,
         resumeReviewData, handleApplyResumeData, handleCancelResumeData,
-        triggerDeployment, handleExportZip, activeHighlightSection, aiSuggestionPreview
+        triggerDeployment, handleExportZip, handleResetWorkspace, activeHighlightSection, aiSuggestionPreview
     } = workspace;
 
     // 2. Local UI State (Only presentation logic remains here!)
@@ -263,6 +263,7 @@ export default function WorkspaceLayout() {
                     onLogout={logout}
                     onDeploy={triggerDeployment}
                     onExportZip={handleExportZip}
+                    onResetWorkspace={handleResetWorkspace}
                 />
             )}
 

@@ -4,7 +4,7 @@ import { API } from "../../api";
 import { useAppContext } from "../../context/AppContext";
 import { Palette, Sun, Moon, Sparkles } from "lucide-react";
 
-export default function SettingsModal({ isOpen, onClose, userData, setUserData, themeMode, onLogout, onDeploy, onExportZip }) {
+export default function SettingsModal({ isOpen, onClose, userData, setUserData, themeMode, onLogout, onDeploy, onExportZip, onResetWorkspace }) {
     const { themeSetting, setThemeSetting } = useAppContext();
     const isLight = themeMode === 'light';
     const [activeTab, setActiveTab] = useState("account");
@@ -307,7 +307,13 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                                         <h4 className="text-xs font-bold uppercase tracking-widest text-red-500 flex items-center gap-2 mb-4">
                                             <AlertTriangle className="w-4 h-4" /> Danger Zone
                                         </h4>
-                                        <button className="flex items-center gap-2 px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl text-sm font-bold transition-colors cursor-pointer">
+                                        <button 
+                                            onClick={async () => {
+                                                if (onResetWorkspace) await onResetWorkspace();
+                                                onClose();
+                                            }}
+                                            className="flex items-center gap-2 px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl text-sm font-bold transition-colors cursor-pointer"
+                                        >
                                             <Trash2 className="w-4 h-4" /> Reset Workspace Canvas
                                         </button>
                                     </div>
