@@ -34,7 +34,7 @@ from .utils import *
 # -----------------------------------------------------------------
 # 1. GEMINI CLIENT HELPERS
 # -----------------------------------------------------------------
-TEXT_MODEL = 'gemini-1.5-flash'
+TEXT_MODEL = 'gemini-1.5-flash-latest'
 
 class AICreditThrottle(UserRateThrottle):
     scope = 'ai'
@@ -90,7 +90,6 @@ def generate_text_with_fallback(clients, prompt):
         models_to_try = [
             'llama3-8b-8192',
             'llama3-70b-8192',
-            'mixtral-8x7b-32768',
         ]
         
         for model in models_to_try:
