@@ -420,10 +420,10 @@ export default function CanvasContainer({
                 </div>
 
                 {/* --- MAIN CONTENT WRAPPER --- */}
-                <div className="relative z-10 w-full p-4 sm:p-10 flex flex-col">
+                <div className={`relative z-10 w-full p-4 sm:p-10 flex flex-col ${isPreview ? 'max-w-7xl mx-auto' : ''}`}>
 
                     {isPreview ? (
-                        <div key={activePage} className="space-y-8 w-full animate-in slide-in-from-bottom-4 duration-700 ease-out">
+                        <div key={activePage} className="space-y-16 w-full animate-in slide-in-from-bottom-4 duration-700 ease-out">
                             {displaySections.length > 0 ? (
                                 displaySections.map((section) => (
                                     <div key={section.id} id={`preview-node-block-${section.id}`} className="w-full overflow-visible">

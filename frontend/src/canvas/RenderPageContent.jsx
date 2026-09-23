@@ -483,6 +483,11 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         viewport={{ once: false, margin: "-20px", amount: 0.1 }}
                         className="space-y-0 relative border-l-2 ml-4 md:ml-8" style={{ borderColor: 'rgba(255,255,255,0.1)' }}
                     >
+                        {(data.schools || []).length === 0 && isPreview && (
+                            <div className={`p-8 text-center rounded-2xl border ${borderClass} ${cardBg} w-full max-w-2xl mx-auto my-8`}>
+                                <p className={`text-base font-medium ${textSecondary}`}>Education details will appear here once added.</p>
+                            </div>
+                        )}
                         {(data.schools || []).map((school, i) => (
                             <motion.div 
                                 variants={staggerItem}
@@ -566,6 +571,11 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         </motion.h2>
                     
                     <div className="flex flex-col gap-6 pt-2 w-full max-w-5xl mx-auto px-2">
+                        {(data.items || []).length === 0 && isPreview && (
+                            <div className={`p-8 text-center rounded-2xl border ${borderClass} ${cardBg} w-full`}>
+                                <p className={`text-base font-medium ${textSecondary}`}>Skills will appear here once added.</p>
+                            </div>
+                        )}
                         {(data.items || []).map((skill, i) => {
                             const isEven = i % 2 === 0; 
                             
@@ -721,6 +731,11 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         </motion.h2>
                     
                     <div className="flex flex-col gap-10 w-full max-w-5xl mx-auto px-2">
+                        {(data.projects || []).length === 0 && isPreview && (
+                            <div className={`p-8 text-center rounded-2xl border ${borderClass} ${cardBg} w-full`}>
+                                <p className={`text-base font-medium ${textSecondary}`}>Projects will appear here once added.</p>
+                            </div>
+                        )}
                         {(data.projects || []).map((project, i) => (
                             <div 
                                 key={i}
@@ -1118,6 +1133,11 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             Work Experience
                         </motion.h2>
                         <div className="relative border-l-2 border-slate-700/30 ml-3 md:ml-0 md:space-y-12 space-y-8">
+                            {(data.items || []).length === 0 && isPreview && (
+                                <div className={`p-8 text-center rounded-2xl border ${borderClass} ${cardBg} w-full max-w-2xl mx-auto my-8`}>
+                                    <p className={`text-base font-medium ${textSecondary}`}>Work experience will appear here once added.</p>
+                                </div>
+                            )}
                             {(data.items || []).map((item, idx) => (
                                 <motion.div key={idx} variants={staggerItem} className="relative pl-6 md:pl-8">
                                     <div className="absolute w-4 h-4 bg-blue-500 rounded-full -left-[9px] top-1.5 shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
@@ -1167,6 +1187,11 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             Services & Offerings
                         </motion.h2>
                         <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {(data.items || []).length === 0 && isPreview && (
+                                <div className={`col-span-full p-8 text-center rounded-2xl border ${borderClass} ${cardBg} w-full`}>
+                                    <p className={`text-base font-medium ${textSecondary}`}>Services will appear here once added.</p>
+                                </div>
+                            )}
                             {(data.items || []).map((item, idx) => (
                                 <motion.div key={idx} variants={staggerItem} className={"p-6 sm:p-8 rounded-3xl border shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl " + cardBg + " " + borderClass}>
                                     <div className="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center mb-6 text-2xl">
@@ -1209,6 +1234,11 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             Client Testimonials
                         </motion.h2>
                         <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {(data.items || []).length === 0 && isPreview && (
+                                <div className={`col-span-full p-8 text-center rounded-2xl border ${borderClass} ${cardBg} w-full`}>
+                                    <p className={`text-base font-medium ${textSecondary}`}>Testimonials will appear here once added.</p>
+                                </div>
+                            )}
                             {(data.items || []).map((item, idx) => (
                                 <motion.div key={idx} variants={staggerItem} className={"p-8 rounded-3xl border shadow-sm relative " + cardBg + " " + borderClass}>
                                     <div className="absolute top-6 right-6 text-6xl text-blue-500/20 font-serif leading-none">
@@ -1261,6 +1291,11 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             Certifications & Awards
                         </motion.h2>
                         <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="flex flex-col gap-4">
+                            {(data.items || []).length === 0 && isPreview && (
+                                <div className={`p-8 text-center rounded-2xl border ${borderClass} ${cardBg} w-full`}>
+                                    <p className={`text-base font-medium ${textSecondary}`}>Certifications will appear here once added.</p>
+                                </div>
+                            )}
                             {(data.items || []).map((item, idx) => (
                                 <motion.div key={idx} variants={staggerItem} className={"flex flex-col sm:flex-row sm:items-center justify-between p-6 rounded-2xl border transition-colors hover:bg-white/5 " + cardBg + " " + borderClass}>
                                     <div className="flex items-center gap-4 mb-4 sm:mb-0">
@@ -1302,6 +1337,11 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                     {sectionImageBanner}
                     <motion.div {...fadeUpConfig} className="max-w-6xl mx-auto">
                         <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                            {(data.items || []).length === 0 && isPreview && (
+                                <div className={`col-span-full p-8 text-center rounded-2xl border ${borderClass} ${cardBg} w-full`}>
+                                    <p className={`text-base font-medium ${textSecondary}`}>Stats will appear here once added.</p>
+                                </div>
+                            )}
                             {(data.items || []).map((item, idx) => (
                                 <motion.div key={idx} variants={staggerItem} className={"text-center p-8 rounded-3xl border " + cardBg + " " + borderClass}>
                                     <div className={"text-4xl sm:text-5xl font-black mb-2 " + accentText}>
@@ -1341,6 +1381,11 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             Publications & Articles
                         </motion.h2>
                         <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {(data.articles || []).length === 0 && isPreview && (
+                                <div className={`col-span-full p-8 text-center rounded-2xl border ${borderClass} ${cardBg} w-full`}>
+                                    <p className={`text-base font-medium ${textSecondary}`}>Articles will appear here once added.</p>
+                                </div>
+                            )}
                             {(data.articles || []).map((item, idx) => (
                                 <motion.a key={idx} variants={staggerItem} href={item.link ? (item.link.startsWith('http') ? item.link : 'https://'+item.link) : '#'} target="_blank" rel="noopener noreferrer" className={"block p-6 sm:p-8 rounded-3xl border shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl group " + cardBg + " " + borderClass}>
                                     <div className={"text-xs font-bold uppercase tracking-wider mb-3 flex items-center justify-between " + accentText}>
