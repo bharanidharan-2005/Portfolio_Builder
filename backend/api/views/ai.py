@@ -305,7 +305,21 @@ Choose ONE of the following formats based on the user's intent:
 {{"action": "reply", "message": "<your_message>"}}
 """
             response = generate_text_with_fallback(None, system_instruction)
-            action_data = extract_clean_json_payload(response.text)
+
+            try:
+                action_data = extract_clean_json_payload(response.text)
+            except ValueError as e:
+                logger.warning("AI copilot JSON parse error: %s", str(e))
+                # Try to extract JSON from markdown code blocks if present
+                import re
+                markdown_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', response.text, re.IGNORECASE)
+                if markdown_match:
+                    try:
+                        action_data = json.loads(markdown_match.group(1))
+                    except json.JSONDecodeError:
+                        raise ValueError("Failed to parse JSON from markdown block")
+                else:
+                    raise ValueError("AI response is not valid JSON")
 
             # Log the session
             user = request.user if request.user.is_authenticated else None
@@ -318,9 +332,15 @@ Choose ONE of the following formats based on the user's intent:
 
             return Response({'success': True, 'action': action_data})
 
+        except AIKeyMissingError as e:
+            logger.error("AI key missing during copilot: %s", e)
+            return Response({'error': 'AI service not configured. Please contact administrator.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        except ValueError as e:
+            logger.error("AI copilot response parse error: %s", str(e))
+            return Response({'error': 'Failed to understand AI response. Please try again.'}, status=status.HTTP_502_BAD_GATEWAY)
         except Exception as e:
             logger.error("AI Copilot failed: %s", str(e), exc_info=True)
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'error': 'AI copilot service temporarily unavailable.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # -----------------------------------------------------------------
 # GITHUB DATA INGESTION
