@@ -88,8 +88,9 @@ def generate_text_with_fallback(clients, prompt):
     try:
         client = get_groq_client()
         models_to_try = [
-            'llama-3.1-8b-instant',
-            'mixtral-8x7b-32768',
+            'llama3-8b-8192',
+            'llama3-70b-8192',
+            'gemma2-9b-it',
         ]
         
         for model in models_to_try:
