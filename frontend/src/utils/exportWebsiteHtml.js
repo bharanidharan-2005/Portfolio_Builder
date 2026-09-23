@@ -356,7 +356,9 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
             `).join('');
             sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl stagger-container"><h2 class="text-3xl sm:text-4xl uppercase font-black tracking-widest mb-12 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 stagger-item stagger-fade-down">${escapeHtml(data.title) || 'Education'}</h2><div class="space-y-6">${itemsHtml}</div></section>`;
         } else if (type === 'skills') {
-            const itemsHtml = (data.items || []).map((s, i) => `
+            const itemsHtml = (data.items || []).map((s, i) => {
+                const levelVal = (s.level !== undefined && s.level !== null && s.level !== '') ? s.level : 50;
+                return `
                 <div class="stagger-item stagger-fade-up p-6 md:p-8 rounded-3xl transition-all duration-500 w-full md:w-[70%] border shadow-md ${theme.border} bg-white/5 hover:bg-white/10 hover:shadow-[0_20px_40px_rgba(0,0,0,0.3)] hover:-translate-y-2 hover:border-white/20 ${i % 2 === 0 ? 'self-start' : 'self-end'} group" style="transition-delay: ${(i%4)*0.1}s">
                     <div class="flex justify-between items-center text-lg font-bold mb-4">
                         <div class="flex items-center gap-3">
@@ -367,14 +369,15 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                             })()}
                             <span class="tracking-wide ${theme.textPrimary} group-hover:text-white transition-colors">${escapeHtml(s.name)}</span>
                         </div>
-                        <span class="${theme.accentText} font-mono text-sm px-4 py-2 rounded-xl border ${theme.border} bg-black/40 shadow-inner group-hover:bg-black/60 transition-colors">${escapeHtml(s.level)}%</span>
+                        <span class="${theme.accentText} font-mono text-sm px-4 py-2 rounded-xl border ${theme.border} bg-black/40 shadow-inner group-hover:bg-black/60 transition-colors">${escapeHtml(levelVal)}%</span>
                     </div>
                     <div class="h-4 w-full rounded-full bg-black/50 overflow-hidden shadow-inner border ${theme.border}">
-                        <div class="h-full rounded-full ${theme.accentBg || 'bg-blue-500'} transition-all duration-[1.5s] ease-out group-hover:brightness-125" style="width: ${escapeHtml(s.level)}%; box-shadow: inset 0 1px 3px rgba(255,255,255,0.2);"></div>
+                        <div class="h-full rounded-full ${theme.accentBg || 'bg-blue-500'} transition-all duration-[1.5s] ease-out group-hover:brightness-125" style="width: ${escapeHtml(levelVal)}%; box-shadow: inset 0 1px 3px rgba(255,255,255,0.2);"></div>
                     </div>
                 </div>
-            `).join('');
-            sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl stagger-container"><h2 class="text-3xl sm:text-4xl uppercase font-black tracking-widest mb-12 text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 stagger-item stagger-fade-down">${escapeHtml(data.title) || 'Skills'}</h2><div class="flex flex-col gap-8 pt-2 w-full max-w-5xl mx-auto px-2">${itemsHtml}</div></section>`;
+            `;
+            }).join('');
+            sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl stagger-container"><h2 class="text-3xl sm:text-4xl uppercase font-black tracking-widest mb-12 text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 stagger-item stagger-fade-down">${escapeHtml(data.title) || 'Core Expertise'}</h2><div class="flex flex-col gap-8 pt-2 w-full max-w-5xl mx-auto px-2">${itemsHtml}</div></section>`;
         } else if (type === 'projects_grid') {
             const projectsHtml = (data.projects || []).map((p, i) => `
                 <div class="group relative flex flex-col lg:flex-row items-center gap-10 rounded-[2.5rem] border ${theme.border} bg-white/5 overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-all duration-700 hover:bg-white/10 p-10 hover:-translate-y-3 hover:border-white/20">

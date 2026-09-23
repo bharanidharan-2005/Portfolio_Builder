@@ -676,7 +676,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                         </div>
                                         <span className={`${accentText} font-mono text-sm flex items-center shrink-0 ${trackBg} px-4 py-2 rounded-xl border ${borderClass} shadow-inner`}>
                                             <TextElement 
-                                                value={String(skill.level || 50)}
+                                                value={String((skill.level !== undefined && skill.level !== null && skill.level !== '') ? skill.level : 50)}
                                                 placeholder="50"
                                                 onCommit={(v) => {
                                                     let num = parseInt(v, 10);
@@ -701,7 +701,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                         <motion.div 
                                             className={`h-full rounded-full ${accentBg}`}
                                             initial={{ width: 0 }}
-                                            whileInView={{ width: `${skill.level || 50}%` }}
+                                            whileInView={{ width: `${(skill.level !== undefined && skill.level !== null && skill.level !== '') ? skill.level : 50}%` }}
                                             viewport={{ once: false }}
                                             transition={{ duration: 1, ease: "easeOut" }}
                                             style={{ boxShadow: 'inset 0 1px 3px rgba(255,255,255,0.2)' }}
