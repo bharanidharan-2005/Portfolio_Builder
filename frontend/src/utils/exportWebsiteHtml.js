@@ -106,6 +106,9 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
     const templateKey = userData?.frontpageTemplate || 'template1';
     const tplConfig = FRONT_PAGE_TEMPLATES[templateKey] || FRONT_PAGE_TEMPLATES.template1;
 
+    const heroCustomImage = heroData.customSideImage ? getAbsoluteUrl(heroData.customSideImage) : '';
+    const heroVisualImageUrl = heroCustomImage || roleImageUrl;
+
     let rightVisualHtml = '';
     if (tplConfig.visual === 'Code') {
         rightVisualHtml = `
@@ -141,7 +144,7 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
         rightVisualHtml = `
             <div class="relative w-[250px] h-[250px] sm:w-[350px] sm:h-[350px] lg:w-[500px] lg:h-[500px] animate-[float_8s_ease-in-out_infinite]">
                 <div class="absolute inset-0 bg-blue-500/20 rounded-full blur-[100px] animate-pulse"></div>
-                <img src="${roleImageUrl}" alt="Hero Visual" class="absolute inset-0 w-full h-full object-cover mix-blend-screen opacity-90 rounded-3xl drop-shadow-2xl hover:scale-105 transition-transform duration-700 hover:rotate-2" />
+                <img src="${heroVisualImageUrl}" alt="Hero Visual" class="absolute inset-0 w-full h-full object-cover mix-blend-screen opacity-90 rounded-3xl drop-shadow-2xl hover:scale-105 transition-transform duration-700 hover:rotate-2" />
             </div>`;
     }
 
@@ -187,9 +190,11 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                     ${frontHeadline}
                 </p>
                 
-                <p class="text-lg md:text-xl leading-relaxed w-full max-w-xl font-medium opacity-80 ${!frontBio ? 'opacity-60 italic' : ''}">
-                    ${frontBio || 'Introduction...'}
+                ${frontBio ? `
+                <p class="text-lg md:text-xl leading-relaxed w-full max-w-xl font-medium opacity-80">
+                    ${frontBio}
                 </p>
+                ` : ''}
 
                 <div class="flex flex-wrap items-center gap-4 pt-4 w-full ${tplConfig.layoutDir.includes('row-reverse') ? 'justify-center lg:justify-end' : 'justify-center lg:justify-start'}">
                     <button onclick="dismissFrontpage()" class="px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all shadow-lg hover:shadow-2xl hover:shadow-blue-500/40 text-white flex items-center gap-2 ${tplConfig.buttonClass} hover:scale-110 hover:-translate-y-1">
@@ -212,7 +217,11 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
     const navLinks = activeSections
         .filter(s => s.section_type !== 'hero' && s.section_type !== 'footer')
         .map(s => {
-            const label = s.section_type === 'projects_grid' ? 'Projects' : s.section_type.charAt(0).toUpperCase() + s.section_type.slice(1);
+            let label = s.section_type === 'projects_grid' ? 'Projects' : s.section_type.charAt(0).toUpperCase() + s.section_type.slice(1);
+            if (s.section_type === 'about') label = 'About';
+            if (s.section_type === 'education') label = 'Education';
+            if (s.section_type === 'skills') label = 'Skills';
+            if (s.section_type === 'contact') label = 'Contact';
             return `<li><a href="#section-${s.id}" class="text-sm font-bold hover:text-blue-400 hover:-translate-y-0.5 inline-block transition-all">${escapeHtml(label)}</a></li>`;
         }).join('');
         
@@ -276,97 +285,127 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                 projectsDropdown = `<div class="group relative z-50"><button class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg flex items-center gap-2 bg-[#0a0a0f] hover:bg-[#1a1a24] text-white">Projects ▾</button><div class="absolute top-full left-0 mt-2 w-56 rounded-xl border border-slate-800 bg-[#0a0a0f]/95 backdrop-blur-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col p-2 max-h-60 overflow-y-auto custom-scrollbar text-left">${links}</div></div>`;
             }
 
+            // CRITICAL FIX: Hero Visual Image in Workspace/Preview uses customSideImage || getRoleImage
+            const heroSideImage = data.customSideImage ? getAbsoluteUrl(data.customSideImage) : getAbsoluteUrl(getRoleImage(data.subheading || ""));
+            const isCustomSide = !!data.customSideImage;
+
+            const heroDescText = data.description || data.text || '';
+            const heroDescHtml = heroDescText ? `
+                <p class="text-lg md:text-xl leading-relaxed w-full max-w-xl font-medium ${bgImage ? 'text-white/80' : `${theme.textSecondary}`}">
+                    ${escapeHtml(heroDescText)}
+                </p>
+            ` : '';
+
             sectionsHtml += `
-            <section class="py-16 sm:py-24 px-6 sm:px-12 relative rounded-3xl overflow-visible border ${theme.border} ${!bgImage ? tplConfig.bgClass : ''} mb-16 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)]" ${bgInlineStyle}>
-                <div class="relative z-10 w-full max-w-7xl mx-auto flex flex-col ${tplConfig.layoutDir} items-center gap-12 lg:gap-20">
-                    <div class="flex-1 space-y-8 flex flex-col items-center ${tplConfig.layoutDir.includes('row-reverse') ? 'lg:items-end text-center lg:text-right' : 'lg:items-start text-center lg:text-left'} stagger-item stagger-fade-left">
-                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold border border-white/10 bg-white/5 backdrop-blur-md shadow-sm">
+            <section class="py-16 sm:py-24 px-6 sm:px-12 relative rounded-3xl overflow-visible border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} mb-16 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)]" ${bgInlineStyle}>
+                <div class="relative z-10 w-full max-w-7xl mx-auto flex flex-col-reverse lg:flex-row items-center gap-12 lg:gap-20">
+                    <div class="flex-1 space-y-8 flex flex-col items-center lg:items-start text-center lg:text-left stagger-item stagger-fade-left">
+                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold border ${theme.border} bg-white/5 backdrop-blur-md shadow-sm">
                             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span class="${tplConfig.textClass} opacity-90">Open to opportunities</span>
+                            <span class="${theme.textSecondary} opacity-90">Open to opportunities</span>
                         </div>
                         
                         <div class="space-y-4 w-full">
-                            <h1 class="font-black tracking-tight leading-tight w-full max-w-3xl text-4xl sm:text-5xl lg:text-6xl break-words ${bgImage ? 'text-white' : tplConfig.textClass}">
+                            <h1 class="font-black tracking-tight leading-tight w-full max-w-3xl text-4xl sm:text-5xl lg:text-6xl break-words ${bgImage ? 'text-white' : theme.textPrimary}">
                                 ${escapeHtml(data.heading) || 'YOUR NAME'}
                             </h1>
-                            <p class="text-xl md:text-2xl font-bold w-full ${tplConfig.accentClass}">
+                            <p class="text-xl md:text-2xl font-bold w-full ${theme.accentText || 'text-blue-400'}">
                                 ${escapeHtml(data.subheading) || 'Professional Headline'}
                             </p>
-                            <p class="text-lg leading-relaxed w-full max-w-xl font-medium ${bgImage ? 'text-white/80' : `${tplConfig.textClass} opacity-80`} ${!(data.description || data.text) ? 'opacity-60 italic' : ''}">
-                                ${escapeHtml(data.description || data.text) || 'Introduction...'}
-                            </p>
+                            ${heroDescHtml}
                         </div>
                         
-                        <div class="flex flex-col items-center ${tplConfig.layoutDir.includes('row-reverse') ? 'lg:items-end' : 'lg:items-start'} gap-6 pt-4 w-full">
-                            <div class="flex flex-wrap items-center justify-center ${tplConfig.layoutDir.includes('row-reverse') ? 'lg:justify-end' : 'lg:justify-start'} gap-4 w-full">
-                                <button onclick="document.getElementById('section-${activeSections.find(s=>s.section_type==='projects_grid')?.id||''}').scrollIntoView({behavior:'smooth'})" class="px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all shadow-lg hover:shadow-[0_20px_40px_rgba(59,130,246,0.3)] ${tplConfig.buttonClass} text-white flex items-center gap-2 hover:scale-110 hover:-translate-y-2">
+                        <div class="flex flex-col items-center lg:items-start gap-6 pt-4 w-full">
+                            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 w-full">
+                                <button onclick="document.getElementById('section-${activeSections.find(s=>s.section_type==='projects_grid')?.id||''}').scrollIntoView({behavior:'smooth'})" class="px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all shadow-lg hover:shadow-[0_20px_40px_rgba(59,130,246,0.3)] ${theme.accentBg || 'bg-blue-600'} text-white flex items-center gap-2 hover:scale-110 hover:-translate-y-2">
                                     View My Work &rarr;
                                 </button>
-                                <button class="px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all bg-transparent hover:bg-white/10 border shadow-sm hover:shadow-lg hover:shadow-white/10 ${tplConfig.textClass} border-current hover:scale-110 hover:-translate-y-2">
+                                <button class="px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all bg-transparent hover:bg-white/10 border shadow-sm hover:shadow-lg hover:shadow-white/10 ${theme.textPrimary} border-current hover:scale-110 hover:-translate-y-2">
                                     Download Resume
                                 </button>
                             </div>
                             
-                            <div class="flex flex-wrap items-center justify-center ${tplConfig.layoutDir.includes('row-reverse') ? 'lg:justify-end' : 'lg:justify-start'} gap-3 w-full mt-2">
+                            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-3 w-full mt-2">
                                 ${seeLiveDropdown}
                                 ${projectsDropdown}
                             </div>
                         </div>
                     </div>
 
-                    <div class="flex-1 w-full max-w-md lg:max-w-none relative aspect-square flex justify-center items-center stagger-item stagger-fade-right animate-float" style="transition-delay: 0.2s">
-                        ${rightVisualHtml.replace('max-w-md h-[400px]', 'max-w-full h-full').replace('w-[250px] h-[250px]', 'w-full h-full')}
-                    </div>
-                </div>
-            </section>`;
-        } else if (type === 'about') {
-            const aboutImg = getAbsoluteUrl(data.backgroundImage);
-            sectionsHtml += `
-            <section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-[0_20px_40px_-15px_rgba(0,0,0,0.4)] hover:border-white/20 transition-all duration-700">
-                <div class="flex flex-wrap justify-center items-center gap-10">
-                    ${aboutImg ? `
-                    <div class="shrink-0 relative group w-48 h-48 md:w-64 md:h-64 mx-auto md:mx-0 stagger-item stagger-fade-left">
-                        <div class="absolute inset-0 rounded-2xl md:rounded-full blur-[30px] opacity-40 bg-gradient-to-tr from-blue-500 to-purple-500 group-hover:opacity-80 transition-opacity duration-700"></div>
-                        <img src="${aboutImg}" alt="About Me" class="relative w-full h-full object-cover rounded-2xl md:rounded-[3rem] border-4 ${theme.border} shadow-2xl transform transition-transform duration-700 group-hover:scale-110 group-hover:rotate-3" />
-                    </div>
-                    ` : ''}
-                    <div class="flex-[1_1_300px] space-y-5 w-full text-center min-[600px]:text-left stagger-item stagger-fade-right" style="transition-delay: 0.2s">
-                        <h2 class="text-3xl sm:text-4xl uppercase font-black tracking-widest mb-10 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">${escapeHtml(data.title) || 'About Me'}</h2>
-                        <div class="text-lg md:text-xl leading-relaxed break-words max-w-full font-medium ${theme.textSecondary}">
-                            ${escapeHtml(data.bio) || 'Introduction...'}
+                    <div class="flex-1 w-full flex justify-center lg:justify-end relative stagger-item stagger-fade-right" style="transition-delay: 0.2s">
+                        <div class="relative w-[300px] h-[300px] md:w-[450px] md:h-[450px] lg:w-[500px] lg:h-[500px] animate-float">
+                            <div class="absolute inset-0 bg-blue-500/20 rounded-full blur-[100px]"></div>
+                            <img src="${heroSideImage}" alt="3D Workspace" class="absolute inset-0 w-full h-full object-cover opacity-90 rounded-3xl ${!isCustomSide ? 'mix-blend-screen' : 'shadow-2xl'}" style="filter: drop-shadow(0 0 30px rgba(59,130,246,0.3));" />
                         </div>
                     </div>
                 </div>
             </section>`;
+        } else if (type === 'about') {
+            // CRITICAL FIX: About Me uses customSideImage for the side avatar, and backgroundImage for the section background!
+            const aboutSideImg = data.customSideImage ? getAbsoluteUrl(data.customSideImage) : '';
+            const aboutBgImg = data.backgroundImage ? getAbsoluteUrl(data.backgroundImage) : '';
+            
+            sectionsHtml += `
+            <section class="py-12 md:py-16 px-6 md:px-12 mb-16 rounded-[2.5rem] relative overflow-hidden border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-[0_20px_40px_-15px_rgba(0,0,0,0.4)]">
+                ${aboutBgImg ? `
+                <div class="absolute inset-0 z-0 pointer-events-none rounded-[2.5rem] overflow-hidden">
+                    <div class="absolute inset-0 z-10 backdrop-blur-[4px] bg-[#0B0C10]/80"></div>
+                    <img src="${aboutBgImg}" alt="About Background" class="w-full h-full object-cover" />
+                </div>
+                ` : ''}
+                <div class="flex flex-wrap justify-center items-center gap-10 relative z-10">
+                    ${aboutSideImg ? `
+                    <div class="shrink-0 relative group w-48 h-48 md:w-64 md:h-64 mx-auto md:mx-0 stagger-item stagger-fade-left">
+                        <div class="absolute inset-0 rounded-2xl md:rounded-full blur-[30px] opacity-40 bg-gradient-to-tr from-blue-500 to-purple-500 group-hover:opacity-80 transition-opacity duration-700"></div>
+                        <img src="${aboutSideImg}" alt="Profile" class="relative w-full h-full object-cover rounded-2xl md:rounded-[3rem] border-4 ${theme.border} shadow-2xl transform transition-transform duration-700 group-hover:scale-110 group-hover:rotate-3" />
+                    </div>
+                    ` : ''}
+                    <div class="flex-[1_1_300px] space-y-5 w-full text-center min-[600px]:text-left stagger-item stagger-fade-right" style="transition-delay: 0.2s">
+                        <h2 class="text-3xl sm:text-4xl uppercase font-black tracking-widest mb-10 ${theme.textPrimary}">${escapeHtml(data.title) || 'About Me'}</h2>
+                        ${data.bio ? `
+                        <div class="text-lg md:text-xl leading-relaxed break-words max-w-full font-medium ${theme.textSecondary}">
+                            ${escapeHtml(data.bio)}
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </section>`;
         } else if (type === 'education') {
-            const itemsHtml = (data.schools || []).map((s, i) => `
+            const hasSchools = data.schools && data.schools.length > 0;
+            const itemsHtml = hasSchools ? (data.schools || []).map((s, i) => `
                 <div class="stagger-item stagger-fade-up p-8 rounded-3xl border ${theme.border} bg-white/5 hover:bg-white/10 transition-all shadow-md hover:shadow-[0_15px_30px_rgba(0,0,0,0.3)] hover:-translate-y-2 hover:border-white/20 group" style="transition-delay: ${(i%4)*0.1}s">
                     <div class="flex flex-wrap justify-between items-start gap-4">
                         <div class="space-y-2 w-full sm:w-auto flex-1">
                             <h3 class="text-xl font-bold uppercase tracking-wide break-words max-w-full ${theme.textPrimary} group-hover:text-blue-400 transition-colors">${escapeHtml(s.institution || 'Unknown College')}</h3>
                             <p class="text-base font-medium break-words max-w-full ${theme.textSecondary}">${escapeHtml(s.degree || 'Degree')}</p>
                         </div>
-                        <span class="text-sm font-mono px-5 py-2 rounded-xl border ${theme.border} bg-black/40 ${theme.textSecondary} shadow-inner">${escapeHtml(s.years || '2020 - 2024')}</span>
+                        ${s.years ? `<span class="text-sm font-mono px-5 py-2 rounded-xl border ${theme.border} bg-black/40 ${theme.textSecondary} shadow-inner">${escapeHtml(s.years)}</span>` : ''}
                     </div>
+                    ${s.score ? `
                     <div class="mt-6 pt-6 border-t border-white/10 flex items-center gap-2 text-sm">
                         <span class="${theme.textSecondary}">Performance:</span>
-                        <span class="font-mono font-bold text-lg ${theme.accentText}">${escapeHtml(s.score || 'GPA')}</span>
+                        <span class="font-mono font-bold text-lg ${theme.accentText}">${escapeHtml(s.score)}</span>
                     </div>
+                    ` : ''}
                 </div>
-            `).join('');
-            sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl stagger-container"><h2 class="text-3xl sm:text-4xl uppercase font-black tracking-widest mb-12 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 stagger-item stagger-fade-down">${escapeHtml(data.title) || 'Education'}</h2><div class="space-y-6">${itemsHtml}</div></section>`;
+            `).join('') : `
+            <div class="p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${theme.border} bg-white/5 w-full max-w-2xl mx-auto my-8 shadow-sm">
+                <h3 class="text-lg font-bold mb-2 ${theme.textPrimary}">No Education Added</h3>
+                <p class="text-sm max-w-sm mx-auto ${theme.textSecondary}">This section is currently empty. Check back later for updates.</p>
+            </div>
+            `;
+            sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl stagger-container"><h2 class="text-3xl sm:text-4xl uppercase font-black tracking-widest mb-12 ${theme.textPrimary} stagger-item stagger-fade-down">${escapeHtml(data.title) || 'Educational Background'}</h2><div class="space-y-6">${itemsHtml}</div></section>`;
         } else if (type === 'skills') {
-            const itemsHtml = (data.items || []).map((s, i) => {
+            const hasItems = data.items && data.items.length > 0;
+            const itemsHtml = hasItems ? (data.items || []).map((s, i) => {
                 const levelVal = (s.level !== undefined && s.level !== null && s.level !== '') ? s.level : 50;
+                const isEven = i % 2 === 0;
+                const iconUrl = s.customIcon ? getAbsoluteUrl(s.customIcon) : getSkillIconUrl(s.name);
                 return `
-                <div class="stagger-item stagger-fade-up p-6 md:p-8 rounded-3xl transition-all duration-500 w-full md:w-[70%] border shadow-md ${theme.border} bg-white/5 hover:bg-white/10 hover:shadow-[0_20px_40px_rgba(0,0,0,0.3)] hover:-translate-y-2 hover:border-white/20 ${i % 2 === 0 ? 'self-start' : 'self-end'} group" style="transition-delay: ${(i%4)*0.1}s">
+                <div class="stagger-item stagger-fade-up p-6 md:p-8 rounded-3xl transition-all duration-500 w-full md:w-[70%] border shadow-md ${theme.border} bg-white/5 hover:bg-white/10 hover:shadow-[0_20px_40px_rgba(0,0,0,0.3)] hover:-translate-y-2 hover:border-white/20 ${isEven ? 'self-start' : 'self-end'} group" style="transition-delay: ${(i%4)*0.1}s">
                     <div class="flex justify-between items-center text-lg font-bold mb-4">
                         <div class="flex items-center gap-3">
-                            ${(() => {
-                                const url = s.customIcon || getSkillIconUrl(s.name);
-                                if (url) return `<img src="${url}" alt="${escapeHtml(s.name)}" class="w-8 h-8 object-contain drop-shadow-lg" />`;
-                                return getFallbackIconSvg(s.name);
-                            })()}
+                            ${iconUrl ? `<img src="${iconUrl}" alt="${escapeHtml(s.name)}" class="w-8 h-8 object-contain drop-shadow-lg" />` : getFallbackIconSvg(s.name)}
                             <span class="tracking-wide ${theme.textPrimary} group-hover:text-white transition-colors">${escapeHtml(s.name)}</span>
                         </div>
                         <span class="${theme.accentText} font-mono text-sm px-4 py-2 rounded-xl border ${theme.border} bg-black/40 shadow-inner group-hover:bg-black/60 transition-colors">${escapeHtml(levelVal)}%</span>
@@ -376,32 +415,53 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                     </div>
                 </div>
             `;
-            }).join('');
-            sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl stagger-container"><h2 class="text-3xl sm:text-4xl uppercase font-black tracking-widest mb-12 text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 stagger-item stagger-fade-down">${escapeHtml(data.title) || 'Core Expertise'}</h2><div class="flex flex-col gap-8 pt-2 w-full max-w-5xl mx-auto px-2">${itemsHtml}</div></section>`;
+            }).join('') : `
+            <div class="p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${theme.border} bg-white/5 w-full shadow-sm">
+                <h3 class="text-lg font-bold mb-2 ${theme.textPrimary}">No Skills Added</h3>
+                <p class="text-sm max-w-sm mx-auto ${theme.textSecondary}">This section is currently empty. Check back later for updates.</p>
+            </div>
+            `;
+            sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl stagger-container"><h2 class="text-3xl sm:text-4xl uppercase font-black tracking-widest mb-12 text-center ${theme.textPrimary} stagger-item stagger-fade-down">${escapeHtml(data.title) || 'Core Expertise'}</h2><div class="flex flex-col gap-8 pt-2 w-full max-w-5xl mx-auto px-2">${itemsHtml}</div></section>`;
         } else if (type === 'projects_grid') {
-            const projectsHtml = (data.projects || []).map((p, i) => `
+            const hasProjects = data.projects && data.projects.length > 0;
+            const projectsHtml = hasProjects ? (data.projects || []).map((p, i) => {
+                const projImg = p.projectImage ? getAbsoluteUrl(p.projectImage) : '';
+                const tagsList = Array.isArray(p.tags) ? p.tags : (p.tags ? String(p.tags).split(',') : []);
+                return `
                 <div class="group relative flex flex-col lg:flex-row items-center gap-10 rounded-[2.5rem] border ${theme.border} bg-white/5 overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-all duration-700 hover:bg-white/10 p-10 hover:-translate-y-3 hover:border-white/20">
                     <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-1 transition-all duration-700 group-hover:w-full ${theme.accentBg || 'bg-blue-500'} shadow-[0_0_15px_rgba(59,130,246,0.8)]"></div>
                     
-                    ${p.projectImage ? `
+                    ${projImg ? `
                     <div class="w-full lg:w-2/5 shrink-0 relative aspect-video rounded-2xl overflow-hidden shadow-xl border ${theme.border} group-hover:border-white/30 transition-all duration-500 stagger-custom-left" style="transition-delay: ${(i*0.2) + 0.1}s">
                         <div class="absolute inset-0 bg-blue-500/20 group-hover:opacity-0 transition-opacity z-10 mix-blend-overlay"></div>
-                        <img src="${p.projectImage}" alt="${escapeHtml(p.title)}" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" />
+                        <img src="${projImg}" alt="${escapeHtml(p.title)}" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" />
                     </div>
                     ` : ''}
                     
-                    <div class="flex-1 space-y-8 ${p.projectImage ? 'lg:pl-6' : ''}">
+                    <div class="flex-1 space-y-8 ${projImg ? 'lg:pl-6' : ''}">
+                        ${p.category ? `<div class="text-xs font-bold uppercase tracking-widest ${theme.accentText}">${escapeHtml(p.category)}</div>` : ''}
                         <h3 class="text-3xl sm:text-4xl font-black ${theme.textPrimary} stagger-custom-left group-hover:text-white transition-colors" style="transition-delay: ${(i*0.2) + 0.1}s">${escapeHtml(p.title)}</h3>
-                        <!-- FIX: Use p.desc instead of p.description to pull the exact project data! -->
-                        <p class="text-lg sm:text-xl text-slate-400 leading-relaxed font-medium stagger-custom-right group-hover:text-slate-300 transition-colors" style="transition-delay: ${(i*0.2) + 0.2}s">${escapeHtml(p.desc)}</p>
+                        ${p.desc ? `<p class="text-lg sm:text-xl text-slate-400 leading-relaxed font-medium stagger-custom-right group-hover:text-slate-300 transition-colors" style="transition-delay: ${(i*0.2) + 0.2}s">${escapeHtml(p.desc)}</p>` : ''}
+                        ${tagsList.length > 0 ? `
                         <div class="flex flex-wrap gap-3 pt-4 stagger-custom-up" style="transition-delay: ${(i*0.2) + 0.3}s">
-                            ${escapeHtml(p.tags).split(',').map(tag => `<span class="px-5 py-2.5 text-xs font-mono font-bold rounded-xl bg-black/40 border ${theme.border} ${theme.accentText} shadow-sm group-hover:shadow-md transition-shadow flex items-center">${getTechIconHtml(tag.trim())} ${tag.trim()}</span>`).join('')}
+                            ${tagsList.map(tag => {
+                                const t = tag.trim();
+                                if (!t) return '';
+                                return `<span class="px-5 py-2.5 text-xs font-mono font-bold rounded-xl bg-black/40 border ${theme.border} ${theme.accentText} shadow-sm group-hover:shadow-md transition-shadow flex items-center">${getTechIconHtml(t)} ${escapeHtml(t)}</span>`;
+                            }).join('')}
                         </div>
+                        ` : ''}
                         ${p.projectUrl ? `<div class="pt-8 stagger-fade-up" style="transition-delay: ${(i*0.2) + 0.4}s"><a href="${escapeHtml(p.projectUrl)}" target="_blank" class="inline-flex px-8 py-4 text-sm font-bold rounded-xl ${theme.accentBg || 'bg-blue-600'} text-white hover:scale-110 hover:-translate-y-2 transition-all shadow-lg hover:shadow-[0_15px_30px_rgba(59,130,246,0.4)]">View Project &rarr;</a></div>` : ''}
                     </div>
                 </div>
-            `).join('');
-            sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl stagger-container"><h2 class="text-3xl sm:text-4xl uppercase font-black tracking-widest mb-12 text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 stagger-item stagger-fade-down">${escapeHtml(data.title) || 'Projects'}</h2><div class="flex flex-col gap-12 w-full max-w-5xl mx-auto">${projectsHtml}</div></section>`;
+            `;
+            }).join('') : `
+            <div class="p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${theme.border} bg-white/5 w-full shadow-sm">
+                <h3 class="text-lg font-bold mb-2 ${theme.textPrimary}">No Projects Yet</h3>
+                <p class="text-sm max-w-sm mx-auto ${theme.textSecondary}">This section is currently empty. Check back later for updates.</p>
+            </div>
+            `;
+            sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl stagger-container"><h2 class="text-3xl sm:text-4xl uppercase font-black tracking-widest mb-12 text-center ${theme.textPrimary} stagger-item stagger-fade-down">${escapeHtml(data.title) || 'Showcase of Innovations'}</h2><div class="flex flex-col gap-12 w-full max-w-5xl mx-auto">${projectsHtml}</div></section>`;
         } else if (type === 'contact') {
             const formHtml = `
             <form class="max-w-xl mx-auto space-y-6 mt-12 bg-black/30 p-10 rounded-3xl border ${theme.border} shadow-2xl text-left stagger-item stagger-fade-up hover:border-white/20 transition-colors duration-500" style="transition-delay: 0.3s" onsubmit="event.preventDefault(); alert('Form submitted! (Demo only in static export)');">
@@ -430,7 +490,7 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                 data.github ? `<a href="${escapeHtml(data.github)}" target="_blank" class="px-8 py-4 rounded-full text-sm font-bold border ${theme.border} bg-white/5 hover:scale-110 hover:-translate-y-2 hover:bg-white/10 hover:border-white/20 hover:shadow-[0_10px_20px_rgba(255,255,255,0.1)] transition-all text-slate-300 hover:text-white stagger-item stagger-fade-up">GitHub</a>` : '',
             ].filter(Boolean).join('');
             
-            sectionsHtml += `<section class="py-20 px-6 md:px-12 mb-16 text-center rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] stagger-container"><h2 class="text-3xl sm:text-4xl uppercase font-black tracking-widest mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 stagger-item stagger-fade-down">${escapeHtml(data.title) || 'Get In Touch'}</h2><p class="text-xl text-slate-400 max-w-lg mx-auto mb-12 leading-relaxed stagger-item stagger-fade-up">${escapeHtml(data.text) || 'Reach out.'}</p><div class="flex flex-wrap justify-center gap-6 mb-10">${linksHtml}</div>${formHtml}</section>`;
+            sectionsHtml += `<section class="py-20 px-6 md:px-12 mb-16 text-center rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] stagger-container"><h2 class="text-3xl sm:text-4xl uppercase font-black tracking-widest mb-6 ${theme.textPrimary} stagger-item stagger-fade-down">${escapeHtml(data.title) || 'Get In Touch'}</h2>${data.text ? `<p class="text-xl text-slate-400 max-w-lg mx-auto mb-12 leading-relaxed stagger-item stagger-fade-up">${escapeHtml(data.text)}</p>` : ''}<div class="flex flex-wrap justify-center gap-6 mb-10">${linksHtml}</div>${formHtml}</section>`;
         }
         sectionsHtml += `</div>`;
     });
