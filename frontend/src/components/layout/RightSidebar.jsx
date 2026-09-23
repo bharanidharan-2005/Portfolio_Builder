@@ -634,7 +634,7 @@ export default function RightSidebar({
         setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Analyzing canvas to generate SEO tags and Analytics...` }]);
         try {
             const API = (await import('../../api')).default;
-            const res = await API.post('/ai-seo-analytics/', { sections: sections });
+            const res = await API.post('ai-seo-analytics/', { sections: sections });
             if (res.data.success) {
                 setSeoData(res.data.data);
                 setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] SEO and Analytics generated successfully.` }]);
@@ -714,7 +714,7 @@ export default function RightSidebar({
                 return { ...sec, data: cleanData };
             });
 
-            const response = await API.post("/ai-copilot/", {
+            const response = await API.post("ai-copilot/", {
                 prompt: userMsg,
                 canvas_state: strippedSections
             });
@@ -936,7 +936,7 @@ export default function RightSidebar({
                             setIsProcessing(true);
                             setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Scraping GitHub for ${username}...` }]);
                             try {
-                                const res = await API.post('/ai-github-ingest/', { username });
+                                const res = await API.post('ai-github-ingest/', { username });
                                 if (res.data.success) {
                                     const { skills, projects } = res.data.data;
                                     
@@ -1539,7 +1539,7 @@ export default function RightSidebar({
                             setIsProcessing(true);
                             
                             try {
-                                const response = await API.post("/generate-image/", { prompt: imagePrompt });
+                                const response = await API.post("generate-image/", { prompt: imagePrompt });
                                 if (response.data && response.data.success) {
                                     setGeneratedImageUrl(response.data.image_url);
                                     setTerminalLogs(prev => [...prev, { type: "success", text: "[SUCCESS] Image generated successfully!" }]);

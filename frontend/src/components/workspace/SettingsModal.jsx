@@ -28,7 +28,7 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
         const timeoutId = setTimeout(async () => {
             setIsSaving(true);
             try {
-                await API.patch('/user/profile/', { name: localName, avatar: localAvatar });
+                await API.patch('user/profile/', { name: localName, avatar: localAvatar });
                 if (setUserData) {
                     setUserData(prev => ({ ...prev, name: localName, avatar: localAvatar }));
                 }
