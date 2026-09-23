@@ -1,5 +1,6 @@
+import React, { useState, useRef, useEffect } from "react";
 import { 
-    X, Monitor, Smartphone, Tablet as TabletIcon, ExternalLink, Copy, LayoutTemplate
+    X, Monitor, Smartphone, Tablet as TabletIcon, ExternalLink, Copy, LayoutTemplate, ChevronDown
 } from "lucide-react";
 import CanvasContainer from "../../canvas/CanvasContainer.jsx";
 import { PORTFOLIO_THEMES } from "../../canvas/themes.js";
@@ -22,6 +23,19 @@ export default function PreviewModal({
     globalFont,
     setTerminalLogs
 }) {
+    const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
+    const themeDropdownRef = useRef(null);
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (themeDropdownRef.current && !themeDropdownRef.current.contains(event.target)) {
+                setIsThemeDropdownOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
     if (!isOpen) return null;
 
     // Define the frame width and styling for responsive viewports
@@ -76,19 +90,37 @@ export default function PreviewModal({
                 </div>
 
                 <div className="flex items-center gap-2 md:gap-3">
-                    <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-colors ${isLight ? 'bg-slate-100 border-slate-200' : 'bg-black/40 border-slate-800'}`}>
-                        <LayoutTemplate className={`w-4 h-4 ${isLight ? 'text-slate-400' : 'text-slate-500'}`} />
-                        <select 
-                            value={currentTheme}
-                            onChange={(e) => setUserData({...userData, theme: e.target.value})}
-                            className={`bg-transparent text-xs font-semibold outline-none cursor-pointer ${isLight ? 'text-slate-700' : 'text-slate-200'}`}
+                    <div ref={themeDropdownRef} className="relative hidden md:block">
+                        <button 
+                            onClick={() => setIsThemeDropdownOpen(!isThemeDropdownOpen)}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-colors ${isLight ? 'bg-slate-100 border-slate-200 text-slate-700' : 'bg-black/40 border-slate-800 text-slate-200'} hover:opacity-80`}
                         >
-                            {Object.values(PORTFOLIO_THEMES).map(theme => (
-                                <option key={theme.id} value={theme.id} className="bg-slate-900 text-slate-100 font-semibold py-1">
-                                    {theme.name.replace(/^\d+\.\s*/, '')}
-                                </option>
-                            ))}
-                        </select>
+                            <LayoutTemplate className={`w-4 h-4 ${isLight ? 'text-slate-400' : 'text-slate-500'}`} />
+                            <span className="text-xs font-semibold whitespace-nowrap">
+                                {PORTFOLIO_THEMES[currentTheme]?.name.replace(/^\d+\.\s*/, '') || 'Select Theme'}
+                            </span>
+                            <ChevronDown className={`w-3 h-3 transition-transform ${isThemeDropdownOpen ? 'rotate-180' : ''} ${isLight ? 'text-slate-400' : 'text-slate-500'}`} />
+                        </button>
+                        
+                        {isThemeDropdownOpen && (
+                            <div className={`absolute top-full mt-2 w-48 py-1 rounded-xl shadow-2xl border overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200 ${isLight ? 'bg-white border-slate-200 right-0' : 'bg-[#0A0A0F] border-slate-800 right-0'}`}>
+                                <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                                    {Object.values(PORTFOLIO_THEMES).map(theme => (
+                                        <button
+                                            key={theme.id}
+                                            onClick={() => {
+                                                setUserData({...userData, theme: theme.id});
+                                                setIsThemeDropdownOpen(false);
+                                            }}
+                                            className={`w-full text-left px-4 py-2.5 text-xs font-semibold transition-colors flex items-center justify-between group ${currentTheme === theme.id ? (isLight ? 'bg-blue-50 text-blue-600' : 'bg-blue-500/10 text-blue-400') : (isLight ? 'text-slate-600 hover:bg-slate-50' : 'text-slate-300 hover:bg-slate-800 hover:text-white')}`}
+                                        >
+                                            {theme.name.replace(/^\d+\.\s*/, '')}
+                                            {currentTheme === theme.id && <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                     
                     <div className={`h-6 w-px mx-1 hidden sm:block ${isLight ? 'bg-slate-200' : 'bg-slate-800'}`}></div>
