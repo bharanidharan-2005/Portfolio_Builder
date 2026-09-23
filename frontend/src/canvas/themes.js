@@ -86,9 +86,9 @@ export const PORTFOLIO_THEMES = {
         id: 'vibrant_geo',
         name: '9. 3D Vibrant Geo',
         bodyBg: 'bg-black/80 bg-[url(https://images.unsplash.com/photo-1557672172-298e090bd0f1?auto=format&fit=crop&w=1920&q=80)] bg-cover bg-center bg-fixed bg-blend-multiply',
-        border: 'border-fuchsia-500/30',
-        accentText: 'text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-rose-400',
-        accentBg: 'bg-gradient-to-r from-fuchsia-400 to-rose-400',
+        border: 'border-orange-500/30',
+        accentText: 'text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500',
+        accentBg: 'bg-gradient-to-r from-amber-400 to-orange-500',
         textPrimary: 'text-slate-50',
         textSecondary: 'text-slate-300',
     }
