@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
-import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, useSortable, verticalListSortingStrategy, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Undo2, Redo2, Layers, Sparkles } from 'lucide-react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
@@ -110,6 +110,29 @@ function SortableSection({ section, children }) {
         > 
             {children({ listeners, attributes, isDragging })} 
         </div>
+    );
+}
+
+function SortableNavItem({ item, onClick, currentTheme }) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
+    return (
+        <button
+            ref={setNodeRef}
+            type="button"
+            onClick={() => onClick(item.label)}
+            {...attributes}
+            {...listeners}
+            className={`bg-transparent px-3 py-1.5 rounded-lg text-sm font-bold transition-all duration-300 whitespace-nowrap ${isDragging ? 'cursor-grabbing opacity-50 scale-105 z-50' : 'cursor-grab'} ${currentTheme.textSecondary || 'text-slate-400'} hover:bg-white/10`}
+            style={{
+                color: 'inherit',
+                transform: CSS.Transform.toString(transform),
+                transition
+            }}
+        >
+            <span className={`transition-opacity ${currentTheme.textPrimary || 'text-white'}`}>
+                {item.label}
+            </span>
+        </button>
     );
 }
 
@@ -267,18 +290,36 @@ export default function CanvasContainer({
         if (!displaySections) return [];
         const ignoredTypes = ['hero', 'footer', 'resume', 'banner'];
         
-        const types = displaySections
-            .filter(s => s.section_type && !ignoredTypes.includes(s.section_type))
-            .map(s => {
+        const items = [];
+        const seenTypes = new Set();
+        
+        displaySections.forEach(s => {
+            if (s.section_type && !ignoredTypes.includes(s.section_type)) {
                 let name = s.section_type;
-                if (name === 'projects_grid') return 'Projects';
-                // Capitalize first letter
-                return name.charAt(0).toUpperCase() + name.slice(1);
-            });
+                if (name === 'projects_grid') name = 'projects';
+                
+                // Only add unique types to avoid multiple nav links for the same section type
+                if (!seenTypes.has(name)) {
+                    seenTypes.add(name);
+                    items.push({
+                        id: `nav-${s.id}`, // prefix ID to avoid collision with section DnD
+                        sectionId: s.id,
+                        label: name.charAt(0).toUpperCase() + name.slice(1)
+                    });
+                }
+            }
+        });
             
-        // Return unique items
-        return [...new Set(types)];
+        return items;
     }, [displaySections]);
+
+    const handleNavDragEnd = ({ active, over }) => {
+        if (over && active.id !== over.id && onDropSection) {
+            const activeId = String(active.id).replace('nav-', '');
+            const overId = String(over.id).replace('nav-', '');
+            onDropSection(activeId, overId);
+        }
+    };
 
     const heroSectionData = displaySections.find(s => (s.section_type || '').toLowerCase().trim() === 'hero');
     const heroName = heroSectionData?.content_data?.heading || 'DEV';
@@ -326,19 +367,34 @@ export default function CanvasContainer({
 
                         {/* Navigation Links */}
                         <div className="flex flex-wrap items-center justify-center gap-1 md:gap-4 opacity-90 hidden lg:flex"> 
-                            {dynamicNavItems.map((navItem) => ( 
-                                <button 
-                                    key={navItem} 
-                                    type="button" 
-                                    onClick={() => handleNavClick(navItem)} 
-                                    className={`bg-transparent px-3 py-1.5 rounded-lg text-sm font-bold transition-all duration-300 whitespace-nowrap cursor-pointer ${currentTheme.textSecondary || 'text-slate-400'} hover:bg-white/10`}
-                                    style={{ color: 'inherit' }}
-                                > 
-                                    <span className={`opacity-80 hover:opacity-100 transition-opacity ${currentTheme.textPrimary || 'text-white'}`}>
-                                        {navItem}
-                                    </span>
-                                </button>
-                            ))} 
+                            {!isPreview ? (
+                                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleNavDragEnd}>
+                                    <SortableContext items={dynamicNavItems.map(item => item.id)} strategy={horizontalListSortingStrategy}>
+                                        {dynamicNavItems.map((navItem) => (
+                                            <SortableNavItem 
+                                                key={navItem.id} 
+                                                item={navItem} 
+                                                onClick={handleNavClick} 
+                                                currentTheme={currentTheme} 
+                                            />
+                                        ))}
+                                    </SortableContext>
+                                </DndContext>
+                            ) : (
+                                dynamicNavItems.map((navItem) => ( 
+                                    <button 
+                                        key={navItem.id} 
+                                        type="button" 
+                                        onClick={() => handleNavClick(navItem.label)} 
+                                        className={`bg-transparent px-3 py-1.5 rounded-lg text-sm font-bold transition-all duration-300 whitespace-nowrap cursor-pointer ${currentTheme.textSecondary || 'text-slate-400'} hover:bg-white/10`}
+                                        style={{ color: 'inherit' }}
+                                    > 
+                                        <span className={`opacity-80 hover:opacity-100 transition-opacity ${currentTheme.textPrimary || 'text-white'}`}>
+                                            {navItem.label}
+                                        </span>
+                                    </button>
+                                ))
+                            )}
                         </div>
 
                         {/* Right Side - Resume */}
