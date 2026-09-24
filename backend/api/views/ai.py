@@ -285,16 +285,25 @@ class AICopilotAPIView(APIView):
 
     def post(self, request):
         prompt = request.data.get('prompt', '').strip()
+        if len(prompt) > 2000:
+            prompt = prompt[:2000] + "... [TRUNCATED]"
         canvas_state = request.data.get('canvas_state', [])
 
         if not prompt:
             return Response({'error': 'Prompt is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            # Truncate canvas state to prevent exceeding Free Tier TPM limits (8000 tokens)
-            canvas_json = json.dumps(canvas_state)
-            if len(canvas_json) > 15000:
-                canvas_json = canvas_json[:15000] + "... [TRUNCATED]"
+            # Strip heavy content to prevent exceeding Free Tier TPM limits
+            stripped_state = []
+            for sec in canvas_state:
+                if isinstance(sec, dict):
+                    clean_sec = {k: v for k, v in sec.items() if k not in ['content_data', 'data']}
+                    clean_sec['section_type'] = sec.get('section_type', 'unknown')
+                    stripped_state.append(clean_sec)
+            
+            canvas_json = json.dumps(stripped_state)
+            if len(canvas_json) > 4000:
+                canvas_json = canvas_json[:4000] + "... [TRUNCATED]"
                 
             system_instruction = f"""You are an AI Co-Pilot for a React portfolio builder. 
 The user wants to modify their portfolio canvas through a chat interface.
