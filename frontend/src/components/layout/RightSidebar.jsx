@@ -11,23 +11,7 @@ import { PORTFOLIO_THEMES, PORTFOLIO_FONTS } from "../../canvas/themes.js";
 import { API } from "../../api";
 import { useWorkspace } from "../../context/WorkspaceContext";
 
-const FRONT_PAGE_TEMPLATES = [
-    { id: 'template1', name: 'Tech Core', bgClass: 'bg-[#05050A]', accentClass: 'text-blue-400', buttonClass: 'bg-blue-600', visual: 'Image' },
-    { id: 'template2', name: 'Emerald Code', bgClass: 'bg-slate-950', accentClass: 'text-emerald-400', buttonClass: 'bg-emerald-600', visual: 'Code' },
-    { id: 'template3', name: 'Purple Sphere', bgClass: 'bg-[#0f172a]', accentClass: 'text-purple-400', buttonClass: 'bg-purple-600', visual: 'Sphere' },
-    { id: 'template4', name: 'Rose Float', bgClass: 'bg-zinc-950', accentClass: 'text-rose-400', buttonClass: 'bg-rose-600', visual: 'Icons' },
-    { id: 'template5', name: 'Macchiato', bgClass: 'bg-[#1e1e2e]', accentClass: 'text-[#89b4fa]', buttonClass: 'bg-[#89b4fa]', visual: 'Image' },
-    { id: 'template6', name: 'Cyber Neon', bgClass: 'bg-[#0B0C10]', accentClass: 'text-[#66FCF1]', buttonClass: 'bg-[#45A29E]', visual: 'Code' },
-    { id: 'template7', name: 'Bumblebee', bgClass: 'bg-black', accentClass: 'text-yellow-400', buttonClass: 'bg-yellow-600', visual: 'Sphere' },
-    { id: 'template8', name: 'Indigo Deep', bgClass: 'bg-indigo-950', accentClass: 'text-indigo-400', buttonClass: 'bg-indigo-600', visual: 'Icons' },
-    { id: 'template9', name: 'Amethyst', bgClass: 'bg-[#121212]', accentClass: 'text-[#BB86FC]', buttonClass: 'bg-[#BB86FC]', visual: 'Image' },
-    { id: 'template10', name: 'Cyan Abstract', bgClass: 'bg-slate-900', accentClass: 'text-cyan-400', buttonClass: 'bg-cyan-600', visual: 'Code' },
-    { id: 'template11', name: 'One Dark', bgClass: 'bg-[#282c34]', accentClass: 'text-[#61afef]', buttonClass: 'bg-[#61afef]', visual: 'Icons' },
-    { id: 'template12', name: 'Orange Geo', bgClass: 'bg-gray-950', accentClass: 'text-orange-400', buttonClass: 'bg-orange-600', visual: 'Sphere' },
-    { id: 'template13', name: 'Crimson', bgClass: 'bg-[#1a1a1a]', accentClass: 'text-[#ff6b6b]', buttonClass: 'bg-[#ff6b6b]', visual: 'Image' },
-    { id: 'template14', name: 'Dim Blue', bgClass: 'bg-[#0d1117]', accentClass: 'text-[#58a6ff]', buttonClass: 'bg-[#1f6feb]', visual: 'Code' },
-    { id: 'template15', name: 'Mocha Pink', bgClass: 'bg-[#11111b]', accentClass: 'text-[#f38ba8]', buttonClass: 'bg-[#f38ba8]', visual: 'Icons' }
-];
+
 
 const BROAD_JOB_CONCEPTS = [
     "React", "Node.js", "Python", "Java", "Django", "Flask", "AWS", "Docker", 
@@ -1176,7 +1160,7 @@ export default function RightSidebar({
             </div>
             
             <div className={`flex rounded-xl p-1.5 border shadow-inner transition-colors duration-300 ${isLight ? 'bg-slate-200/50 border-slate-300' : 'bg-slate-900/90 border-slate-800'}`}>
-                {["themes", "frontpage", "fonts"].map((tab) => (
+                {["themes", "fonts"].map((tab) => (
                     <button
                         key={tab}
                         onClick={() => setPaletteTab(tab)}
@@ -1244,47 +1228,7 @@ export default function RightSidebar({
                 </div>
             )}
 
-            {paletteTab === "frontpage" && (
-                <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-                    <div className="space-y-3">
-                        <label className={`block text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}> Hero Section Templates </label>
-                        <p className={`text-[10px] leading-relaxed mb-4 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Select a premium hero design. This dictates the first impression of your deployed portfolio.</p>
-                        
-                        <div className="grid grid-cols-2 gap-3 pb-6 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
-                            {FRONT_PAGE_TEMPLATES.map((tpl) => {
-                                const isSelected = (userData?.frontpageTemplate || 'template1') === tpl.id;
-                                return (
-                                    <button
-                                        key={tpl.id}
-                                        onClick={() => {
-                                            if (onTemplateChange) onTemplateChange(tpl.id);
-                                            setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Applied ${tpl.name} frontpage template.` }]);
-                                        }}
-                                        className={`flex flex-col rounded-xl overflow-hidden border text-left transition-all duration-300 cursor-pointer group hover:-translate-y-0.5 ${
-                                            isSelected 
-                                                ? 'border-purple-500 ring-2 ring-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.2)]' 
-                                                : (isLight ? 'border-slate-200 hover:border-purple-300' : 'border-slate-800 hover:border-purple-500/50')
-                                        }`}
-                                    >
-                                        <div className={`h-24 w-full ${tpl.bgClass} flex flex-col items-center justify-center relative overflow-hidden`}>
-                                            <div className={`w-8 h-2 rounded-full ${tpl.buttonClass} mb-2 shadow-lg`}></div>
-                                            <div className="flex gap-2">
-                                                <div className="w-12 h-1.5 rounded-full bg-white/20"></div>
-                                                <div className="w-8 h-1.5 rounded-full bg-white/20"></div>
-                                            </div>
-                                            <span className={`absolute bottom-2 right-2 text-[8px] font-black uppercase opacity-50 ${tpl.accentClass}`}>{tpl.visual}</span>
-                                        </div>
-                                        <div className={`p-2.5 w-full flex items-center justify-between ${isLight ? 'bg-white' : 'bg-slate-900/60 backdrop-blur-sm'}`}>
-                                            <span className={`text-[10px] font-bold truncate ${isLight ? 'text-slate-700' : 'text-slate-300'}`}> {tpl.name} </span> 
-                                            {isSelected && <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-purple-500 animate-in zoom-in" />}
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
-            )}
+
 
             {paletteTab === "fonts" && (
                 <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
