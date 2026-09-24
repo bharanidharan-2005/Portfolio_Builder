@@ -241,7 +241,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                     <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col-reverse lg:flex-row items-center gap-12 lg:gap-20">
                         
                         {/* LEFT COLUMN: TEXT */}
-                        <div className="flex-1 space-y-8 flex flex-col items-center lg:items-start text-center lg:text-left">
+                        <div className={`flex-1 space-y-8 flex flex-col ${data.hideSideImage === true ? 'items-center text-center' : 'items-center lg:items-start text-center lg:text-left'}`}>
                             
                             {/* Status Indicator */}
                             <motion.div 
@@ -302,9 +302,9 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 whileInView={{ opacity: 1, y: 0 }} 
                                 viewport={{ once: false, amount: 0.1 }}
                                 transition={{ ...springTransition, delay: 0.2 }}
-                                className="flex flex-col items-center lg:items-start gap-6 pt-4 w-full"
+                                className={`flex flex-col gap-6 pt-4 w-full ${data.hideSideImage === true ? 'items-center' : 'items-center lg:items-start'}`}
                             >
-                                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 w-full">
+                                <div className={`flex flex-wrap items-center gap-4 w-full ${data.hideSideImage === true ? 'justify-center' : 'justify-center lg:justify-start'}`}>
                                     <motion.button 
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
@@ -331,7 +331,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 
                                 {/* Sleek Side-by-Side Dropdowns */}
                                 {(heroLiveOptions.length > 0 || heroDesignOptions.length > 0) && (
-                                    <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 w-full mt-2">
+                                    <div className={`flex flex-wrap items-center gap-3 w-full mt-2 ${data.hideSideImage === true ? 'justify-center' : 'justify-center lg:justify-start'}`}>
                                         
                                         {/* See Live Dropdown */}
                                         {heroLiveOptions.length > 0 && (
@@ -445,7 +445,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 />
                             </motion.div>
                         )}
-                        <div className={`flex-[1_1_300px] space-y-5 w-full text-center min-[600px]:text-left`}>
+                        <div className={`flex-[1_1_300px] space-y-5 w-full ${(!customSideImage || data.hideSideImage === true) ? 'text-center' : 'text-center min-[600px]:text-left'}`}>
                             <motion.h2 
                             initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: false }}
                             className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest mb-10 ${textPrimary}`}
