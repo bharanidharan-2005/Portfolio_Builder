@@ -171,7 +171,7 @@ export default function WorkspaceLayout() {
                     )}
 
                     <div id="workspace-scroll-container" className={`flex-1 overflow-y-auto w-full h-full ${!isPublicPreview ? 'p-4 sm:p-8' : 'p-0'} [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`}>
-                        <div className={`w-full transition-all duration-300 ${!isPublicPreview ? 'max-w-[1024px] mx-auto' : ''}`}>
+                        <div className={`w-full transition-all duration-300 ${!isPublicPreview ? 'max-w-[1440px] mx-auto' : ''}`}>
                             <CanvasContainer 
                                 activePage={activePage}
                                 sections={sections}
