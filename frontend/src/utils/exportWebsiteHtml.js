@@ -1,6 +1,8 @@
+import React from 'react';
+import { renderToString } from 'react-dom/server';
 import { PORTFOLIO_THEMES, PORTFOLIO_FONTS } from '../canvas/themes';
 import { notify } from '../toast';
-import { getRoleImage } from '../components/portfolio/PortfolioFrontpage';
+import PortfolioFrontpage, { getRoleImage } from '../components/portfolio/PortfolioFrontpage';
 import { getSkillIconUrl } from './skillIcons';
 
 const escapeHtml = (value) => {
@@ -114,107 +116,46 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
     const heroCustomImage = heroData.customSideImage ? getAbsoluteUrl(heroData.customSideImage) : '';
     const heroVisualImageUrl = heroCustomImage || roleImageUrl;
 
-    let rightVisualHtml = '';
-    if (tplConfig.visual === 'Code') {
-        rightVisualHtml = `
-            <div class="relative w-full max-w-md h-[400px]">
-                <div class="absolute top-10 right-10 w-64 h-40 bg-slate-800/80 backdrop-blur-xl border border-slate-700 rounded-2xl p-4 shadow-2xl animate-[float_6s_ease-in-out_infinite]">
-                    <div class="w-full h-2 bg-slate-700 rounded mb-4"></div>
-                    <div class="w-3/4 h-2 bg-blue-500 rounded mb-2"></div>
-                    <div class="w-1/2 h-2 bg-emerald-500 rounded mb-2"></div>
-                    <div class="w-5/6 h-2 bg-purple-500 rounded mb-2"></div>
-                </div>
-                <div class="absolute bottom-10 left-0 w-56 h-48 bg-slate-900/90 backdrop-blur-xl border border-slate-700 rounded-2xl p-4 shadow-2xl animate-[float_7s_ease-in-out_infinite_reverse]">
-                    <div class="w-full h-2 bg-slate-700 rounded mb-2 mt-4"></div>
-                    <div class="w-2/3 h-2 bg-slate-700 rounded mb-2"></div>
-                    <div class="w-full h-2 bg-emerald-500/50 rounded mb-2"></div>
-                </div>
-            </div>`;
-    } else if (tplConfig.visual === 'Sphere') {
-        rightVisualHtml = `
-            <div class="relative w-full max-w-md h-[400px] flex items-center justify-center perspective-[1000px]">
-                <div class="w-64 h-64 border border-blue-500/30 rounded-full flex items-center justify-center preserve-3d animate-[spin_20s_linear_infinite]">
-                    <div class="w-48 h-48 border border-purple-500/40 rounded-full preserve-3d animate-[spin_15s_linear_infinite_reverse]"></div>
-                </div>
-            </div>`;
-    } else if (tplConfig.visual === 'Icons') {
-        rightVisualHtml = `
-            <div class="relative w-full max-w-md h-[400px] flex items-center justify-center">
-                <div class="absolute inset-0 bg-gradient-to-tr from-blue-500/20 to-purple-500/20 rounded-full blur-[80px]"></div>
-                <div class="absolute top-[15%] left-[10%] p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl animate-[float_4s_ease-in-out_infinite]"></div>
-                <div class="absolute top-[30%] left-[25%] p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl animate-[float_5s_ease-in-out_infinite_reverse]"></div>
-                <div class="absolute top-[45%] left-[40%] p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl animate-[float_6s_ease-in-out_infinite]"></div>
-            </div>`;
-    } else {
-        rightVisualHtml = `
-            <div class="relative w-[250px] h-[250px] sm:w-[350px] sm:h-[350px] lg:w-[500px] lg:h-[500px] animate-[float_8s_ease-in-out_infinite]">
-                <div class="absolute inset-0 bg-blue-500/20 rounded-full blur-[100px] animate-pulse"></div>
-                <img src="${heroVisualImageUrl}" alt="Hero Visual" class="absolute inset-0 w-full h-full object-cover mix-blend-screen opacity-90 rounded-3xl drop-shadow-2xl hover:scale-105 transition-transform duration-700 hover:rotate-2" />
-            </div>`;
-    }
+    const rawHtml = renderToString(React.createElement(PortfolioFrontpage, {
+        userData: userData,
+        sections: activeSections,
+        themeMode: isDark ? 'dark' : 'light',
+        onVisualize: null
+    }));
 
-    // 1. Build Frontpage Overlay
+    const overrideCss = `
+    <style>
+      #frontpage-overlay * {
+          opacity: 1 !important;
+      }
+      #frontpage-overlay {
+          position: fixed !important;
+          top: 0; left: 0; right: 0; bottom: 0;
+          z-index: 100;
+          transition: opacity 1s ease-in-out, visibility 1s ease-in-out;
+      }
+    </style>
+    `;
+
     const frontpageHtml = `
-    <div id="frontpage-overlay" class="fixed inset-0 z-[100] flex flex-col ${tplConfig.bgClass} ${tplConfig.textClass} transition-opacity duration-1000 ease-in-out" style="${globalBg ? `background-image: url('${globalBg}'); background-size: cover; background-position: center; background-attachment: fixed;` : ''}">
-        ${globalBg ? '<div class="absolute inset-0 bg-black/60 backdrop-blur-md z-0 pointer-events-none"></div>' : ''}
-        
-        <header class="w-full relative z-10 animate-fade-in-down" style="animation-delay: 0.1s">
-            <div class="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg shadow-inner ${tplConfig.buttonClass} text-white">
-                        ${frontInitials}
-                    </div>
-                    <span class="font-black tracking-widest uppercase hidden sm:block text-sm md:text-base"> 
-                        ${frontFirstName}
-                    </span>
-                </div>
-                <div class="hidden lg:flex items-center gap-8 font-semibold text-sm opacity-80">
-                    <span class="hover:opacity-100 cursor-pointer transition-opacity">About</span>
-                    <span class="hover:opacity-100 cursor-pointer transition-opacity">Skills</span>
-                    <span class="hover:opacity-100 cursor-pointer transition-opacity">Projects</span>
-                    <span class="hover:opacity-100 cursor-pointer transition-opacity">Contact</span>
-                </div>
-                <button onclick="dismissFrontpage()" class="px-6 py-2.5 rounded-lg text-sm font-bold transition-all shadow-lg text-white flex items-center gap-2 ${tplConfig.buttonClass} hover:scale-105 hover:-translate-y-1">
-                    Resume
-                </button>
-            </div>
-        </header>
-
-        <main class="flex-1 flex flex-col ${tplConfig.layoutDir} items-center justify-center p-6 lg:p-12 xl:p-24 gap-12 lg:gap-20 max-w-7xl mx-auto w-full relative z-10">
-            <div class="flex-1 w-full space-y-8 flex flex-col ${tplConfig.layoutDir.includes('row-reverse') ? 'lg:items-end text-center lg:text-right' : 'lg:items-start text-center lg:text-left'} items-center animate-fade-in-left" style="animation-delay: 0.2s">
-                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold border border-white/10 bg-white/5 backdrop-blur-md shadow-sm">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span class="opacity-90">Open to opportunities</span>
-                </div>
-                
-                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight w-full max-w-3xl drop-shadow-xl hover:scale-[1.01] transition-transform duration-500">
-                    ${frontName}
-                </h1>
-                
-                <p class="text-xl md:text-2xl font-bold w-full ${tplConfig.accentClass}">
-                    ${frontHeadline}
-                </p>
-                
-                ${frontBio ? `
-                <p class="text-lg md:text-xl leading-relaxed w-full max-w-xl font-medium opacity-80">
-                    ${frontBio}
-                </p>
-                ` : ''}
-
-                <div class="flex flex-wrap items-center gap-4 pt-4 w-full ${tplConfig.layoutDir.includes('row-reverse') ? 'justify-center lg:justify-end' : 'justify-center lg:justify-start'}">
-                    <button onclick="dismissFrontpage()" class="px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all shadow-lg hover:shadow-2xl hover:shadow-blue-500/40 text-white flex items-center gap-2 ${tplConfig.buttonClass} hover:scale-110 hover:-translate-y-1">
-                        View My Work &rarr;
-                    </button>
-                    <button onclick="dismissFrontpage()" class="px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all bg-transparent hover:bg-white/10 border border-current shadow-sm hover:shadow-md flex items-center gap-2 hover:scale-110 hover:-translate-y-1">
-                        Download Resume
-                    </button>
-                </div>
-            </div>
-
-            <div class="flex-1 w-full flex justify-center relative animate-fade-in-right" style="animation-delay: 0.4s">
-                ${rightVisualHtml}
-            </div>
-        </main>
+    <div id="frontpage-overlay" class="fixed inset-0 z-[100] transition-opacity duration-1000 ease-in-out">
+        ${overrideCss}
+        ${rawHtml}
+        <script>
+            // Ensure any button clicked on the frontpage overlay dismisses it.
+            setTimeout(() => {
+                const overlay = document.getElementById('frontpage-overlay');
+                if (overlay) {
+                    const buttons = overlay.querySelectorAll('button');
+                    buttons.forEach(btn => {
+                        btn.onclick = (e) => {
+                            e.preventDefault();
+                            if (typeof dismissFrontpage === 'function') dismissFrontpage();
+                        };
+                    });
+                }
+            }, 100);
+        </script>
     </div>
     `;
 
@@ -443,12 +384,12 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                     </div>
                     ` : ''}
                     
-                    <div class="flex-1 space-y-8 ${projImg ? 'lg:pl-6' : ''}">
+                    <div class="flex-1 space-y-8 flex flex-col ${projImg ? 'lg:pl-6 items-start text-left' : 'items-center text-center'}">
                         ${p.category ? `<div class="text-xs font-bold uppercase tracking-widest ${theme.accentText}">${escapeHtml(p.category)}</div>` : ''}
                         <h3 class="text-3xl sm:text-4xl font-black ${theme.textPrimary} stagger-custom-left group-hover:text-white transition-colors" style="transition-delay: ${(i*0.2) + 0.1}s">${escapeHtml(p.title)}</h3>
                         ${p.desc ? `<p class="text-lg sm:text-xl text-slate-400 leading-relaxed font-medium stagger-custom-right group-hover:text-slate-300 transition-colors" style="transition-delay: ${(i*0.2) + 0.2}s">${escapeHtml(p.desc)}</p>` : ''}
                         ${tagsList.length > 0 ? `
-                        <div class="flex flex-wrap gap-3 pt-4 stagger-custom-up" style="transition-delay: ${(i*0.2) + 0.3}s">
+                        <div class="flex flex-wrap gap-3 pt-4 stagger-custom-up ${projImg ? '' : 'justify-center'}" style="transition-delay: ${(i*0.2) + 0.3}s">
                             ${tagsList.map(tag => {
                                 const t = tag.trim();
                                 if (!t) return '';
