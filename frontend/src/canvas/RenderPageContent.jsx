@@ -404,6 +404,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             >
                             <motion.div 
                                 animate={{ y: [-15, 15, -15], rotateZ: [-2, 2, -2] }}
+                                whileHover={{ y: 0, rotateZ: 0, scale: 1.02, transition: { duration: 0.3 } }}
                                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                                 className="relative group w-[300px] h-[300px] md:w-[450px] md:h-[450px] lg:w-[500px] lg:h-[500px]"
                             >
