@@ -254,31 +254,7 @@ export default function CanvasContainer({
                 const targetId = isPreview ? `preview-node-block-${foundSection.id}` : `live-node-block-${foundSection.id}`;
                 const targetElement = document.getElementById(targetId);
                 if (targetElement) {
-                    const getScrollContainer = () => {
-                        const p = document.getElementById('preview-scroll-container');
-                        if (p) return p;
-                        const w = document.getElementById('workspace-scroll-container');
-                        if (w) return w;
-                        return null;
-                    };
-                    
-                    const scrollContainer = getScrollContainer();
-                    const headerOffset = 80; // Approximate height of the sticky navbar + padding
-                    
-                    if (scrollContainer) {
-                        const containerRect = scrollContainer.getBoundingClientRect();
-                        const elementRect = targetElement.getBoundingClientRect();
-                        const relativeTop = elementRect.top - containerRect.top;
-                        
-                        // Apply offset to prevent the sticky header from hiding the section top
-                        scrollContainer.scrollTo({ 
-                            top: scrollContainer.scrollTop + relativeTop - headerOffset, 
-                            behavior: 'smooth' 
-                        });
-                    } else {
-                        const topOffset = targetElement.getBoundingClientRect().top + window.scrollY - headerOffset;
-                        window.scrollTo({ top: topOffset, behavior: 'smooth' });
-                    }
+                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             }, 50);
         }
@@ -467,7 +443,7 @@ export default function CanvasContainer({
                         <div key={activePage} className="space-y-16 w-full animate-in slide-in-from-bottom-4 duration-700 ease-out">
                             {displaySections.length > 0 ? (
                                 displaySections.map((section) => (
-                                    <div key={section.id} id={`preview-node-block-${section.id}`} className="w-full overflow-visible">
+                                    <div key={section.id} id={`preview-node-block-${section.id}`} className="w-full overflow-visible scroll-mt-24">
                                         <RenderPageContent 
                                             section={section} 
                                             portfolioTheme={portfolioTheme} 
@@ -500,7 +476,7 @@ export default function CanvasContainer({
                                                                 e.stopPropagation();
                                                                 setActiveSectionId(section.id);
                                                             }} 
-                                                            className={`relative group rounded-3xl border p-4 sm:p-6 transition-all duration-300 cursor-pointer w-full overflow-visible ${
+                                                            className={`relative group rounded-3xl border p-4 sm:p-6 transition-all duration-300 cursor-pointer w-full overflow-visible scroll-mt-24 ${
                                                                 isActive
                                                                     ? 'border-blue-500/50 bg-blue-500/5 shadow-[0_0_30px_rgba(59,130,246,0.15)] ring-1 ring-blue-500/20 z-50'
                                                                     : globalBgImage
