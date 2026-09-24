@@ -293,11 +293,20 @@ class AICopilotAPIView(APIView):
             return Response({'error': 'Prompt is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            # Strip heavy content to prevent exceeding Free Tier TPM limits
+            # Strip heavy content to prevent exceeding Free Tier TPM limits while preserving schema
+            def truncate_strings(obj):
+                if isinstance(obj, dict):
+                    return {k: truncate_strings(v) for k, v in obj.items()}
+                elif isinstance(obj, list):
+                    return [truncate_strings(v) for v in obj]
+                elif isinstance(obj, str) and len(obj) > 50:
+                    return obj[:50] + "... [TRUNCATED]"
+                return obj
+
             stripped_state = []
             for sec in canvas_state:
                 if isinstance(sec, dict):
-                    clean_sec = {k: v for k, v in sec.items() if k not in ['content_data', 'data']}
+                    clean_sec = truncate_strings(sec)
                     clean_sec['section_type'] = sec.get('section_type', 'unknown')
                     stripped_state.append(clean_sec)
             
@@ -329,6 +338,9 @@ Choose ONE of the following formats based on the user's intent:
 
 4. If you just need to reply to the user without changing anything (e.g. asking for clarification):
 {{"action": "reply", "message": "<your_message>"}}
+
+5. To hide or remove the side image in a section (like hero or about):
+{{"action": "update_section", "section_type": "<type>", "updates": {{"hideSideImage": true}}, "message": "I've hidden the image in the <type> section."}}
 """
             response = generate_text_with_fallback(None, system_instruction)
 

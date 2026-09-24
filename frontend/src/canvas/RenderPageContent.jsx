@@ -162,7 +162,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
         setCSending(false);
     };
 
-    const sectionImageBanner = bgImage ? (
+    const sectionImageBanner = bgImage && data.hideSideImage !== true ? (
         <motion.img 
             initial={{ opacity: 0, scale: 0.98 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -390,12 +390,13 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         </div>
 
                         {/* RIGHT COLUMN: 3D VISUAL */}
-                        <motion.div 
-                            initial={{ opacity: 0, scale: 0.8, rotateY: -15 }}
-                            whileInView={{ opacity: 1, scale: 1, rotateY: 0 }}
-                            transition={{ type: "spring", damping: 20, stiffness: 40, delay: 0.3 }}
-                            className="flex-1 w-full flex justify-center lg:justify-end relative"
-                        >
+                        {data.hideSideImage !== true && (
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.8, rotateY: -15 }}
+                                whileInView={{ opacity: 1, scale: 1, rotateY: 0 }}
+                                transition={{ type: "spring", damping: 20, stiffness: 40, delay: 0.3 }}
+                                className="flex-1 w-full flex justify-center lg:justify-end relative"
+                            >
                             <motion.div 
                                 animate={{ y: [-15, 15, -15], rotateZ: [-2, 2, -2] }}
                                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -410,6 +411,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 />
                             </motion.div>
                         </motion.div>
+                        )}
                     </div>
                 </motion.div>
             )}
@@ -426,7 +428,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                     )}
                     
                     <div className="flex flex-wrap justify-center items-center gap-10 relative z-10 px-6">
-                        {customSideImage && (
+                        {customSideImage && data.hideSideImage !== true && (
                             <motion.div 
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 whileInView={{ opacity: 1, scale: 1 }}
@@ -764,58 +766,60 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 )}
 
                                 {/* LEFT: PROJECT IMAGE */}
-                                <div className={`w-full md:w-[45%] relative group/image shrink-0 rounded-[1.5rem] overflow-hidden ${trackBgLight} border ${borderClass} min-h-[220px] md:min-h-[280px] flex items-center justify-center`}>
-                                    {project.projectImage ? (
-                                        <img src={project.projectImage} alt={project.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover/image:scale-[1.03]" />
-                                    ) : (
-                                        <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-transparent flex flex-col items-center justify-center opacity-60 transition-opacity group-hover/image:opacity-100">
-                                            <div className="w-16 h-16 mb-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shadow-lg backdrop-blur-md">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={textPrimary}><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+                                {data.hideSideImage !== true && (
+                                    <div className={`w-full md:w-[45%] relative group/image shrink-0 rounded-[1.5rem] overflow-hidden ${trackBgLight} border ${borderClass} min-h-[220px] md:min-h-[280px] flex items-center justify-center`}>
+                                        {project.projectImage ? (
+                                            <img src={project.projectImage} alt={project.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover/image:scale-[1.03]" />
+                                        ) : (
+                                            <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-transparent flex flex-col items-center justify-center opacity-60 transition-opacity group-hover/image:opacity-100">
+                                                <div className="w-16 h-16 mb-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shadow-lg backdrop-blur-md">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={textPrimary}><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-50 group-hover/image:opacity-30 transition-opacity pointer-events-none"></div>
-                                    
-                                    {!isPreview && (
-                                        <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover/image:opacity-100 transition-opacity z-10 cursor-pointer">
-                                            <span className="text-[10px] text-white font-bold uppercase tracking-widest bg-black/50 px-3 py-1.5 rounded-lg mb-2">Upload Image</span>
-                                            <input 
-                                                type="file" 
-                                                accept="image/*"
-                                                className="absolute inset-0 opacity-0 cursor-pointer"
-                                                title="Upload Project Image"
-                                                onChange={(e) => {
-                                                    const file = e.target.files[0];
-                                                    if (file) {
-                                                        if (file.size > 2 * 1024 * 1024) {
-                                                            notify("File is too large (max 2MB).", "error");
-                                                            return;
+                                        )}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-50 group-hover/image:opacity-30 transition-opacity pointer-events-none"></div>
+                                        
+                                        {!isPreview && (
+                                            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover/image:opacity-100 transition-opacity z-10 cursor-pointer">
+                                                <span className="text-[10px] text-white font-bold uppercase tracking-widest bg-black/50 px-3 py-1.5 rounded-lg mb-2">Upload Image</span>
+                                                <input 
+                                                    type="file" 
+                                                    accept="image/*"
+                                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                                    title="Upload Project Image"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files[0];
+                                                        if (file) {
+                                                            if (file.size > 2 * 1024 * 1024) {
+                                                                notify("File is too large (max 2MB).", "error");
+                                                                return;
+                                                            }
+                                                            const reader = new FileReader();
+                                                            reader.onload = (ev) => {
+                                                                updateArrayItem("projects", i, "projectImage", ev.target.result);
+                                                            };
+                                                            reader.readAsDataURL(file);
                                                         }
-                                                        const reader = new FileReader();
-                                                        reader.onload = (ev) => {
-                                                            updateArrayItem("projects", i, "projectImage", ev.target.result);
-                                                        };
-                                                        reader.readAsDataURL(file);
-                                                    }
-                                                }}
-                                            />
-                                            {project.projectImage && (
-                                                <button 
-                                                    onClick={(e) => { 
-                                                        e.preventDefault();
-                                                        e.stopPropagation(); 
-                                                        updateArrayItem("projects", i, "projectImage", null); 
                                                     }}
-                                                    className="absolute top-3 right-3 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-[10px] hover:bg-red-600 z-20 shadow-md"
-                                                    title="Remove Image"
-                                                >✕</button>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
+                                                />
+                                                {project.projectImage && (
+                                                    <button 
+                                                        onClick={(e) => { 
+                                                            e.preventDefault();
+                                                            e.stopPropagation(); 
+                                                            updateArrayItem("projects", i, "projectImage", null); 
+                                                        }}
+                                                        className="absolute top-3 right-3 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-[10px] hover:bg-red-600 z-20 shadow-md"
+                                                        title="Remove Image"
+                                                    >✕</button>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 {/* RIGHT: CONTENT */}
-                                <div className="w-full md:w-[55%] flex flex-col py-2 relative z-10">
+                                <div className={`w-full ${data.hideSideImage !== true ? 'md:w-[55%]' : ''} flex flex-col py-2 relative z-10`}>
                                     <div className={`text-xs font-bold uppercase tracking-widest mb-3 ${accentText}`}>
                                         {isPreview ? (
                                             project.category && <span>{project.category}</span>
