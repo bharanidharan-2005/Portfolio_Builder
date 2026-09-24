@@ -162,18 +162,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
         setCSending(false);
     };
 
-    const sectionImageBanner = bgImage && data.hideSideImage !== true ? (
-        <motion.img 
-            initial={{ opacity: 0, scale: 0.98 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: false, amount: 0.1 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            src={bgImage}
-            alt="Section header"
-            className={`w-full h-32 md:h-40 object-cover rounded-2xl mb-6 border ${borderClass} shadow-lg`}
-            loading="lazy" 
-        />
-    ) : null;
+    const sectionImageBanner = null; // Premium UI removes section image banners
 
     const openExternal = (url) => {
         const targetUrl = url.startsWith("http") ? url : `https://${url}`;
@@ -228,20 +217,15 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                 <motion.div 
                     {...fadeUpConfig}
                     className={`py-12 sm:py-24 px-4 sm:px-10 relative rounded-3xl bg-transparent overflow-visible`}
-                    style={bgImage ? {
-                        backgroundImage: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.8)), url('${bgImage}')`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                    } : undefined}
                 >
                     <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
-                        {!bgImage && <HeroParticles isDark={themeDef.bodyBg?.includes('black') || themeDef.bodyBg?.includes('#0')} />}
+                        <HeroParticles isDark={true} />
                     </div>
                     
-                    <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col-reverse lg:flex-row items-center gap-12 lg:gap-20">
+                    <div className={`relative z-10 w-full max-w-7xl mx-auto flex flex-col-reverse lg:flex-row items-center gap-12 lg:gap-20 ${data.hideSideImage === true ? 'justify-center' : ''}`}>
                         
                         {/* LEFT COLUMN: TEXT */}
-                        <div className={`flex-1 space-y-8 flex flex-col ${data.hideSideImage === true ? 'items-center text-center' : 'items-center lg:items-start text-center lg:text-left'}`}>
+                        <div className={`flex-[1.5] space-y-8 flex flex-col w-full ${data.hideSideImage === true ? 'items-center text-center max-w-4xl' : 'items-center lg:items-start text-center lg:text-left'}`}>
                             
                             {/* Status Indicator */}
                             <motion.div 
@@ -252,13 +236,13 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 <span className={textSecondary}>Open to opportunities</span>
                             </motion.div>
 
-                            <div className={`space-y-4 w-full ${fontSzClass}`}>
+                            <div className={`space-y-4 w-full ${fontSzClass} ${data.hideSideImage === true ? 'flex flex-col items-center' : ''}`}>
                                 <motion.h1
                                     initial={{ opacity: 0, y: 15 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: false, amount: 0.1 }}
                                     transition={springTransition}
-                                    className={`font-display font-black tracking-tight leading-[1.05] w-full max-w-3xl text-4xl sm:text-5xl lg:text-6xl xl:text-7xl break-words ${bgImage ? 'text-white' : textPrimary}`}
+                                    className={`font-display font-black tracking-tight leading-[1.05] w-full max-w-3xl text-4xl sm:text-5xl lg:text-6xl xl:text-7xl break-words text-white`}
                                 >
                                     <TextElement
                                         value={data.heading || "YOUR NAME"}
@@ -281,12 +265,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     />
                                 </motion.p>
                                 
-                                <motion.p 
+                                <motion.div 
                                     initial={{ opacity: 0, y: 15 }} 
                                     whileInView={{ opacity: 1, y: 0 }} 
                                     viewport={{ once: false, amount: 0.1 }}
                                     transition={{ ...springTransition, delay: 0.15 }}
-                                    className={`text-lg md:text-xl leading-relaxed w-full max-w-2xl font-medium ${bgImage ? 'text-white/90' : textSecondary}`}
+                                    className={`text-lg md:text-xl leading-relaxed w-full max-w-2xl font-medium text-slate-300`}
                                 >
                                     <TextElement 
                                         multiline
@@ -294,7 +278,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                         placeholder="Introduction ..."
                                         onCommit={(v) => updateScalar("description", v)}
                                     />
-                                </motion.p>
+                                </motion.div>
                             </div>
 
                             <motion.div 
@@ -313,7 +297,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                             const projectsSection = document.getElementById('preview-node-block-' + (sections.find(s => s.section_type === 'projects_grid')?.id || ''));
                                             if (projectsSection) projectsSection.scrollIntoView({ behavior: 'smooth' });
                                         }}
-                                        className={`px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all shadow-lg hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:-translate-y-1 ${accentBg} text-white flex items-center gap-2`}
+                                        className={`px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all shadow-[0_0_20px_rgba(59,130,246,0.15)] hover:shadow-[0_0_30px_rgba(59,130,246,0.3)] hover:-translate-y-1 ${accentBg} text-white flex items-center gap-2`}
                                     >
                                         View My Work &rarr;
                                     </motion.button>
@@ -322,7 +306,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                         <PDFDownloadLink
                                             document={pdfDocument}
                                             fileName={`${data.heading?.replace(/\s+/g, '_') || 'Portfolio'}_Resume.pdf`}
-                                            className={`px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all hover:bg-white/5 border border-white/10 shadow-sm hover:shadow-md hover:-translate-y-1 ${textPrimary} ${borderClass}`}
+                                            className={`px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all hover:bg-white/5 border border-white/10 shadow-sm hover:shadow-md hover:-translate-y-1 ${textPrimary} ${cardBg}`}
                                         >
                                             {({ blob, url, loading, error }) => (loading ? 'Preparing...' : 'Download Resume')}
                                         </PDFDownloadLink>
@@ -343,12 +327,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                             openExternal(heroLiveOptions[0].url);
                                                         }
                                                     }}
-                                                    className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg flex items-center gap-2 bg-[#0a0a0f] hover:bg-[#1a1a24] text-white"
+                                                    className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white backdrop-blur-md"
                                                 >
                                                     See Live {heroLiveOptions.length > 1 ? '▾' : '↗'}
                                                 </button>
                                                 {heroLiveOptions.length > 1 && (
-                                                    <div className="absolute top-full left-0 mt-2 w-48 rounded-xl border border-slate-800 bg-[#0a0a0f]/95 backdrop-blur-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col p-2 max-h-60 overflow-y-auto custom-scrollbar">
+                                                    <div className="absolute top-full left-0 mt-2 w-48 rounded-xl border border-white/10 bg-[#0a0a0f]/95 backdrop-blur-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col p-2 max-h-60 overflow-y-auto custom-scrollbar">
                                                         {heroLiveOptions.map((link, i) => (
                                                             <button
                                                                 key={`social-${i}`}
@@ -367,10 +351,10 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                         {/* Projects Dropdown */}
                                         {heroDesignOptions.length > 0 && (
                                             <div className="group relative z-50">
-                                                <button className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg flex items-center gap-2 bg-[#0a0a0f] hover:bg-[#1a1a24] text-white">
+                                                <button className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white backdrop-blur-md">
                                                     Projects ▾
                                                 </button>
-                                                <div className="absolute top-full left-0 mt-2 w-56 rounded-xl border border-slate-800 bg-[#0a0a0f]/95 backdrop-blur-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col p-2 max-h-60 overflow-y-auto custom-scrollbar">
+                                                <div className="absolute top-full left-0 mt-2 w-56 rounded-xl border border-white/10 bg-[#0a0a0f]/95 backdrop-blur-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col p-2 max-h-60 overflow-y-auto custom-scrollbar">
                                                     {heroDesignOptions.map((link, i) => (
                                                         <button
                                                             key={`proj-${i}`}
@@ -418,42 +402,42 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
 
             {/* 2. ABOUT SECTION */}
             {currentType === "about" && (
-                <motion.div {...fadeUpConfig} className="py-12 relative rounded-[2.5rem] overflow-hidden">
-                    {/* Background Layer */}
-                    {bgImage && (
-                        <div className="absolute inset-0 z-0 pointer-events-none rounded-[2.5rem] overflow-hidden">
-                            <div className="absolute inset-0 z-10 backdrop-blur-[4px] bg-[#0B0C10]/80"></div>
-                            <img src={bgImage} alt="About Background" className="w-full h-full object-cover" />
-                        </div>
-                    )}
+                <motion.div {...fadeUpConfig} className={`py-16 md:py-24 px-6 md:px-12 relative rounded-[3rem] border border-white/5 shadow-2xl ${cardBg} backdrop-blur-3xl overflow-hidden my-8 mx-2 sm:mx-8`}>
+                    {/* Subtle Internal Glow */}
+                    <div className="absolute top-0 right-0 w-[50%] h-[50%] bg-blue-500/5 rounded-full blur-[80px]"></div>
+                    <div className="absolute bottom-0 left-0 w-[50%] h-[50%] bg-purple-500/5 rounded-full blur-[80px]"></div>
                     
-                    <div className="flex flex-wrap justify-center items-center gap-10 relative z-10 px-6">
+                    <div className="flex flex-wrap justify-center items-center gap-12 relative z-10 w-full max-w-6xl mx-auto">
                         {customSideImage && data.hideSideImage !== true && (
                             <motion.div 
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 whileInView={{ opacity: 1, scale: 1 }}
                                 viewport={{ once: false, amount: 0.2 }}
                                 transition={springTransition}
-                                className="shrink-0 relative group w-48 h-48 md:w-64 md:h-64 mx-auto md:mx-0"
+                                className="shrink-0 relative group w-56 h-56 md:w-72 md:h-72 mx-auto lg:mx-0"
                             >
-                                <div className={`absolute inset-0 rounded-2xl md:rounded-full blur-lg opacity-40 bg-gradient-to-tr from-blue-500 to-purple-500 group-hover:opacity-60 transition-opacity duration-500`}></div>
+                                <div className={`absolute inset-0 rounded-[3rem] blur-xl opacity-30 bg-gradient-to-tr from-blue-500 to-purple-500 group-hover:opacity-50 transition-opacity duration-700`}></div>
                                 <img 
                                     src={customSideImage} 
                                     alt="Profile" 
-                                    className={`relative w-full h-full object-cover rounded-2xl md:rounded-[3rem] border-4 ${borderClass} shadow-xl transition-transform duration-500 group-hover:scale-[1.02]`}
+                                    className={`relative w-full h-full object-cover rounded-[3rem] border border-white/10 shadow-2xl transition-transform duration-700 group-hover:scale-[1.03]`}
                                     loading="lazy"
                                 />
                             </motion.div>
                         )}
-                        <div className={`flex-[1_1_300px] space-y-5 w-full ${(!customSideImage || data.hideSideImage === true) ? 'text-center' : 'text-center min-[600px]:text-left'}`}>
-                            <motion.h2 
-                            initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: false }}
-                            className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest mb-10 ${textPrimary}`}
-                        >
-                            About Me
-                        
-                        </motion.h2>
-                            <div className={`text-lg md:text-xl leading-relaxed break-words max-w-full font-medium ${textSecondary}`}>
+                        <div className={`flex-[1_1_400px] space-y-6 w-full ${(!customSideImage || data.hideSideImage === true) ? 'text-center flex flex-col items-center' : 'text-center lg:text-left'}`}>
+                            <motion.div 
+                                initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
+                                className="flex items-center gap-4 w-full" style={{ justifyContent: (!customSideImage || data.hideSideImage === true) ? 'center' : 'flex-start' }}
+                            >
+                                <span className={`h-px w-12 bg-blue-500/50 hidden lg:block ${(!customSideImage || data.hideSideImage === true) ? 'lg:hidden' : ''}`}></span>
+                                <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-white`}>
+                                    About Me
+                                </h2>
+                                <span className={`h-px w-12 bg-blue-500/50 hidden lg:block ${(!customSideImage || data.hideSideImage === true) ? 'lg:hidden' : ''}`}></span>
+                            </motion.div>
+                            
+                            <div className={`text-lg md:text-xl leading-relaxed break-words w-full max-w-3xl font-medium text-slate-300`}>
                                 <TextElement 
                                     multiline 
                                     value={data.bio || ""}
@@ -468,22 +452,24 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
 
             {/* 3. EDUCATION SECTION */}
             {currentType === "education" && (
-                <motion.div {...fadeUpConfig} className="space-y-6 py-8">
-                    {sectionImageBanner}
-                    <motion.h2 
-                            initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: false }}
-                            className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest mb-10 ${textPrimary}`}
-                        >
+                <motion.div {...fadeUpConfig} className="space-y-6 py-12 md:py-16">
+                    <motion.div 
+                        initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
+                        className="flex items-center justify-center gap-4 w-full mb-12"
+                    >
+                        <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                        <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
                             Educational Background
-                        
-                        </motion.h2>
+                        </h2>
+                        <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                    </motion.div>
                     
                     <motion.div 
                         variants={staggerContainer}
                         initial="hidden"
                         whileInView="show"
                         viewport={{ once: false, margin: "-20px", amount: 0.1 }}
-                        className="space-y-0 relative border-l-2 ml-4 md:ml-8" style={{ borderColor: 'rgba(255,255,255,0.1)' }}
+                        className="space-y-0 relative border-l-2 ml-4 md:ml-8" style={{ borderColor: 'rgba(59,130,246,0.2)' }}
                     >
                         {(data.schools || []).length === 0 && isPreview && (
                             <div className={`p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full max-w-2xl mx-auto my-8 shadow-sm`}>
@@ -566,15 +552,17 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
 
             {/* 4. SKILLS SECTION */}
             {currentType === "skills" && (
-                <motion.div {...fadeUpConfig} className="space-y-8 py-10">
-                    {sectionImageBanner}
-                    <motion.h2 
-                            initial={{ opacity: 0, y: -20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
-                            className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center mb-14 ${textPrimary}`}
-                        >
+                <motion.div {...fadeUpConfig} className="space-y-8 py-12 md:py-16">
+                    <motion.div 
+                        initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
+                        className="flex items-center justify-center gap-4 w-full mb-12"
+                    >
+                        <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                        <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
                             Core Expertise
-                        
-                        </motion.h2>
+                        </h2>
+                        <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                    </motion.div>
                     
                     <div className="flex flex-col gap-6 pt-2 w-full max-w-5xl mx-auto px-2">
                         {(data.items || []).length === 0 && isPreview && (
@@ -730,15 +718,17 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
 
             {/* 5. PROJECTS SECTION */}
             {currentType === "projects_grid" && (
-                <div className="space-y-8 py-10">
-                    {sectionImageBanner}
-                    <motion.h2 
-                            initial={{ opacity: 0, y: -20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
-                            className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center mb-14 ${textPrimary}`}
-                        >
+                <div className="space-y-8 py-12 md:py-16">
+                    <motion.div 
+                        initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
+                        className="flex items-center justify-center gap-4 w-full mb-12"
+                    >
+                        <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                        <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
                             {data.title || "Showcase of Innovations"}
-                        
-                        </motion.h2>
+                        </h2>
+                        <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                    </motion.div>
                     
                     <div className="flex flex-col gap-10 w-full max-w-5xl mx-auto px-2">
                         {(data.projects || []).length === 0 && isPreview && (
@@ -1022,15 +1012,16 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                     />
 
                     <div className="relative z-10">
-                        {sectionImageBanner}
-                        <motion.h2 
-                            initial={{ opacity: 0, y: -15 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: false, amount: 0.1 }}
-                            className={`text-sm uppercase font-display font-black tracking-widest mb-6 ${accentText}`}
+                        <motion.div 
+                            initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
+                            className="flex items-center justify-center gap-4 w-full mb-6"
                         >
-                            Get In Touch
-                        </motion.h2>
+                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                            <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                                Get In Touch
+                            </h2>
+                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                        </motion.div>
                         
                         <motion.div 
                             initial={{ opacity: 0 }}
@@ -1139,16 +1130,17 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
             {/* 6. WORK EXPERIENCE SECTION */}
             {currentType === 'experience' && (
                 <div className="py-12 sm:py-24 px-4">
-                    {sectionImageBanner}
                     <motion.div {...fadeUpConfig} className="max-w-4xl mx-auto space-y-12">
-                        <motion.h2 
-                            initial={{ opacity: 0, y: -15 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: false, amount: 0.1 }}
-                            className={`text-sm uppercase font-black tracking-widest text-center mb-12 ${accentText}`}
+                        <motion.div 
+                            initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
+                            className="flex items-center justify-center gap-4 w-full mb-12"
                         >
-                            Work Experience
-                        </motion.h2>
+                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                            <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                                Work Experience
+                            </h2>
+                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                        </motion.div>
                         <div className="relative border-l-2 border-slate-700/30 ml-3 md:ml-0 md:space-y-12 space-y-8">
                             {(data.items || []).length === 0 && isPreview && (
                                 <div className={`p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full max-w-2xl mx-auto my-8 shadow-sm`}>
@@ -1197,16 +1189,17 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
             {/* 7. SERVICES SECTION */}
             {currentType === 'services' && (
                 <div className="py-12 sm:py-24 px-4">
-                    {sectionImageBanner}
                     <motion.div {...fadeUpConfig} className="max-w-6xl mx-auto space-y-12">
-                        <motion.h2 
-                            initial={{ opacity: 0, y: -15 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: false, amount: 0.1 }}
-                            className={`text-sm uppercase font-black tracking-widest text-center mb-12 ${accentText}`}
+                        <motion.div 
+                            initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
+                            className="flex items-center justify-center gap-4 w-full mb-12"
                         >
-                            Services & Offerings
-                        </motion.h2>
+                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                            <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                                Services & Offerings
+                            </h2>
+                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                        </motion.div>
                         <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {(data.items || []).length === 0 && isPreview && (
                                 <div className={`col-span-full p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
@@ -1248,16 +1241,17 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
             {/* 8. TESTIMONIALS SECTION */}
             {currentType === 'testimonials' && (
                 <div className="py-12 sm:py-24 px-4">
-                    {sectionImageBanner}
                     <motion.div {...fadeUpConfig} className="max-w-6xl mx-auto space-y-12">
-                        <motion.h2 
-                            initial={{ opacity: 0, y: -15 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: false, amount: 0.1 }}
-                            className={`text-sm uppercase font-black tracking-widest text-center mb-12 ${accentText}`}
+                        <motion.div 
+                            initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
+                            className="flex items-center justify-center gap-4 w-full mb-12"
                         >
-                            Client Testimonials
-                        </motion.h2>
+                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                            <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                                Client Testimonials
+                            </h2>
+                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                        </motion.div>
                         <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {(data.items || []).length === 0 && isPreview && (
                                 <div className={`col-span-full p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
@@ -1309,16 +1303,17 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
             {/* 9. CERTIFICATIONS SECTION */}
             {currentType === 'certifications' && (
                 <div className="py-12 sm:py-24 px-4">
-                    {sectionImageBanner}
                     <motion.div {...fadeUpConfig} className="max-w-4xl mx-auto space-y-12">
-                        <motion.h2 
-                            initial={{ opacity: 0, y: -15 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: false, amount: 0.1 }}
-                            className={`text-sm uppercase font-black tracking-widest text-center mb-12 ${accentText}`}
+                        <motion.div 
+                            initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
+                            className="flex items-center justify-center gap-4 w-full mb-12"
                         >
-                            Certifications & Awards
-                        </motion.h2>
+                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                            <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                                Certifications & Awards
+                            </h2>
+                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                        </motion.div>
                         <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="flex flex-col gap-4">
                             {(data.items || []).length === 0 && isPreview && (
                                 <div className={`p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
@@ -1367,8 +1362,17 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
             {/* 10. STATS SECTION */}
             {currentType === 'stats' && (
                 <div className="py-12 sm:py-20 px-4">
-                    {sectionImageBanner}
                     <motion.div {...fadeUpConfig} className="max-w-6xl mx-auto">
+                        <motion.div 
+                            initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
+                            className="flex items-center justify-center gap-4 w-full mb-12"
+                        >
+                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                            <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                                By the Numbers
+                            </h2>
+                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                        </motion.div>
                         <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-2 md:grid-cols-4 gap-6">
                             {(data.items || []).length === 0 && isPreview && (
                                 <div className={`col-span-full p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
@@ -1407,16 +1411,17 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
             {/* 11. BLOG SECTION */}
             {currentType === 'blog' && (
                 <div className="py-12 sm:py-24 px-4">
-                    {sectionImageBanner}
                     <motion.div {...fadeUpConfig} className="max-w-6xl mx-auto space-y-12">
-                        <motion.h2 
-                            initial={{ opacity: 0, y: -15 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: false, amount: 0.1 }}
-                            className={`text-sm uppercase font-black tracking-widest text-center mb-12 ${accentText}`}
+                        <motion.div 
+                            initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
+                            className="flex items-center justify-center gap-4 w-full mb-12"
                         >
-                            Publications & Articles
-                        </motion.h2>
+                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                            <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                                Publications & Articles
+                            </h2>
+                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                        </motion.div>
                         <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {(data.articles || []).length === 0 && isPreview && (
                                 <div className={`col-span-full p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>

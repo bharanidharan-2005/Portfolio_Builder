@@ -245,7 +245,6 @@ export default function CanvasContainer({
                    (targetType === 'projects_grid' && stype === 'projects') ||
                    (targetType === 'projects' && stype === 'projects_grid');
         });
-        
         if (foundSection) {
             if (!isPreview && setActiveSectionId) {
                 setActiveSectionId(foundSection.id);
@@ -253,8 +252,29 @@ export default function CanvasContainer({
             setTimeout(() => {
                 const targetId = isPreview ? `preview-node-block-${foundSection.id}` : `live-node-block-${foundSection.id}`;
                 const targetElement = document.getElementById(targetId);
+                
                 if (targetElement) {
-                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    let scrollContainer = document.getElementById('preview-scroll-container') || document.getElementById('workspace-scroll-container');
+                    
+                    if (scrollContainer) {
+                        const containerRect = scrollContainer.getBoundingClientRect();
+                        const elementRect = targetElement.getBoundingClientRect();
+                        const scrollTop = scrollContainer.scrollTop;
+                        
+                        const relativeTop = elementRect.top - containerRect.top;
+                        
+                        scrollContainer.scrollTo({
+                            top: scrollTop + relativeTop - 90, // Offset for navbar
+                            behavior: 'smooth'
+                        });
+                    } else {
+                        // For public preview where window is the scroll container
+                        const topPos = targetElement.getBoundingClientRect().top + window.scrollY;
+                        window.scrollTo({
+                            top: topPos - 90,
+                            behavior: 'smooth'
+                        });
+                    }
                 }
             }, 50);
         }
@@ -319,26 +339,14 @@ export default function CanvasContainer({
             {/* Main Outer Container */}
             <div className={`dark relative w-full min-h-[700px] transition-all duration-500 ease-out overflow-x-clip [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
                 !isPreview ? `shadow-2xl rounded-[2rem] border ${currentTheme.border || 'border-slate-800/80'}` : 'min-h-screen'
-            } ${
-                globalBgImage ? 'bg-[#0B0C10]/40 backdrop-blur-2xl' : 'bg-[#0B0C10] ' + (currentTheme.bodyBg || '')
-            }`} style={{ ...currentFontObj.style }}>
+            } bg-[#030712]`} style={{ ...currentFontObj.style }}>
                 
-                {/* --- GLOBAL BACKGROUND LAYER --- */}
-                {globalBgImage === 'PARTICLES_3D' ? (
-                    <ParticleNetwork />
-                ) : globalBgImage ? (
-                    <div 
-                        className="absolute inset-0 z-0 pointer-events-none rounded-[2rem] overflow-hidden"
-                        style={{
-                            backgroundImage: `url('${globalBgImage}')`,
-                            backgroundSize: 'cover',
-                            backgroundRepeat: 'no-repeat',
-                            backgroundPosition: 'center',
-                            backgroundAttachment: 'fixed',
-                            opacity: 0.3
-                        }}
-                    />
-                ) : null}
+                {/* --- PREMIUM GLOBAL BACKGROUND --- */}
+                <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+                    <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-900/20 blur-[120px]"></div>
+                    <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-violet-900/20 blur-[120px]"></div>
+                    <div className="absolute top-[40%] right-[20%] w-[30%] h-[30%] rounded-full bg-indigo-900/10 blur-[100px]"></div>
+                </div>
 
                 {/* --- FULL WIDTH NAVIGATION NAVBAR --- */}
                 <div className={`sticky top-0 z-50 w-full backdrop-blur-2xl ${currentTheme.cardBg || 'bg-black/20'} border-b ${currentTheme.border || 'border-slate-700/30'} shadow-lg transition-all duration-500`}>
