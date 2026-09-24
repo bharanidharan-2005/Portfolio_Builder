@@ -405,15 +405,51 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             <motion.div 
                                 animate={{ y: [-15, 15, -15], rotateZ: [-2, 2, -2] }}
                                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                                className="relative w-[300px] h-[300px] md:w-[450px] md:h-[450px] lg:w-[500px] lg:h-[500px]"
+                                className="relative group w-[300px] h-[300px] md:w-[450px] md:h-[450px] lg:w-[500px] lg:h-[500px]"
                             >
                                 <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-[100px]"></div>
                                 <img 
                                     src={customSideImage || getRoleImage(data.subheading || "")} 
                                     alt="3D Workspace" 
-                                    className={`absolute inset-0 w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-500 rounded-3xl ${!customSideImage ? 'mix-blend-screen' : 'shadow-2xl'}`}
+                                    className={`absolute inset-0 w-full h-full object-cover opacity-90 transition-all duration-500 rounded-3xl ${!customSideImage ? 'mix-blend-screen' : 'shadow-2xl'}`}
                                     style={{ filter: "drop-shadow(0 0 30px rgba(59,130,246,0.3))" }}
                                 />
+                                {!isPreview && (
+                                    <div className="absolute inset-0 rounded-3xl bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer">
+                                        <span className="text-[10px] text-white font-bold uppercase tracking-widest bg-black/50 px-3 py-1.5 rounded-lg mb-2">Upload Image</span>
+                                        <input 
+                                            type="file" 
+                                            accept="image/*"
+                                            className="absolute inset-0 opacity-0 cursor-pointer"
+                                            title="Upload Image"
+                                            onChange={(e) => {
+                                                const file = e.target.files[0];
+                                                if (file) {
+                                                    if (file.size > 2 * 1024 * 1024) {
+                                                        notify("File is too large (max 2MB).", "error");
+                                                        return;
+                                                    }
+                                                    const reader = new FileReader();
+                                                    reader.onload = (ev) => {
+                                                        onInlineEdit(data.id, "customSideImage", ev.target.result);
+                                                    };
+                                                    reader.readAsDataURL(file);
+                                                }
+                                            }}
+                                        />
+                                        {customSideImage && (
+                                            <button 
+                                                onClick={(e) => { 
+                                                    e.preventDefault();
+                                                    e.stopPropagation(); 
+                                                    onInlineEdit(data.id, "customSideImage", ""); 
+                                                }}
+                                                className="absolute top-4 right-4 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs hover:bg-red-600 z-20 shadow-md"
+                                                title="Remove Image"
+                                            >✕</button>
+                                        )}
+                                    </div>
+                                )}
                             </motion.div>
                         </motion.div>
                         )}
@@ -444,6 +480,42 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     className={`relative w-full h-full object-cover rounded-[3rem] border border-white/10 shadow-2xl transition-transform duration-700 group-hover:scale-[1.03]`}
                                     loading="lazy"
                                 />
+                                {!isPreview && (
+                                    <div className="absolute inset-0 rounded-[3rem] bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer">
+                                        <span className="text-[10px] text-white font-bold uppercase tracking-widest bg-black/50 px-3 py-1.5 rounded-lg mb-2">Upload Image</span>
+                                        <input 
+                                            type="file" 
+                                            accept="image/*"
+                                            className="absolute inset-0 opacity-0 cursor-pointer"
+                                            title="Upload Image"
+                                            onChange={(e) => {
+                                                const file = e.target.files[0];
+                                                if (file) {
+                                                    if (file.size > 2 * 1024 * 1024) {
+                                                        notify("File is too large (max 2MB).", "error");
+                                                        return;
+                                                    }
+                                                    const reader = new FileReader();
+                                                    reader.onload = (ev) => {
+                                                        onInlineEdit(data.id, "customSideImage", ev.target.result);
+                                                    };
+                                                    reader.readAsDataURL(file);
+                                                }
+                                            }}
+                                        />
+                                        {customSideImage && (
+                                            <button 
+                                                onClick={(e) => { 
+                                                    e.preventDefault();
+                                                    e.stopPropagation(); 
+                                                    onInlineEdit(data.id, "customSideImage", ""); 
+                                                }}
+                                                className="absolute top-4 right-4 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs hover:bg-red-600 z-20 shadow-md"
+                                                title="Remove Image"
+                                            >✕</button>
+                                        )}
+                                    </div>
+                                )}
                             </motion.div>
                         )}
                         <div className={`flex-[1_1_400px] space-y-6 w-full ${(!customSideImage || isImageHidden) ? 'text-center flex flex-col items-center' : 'text-center lg:text-left'}`}>
