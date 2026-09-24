@@ -440,17 +440,16 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                 }}
                                             />
                                         </div>
-                                        {customSideImage && (
                                             <button 
                                                 onClick={(e) => { 
                                                     e.preventDefault();
                                                     e.stopPropagation(); 
-                                                    onInlineEdit(section.id, "customSideImage", ""); 
+                                                    onInlineEdit(section.id, "hideSideImage", true);
+                                                    setTimeout(() => onInlineEdit(section.id, "customSideImage", ""), 0);
                                                 }}
                                                 className="absolute top-4 right-4 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 hover:bg-red-600 z-20 shadow-md"
                                                 title="Remove Image"
                                             >✕</button>
-                                        )}
                                     </>
                                 )}
                             </motion.div>
@@ -508,17 +507,16 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                 }}
                                             />
                                         </div>
-                                        {customSideImage && (
                                             <button 
                                                 onClick={(e) => { 
                                                     e.preventDefault();
                                                     e.stopPropagation(); 
-                                                    onInlineEdit(section.id, "customSideImage", ""); 
+                                                    onInlineEdit(section.id, "hideSideImage", true);
+                                                    setTimeout(() => onInlineEdit(section.id, "customSideImage", ""), 0);
                                                 }}
                                                 className="absolute top-4 right-4 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 hover:bg-red-600 z-20 shadow-md"
                                                 title="Remove Image"
                                             >✕</button>
-                                        )}
                                     </>
                                 )}
                             </motion.div>

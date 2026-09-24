@@ -706,7 +706,7 @@ export default function RightSidebar({
             const data = response.data;
             if (data.success && data.action) {
                 const action = data.action;
-                setTerminalLogs(prev => [...prev, { type: "system", text: `Co-Pilot: ${action.message || "Executing..."}` }]);
+                setTerminalLogs(prev => [...prev, { type: "system", text: `AuraBuild: ${action.message || "Executing..."}` }]);
                 
                 if (action.action === "update_theme" && onThemeChange) {
                     onThemeChange(action.theme);
@@ -724,10 +724,10 @@ export default function RightSidebar({
                     onAddSection(action.section_type);
                 }
             } else {
-                setTerminalLogs(prev => [...prev, { type: "system", text: `Co-Pilot: I couldn't process that.` }]);
+                setTerminalLogs(prev => [...prev, { type: "system", text: `AuraBuild: I couldn't process that.` }]);
             }
         } catch (error) {
-            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Copilot error: ${error.response?.data?.error || error.message}` }]);
+            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] AuraBuild error: ${error.response?.data?.error || error.message}` }]);
         } finally {
             setIsProcessing(false);
         }
