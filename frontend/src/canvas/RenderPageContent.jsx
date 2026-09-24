@@ -1,4 +1,4 @@
-import { useState, useMemo, useContext } from "react";
+import { useState, useMemo, useContext, useEffect, useRef } from "react";
 import { notify } from "../toast";
 import { sendContactForm } from "../utils/contactUtils";
 import EditableText from "./EditableText";
@@ -105,6 +105,21 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
             </div>
         );
     };
+
+    // Auto-reveal the image if a custom side image was just added
+    const prevCustomImageRef = useRef(data.customSideImage);
+    useEffect(() => {
+        if (!isPreview && onInlineEdit) {
+            // If the customSideImage changes and is truthy, we assume the user/AI added a new image
+            if (data.customSideImage && data.customSideImage !== prevCustomImageRef.current) {
+                // If it was previously hidden, unset the hide flag so the new image is visible
+                if (data.hideSideImage === true || String(data.hideSideImage).toLowerCase() === 'true') {
+                    onInlineEdit(section.id, 'hideSideImage', false);
+                }
+            }
+        }
+        prevCustomImageRef.current = data.customSideImage;
+    }, [data.customSideImage, data.hideSideImage, onInlineEdit, isPreview, section.id]);
 
     // Determine globally if the side image is explicitly hidden by the AI
     const isImageHidden = data.hideSideImage === true || String(data.hideSideImage).toLowerCase() === 'true';
