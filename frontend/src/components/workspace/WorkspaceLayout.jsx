@@ -189,7 +189,7 @@ export default function WorkspaceLayout() {
                                 onRedo={!isPublicPreview ? handleRedo : undefined}
                                 canUndo={history.past.length > 0}
                                 canRedo={history.future.length > 0}
-                                isPreview={isPublicPreview || isInternalPreviewOpen} 
+                                isPreview={isPublicPreview} 
                                 activeHighlightSection={activeHighlightSection}
                                 aiSuggestionPreview={aiSuggestionPreview}
                             />

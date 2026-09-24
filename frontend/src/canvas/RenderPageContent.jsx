@@ -106,6 +106,9 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
         );
     };
 
+    // Determine globally if the side image is explicitly hidden by the AI
+    const isImageHidden = data.hideSideImage === true || String(data.hideSideImage).toLowerCase() === 'true';
+
     // --- Data Mutation Helpers ---
     const updateScalar = (key, value) => {
         if (onInlineEdit && !isPreview) onInlineEdit(section.id, key, value);
@@ -213,7 +216,10 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
             )}
 
             {/* 1. HERO SECTION */}
-            {currentType === "hero" && (
+            {currentType === "hero" && (() => {
+                const shouldCenterHero = isImageHidden || !data.heroImage;
+
+                return (
                 <motion.div 
                     {...fadeUpConfig}
                     className={`py-12 sm:py-24 px-4 sm:px-10 relative rounded-3xl bg-transparent overflow-visible`}
@@ -222,10 +228,10 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         <HeroParticles isDark={true} />
                     </div>
                     
-                    <div className={`relative z-10 w-full max-w-7xl mx-auto flex flex-col-reverse lg:flex-row items-center gap-12 lg:gap-20 ${data.hideSideImage === true ? 'justify-center' : ''}`}>
+                    <div className={`relative z-10 w-full max-w-7xl mx-auto flex flex-col-reverse lg:flex-row items-center gap-12 lg:gap-20 ${shouldCenterHero ? 'justify-center' : ''}`}>
                         
                         {/* LEFT COLUMN: TEXT */}
-                        <div className={`flex-[1.5] space-y-8 flex flex-col w-full ${data.hideSideImage === true ? 'items-center text-center max-w-4xl' : 'items-center lg:items-start text-center lg:text-left'}`}>
+                        <div className={`flex-[1.5] space-y-8 flex flex-col w-full ${shouldCenterHero ? 'items-center text-center max-w-4xl' : 'items-center lg:items-start text-center lg:text-left'}`}>
                             
                             {/* Status Indicator */}
                             <motion.div 
@@ -236,7 +242,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 <span className={textSecondary}>Open to opportunities</span>
                             </motion.div>
 
-                            <div className={`space-y-4 w-full ${fontSzClass} ${data.hideSideImage === true ? 'flex flex-col items-center' : ''}`}>
+                            <div className={`space-y-4 w-full ${fontSzClass} ${shouldCenterHero ? 'flex flex-col items-center' : ''}`}>
                                 <motion.h1
                                     initial={{ opacity: 0, y: 15 }}
                                     whileInView={{ opacity: 1, y: 0 }}
@@ -286,9 +292,9 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 whileInView={{ opacity: 1, y: 0 }} 
                                 viewport={{ once: false, amount: 0.1 }}
                                 transition={{ ...springTransition, delay: 0.2 }}
-                                className={`flex flex-col gap-6 pt-4 w-full ${data.hideSideImage === true ? 'items-center' : 'items-center lg:items-start'}`}
+                                className={`flex flex-col gap-6 pt-4 w-full ${shouldCenterHero ? 'items-center' : 'items-center lg:items-start'}`}
                             >
-                                <div className={`flex flex-wrap items-center gap-4 w-full ${data.hideSideImage === true ? 'justify-center' : 'justify-center lg:justify-start'}`}>
+                                <div className={`flex flex-wrap items-center gap-4 w-full ${shouldCenterHero ? 'justify-center' : 'justify-center lg:justify-start'}`}>
                                     <motion.button 
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
@@ -315,7 +321,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 
                                 {/* Sleek Side-by-Side Dropdowns */}
                                 {(heroLiveOptions.length > 0 || heroDesignOptions.length > 0) && (
-                                    <div className={`flex flex-wrap items-center gap-3 w-full mt-2 ${data.hideSideImage === true ? 'justify-center' : 'justify-center lg:justify-start'}`}>
+                                    <div className={`flex flex-wrap items-center gap-3 w-full mt-2 ${shouldCenterHero ? 'justify-center' : 'justify-center lg:justify-start'}`}>
                                         
                                         {/* See Live Dropdown */}
                                         {heroLiveOptions.length > 0 && (
@@ -374,7 +380,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         </div>
 
                         {/* RIGHT COLUMN: 3D VISUAL */}
-                        {data.hideSideImage !== true && (
+                        {!isImageHidden && (
                             <motion.div 
                                 initial={{ opacity: 0, scale: 0.8, rotateY: -15 }}
                                 whileInView={{ opacity: 1, scale: 1, rotateY: 0 }}
@@ -398,7 +404,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         )}
                     </div>
                 </motion.div>
-            )}
+            )})()}
 
             {/* 2. ABOUT SECTION */}
             {currentType === "about" && (
@@ -408,7 +414,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                     <div className="absolute bottom-0 left-0 w-[50%] h-[50%] bg-purple-500/5 rounded-full blur-[80px]"></div>
                     
                     <div className="flex flex-wrap justify-center items-center gap-12 relative z-10 w-full max-w-6xl mx-auto">
-                        {customSideImage && data.hideSideImage !== true && (
+                        {customSideImage && !isImageHidden && (
                             <motion.div 
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 whileInView={{ opacity: 1, scale: 1 }}
@@ -425,16 +431,16 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 />
                             </motion.div>
                         )}
-                        <div className={`flex-[1_1_400px] space-y-6 w-full ${(!customSideImage || data.hideSideImage === true) ? 'text-center flex flex-col items-center' : 'text-center lg:text-left'}`}>
+                        <div className={`flex-[1_1_400px] space-y-6 w-full ${(!customSideImage || isImageHidden) ? 'text-center flex flex-col items-center' : 'text-center lg:text-left'}`}>
                             <motion.div 
                                 initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
-                                className="flex items-center gap-4 w-full" style={{ justifyContent: (!customSideImage || data.hideSideImage === true) ? 'center' : 'flex-start' }}
+                                className="flex items-center gap-4 w-full" style={{ justifyContent: (!customSideImage || isImageHidden) ? 'center' : 'flex-start' }}
                             >
-                                <span className={`h-px w-12 bg-blue-500/50 hidden lg:block ${(!customSideImage || data.hideSideImage === true) ? 'lg:hidden' : ''}`}></span>
+                                <span className={`h-px w-12 bg-blue-500/50 hidden lg:block ${(!customSideImage || isImageHidden) ? 'lg:hidden' : ''}`}></span>
                                 <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-white`}>
                                     About Me
                                 </h2>
-                                <span className={`h-px w-12 bg-blue-500/50 hidden lg:block ${(!customSideImage || data.hideSideImage === true) ? 'lg:hidden' : ''}`}></span>
+                                <span className={`h-px w-12 bg-blue-500/50 hidden lg:block ${(!customSideImage || isImageHidden) ? 'lg:hidden' : ''}`}></span>
                             </motion.div>
                             
                             <div className={`text-lg md:text-xl leading-relaxed break-words w-full max-w-3xl font-medium text-slate-300`}>
@@ -756,7 +762,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 )}
 
                                 {/* LEFT: PROJECT IMAGE */}
-                                {data.hideSideImage !== true && (
+                                {!isImageHidden && (
                                     <div className={`w-full md:w-[45%] relative group/image shrink-0 rounded-[1.5rem] overflow-hidden ${trackBgLight} border ${borderClass} min-h-[220px] md:min-h-[280px] flex items-center justify-center`}>
                                         {project.projectImage ? (
                                             <img src={project.projectImage} alt={project.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover/image:scale-[1.03]" />
@@ -809,7 +815,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 )}
 
                                 {/* RIGHT: CONTENT */}
-                                <div className={`w-full ${data.hideSideImage !== true ? 'md:w-[55%]' : ''} flex flex-col py-2 relative z-10`}>
+                                <div className={`w-full ${!isImageHidden ? 'md:w-[55%]' : 'items-center text-center'} flex flex-col py-2 relative z-10`}>
                                     <div className={`text-xs font-bold uppercase tracking-widest mb-3 ${accentText}`}>
                                         {isPreview ? (
                                             project.category && <span>{project.category}</span>

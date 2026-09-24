@@ -254,21 +254,24 @@ export default function CanvasContainer({
                 const targetElement = document.getElementById(targetId);
                 
                 if (targetElement) {
-                    let scrollContainer = document.getElementById('preview-scroll-container') || document.getElementById('workspace-scroll-container');
+                    const previewContainer = document.getElementById('preview-scroll-container');
+                    const workspaceContainer = document.getElementById('workspace-scroll-container');
                     
-                    if (scrollContainer) {
-                        const containerRect = scrollContainer.getBoundingClientRect();
-                        const elementRect = targetElement.getBoundingClientRect();
-                        const scrollTop = scrollContainer.scrollTop;
-                        
-                        const relativeTop = elementRect.top - containerRect.top;
-                        
-                        scrollContainer.scrollTo({
-                            top: scrollTop + relativeTop - 90, // Offset for navbar
+                    if (isPreview && previewContainer) {
+                        const containerRect = previewContainer.getBoundingClientRect();
+                        const targetRect = targetElement.getBoundingClientRect();
+                        previewContainer.scrollTo({
+                            top: previewContainer.scrollTop + (targetRect.top - containerRect.top) - 90,
+                            behavior: 'smooth'
+                        });
+                    } else if (workspaceContainer) {
+                        const containerRect = workspaceContainer.getBoundingClientRect();
+                        const targetRect = targetElement.getBoundingClientRect();
+                        workspaceContainer.scrollTo({
+                            top: workspaceContainer.scrollTop + (targetRect.top - containerRect.top) - 90,
                             behavior: 'smooth'
                         });
                     } else {
-                        // For public preview where window is the scroll container
                         const topPos = targetElement.getBoundingClientRect().top + window.scrollY;
                         window.scrollTo({
                             top: topPos - 90,
