@@ -88,9 +88,8 @@ def generate_text_with_fallback(clients, prompt):
     try:
         client = get_groq_client()
         models_to_try = [
-            'llama-3.1-70b-versatile',
-            'llama-3.1-8b-instant',
-            'mixtral-8x7b-32768',
+            'openai/gpt-oss-20b',
+            'qwen/qwen3.8-27b',
         ]
         
         for model in models_to_try:
@@ -292,10 +291,15 @@ class AICopilotAPIView(APIView):
             return Response({'error': 'Prompt is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            # Truncate canvas state to prevent exceeding Free Tier TPM limits (8000 tokens)
+            canvas_json = json.dumps(canvas_state)
+            if len(canvas_json) > 15000:
+                canvas_json = canvas_json[:15000] + "... [TRUNCATED]"
+                
             system_instruction = f"""You are an AI Co-Pilot for a React portfolio builder. 
 The user wants to modify their portfolio canvas through a chat interface.
 
-Current canvas sections: {json.dumps(canvas_state)}
+Current canvas sections: {canvas_json}
 
 Available themes: modern_glass, cyber_neon, clean_minimal, vibrant_creative, editorial_paper
 Available section types: hero, about, experience, projects_grid, education, skills, services, contact, testimonials, certifications, stats, blog
