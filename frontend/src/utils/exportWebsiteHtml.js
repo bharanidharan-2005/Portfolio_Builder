@@ -16,7 +16,12 @@ const escapeHtml = (value) => {
 const getAbsoluteUrl = (url) => {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://aurabuild.io';
+    
+    // Extract backend base URL from VITE_API_URL or use fallback
+    const rawApiUrl = import.meta.env.VITE_API_URL || 'https://aurabuild-backend.onrender.com';
+    // Remove trailing slashes and '/api' if present
+    const baseUrl = rawApiUrl.replace(/\/api\/?$/, '').replace(/\/$/, '');
+    
     return baseUrl + (url.startsWith('/') ? '' : '/') + url;
 };
 

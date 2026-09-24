@@ -702,7 +702,7 @@ export default function RightSidebar({
         try {
             // Strip out heavy base64 strings to prevent 413 Payload Too Large
             const strippedSections = sections.map(sec => {
-                const cleanData = { ...sec.data };
+                const cleanData = { ...(sec.content_data || sec.data || {}) };
                 if (cleanData.image) delete cleanData.image;
                 if (cleanData.avatar) delete cleanData.avatar;
                 if (cleanData.projects) {
@@ -727,9 +727,10 @@ export default function RightSidebar({
                 if (action.action === "update_theme" && onThemeChange) {
                     onThemeChange(action.theme);
                 } else if (action.action === "update_section" && onUpdateSectionContent) {
-                    const targetSec = sections.find(s => s.section_type === action.section_type);
+                    const targetSec = sections.find(s => (s.section_type || '').toLowerCase() === (action.section_type || '').toLowerCase());
                     if (targetSec && action.updates) {
-                        Object.entries(action.updates).forEach(([k, v]) => {
+                        const updatesToApply = action.updates.data || action.updates;
+                        Object.entries(updatesToApply).forEach(([k, v]) => {
                             onUpdateSectionContent(targetSec.id, k, v);
                         });
                     } else if (!targetSec) {

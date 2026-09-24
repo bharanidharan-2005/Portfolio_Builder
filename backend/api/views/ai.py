@@ -34,7 +34,7 @@ from .utils import *
 # -----------------------------------------------------------------
 # 1. GEMINI CLIENT HELPERS
 # -----------------------------------------------------------------
-TEXT_MODEL = 'gemini-3.5-flash'
+TEXT_MODEL = 'gemini-1.5-flash'
 
 class AICreditThrottle(UserRateThrottle):
     scope = 'ai'
@@ -131,6 +131,10 @@ def generate_text_with_fallback(clients, prompt):
             def __init__(self, text):
                 self.text = text
         return MockResponse(response.text)
+    except AIKeyMissingError as e:
+        if isinstance(last_error, AIKeyMissingError):
+            raise AIKeyMissingError("Neither Groq nor Gemini keys are configured.")
+        raise Exception(f"AI generation failed completely. Last Groq error: {last_error} | Gemini error: {e}")
     except Exception as e:
         raise Exception(f"AI generation failed completely. Last Groq error: {last_error} | Gemini error: {e}")
 
@@ -554,9 +558,8 @@ class PortfolioReviewAPIView(APIView):
 # 10. CUSTOM IMAGE GENERATION
 # -----------------------------------------------------------------
 IMAGE_MODELS = [
-    'gemini-3.1-flash-image',
-    'gemini-3-pro-image',
-    'gemini-2.5-flash-image',
+    'gemini-1.5-pro',
+    'gemini-1.5-flash',
 ]
 
 IMAGEN_MODEL = 'imagen-3.0-generate-002'
