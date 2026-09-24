@@ -433,7 +433,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                         }
                                                         const reader = new FileReader();
                                                         reader.onload = (ev) => {
-                                                            onInlineEdit(data.id, "customSideImage", ev.target.result);
+                                                            onInlineEdit(section.id, "customSideImage", ev.target.result);
                                                         };
                                                         reader.readAsDataURL(file);
                                                     }
@@ -445,7 +445,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                 onClick={(e) => { 
                                                     e.preventDefault();
                                                     e.stopPropagation(); 
-                                                    onInlineEdit(data.id, "customSideImage", ""); 
+                                                    onInlineEdit(section.id, "customSideImage", ""); 
                                                 }}
                                                 className="absolute top-4 right-4 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 hover:bg-red-600 z-20 shadow-md"
                                                 title="Remove Image"
@@ -501,7 +501,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                         }
                                                         const reader = new FileReader();
                                                         reader.onload = (ev) => {
-                                                            onInlineEdit(data.id, "customSideImage", ev.target.result);
+                                                            onInlineEdit(section.id, "customSideImage", ev.target.result);
                                                         };
                                                         reader.readAsDataURL(file);
                                                     }
@@ -513,7 +513,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                 onClick={(e) => { 
                                                     e.preventDefault();
                                                     e.stopPropagation(); 
-                                                    onInlineEdit(data.id, "customSideImage", ""); 
+                                                    onInlineEdit(section.id, "customSideImage", ""); 
                                                 }}
                                                 className="absolute top-4 right-4 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 hover:bg-red-600 z-20 shadow-md"
                                                 title="Remove Image"
