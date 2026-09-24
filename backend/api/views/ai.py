@@ -122,15 +122,23 @@ def generate_text_with_fallback(clients, prompt):
         logger.info("Groq failed or key missing. Falling back to Gemini.")
         if not clients:
             clients = get_gemini_clients()
-        gemini_client = clients[0]
-        response = gemini_client.models.generate_content(
-            model=TEXT_MODEL,
-            contents=[prompt],
-        )
-        class MockResponse:
-            def __init__(self, text):
-                self.text = text
-        return MockResponse(response.text)
+        last_gemini_error = None
+        for gemini_client in clients:
+            try:
+                response = gemini_client.models.generate_content(
+                    model=TEXT_MODEL,
+                    contents=[prompt],
+                )
+                class MockResponse:
+                    def __init__(self, text):
+                        self.text = text
+                return MockResponse(response.text)
+            except Exception as e:
+                last_gemini_error = e
+                logger.warning("Gemini client failed: %s. Trying next key.", e)
+                continue
+                
+        raise last_gemini_error or Exception("No valid Gemini clients available.")
     except AIKeyMissingError as e:
         if isinstance(last_error, AIKeyMissingError):
             raise AIKeyMissingError("Neither Groq nor Gemini keys are configured.")
