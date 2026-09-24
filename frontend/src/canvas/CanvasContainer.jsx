@@ -239,7 +239,13 @@ export default function CanvasContainer({
         let targetType = navLabel.toLowerCase().trim();
         if (targetType === 'projects') targetType = 'projects_grid';
 
-        const foundSection = displaySections.find(s => (s.section_type || '').toLowerCase().trim() === targetType);
+        const foundSection = displaySections.find(s => {
+            const stype = (s.section_type || '').toLowerCase().trim();
+            return stype === targetType || 
+                   (targetType === 'projects_grid' && stype === 'projects') ||
+                   (targetType === 'projects' && stype === 'projects_grid');
+        });
+        
         if (foundSection) {
             if (!isPreview && setActiveSectionId) {
                 setActiveSectionId(foundSection.id);
@@ -257,15 +263,20 @@ export default function CanvasContainer({
                     };
                     
                     const scrollContainer = getScrollContainer();
+                    const headerOffset = 80; // Approximate height of the sticky navbar + padding
                     
                     if (scrollContainer) {
                         const containerRect = scrollContainer.getBoundingClientRect();
                         const elementRect = targetElement.getBoundingClientRect();
                         const relativeTop = elementRect.top - containerRect.top;
-                        // 0 offset to snap exactly to the top of the section (since sections have their own padding)
-                        scrollContainer.scrollTo({ top: scrollContainer.scrollTop + relativeTop, behavior: 'smooth' });
+                        
+                        // Apply offset to prevent the sticky header from hiding the section top
+                        scrollContainer.scrollTo({ 
+                            top: scrollContainer.scrollTop + relativeTop - headerOffset, 
+                            behavior: 'smooth' 
+                        });
                     } else {
-                        const topOffset = targetElement.getBoundingClientRect().top + window.scrollY;
+                        const topOffset = targetElement.getBoundingClientRect().top + window.scrollY - headerOffset;
                         window.scrollTo({ top: topOffset, behavior: 'smooth' });
                     }
                 }
