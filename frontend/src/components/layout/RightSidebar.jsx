@@ -10,6 +10,7 @@ import {
 import { PORTFOLIO_THEMES, PORTFOLIO_FONTS } from "../../canvas/themes.js";
 import { API } from "../../api";
 import { useWorkspace } from "../../context/WorkspaceContext";
+import { downloadPortfolioHtml } from "../../utils/exportWebsiteHtml";
 
 
 
@@ -1681,6 +1682,19 @@ export default function RightSidebar({
                 >
                     {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} 
                     {isProcessing ? 'Packaging...' : 'Download Source (.zip)'}
+                </button>
+
+                <button 
+                    disabled={isProcessing}
+                    onClick={() => {
+                        downloadPortfolioHtml({ pages, activePage, userData });
+                    }}
+                    className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-xs font-bold transition-all duration-300 shadow-md cursor-pointer active:scale-95 hover:-translate-y-0.5 ${
+                        isLight ? 'bg-slate-100 border border-slate-300 text-slate-800 hover:bg-slate-200' : 'bg-slate-900 border border-slate-700 text-cyan-400 hover:bg-slate-850'
+                    }`}
+                >
+                    <Download className="w-4 h-4 text-cyan-400" />
+                    Download Standalone HTML (SEO Ready)
                 </button>
 
                 <div className="relative flex items-center py-2">
