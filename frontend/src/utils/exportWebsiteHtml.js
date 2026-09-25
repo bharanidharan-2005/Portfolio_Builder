@@ -487,7 +487,35 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
         });
       }
     </script>
-    <title>${frontName} | Portfolio</title>
+    <title>${frontName} — ${frontHeadline}</title>
+    <meta name="description" content="${frontBio || frontHeadline}">
+    <meta name="keywords" content="${frontName}, Portfolio, ${frontHeadline}, Developer, Software Engineer, Web Development">
+    <meta name="author" content="${frontName}">
+    
+    <!-- OpenGraph Social Card Meta Tags -->
+    <meta property="og:site_name" content="${frontName} Portfolio">
+    <meta property="og:title" content="${frontName} — ${frontHeadline}">
+    <meta property="og:description" content="${frontBio || frontHeadline}">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="${heroVisualImageUrl || 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80'}">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="${frontName} — ${frontHeadline}">
+    <meta name="twitter:description" content="${frontBio || frontHeadline}">
+    <meta name="twitter:image" content="${heroVisualImageUrl || 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80'}">
+    
+    <!-- JSON-LD Structured Data for Search Engine Indexing -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "${frontName}",
+      "jobTitle": "${frontHeadline}",
+      "description": "${frontBio || frontHeadline}",
+      "image": "${heroVisualImageUrl || ''}"
+    }
+    </script>
     <style>
         body { font-family: ${fontFamilyStyle}; }
         ::-webkit-scrollbar { width: 12px; }
