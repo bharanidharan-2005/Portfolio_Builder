@@ -339,8 +339,8 @@ Choose ONE of the following formats based on the user's intent:
 4. If you just need to reply to the user without changing anything (e.g. asking for clarification):
 {{"action": "reply", "message": "<your_message>"}}
 
-5. To hide or remove the side image in a section (like hero or about):
-{{"action": "update_section", "section_type": "<type>", "updates": {{"hideSideImage": true}}, "message": "I've hidden the image in the <type> section."}}
+5. To hide or remove an image in a section (like hero, about, or projects_grid):
+{{"action": "update_section", "section_type": "<type>", "updates": {{"hideSideImage": true, "hideProjectImage": true}}, "message": "I've hidden the image in the <type> section."}}
 """
             response = generate_text_with_fallback(None, system_instruction)
 

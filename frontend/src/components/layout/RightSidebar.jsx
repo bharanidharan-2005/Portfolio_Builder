@@ -714,9 +714,47 @@ export default function RightSidebar({
                     const targetSec = sections.find(s => (s.section_type || '').toLowerCase() === (action.section_type || '').toLowerCase());
                     if (targetSec && action.updates) {
                         const updatesToApply = action.updates.data || action.updates;
-                        Object.entries(updatesToApply).forEach(([k, v]) => {
-                            onUpdateSectionContent(targetSec.id, k, v);
-                        });
+                        const isProjectsSec = (targetSec.section_type || '').toLowerCase() === 'projects_grid';
+
+                        if (isProjectsSec) {
+                            const isHideImageReq = updatesToApply.hideSideImage || updatesToApply.hideProjectImage || updatesToApply.projectImage === null || updatesToApply.projectImage === "";
+                            const projects = targetSec.content_data?.projects || [];
+                            
+                            if (isHideImageReq && projects.length > 0) {
+                                const userPromptLower = (userMsg || '').toLowerCase();
+                                // Try finding project whose title words overlap with prompt
+                                let matchedIndex = projects.findIndex(p => {
+                                    if (!p.title) return false;
+                                    const t = p.title.toLowerCase();
+                                    const words = t.split(/\s+/).filter(w => w.length > 3);
+                                    return words.some(w => userPromptLower.includes(w));
+                                });
+                                
+                                if (matchedIndex === -1 && projects.length === 1) {
+                                    matchedIndex = 0;
+                                }
+
+                                const updatedProjects = projects.map((p, idx) => {
+                                    if (matchedIndex === -1 || idx === matchedIndex) {
+                                        return { ...p, projectImage: null, hideProjectImage: true };
+                                    }
+                                    return p;
+                                });
+
+                                onUpdateSectionContent(targetSec.id, {
+                                    ...updatesToApply,
+                                    projects: updatedProjects
+                                });
+                            } else {
+                                Object.entries(updatesToApply).forEach(([k, v]) => {
+                                    onUpdateSectionContent(targetSec.id, k, v);
+                                });
+                            }
+                        } else {
+                            Object.entries(updatesToApply).forEach(([k, v]) => {
+                                onUpdateSectionContent(targetSec.id, k, v);
+                            });
+                        }
                     } else if (!targetSec) {
                         setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Section of type '${action.section_type}' not found on canvas.` }]);
                     }
