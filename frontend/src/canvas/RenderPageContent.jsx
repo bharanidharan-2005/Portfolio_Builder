@@ -257,13 +257,13 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 <span className={textSecondary}>Open to opportunities</span>
                             </motion.div>
 
-                            <div className={`space-y-4 w-full ${fontSzClass} ${shouldCenterHero ? 'flex flex-col items-center' : ''}`}>
+                            <div className={`space-y-4 w-full ${fontSzClass} flex flex-col ${shouldCenterHero ? 'items-center text-center' : 'items-center lg:items-start text-center lg:text-left'}`}>
                                 <motion.h1
                                     initial={{ opacity: 0, y: 15 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: false, amount: 0.1 }}
                                     transition={springTransition}
-                                    className={`font-display font-black tracking-tight leading-[1.05] w-full max-w-3xl text-4xl sm:text-5xl lg:text-6xl xl:text-7xl break-words text-white`}
+                                    className={`font-display font-black tracking-tight leading-[1.05] w-full max-w-3xl text-4xl sm:text-5xl lg:text-6xl xl:text-7xl break-words text-white ${shouldCenterHero ? 'mx-auto text-center' : 'mx-auto lg:mx-0 text-center lg:text-left'}`}
                                 >
                                     <TextElement
                                         value={data.heading || "YOUR NAME"}
@@ -277,7 +277,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     whileInView={{ opacity: 1, y: 0 }} 
                                     viewport={{ once: false, amount: 0.1 }}
                                     transition={{ ...springTransition, delay: 0.1 }}
-                                    className={`text-xl md:text-2xl font-bold w-full max-w-full ${accentText}`}
+                                    className={`text-xl md:text-2xl font-bold w-full max-w-full ${accentText} ${shouldCenterHero ? 'text-center' : 'text-center lg:text-left'}`}
                                 >
                                     <TextElement 
                                         value={data.subheading || "Junior Data Engineer (GenAI) | Python Developer"}
@@ -291,7 +291,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     whileInView={{ opacity: 1, y: 0 }} 
                                     viewport={{ once: false, amount: 0.1 }}
                                     transition={{ ...springTransition, delay: 0.15 }}
-                                    className={`text-lg md:text-xl leading-relaxed w-full max-w-2xl font-medium text-slate-300`}
+                                    className={`text-lg md:text-xl leading-relaxed w-full max-w-2xl font-medium text-slate-300 ${shouldCenterHero ? 'mx-auto text-center' : 'mx-auto lg:mx-0 text-center lg:text-left'}`}
                                 >
                                     <TextElement 
                                         multiline

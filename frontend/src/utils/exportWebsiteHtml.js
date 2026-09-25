@@ -245,7 +245,7 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
 
             const heroDescText = data.description || data.text || '';
             const heroDescHtml = heroDescText ? `
-                <p class="text-lg md:text-xl leading-relaxed w-full max-w-xl font-medium ${bgImage ? 'text-white/80' : `${theme.textSecondary}`}">
+                <p class="text-lg md:text-xl leading-relaxed w-full max-w-xl font-medium ${bgImage ? 'text-white/80' : `${theme.textSecondary}`} ${heroSideImage ? 'mx-auto text-center lg:mx-0 lg:text-left' : 'mx-auto text-center'}">
                     ${escapeHtml(heroDescText)}
                 </p>
             ` : '';
@@ -259,11 +259,11 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                             <span class="${theme.textSecondary} opacity-90">Open to opportunities</span>
                         </div>
                         
-                        <div class="space-y-4 w-full">
-                            <h1 class="font-black tracking-tight leading-tight w-full max-w-3xl text-4xl sm:text-5xl lg:text-6xl break-words ${bgImage ? 'text-white' : theme.textPrimary}">
+                        <div class="space-y-4 w-full flex flex-col ${heroSideImage ? 'items-center lg:items-start text-center lg:text-left' : 'items-center text-center'}">
+                            <h1 class="font-black tracking-tight leading-tight w-full max-w-3xl text-4xl sm:text-5xl lg:text-6xl break-words ${bgImage ? 'text-white' : theme.textPrimary} ${heroSideImage ? 'mx-auto text-center lg:mx-0 lg:text-left' : 'mx-auto text-center'}">
                                 ${escapeHtml(data.heading) || 'YOUR NAME'}
                             </h1>
-                            <p class="text-xl md:text-2xl font-bold w-full ${theme.accentText || 'text-blue-400'}">
+                            <p class="text-xl md:text-2xl font-bold w-full ${theme.accentText || 'text-blue-400'} ${heroSideImage ? 'text-center lg:text-left' : 'text-center'}">
                                 ${escapeHtml(data.subheading) || 'Professional Headline'}
                             </p>
                             ${heroDescHtml}
