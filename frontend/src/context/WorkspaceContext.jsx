@@ -241,9 +241,10 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
 
     const handleUpdateSectionContent = async (sectionId, key, value) => {
         const currentSections = sectionsRef.current;
+        const patch = (typeof key === 'object' && key !== null) ? key : { [key]: value };
         const newSections = currentSections.map(sec => {
             if (String(sec.id) === String(sectionId)) {
-                return { ...sec, content_data: { ...sec.content_data, [key]: value } };
+                return { ...sec, content_data: { ...sec.content_data, ...patch } };
             }
             return sec;
         });

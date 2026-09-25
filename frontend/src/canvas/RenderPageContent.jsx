@@ -433,7 +433,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                         }
                                                         const reader = new FileReader();
                                                         reader.onload = (ev) => {
-                                                            onInlineEdit(section.id, "customSideImage", ev.target.result);
+                                                            onInlineEdit(section.id, { customSideImage: ev.target.result, hideSideImage: false });
                                                         };
                                                         reader.readAsDataURL(file);
                                                     }
@@ -444,8 +444,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                 onClick={(e) => { 
                                                     e.preventDefault();
                                                     e.stopPropagation(); 
-                                                    onInlineEdit(section.id, "hideSideImage", true);
-                                                    setTimeout(() => onInlineEdit(section.id, "customSideImage", ""), 0);
+                                                    onInlineEdit(section.id, { hideSideImage: true, customSideImage: "" });
                                                 }}
                                                 className="absolute top-4 right-4 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 hover:bg-red-600 z-20 shadow-md"
                                                 title="Remove Image"
@@ -500,7 +499,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                         }
                                                         const reader = new FileReader();
                                                         reader.onload = (ev) => {
-                                                            onInlineEdit(section.id, "customSideImage", ev.target.result);
+                                                            onInlineEdit(section.id, { customSideImage: ev.target.result, hideSideImage: false });
                                                         };
                                                         reader.readAsDataURL(file);
                                                     }
@@ -511,8 +510,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                 onClick={(e) => { 
                                                     e.preventDefault();
                                                     e.stopPropagation(); 
-                                                    onInlineEdit(section.id, "hideSideImage", true);
-                                                    setTimeout(() => onInlineEdit(section.id, "customSideImage", ""), 0);
+                                                    onInlineEdit(section.id, { hideSideImage: true, customSideImage: "" });
                                                 }}
                                                 className="absolute top-4 right-4 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 hover:bg-red-600 z-20 shadow-md"
                                                 title="Remove Image"
@@ -836,7 +834,11 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 <p className={`text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
                             </div>
                         )}
-                        {(data.projects || []).map((project, i) => (
+                        {(data.projects || []).map((project, i) => {
+                            const isProjImgHidden = project.hideProjectImage === true || String(project.hideProjectImage).toLowerCase() === 'true';
+                            const hasProjImg = project.projectImage && !isProjImgHidden;
+
+                            return (
                             <div 
                                 key={i}
                                 id={`project-card-${i}`}
@@ -852,7 +854,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 )}
 
                                 {/* LEFT: PROJECT IMAGE */}
-                                {(!isImageHidden && project.projectImage) && (
+                                {hasProjImg && (
                                     <div className={`w-full md:w-[45%] relative group/image shrink-0 rounded-[1.5rem] overflow-hidden ${trackBgLight} border ${borderClass} min-h-[220px] md:min-h-[280px] flex items-center justify-center`}>
                                         <img src={project.projectImage} alt={project.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover/image:scale-[1.03]" />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-50 group-hover/image:opacity-30 transition-opacity pointer-events-none"></div>
@@ -875,32 +877,36 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                                 }
                                                                 const reader = new FileReader();
                                                                 reader.onload = (ev) => {
-                                                                    updateArrayItem("projects", i, "projectImage", ev.target.result);
+                                                                    const list = (data.projects || []).map((item, idx) =>
+                                                                        idx === i ? { ...item, projectImage: ev.target.result, hideProjectImage: false } : item
+                                                                    );
+                                                                    onInlineEdit(section.id, "projects", list);
                                                                 };
                                                                 reader.readAsDataURL(file);
                                                             }
                                                         }}
                                                     />
                                                 </div>
-                                                {project.projectImage && (
-                                                    <button 
-                                                        onClick={(e) => { 
-                                                            e.preventDefault();
-                                                            e.stopPropagation(); 
-                                                            updateArrayItem("projects", i, "projectImage", null); 
-                                                        }}
-                                                        className="absolute top-3 right-3 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-[10px] opacity-0 group-hover/image:opacity-100 hover:bg-red-600 z-20 shadow-md"
-                                                        title="Remove Image"
-                                                    >✕</button>
-                                                )}
+                                                <button 
+                                                    onClick={(e) => { 
+                                                        e.preventDefault();
+                                                        e.stopPropagation(); 
+                                                        const list = (data.projects || []).map((item, idx) =>
+                                                            idx === i ? { ...item, projectImage: null, hideProjectImage: true } : item
+                                                        );
+                                                        onInlineEdit(section.id, "projects", list);
+                                                    }}
+                                                    className="absolute top-3 right-3 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-[10px] opacity-0 group-hover/image:opacity-100 hover:bg-red-600 z-20 shadow-md"
+                                                    title="Remove Image"
+                                                >✕</button>
                                             </>
                                         )}
                                     </div>
                                 )}
 
                                 {/* RIGHT: CONTENT */}
-                                <div className={`w-full ${(!isImageHidden && project.projectImage) ? 'md:w-[55%]' : 'items-center text-center'} flex flex-col py-2 relative z-10`}>
-                                    {!project.projectImage && !isPreview && (
+                                <div className={`w-full ${hasProjImg ? 'md:w-[55%]' : 'items-center text-center'} flex flex-col py-2 relative z-10`}>
+                                    {!hasProjImg && !isPreview && (
                                         <div className="relative inline-flex items-center justify-center px-4 py-2 mb-4 text-[10px] font-bold text-white bg-blue-600 rounded-lg cursor-pointer hover:bg-blue-700 w-max self-center shadow-md">
                                             <span>+ Add Project Image</span>
                                             <input 
@@ -912,7 +918,10 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                     if (file) {
                                                         const reader = new FileReader();
                                                         reader.onload = (ev) => {
-                                                            updateArrayItem("projects", i, "projectImage", ev.target.result);
+                                                            const list = (data.projects || []).map((item, idx) =>
+                                                                idx === i ? { ...item, projectImage: ev.target.result, hideProjectImage: false } : item
+                                                            );
+                                                            onInlineEdit(section.id, "projects", list);
                                                         };
                                                         reader.readAsDataURL(file);
                                                     }
@@ -1064,7 +1073,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     )}
                                 </div>
                             </div>
-                        ))}
+                        )})}
                     </div>
 
                     {data.githubUsername && data.githubUsername.trim() !== "" && (

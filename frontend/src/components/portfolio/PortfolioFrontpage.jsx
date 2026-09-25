@@ -37,7 +37,8 @@ const PortfolioFrontpage = ({ userData, sections, themeMode, onVisualize }) => {
     const lastName = name.split(' ').slice(1).join(' ');
     const initials = name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
-    const roleImage = heroSec?.content_data?.customSideImage || getRoleImage(headline);
+    const isImageHidden = heroSec?.content_data?.hideSideImage === true || String(heroSec?.content_data?.hideSideImage).toLowerCase() === 'true';
+    const roleImage = isImageHidden ? null : (heroSec?.content_data?.customSideImage || getRoleImage(headline));
     const d = { name, headline, bio, firstName, lastName, initials, roleImage, onVisualize };
     switch (templateId) {
         case 'template1': return <MinimalistCentered d={d} />;

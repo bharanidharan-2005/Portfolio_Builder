@@ -125,33 +125,40 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
 
     const overrideCss = `
     <style>
-      #frontpage-overlay * {
-          opacity: 1 !important;
-      }
       #frontpage-overlay {
           position: fixed !important;
           top: 0; left: 0; right: 0; bottom: 0;
           z-index: 100;
+          overflow-y: auto !important;
+          -webkit-overflow-scrolling: touch;
           transition: opacity 1s ease-in-out, visibility 1s ease-in-out;
+      }
+      #frontpage-overlay * {
+          opacity: 1 !important;
+      }
+      /* Ensure nested template wrappers don't cut off scrolling */
+      #frontpage-overlay > div {
+          min-height: 100vh;
+          height: auto !important;
+          overflow-y: visible !important;
       }
     </style>
     `;
 
     const frontpageHtml = `
-    <div id="frontpage-overlay" class="fixed inset-0 z-[100] transition-opacity duration-1000 ease-in-out">
+    <div id="frontpage-overlay" class="fixed inset-0 z-[100] transition-opacity duration-1000 ease-in-out overflow-y-auto bg-slate-950">
         ${overrideCss}
         ${rawHtml}
         <script>
-            // Ensure any button clicked on the frontpage overlay dismisses it.
+            // Dismiss overlay when any action button or link inside frontpage is clicked
             setTimeout(() => {
                 const overlay = document.getElementById('frontpage-overlay');
                 if (overlay) {
-                    const buttons = overlay.querySelectorAll('button');
-                    buttons.forEach(btn => {
-                        btn.onclick = (e) => {
-                            e.preventDefault();
+                    const interactives = overlay.querySelectorAll('button, a, [role="button"], .cursor-pointer');
+                    interactives.forEach(btn => {
+                        btn.addEventListener('click', (e) => {
                             if (typeof dismissFrontpage === 'function') dismissFrontpage();
-                        };
+                        });
                     });
                 }
             }, 100);
@@ -231,8 +238,9 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                 projectsDropdown = `<div class="group relative z-50"><button class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg flex items-center gap-2 bg-[#0a0a0f] hover:bg-[#1a1a24] text-white">Projects ▾</button><div class="absolute top-full left-0 mt-2 w-56 rounded-xl border border-slate-800 bg-[#0a0a0f]/95 backdrop-blur-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col p-2 max-h-60 overflow-y-auto custom-scrollbar text-left">${links}</div></div>`;
             }
 
-            // CRITICAL FIX: Hero Visual Image in Workspace/Preview uses customSideImage || getRoleImage
-            const heroSideImage = data.customSideImage ? getAbsoluteUrl(data.customSideImage) : getAbsoluteUrl(getRoleImage(data.subheading || ""));
+            // CRITICAL FIX: Respect hideSideImage flag for Hero section
+            const isHeroImageHidden = data.hideSideImage === true || String(data.hideSideImage).toLowerCase() === 'true';
+            const heroSideImage = isHeroImageHidden ? '' : (data.customSideImage ? getAbsoluteUrl(data.customSideImage) : getAbsoluteUrl(getRoleImage(data.subheading || "")));
             const isCustomSide = !!data.customSideImage;
 
             const heroDescText = data.description || data.text || '';
@@ -245,7 +253,7 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
             sectionsHtml += `
             <section class="py-16 sm:py-24 px-6 sm:px-12 relative rounded-3xl overflow-visible border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} mb-16 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)]" ${bgInlineStyle}>
                 <div class="relative z-10 w-full max-w-7xl mx-auto flex flex-col-reverse lg:flex-row items-center gap-12 lg:gap-20">
-                    <div class="flex-1 space-y-8 flex flex-col items-center lg:items-start text-center lg:text-left stagger-item stagger-fade-left">
+                    <div class="flex-1 space-y-8 flex flex-col ${heroSideImage ? 'items-center lg:items-start text-center lg:text-left' : 'items-center text-center max-w-4xl mx-auto'} stagger-item stagger-fade-left">
                         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold border ${theme.border} bg-white/5 backdrop-blur-md shadow-sm">
                             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                             <span class="${theme.textSecondary} opacity-90">Open to opportunities</span>
@@ -278,17 +286,19 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                         </div>
                     </div>
 
+                    ${heroSideImage ? `
                     <div class="flex-1 w-full flex justify-center lg:justify-end relative stagger-item stagger-fade-right" style="transition-delay: 0.2s">
                         <div class="relative w-[300px] h-[300px] md:w-[450px] md:h-[450px] lg:w-[500px] lg:h-[500px] animate-float">
                             <div class="absolute inset-0 bg-blue-500/20 rounded-full blur-[100px]"></div>
                             <img src="${heroSideImage}" alt="3D Workspace" class="absolute inset-0 w-full h-full object-cover opacity-90 rounded-3xl ${!isCustomSide ? 'mix-blend-screen' : 'shadow-2xl'}" style="filter: drop-shadow(0 0 30px rgba(59,130,246,0.3));" />
                         </div>
                     </div>
+                    ` : ''}
                 </div>
             </section>`;
         } else if (type === 'about') {
-            // CRITICAL FIX: About Me uses customSideImage for the side avatar, and backgroundImage for the section background!
-            const aboutSideImg = data.customSideImage ? getAbsoluteUrl(data.customSideImage) : '';
+            const isAboutImageHidden = data.hideSideImage === true || String(data.hideSideImage).toLowerCase() === 'true';
+            const aboutSideImg = (isAboutImageHidden || !data.customSideImage) ? '' : getAbsoluteUrl(data.customSideImage);
             const aboutBgImg = data.backgroundImage ? getAbsoluteUrl(data.backgroundImage) : '';
             
             sectionsHtml += `
@@ -371,7 +381,8 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
         } else if (type === 'projects_grid') {
             const hasProjects = data.projects && data.projects.length > 0;
             const projectsHtml = hasProjects ? (data.projects || []).map((p, i) => {
-                const projImg = p.projectImage ? getAbsoluteUrl(p.projectImage) : '';
+                const isProjImgHidden = p.hideProjectImage === true || String(p.hideProjectImage).toLowerCase() === 'true';
+                const projImg = (isProjImgHidden || !p.projectImage) ? '' : getAbsoluteUrl(p.projectImage);
                 const tagsList = Array.isArray(p.tags) ? p.tags : (p.tags ? String(p.tags).split(',') : []);
                 return `
                 <div class="group relative flex flex-col lg:flex-row items-center gap-10 rounded-[2.5rem] border ${theme.border} bg-white/5 overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-all duration-700 hover:bg-white/10 p-10 hover:-translate-y-3 hover:border-white/20">
