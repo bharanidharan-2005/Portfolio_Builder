@@ -72,13 +72,6 @@ def ensure_user_workspace(request):
     page = PortfolioPage.objects.filter(portfolio=portfolio).order_by('order').first()
     if not page:
         page = PortfolioPage.objects.create(portfolio=portfolio, name='Home', slug='home')
-        for s_type, content in DEFAULT_WORKSPACE_SECTIONS:
-            PortfolioSection.objects.create(
-                page=page,
-                section_type=s_type,
-                order=list(DEFAULT_WORKSPACE_SECTIONS_MAP.keys()).index(s_type),
-                content_data=content
-            )
     return page
 
 def validate_section_content(section_type, content_data):

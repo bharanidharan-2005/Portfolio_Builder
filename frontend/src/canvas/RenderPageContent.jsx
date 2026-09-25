@@ -280,7 +280,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     className={`text-xl md:text-2xl font-bold w-full max-w-full ${accentText} ${shouldCenterHero ? 'text-center' : 'text-center lg:text-left'}`}
                                 >
                                     <TextElement 
-                                        value={data.subheading || "Junior Data Engineer (GenAI) | Python Developer"}
+                                        value={data.subheading || "Professional Headline"}
                                         placeholder="Professional Headline"
                                         onCommit={(v) => updateScalar("subheading", v)}
                                     />
