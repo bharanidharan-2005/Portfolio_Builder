@@ -269,8 +269,8 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                             ${heroDescHtml}
                         </div>
                         
-                        <div class="flex flex-col items-center lg:items-start gap-6 pt-4 w-full">
-                            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 w-full">
+                        <div class="flex flex-col ${heroSideImage ? 'items-center lg:items-start' : 'items-center'} gap-6 pt-4 w-full">
+                            <div class="flex flex-wrap items-center ${heroSideImage ? 'justify-center lg:justify-start' : 'justify-center'} gap-4 w-full">
                                 <button onclick="document.getElementById('section-${activeSections.find(s=>s.section_type==='projects_grid')?.id||''}').scrollIntoView({behavior:'smooth'})" class="px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all shadow-lg hover:shadow-[0_20px_40px_rgba(59,130,246,0.3)] ${theme.accentBg || 'bg-blue-600'} text-white flex items-center gap-2 hover:scale-110 hover:-translate-y-2">
                                     View My Work &rarr;
                                 </button>
@@ -279,7 +279,7 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                                 </button>
                             </div>
                             
-                            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-3 w-full mt-2">
+                            <div class="flex flex-wrap items-center ${heroSideImage ? 'justify-center lg:justify-start' : 'justify-center'} gap-3 w-full mt-2">
                                 ${seeLiveDropdown}
                                 ${projectsDropdown}
                             </div>
