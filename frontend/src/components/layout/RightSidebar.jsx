@@ -158,6 +158,9 @@ export default function RightSidebar({
     onTemplateChange
 }) {
     const { 
+        pages,
+        activePage,
+        userData: contextUserData,
         activeHighlightSection, setActiveHighlightSection, 
         aiSuggestionPreview, setAiSuggestionPreview,
         heroCustomImage, setHeroCustomImage,
@@ -1687,7 +1690,12 @@ export default function RightSidebar({
                 <button 
                     disabled={isProcessing}
                     onClick={() => {
-                        downloadPortfolioHtml({ pages, activePage, userData });
+                        const pagesToExport = (pages && pages.length > 0) ? pages : [{ name: activePage || 'Home', sections }];
+                        downloadPortfolioHtml({ 
+                            pages: pagesToExport, 
+                            activePage: activePage || 'Home', 
+                            userData: userData || contextUserData 
+                        });
                     }}
                     className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-xs font-bold transition-all duration-300 shadow-md cursor-pointer active:scale-95 hover:-translate-y-0.5 ${
                         isLight ? 'bg-slate-100 border border-slate-300 text-slate-800 hover:bg-slate-200' : 'bg-slate-900 border border-slate-700 text-cyan-400 hover:bg-slate-850'
