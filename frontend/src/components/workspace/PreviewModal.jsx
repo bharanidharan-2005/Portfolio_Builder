@@ -129,11 +129,11 @@ export default function PreviewModal({
                     <button 
                         onClick={() => {
                             const cleanUsername = (userData?.name || "developer").toLowerCase().replace(/[^a-z0-9]/g, '');
-                            const liveUrl = `${window.location.protocol}//${window.location.host}/preview/${cleanUsername}/public`;
+                            const liveUrl = `${window.location.protocol}//${window.location.host}/${cleanUsername}/`;
                             navigator.clipboard.writeText(liveUrl);
                             setCopied(true);
                             setTimeout(() => setCopied(false), 2000);
-                            if (setTerminalLogs) setTerminalLogs(prev => [...prev, { type: "system", text: "[SYSTEM] Portfolio link copied to clipboard." }]);
+                            if (setTerminalLogs) setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Portfolio link copied: ${liveUrl}` }]);
                         }}
                         className={`p-2 rounded-xl transition-all ${copied ? 'text-emerald-400 bg-emerald-500/10' : (isLight ? 'text-slate-500 hover:text-slate-800 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-white/10')}`}
                         title={copied ? "Link Copied!" : "Copy Shareable Link"}
@@ -144,7 +144,7 @@ export default function PreviewModal({
                     <button 
                         onClick={() => {
                             const cleanUsername = (userData?.name || "developer").toLowerCase().replace(/[^a-z0-9]/g, '');
-                            const liveUrl = `${window.location.protocol}//${window.location.host}/preview/${cleanUsername}/public`;
+                            const liveUrl = `${window.location.protocol}//${window.location.host}/${cleanUsername}/`;
                             window.open(liveUrl, '_blank');
                         }}
                         className={`p-2 rounded-xl transition-all ${isLight ? 'text-slate-500 hover:text-slate-800 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}

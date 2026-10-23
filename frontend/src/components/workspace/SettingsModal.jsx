@@ -58,13 +58,13 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
     if (!isOpen) return null;
 
     // Clean username (e.g. "Bharani Dharan" -> "bharanidharan")
-    const cleanUsername = (localName || "developer").toLowerCase().replace(/[^a-z0-9]/g, '');
+    const cleanUsername = (localName || userData?.name || "developer").toLowerCase().replace(/[^a-z0-9]/g, '');
     
-    // Path-based preview routing format
+    // Direct Public Portfolio URL: https://portfolio-builder-one-brown.vercel.app/[username]/
     const protocol = window.location.protocol;
     const host = window.location.host;
     
-    const liveUrl = `${protocol}//${host}/preview/${cleanUsername}/public`;
+    const liveUrl = `${protocol}//${host}/${cleanUsername}/`;
 
     const getTabBtnClass = (tabId) => {
         const isActive = activeTab === tabId;

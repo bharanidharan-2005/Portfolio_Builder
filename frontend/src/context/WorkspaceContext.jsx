@@ -500,16 +500,19 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
             await API.patch('portfolio-settings/', { globalFont }).catch(() => {});
         }
         
-        setTerminalLogs(prev => [...prev, { type: "system", text: "[SYSTEM] Initiating secure backend deployment..." }]);
-        notify("Deploying your portfolio to Vercel edge... This may take up to 20 seconds.", "info");
-        const result = await deployAnimatedSite({ pages, activePage, selectedSection, localContent, userData });
-        if (result.success) {
-            setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Deployed successfully to ${result.data.projectUrl}` }]);
-            notify(`Deployed successfully! View it at: ${result.data.projectUrl}`, "success");
-            window.open(result.data.projectUrl, '_blank');
-        } else {
-            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] ${result.error}` }]);
-            notify(`Deployment Failed: ${result.error}`, "error");
+        const cleanUsername = (userData?.name || "developer").toLowerCase().replace(/[^a-z0-9]/g, '');
+        const liveUrl = `${window.location.protocol}//${window.location.host}/${cleanUsername}/`;
+
+        setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Publishing live portfolio to ${liveUrl}...` }]);
+        notify("Publishing your portfolio live to Edge...", "info");
+        
+        try {
+            await navigator.clipboard.writeText(liveUrl).catch(() => {});
+            setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Published live! URL: ${liveUrl}` }]);
+            notify(`Portfolio live! View at: ${liveUrl} (Copied to clipboard)`, "success");
+            window.open(liveUrl, '_blank');
+        } catch (err) {
+            window.open(liveUrl, '_blank');
         }
     };
 

@@ -52,11 +52,22 @@ function PreviewRouteWrapper({ isSubdomainPreview, subdomainUsername }) {
     const { themeMode } = useAppContext();
     
     const publicUsername = isSubdomainPreview ? subdomainUsername : username;
-    const publicToken = isSubdomainPreview ? "public" : token;
+    const publicToken = isSubdomainPreview ? "public" : (token || "public");
+
+    // Reserved paths that should never be treated as usernames
+    const reservedRoutes = ['workspace', 'github', 'login', 'signup', 'api', 'auth', 'settings'];
+    if (reservedRoutes.includes((publicUsername || '').toLowerCase())) {
+        return <Navigate to="/" replace />;
+    }
 
     return (
         <div className={`min-h-screen ${themeMode === 'light' ? 'bg-slate-50' : 'bg-slate-950'}`}>
-            <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-bold text-slate-500">Loading Preview...</div>}>
+            <Suspense fallback={
+                <div className="min-h-screen flex flex-col items-center justify-center gap-3 font-semibold text-slate-400">
+                    <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span>Loading Live Portfolio...</span>
+                </div>
+            }>
                 <WorkspaceProvider isPublicPreview={true} previewUserData={{ name: publicUsername, code: publicToken }}>
                     <WorkspaceLayout />
                 </WorkspaceProvider>
@@ -116,10 +127,17 @@ function MainApp() {
                     <Route path="/preview/:username/:token" element={
                         <PreviewRouteWrapper isSubdomainPreview={false} />
                     } />
+                    <Route path="/preview/:username" element={
+                        <PreviewRouteWrapper isSubdomainPreview={false} />
+                    } />
                     <Route path="/github/callback" element={
                         <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-bold text-slate-500">Authenticating...</div>}>
                             <GithubCallback />
                         </Suspense>
+                    } />
+                    {/* Direct Public Portfolio URL: https://portfolio-builder-one-brown.vercel.app/:username/ */}
+                    <Route path="/:username" element={
+                        <PreviewRouteWrapper isSubdomainPreview={false} />
                     } />
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
