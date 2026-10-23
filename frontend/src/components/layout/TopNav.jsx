@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, memo } from "react";
 import { 
     Palette, ChevronDown, Check, Menu, 
     Settings2, HelpCircle, Eye, Undo2, Redo2, Rocket, CheckCircle2, AlertCircle,
@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { PORTFOLIO_THEMES } from "../../canvas/themes.js";
 
-export function TopNav({ 
+export const TopNav = memo(function TopNav({ 
     onDeploy, theme, setTheme, activeTheme, onThemeChange, 
     onToggleLeft, onToggleRight, isRightOpen, userData, onLogout, onHelpClick,
     isPreviewMode, onTogglePreview, onUndo, canUndo, onRedo, canRedo,
@@ -337,4 +337,4 @@ export function TopNav({
             </div> 
         </div>
     );
-}
+});

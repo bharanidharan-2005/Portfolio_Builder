@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, memo } from "react";
 import { 
     Settings, Paperclip, Zap, Sparkles, User, Rocket, Globe, 
     CheckCircle2, Loader2, TrendingUp, Wand2, 
@@ -140,7 +140,7 @@ const CustomDropdown = ({ value, onChange, options, isLight }) => {
     );
 };
 
-export default function RightSidebar({ 
+function RightSidebar({ 
     activeSectionId,
     themeMode, 
     activeTool, 
@@ -228,12 +228,11 @@ export default function RightSidebar({
         return JSON.stringify(sections).toLowerCase();
     };
 
-    const handleGenerateSection = async (title, type) => {
+    const handleGenerateSection = (title, type) => {
         setIsProcessing(true);
         setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Generating ${type.toUpperCase()} block...` }]);
         
         try {
-            await new Promise(resolve => setTimeout(resolve, 800)); 
             if (onAddSection) onAddSection(type);
             setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Added ${title} to canvas.` }]);
         } catch (error) {
@@ -252,8 +251,6 @@ export default function RightSidebar({
         setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Refinement Agent processing prompt: "${refinePrompt}"...` }]);
         
         try {
-            await new Promise(resolve => setTimeout(resolve, 1200));
-            
             const targetSecs = selectedAiSection === "all" 
                 ? sections 
                 : sections.filter(s => String(s.id) === String(selectedAiSection));
@@ -328,7 +325,6 @@ export default function RightSidebar({
         setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Initiating NLP semantic extraction on Job Description...` }]);
         
         try {
-            await new Promise(resolve => setTimeout(resolve, 1500));
             const canvasText = getAllCanvasText();
 
             const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -393,7 +389,6 @@ export default function RightSidebar({
         setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Injecting missing requirements into canvas...` }]);
         
         try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
             const skillsSec = sections.find(s => s.section_type === 'skills');
             const aboutSec = sections.find(s => s.section_type === 'about');
             
@@ -442,7 +437,6 @@ export default function RightSidebar({
         setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Executing ${title} across active blocks...` }]);
         
         try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
             let modifiedCount = 0;
 
             sections.forEach(sec => {
@@ -597,7 +591,6 @@ export default function RightSidebar({
         setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Generating theme palette for vibe: "${vibeInput}"...` }]);
         
         try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
             const vibeLower = vibeInput.toLowerCase();
             let selectedThemeKey = "modern_glass";
 
@@ -646,8 +639,6 @@ export default function RightSidebar({
         setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Extracting canvas skills and projects for ${pitchTarget}...` }]);
         
         try {
-            await new Promise(resolve => setTimeout(resolve, 1200));
-            
             const heroSec = sections.find(s => s.section_type === 'hero');
             const skillsSec = sections.find(s => s.section_type === 'skills');
             const projectSec = sections.find(s => s.section_type === 'projects_grid');
@@ -669,11 +660,10 @@ export default function RightSidebar({
         }
     };
 
-    const executeAiAction = async (toolName, successMsg, customDelay = 1000) => {
+    const executeAiAction = (toolName, successMsg) => {
         setIsProcessing(true);
         setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Running audit: ${toolName}...` }]);
         try {
-            await new Promise(resolve => setTimeout(resolve, customDelay)); 
             setTerminalLogs(prev => [...prev, { type: "success", text: successMsg }]);
         } catch (error) {
             setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Action '${toolName}' failed.` }]);
@@ -1728,7 +1718,6 @@ export default function RightSidebar({
                         setIsProcessing(true);
                         setTerminalLogs(prev => [...prev, { type: "system", text: "[SYSTEM] Initiating production build sequence..." }]);
                         try {
-                            await new Promise(resolve => setTimeout(resolve, 800));
                             if (onDeploy) await onDeploy(); 
                         } catch(error) {
                             setTerminalLogs(prev => [...prev, { type: "error", text: "[ERROR] Deployment Pipeline Failed." }]);
@@ -1957,3 +1946,5 @@ export default function RightSidebar({
         </div>
     );
 }
+
+export default memo(RightSidebar);

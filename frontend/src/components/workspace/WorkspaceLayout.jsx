@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, lazy, Suspense } from "react";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { useAppContext } from "../../context/AppContext";
 import { TopNav } from "../layout/TopNav.jsx";
@@ -12,7 +12,6 @@ import ResumeReviewModal from "./ResumeReviewModal.jsx";
 import PortfolioFrontpage from "../portfolio/PortfolioFrontpage.jsx";
 import { Undo2, Redo2, ChevronLeft } from "lucide-react";
 import SEOUpdater from "../../utils/SEOUpdater";
-import { lazy, Suspense } from 'react';
 
 const ThreeBackground = lazy(() => import('../ThreeBackground.jsx'));
 
@@ -55,13 +54,34 @@ export default function WorkspaceLayout() {
         }
     });
 
-    const handleTogglePin = () => {
+    const handleTogglePin = useCallback(() => {
         setIsLeftPinned(prev => {
             const next = !prev;
             try { localStorage.setItem("aurabuild_left_pinned", String(next)); } catch (e) {}
             return next;
         });
-    };
+    }, []);
+
+    const handleSelectTool = useCallback((tool) => {
+        setActiveTool(prev => prev === tool ? null : tool);
+        if (window.innerWidth < 1024) {
+            setIsLeftOpen(false);
+            setIsRightOpen(true);
+        }
+    }, []);
+
+    const handleToggleLeft = useCallback(() => setIsLeftOpen(prev => !prev), []);
+    const handleToggleRight = useCallback(() => setIsRightOpen(prev => !prev), []);
+    const handleCloseRight = useCallback(() => setIsRightOpen(false), []);
+    const handleOpenRight = useCallback(() => setIsRightOpen(true), []);
+    const handleThemeChange = useCallback((newTheme) => setUserData(prev => ({ ...prev, theme: newTheme })), [setUserData]);
+    const handleTemplateChange = useCallback((newTpl) => setUserData(prev => ({ ...prev, frontpageTemplate: newTpl })), [setUserData]);
+    const handleOpenHelp = useCallback(() => setIsHelpModalOpen(true), []);
+    const handleCloseHelp = useCallback(() => setIsHelpModalOpen(false), []);
+    const handleOpenSettings = useCallback(() => setIsSettingsModalOpen(true), []);
+    const handleCloseSettings = useCallback(() => setIsSettingsModalOpen(false), []);
+    const handleTogglePreview = useCallback(() => setIsInternalPreviewOpen(prev => !prev), []);
+    const handleClosePreview = useCallback(() => setIsInternalPreviewOpen(false), []);
 
     const isLight = themeMode === 'light';
     const isSystem = themeMode === 'system';
@@ -119,17 +139,17 @@ export default function WorkspaceLayout() {
                         theme={themeMode}
                         setTheme={() => {}} // Controlled by AppContext toggleTheme now, but passed for compatibility
                         activeTheme={currentTheme}
-                        onThemeChange={(newTheme) => setUserData({...userData, theme: newTheme })}
+                        onThemeChange={handleThemeChange}
                         onDeploy={triggerDeployment}
-                        onToggleLeft={() => setIsLeftOpen(!isLeftOpen)}
-                        onToggleRight={() => setIsRightOpen(!isRightOpen)}
+                        onToggleLeft={handleToggleLeft}
+                        onToggleRight={handleToggleRight}
                         isRightOpen={isRightOpen}
                         userData={userData}
                         sections={sections}
                         onLogout={logout}
-                        onHelpClick={() => setIsHelpModalOpen(true)} 
+                        onHelpClick={handleOpenHelp} 
                         isPreviewMode={isInternalPreviewOpen}
-                        onTogglePreview={() => setIsInternalPreviewOpen(!isInternalPreviewOpen)}
+                        onTogglePreview={handleTogglePreview}
                         onUndo={handleUndo}
                         canUndo={history.past.length > 0}
                         onRedo={handleRedo}
@@ -164,19 +184,13 @@ export default function WorkspaceLayout() {
                             activePage={activePage}
                             setActivePage={setActivePage}
                             activeTool={activeTool}
-                            onSelectTool={(tool) => {
-                                setActiveTool(activeTool === tool ? null : tool);
-                                if (window.innerWidth < 1024) {
-                                    setIsLeftOpen(false);
-                                    setIsRightOpen(true);
-                                }
-                            }}
+                            onSelectTool={handleSelectTool}
                             onAddPage={handleAddPage}
                             onDeletePage={handleDeletePage}
                             themeMode={themeMode}
                             setTerminalLogs={setTerminalLogs}
                             onResumeParsed={handleResumeParsed}
-                            onOpenSettings={() => setIsSettingsModalOpen(true)}
+                            onOpenSettings={handleOpenSettings}
                             isPinned={isLeftPinned}
                             onTogglePin={handleTogglePin}
                         />
@@ -191,7 +205,7 @@ export default function WorkspaceLayout() {
                     {/* Floating Studio Button when Right Sidebar is collapsed */}
                     {!isPublicPreview && !isRightOpen && (
                         <button
-                            onClick={() => setIsRightOpen(true)}
+                            onClick={handleOpenRight}
                             title="Open AI Studio Panel"
                             className={`absolute top-1/2 -translate-y-1/2 right-0 z-50 text-white py-2.5 px-2 rounded-l-2xl shadow-2xl flex items-center gap-1 text-xs font-bold transition-all cursor-pointer hover:pl-3 group ${
                                 isSystem 
@@ -210,7 +224,7 @@ export default function WorkspaceLayout() {
                                 activePage={activePage}
                                 sections={sections}
                                 activeSectionId={!isPublicPreview ? activeSectionId : null}
-                                setActiveSectionId={!isPublicPreview ? setActiveSectionId : () => {}}
+                                setActiveSectionId={setActiveSectionId}
                                 portfolioTheme={currentTheme}
                                 themeMode={themeMode}
                                 globalBgImage={globalBg}
@@ -247,8 +261,8 @@ export default function WorkspaceLayout() {
                             terminalLogs={terminalLogs}
                             setTerminalLogs={setTerminalLogs}
                             activeTheme={currentTheme}
-                            onThemeChange={(newTheme) => setUserData({...userData, theme: newTheme })}
-                            onTemplateChange={(newTpl) => setUserData({...userData, frontpageTemplate: newTpl})}
+                            onThemeChange={handleThemeChange}
+                            onTemplateChange={handleTemplateChange}
                             sections={sections}
                             onUpdateSectionContent={handleUpdateSectionContent}
                             onUpdateGlobalBg={setGlobalBg}
@@ -257,7 +271,7 @@ export default function WorkspaceLayout() {
                             onAddSection={handleAddManualSection}
                             onDeploy={triggerDeployment}
                             onExportZip={handleExportZip}
-                            onClose={() => setIsRightOpen(false)}
+                            onClose={handleCloseRight}
                         />
                     </aside>
                 )}
@@ -267,7 +281,7 @@ export default function WorkspaceLayout() {
             {!isPublicPreview && (
                 <PreviewModal
                     isOpen={isInternalPreviewOpen}
-                    onClose={() => setIsInternalPreviewOpen(false)}
+                    onClose={handleClosePreview}
                     isLight={isLight}
                     previewViewport={previewViewport}
                     setPreviewViewport={setPreviewViewport}
@@ -288,7 +302,7 @@ export default function WorkspaceLayout() {
             {!isPublicPreview && (
                 <HelpModal
                     isOpen={isHelpModalOpen}
-                    onClose={() => setIsHelpModalOpen(false)}
+                    onClose={handleCloseHelp}
                     isLight={isLight}
                 />
             )}
@@ -296,7 +310,7 @@ export default function WorkspaceLayout() {
             {!isPublicPreview && (
                 <SettingsModal 
                     isOpen={isSettingsModalOpen} 
-                    onClose={() => setIsSettingsModalOpen(false)} 
+                    onClose={handleCloseSettings} 
                     userData={userData} 
                     setUserData={setUserData} 
                     themeMode={themeMode}

@@ -9,93 +9,6 @@ import RenderPageContent from './RenderPageContent';
 import { PORTFOLIO_THEMES, PORTFOLIO_FONTS } from './themes';
 import { notify } from '../toast';
 
-function ParticleNetwork() {
-    const canvasRef = useRef(null);
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        let width = canvas.width = canvas.parentElement.offsetWidth;
-        let height = canvas.height = canvas.parentElement.offsetHeight;
-        let particles = [];
-        const mouse = { x: null, y: null, radius: 150 };
-
-        const handleMouseMove = (e) => {
-            const rect = canvas.getBoundingClientRect();
-            mouse.x = e.clientX - rect.left;
-            mouse.y = e.clientY - rect.top;
-        };
-        canvas.addEventListener('mousemove', handleMouseMove);
-
-        class Particle {
-            constructor() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                this.vx = (Math.random() - 0.5) * 1;
-                this.vy = (Math.random() - 0.5) * 1;
-                this.size = Math.random() * 2 + 1;
-            }
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                if (this.x < 0 || this.x > width) this.vx *= -1;
-                if (this.y < 0 || this.y > height) this.vy *= -1;
-                
-                if (mouse.x) {
-                    const dx = mouse.x - this.x;
-                    const dy = mouse.y - this.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < mouse.radius) {
-                        const force = (mouse.radius - dist) / mouse.radius;
-                        this.vx -= (dx / dist) * force * 0.2;
-                        this.vy -= (dy / dist) * force * 0.2;
-                    }
-                }
-            }
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(59, 130, 246, 0.5)';
-                ctx.fill();
-            }
-        }
-
-        for (let i = 0; i < 80; i++) particles.push(new Particle());
-
-        const animate = () => {
-            ctx.clearRect(0, 0, width, height);
-            particles.forEach((p, i) => {
-                p.update();
-                p.draw();
-                for (let j = i; j < particles.length; j++) {
-                    const p2 = particles[j];
-                    const dist = Math.sqrt((p.x - p2.x)**2 + (p.y - p2.y)**2);
-                    if (dist < 120) {
-                        ctx.beginPath();
-                        ctx.moveTo(p.x, p.y);
-                        ctx.lineTo(p2.x, p2.y);
-                        ctx.strokeStyle = `rgba(59, 130, 246, ${1 - dist/120})`;
-                        ctx.lineWidth = 0.5;
-                        ctx.stroke();
-                    }
-                }
-            });
-            requestAnimationFrame(animate);
-        };
-        animate();
-
-        const handleResize = () => {
-            width = canvas.width = canvas.parentElement.offsetWidth;
-            height = canvas.height = canvas.parentElement.offsetHeight;
-        };
-        window.addEventListener('resize', handleResize);
-        return () => {
-            canvas.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('resize', handleResize);
-        };
-    }, []);
-    return <canvas ref={canvasRef} className="absolute inset-0 z-0 opacity-40 pointer-events-auto" />;
-}
 
 function SortableSection({ section, children }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
@@ -193,7 +106,7 @@ function EmptyCanvasState({ onAddSection }) {
     );
 }
 
-export default function CanvasContainer({
+function CanvasContainer({
     activePage,
     sections,
     activeSectionId,
@@ -222,29 +135,7 @@ export default function CanvasContainer({
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
-    const [scrollRotation, setScrollRotation] = useState(0);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-    useEffect(() => {
-        // Try both internal workspace scroll and window scroll (if deployed)
-        const scrollContainer = document.getElementById('workspace-scroll-container') || window;
-        
-        const handleScroll = () => {
-            const currentScroll = scrollContainer.scrollTop || window.scrollY;
-            const maxScroll = (scrollContainer.scrollHeight || document.body.scrollHeight) - (scrollContainer.clientHeight || window.innerHeight);
-            if (maxScroll <= 0) return;
-            
-            // Spin slowly as user scrolls down
-            const rotation = (currentScroll / maxScroll) * 360;
-            setScrollRotation(rotation);
-        };
-
-        scrollContainer.addEventListener('scroll', handleScroll);
-        // Initial setup
-        handleScroll();
-        
-        return () => scrollContainer.removeEventListener('scroll', handleScroll);
-    }, []);
 
     const handleNavClick = (navLabel) => {
         if (!displaySections.length) return;
@@ -561,3 +452,5 @@ export default function CanvasContainer({
         </div>
     );
 }
+
+export default React.memo(CanvasContainer);

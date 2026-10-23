@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, memo } from "react";
 import { 
     FileText, CheckCircle2, Loader2, Settings, Pin, PinOff, Plus, Trash2, 
     FileUp, Activity, Sparkles, Target, TrendingUp, Palette, Image, 
@@ -18,7 +18,7 @@ const AI_TOOLS_LIST = [
     { id: "export", icon: FileCode, name: "Code Export" },
 ];
 
-export default function LeftSidebar({
+function LeftSidebar({
     pages,
     activePage,
     setActivePage,
@@ -301,3 +301,5 @@ export default function LeftSidebar({
         </div>
     );
 }
+
+export default memo(LeftSidebar);

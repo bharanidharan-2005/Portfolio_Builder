@@ -1,4 +1,13 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
+
+const fastClone = (obj) => {
+    if (!obj) return obj;
+    try {
+        return typeof structuredClone === 'function' ? structuredClone(obj) : JSON.parse(JSON.stringify(obj));
+    } catch (e) {
+        return JSON.parse(JSON.stringify(obj));
+    }
+};
 import { API } from '../api';
 import { useAppContext } from './AppContext';
 import { DEFAULT_BLOCK_DATA, SECTION_ORDER_WEIGHTS } from '../utils/constants';
@@ -250,7 +259,7 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
 
     // --- BULLETPROOF HISTORY RECORDER ---
     const commitHistory = (newSections, oldSections) => {
-        const currentSnapshot = JSON.parse(JSON.stringify(oldSections)); 
+        const currentSnapshot = fastClone(oldSections); 
         setHistory(prev => ({
             past: [...prev.past, currentSnapshot].slice(-30), 
             future: [] 
@@ -264,7 +273,7 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         if (history.past.length === 0) return;
         const previous = history.past[history.past.length - 1];
         const newPast = history.past.slice(0, -1);
-        const currentSnapshot = JSON.parse(JSON.stringify(sectionsRef.current));
+        const currentSnapshot = fastClone(sectionsRef.current);
         setHistory({ past: newPast, future: [currentSnapshot, ...history.future] });
         setSections(previous);
         setPages(prev => prev.map(p => p.name === activePage ? { ...p, sections: previous } : p));
@@ -275,7 +284,7 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         if (history.future.length === 0) return;
         const next = history.future[0];
         const newFuture = history.future.slice(1);
-        const currentSnapshot = JSON.parse(JSON.stringify(sectionsRef.current));
+        const currentSnapshot = fastClone(sectionsRef.current);
         setHistory({ past: [...history.past, currentSnapshot], future: newFuture });
         setSections(next);
         setPages(prev => prev.map(p => p.name === activePage ? { ...p, sections: next } : p));
@@ -310,7 +319,7 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         }
     };
 
-    const handleUpdateSectionContent = async (sectionId, key, value) => {
+    const handleUpdateSectionContent = (sectionId, key, value) => {
         const currentSections = sectionsRef.current;
         const patch = (typeof key === 'object' && key !== null) ? key : { [key]: value };
         const newSections = currentSections.map(sec => {
@@ -325,13 +334,13 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
 
         const isNumericId = /^\d+$/.test(String(sectionId));
         if (isNumericId) { 
-            try {
-                const targetSec = newSections.find(s => String(s.id) === String(sectionId));
-                if (targetSec) {
-                    await API.patch(`sections/${sectionId}/`, { content_data: targetSec.content_data });
-                }
-            } catch(e) {
-                setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Autosave failed for section #${sectionId}` }]);
+            const targetSec = newSections.find(s => String(s.id) === String(sectionId));
+            if (targetSec) {
+                // Non-blocking background save to keep UI transactions instant
+                API.patch(`sections/${sectionId}/`, { content_data: targetSec.content_data })
+                    .catch(() => {
+                        setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Autosave failed for section #${sectionId}` }]);
+                    });
             }
         }
     };
@@ -533,7 +542,7 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Workspace canvas reset.` }]);
     };
 
-    const value = {
+    const value = useMemo(() => ({
         isPublicPreview,
         userData,
         setUserData,
@@ -576,7 +585,12 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         handleResetWorkspace,
         selectedSection,
         localContent,
-    };
+    }), [
+        isPublicPreview, userData, themeMode, currentTheme, pages, activePage,
+        sections, activeHighlightSection, aiSuggestionPreview, globalBg,
+        globalFont, customFontSize, customAccentColor, terminalLogs, history,
+        resumeReviewData, selectedSection, localContent
+    ]);
 
     return (
         <WorkspaceContext.Provider value={value}>
