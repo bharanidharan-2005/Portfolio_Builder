@@ -61,8 +61,8 @@ const CardFlip3D = ({ d }) => {
                         </a>
                     </div>
                     
-                    <button onClick={() => alert("Proceed to portfolio")} className="px-10 py-5 bg-white text-slate-900 rounded-xl font-black uppercase tracking-widest hover:bg-blue-50 transition-colors flex items-center gap-3">
-                        <Download className="w-5 h-5" /> Download Resume
+                    <button onClick={d.onVisualize} className="px-10 py-5 bg-white text-slate-900 rounded-xl font-black uppercase tracking-widest hover:bg-blue-50 transition-colors flex items-center gap-3 cursor-pointer">
+                        <Download className="w-5 h-5" /> Explore Portfolio
                     </button>
                 </div>
 

@@ -10,7 +10,7 @@ import HelpModal from "./HelpModal.jsx";
 import PreviewModal from "./PreviewModal.jsx";
 import ResumeReviewModal from "./ResumeReviewModal.jsx";
 import PortfolioFrontpage from "../portfolio/PortfolioFrontpage.jsx";
-import { Undo2, Redo2 } from "lucide-react";
+import { Undo2, Redo2, ChevronLeft } from "lucide-react";
 import SEOUpdater from "../../utils/SEOUpdater";
 import { lazy, Suspense } from 'react';
 
@@ -45,6 +45,23 @@ export default function WorkspaceLayout() {
     const [previewViewport, setPreviewViewport] = useState("desktop"); 
     const [isLandscape, setIsLandscape] = useState(false);
     const [isFrontpageViewed, setIsFrontpageViewed] = useState(false);
+    
+    // Left Sidebar Pin State (persisted in localStorage)
+    const [isLeftPinned, setIsLeftPinned] = useState(() => {
+        try {
+            return localStorage.getItem("aurabuild_left_pinned") === "true";
+        } catch (e) {
+            return false;
+        }
+    });
+
+    const handleTogglePin = () => {
+        setIsLeftPinned(prev => {
+            const next = !prev;
+            try { localStorage.setItem("aurabuild_left_pinned", String(next)); } catch (e) {}
+            return next;
+        });
+    };
 
     const isLight = themeMode === 'light';
 
@@ -91,6 +108,7 @@ export default function WorkspaceLayout() {
                         onDeploy={triggerDeployment}
                         onToggleLeft={() => setIsLeftOpen(!isLeftOpen)}
                         onToggleRight={() => setIsRightOpen(!isRightOpen)}
+                        isRightOpen={isRightOpen}
                         userData={userData}
                         sections={sections}
                         onLogout={logout}
@@ -106,7 +124,7 @@ export default function WorkspaceLayout() {
             )}
 
             {/* DUAL-PANE ARCHITECTURE STARTS HERE */}
-            <div className="flex-1 flex w-full h-full overflow-hidden relative">
+            <div className="flex-1 flex w-full h-full overflow-hidden relative min-w-0">
                 
                 {/* Mobile Overlay */}
                 {!isPublicPreview && (isLeftOpen || isRightOpen) && (
@@ -121,7 +139,11 @@ export default function WorkspaceLayout() {
 
                 {/* LEFT SIDEBAR */}
                 {!isPublicPreview && (
-                    <aside className={`absolute lg:relative group h-full shrink-0 transition-all duration-300 ease-in-out w-16 hover:w-64 overflow-hidden z-40 shadow-2xl ${isLeftOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${isLight ? 'bg-white border-r border-slate-200' : 'bg-white/[0.02] backdrop-blur-2xl border-r border-white/10'}`}>
+                    <aside className={`absolute lg:relative group h-full shrink-0 transition-all duration-300 ease-in-out ${
+                        isLeftPinned ? 'w-60 lg:w-64' : 'w-16 hover:w-60 lg:hover:w-64'
+                    } overflow-hidden z-40 shadow-2xl ${
+                        isLeftOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                    } ${isLight ? 'bg-white border-r border-slate-200' : 'bg-white/[0.02] backdrop-blur-2xl border-r border-white/10'}`}>
                         <LeftSidebar 
                             pages={pages}
                             activePage={activePage}
@@ -140,38 +162,31 @@ export default function WorkspaceLayout() {
                             setTerminalLogs={setTerminalLogs}
                             onResumeParsed={handleResumeParsed}
                             onOpenSettings={() => setIsSettingsModalOpen(true)}
+                            isPinned={isLeftPinned}
+                            onTogglePin={handleTogglePin}
                         />
                     </aside>
                 )}
 
                 {/* CENTER: CLEAN LIVE PREVIEW CANVAS */}
-                <main className={`flex-1 h-full flex flex-col relative z-10 ${isLight ? 'bg-slate-100/50' : 'bg-transparent'}`}>
+                <main className={`flex-1 min-w-0 h-full flex flex-col relative z-10 overflow-hidden ${isLight ? 'bg-slate-100/50' : 'bg-transparent'}`}>
                     
-                    {/* FLOATING HISTORY TOOLBAR */}
-                    {!isPublicPreview && (history.past.length > 0 || history.future.length > 0) && (
-                        <div className="absolute top-6 right-8 z-50 pointer-events-auto flex items-center gap-1 p-1.5 rounded-2xl bg-slate-900/80 backdrop-blur-xl border border-slate-700/80 shadow-[0_8px_30px_rgb(0,0,0,0.4)] animate-in slide-in-from-top-4 duration-500">
-                            <button 
-                                onClick={handleUndo} 
-                                disabled={history.past.length === 0} 
-                                className={`p-2.5 rounded-xl transition-all duration-200 ${history.past.length === 0 ? 'opacity-30 cursor-not-allowed text-slate-500' : 'text-slate-200 hover:text-white hover:bg-slate-700 active:scale-95 cursor-pointer'} `}
-                                title="Undo (Ctrl+Z)"
-                            >
-                                <Undo2 className="w-4 h-4" />
-                            </button>
-                            <div className="w-px h-5 bg-slate-700/50 mx-1"></div>
-                            <button 
-                                onClick={handleRedo} 
-                                disabled={history.future.length === 0} 
-                                className={`p-2.5 rounded-xl transition-all duration-200 ${history.future.length === 0 ? 'opacity-30 cursor-not-allowed text-slate-500' : 'text-slate-200 hover:text-white hover:bg-slate-700 active:scale-95 cursor-pointer'} `}
-                                title="Redo (Ctrl+Y)"
-                            >
-                                <Redo2 className="w-4 h-4" />
-                            </button>
-                        </div>
+
+
+                    {/* Floating Studio Button when Right Sidebar is collapsed */}
+                    {!isPublicPreview && !isRightOpen && (
+                        <button
+                            onClick={() => setIsRightOpen(true)}
+                            title="Open AI Studio Panel"
+                            className="absolute top-1/2 -translate-y-1/2 right-0 z-50 bg-blue-600 hover:bg-blue-500 text-white py-2.5 px-2 rounded-l-2xl shadow-2xl flex items-center gap-1 text-xs font-bold transition-all cursor-pointer hover:pl-3 group border border-r-0 border-blue-400/30"
+                        >
+                            <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+                            <span className="hidden sm:inline">Studio</span>
+                        </button>
                     )}
 
-                    <div id="workspace-scroll-container" className={`flex-1 overflow-y-auto w-full h-full ${!isPublicPreview ? 'p-4 sm:p-8' : 'p-0'} [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`}>
-                        <div className={`w-full transition-all duration-300 ${!isPublicPreview ? 'max-w-[1440px] mx-auto' : ''}`}>
+                    <div id="workspace-scroll-container" className={`flex-1 min-w-0 overflow-y-auto overflow-x-hidden w-full h-full ${!isPublicPreview ? 'p-3 sm:p-5 lg:p-6' : 'p-0'} [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`}>
+                        <div className={`w-full min-w-0 max-w-full transition-all duration-300 ${!isPublicPreview ? 'max-w-[1440px] mx-auto' : ''}`}>
                             <CanvasContainer 
                                 activePage={activePage}
                                 sections={sections}
@@ -185,6 +200,7 @@ export default function WorkspaceLayout() {
                                 onDropSection={!isPublicPreview ? handleDropSection : undefined} 
                                 onDeleteSection={!isPublicPreview ? handleDeleteSection : undefined}
                                 onDuplicateSection={!isPublicPreview ? handleDuplicateSection : undefined}
+                                onAddSection={!isPublicPreview ? handleAddManualSection : undefined}
                                 onUndo={!isPublicPreview ? handleUndo : undefined}
                                 onRedo={!isPublicPreview ? handleRedo : undefined}
                                 canUndo={history.past.length > 0}
@@ -199,7 +215,11 @@ export default function WorkspaceLayout() {
 
                 {/* RIGHT SIDEBAR */}
                 {!isPublicPreview && (
-                    <aside className={`absolute right-0 lg:relative h-full w-80 shrink-0 border-l transition-transform duration-300 ease-in-out z-40 shadow-2xl ${isRightOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'} ${isLight ? 'bg-white border-slate-200' : 'bg-white/[0.02] backdrop-blur-2xl border-white/10'}`}>
+                    <aside className={`absolute right-0 lg:relative h-full shrink-0 border-l transition-all duration-300 ease-in-out z-40 shadow-2xl overflow-hidden ${
+                        isRightOpen 
+                            ? 'w-[310px] md:w-[330px] xl:w-[360px] translate-x-0 opacity-100' 
+                            : 'w-0 border-l-0 translate-x-full lg:translate-x-0 opacity-0 pointer-events-none'
+                    } ${isLight ? 'bg-white border-slate-200' : 'bg-white/[0.02] backdrop-blur-2xl border-white/10'}`}>
                         <RightSidebar 
                             userData={userData}
                             activeSectionId={activeSectionId}
@@ -218,6 +238,7 @@ export default function WorkspaceLayout() {
                             onAddSection={handleAddManualSection}
                             onDeploy={triggerDeployment}
                             onExportZip={handleExportZip}
+                            onClose={() => setIsRightOpen(false)}
                         />
                     </aside>
                 )}

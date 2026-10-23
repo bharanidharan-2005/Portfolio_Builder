@@ -47,59 +47,39 @@ export default function ReviewTool(props) {
                 div className = "flex-1 overflow-y-auto p-4 space-y-4" > {
                     studioSubTab === 'Generate' && ( <
                         div className = "space-y-3" >
-                        <
-                        div className = "text-[9px] uppercase font-black tracking-widest text-slate-400 mb-2" > Section Blueprints < /div> <
-                        button onClick = {
-                            () => onSubmitPrompt("COMPLETELY REWRITE AND GENERATE a new professional headline. Return keys: heading (Full Name in uppercase), subheading.", "hero")
-                        }
-                        className = "w-full p-4 text-left bg-white border border-slate-200 hover:border-blue-500 text-slate-800 text-xs rounded-xl shadow-sm transition-all flex flex-col gap-1.5" >
-                        <
-                        span className = "font-bold text-blue-600" > ✨Generate Hero Section < /span> <
-                        span className = "text-[10px] text-slate-500 font-medium leading-relaxed" > Assembles profile title structures, name fields, and headlines. < /span> < /
-                        button > <
-                        button onClick = {
-                            () => onSubmitPrompt("COMPLETELY REWRITE AND GENERATE a new detailed profile narrative bio paragraph.", "about")
-                        }
-                        className = "w-full p-4 text-left bg-white border border-slate-200 hover:border-blue-500 text-slate-800 text-xs rounded-xl shadow-sm transition-all flex flex-col gap-1.5" >
-                        <
-                        span className = "font-bold text-blue-600" > 👤Generate About Me Bio < /span> <
-                        span className = "text-[10px] text-slate-500 font-medium leading-relaxed" > Auto - writes deep comprehensive profile summaries. < /span> < /
-                        button > <
-                        button onClick = {
-                            () => onSubmitPrompt("COMPLETELY REWRITE AND GENERATE a full professional item array list of skills. Return array with 'name' and 'level'.", "skills")
-                        }
-                        className = "w-full p-4 text-left bg-white border border-slate-200 hover:border-blue-500 text-slate-800 text-xs rounded-xl shadow-sm transition-all flex flex-col gap-1.5" >
-                        <
-                        span className = "font-bold text-blue-600" > 📊Generate Categorized Skills < /span> <
-                        span className = "text-[10px] text-slate-500 font-medium leading-relaxed" > Fills metrics charts with specialized capabilities logs. < /span> < /
-                        button > <
-                        button onClick = {
-                            () => onSubmitPrompt("COMPLETELY REWRITE AND GENERATE professional application project items.", "projects_grid")
-                        }
-                        className = "w-full p-4 text-left bg-white border border-slate-200 hover:border-blue-500 text-slate-800 text-xs rounded-xl shadow-sm transition-all flex flex-col gap-1.5" >
-                        <
-                        span className = "font-bold text-blue-600" > 🚀Generate Projects Stack < /span> <
-                        span className = "text-[10px] text-slate-500 font-medium leading-relaxed" > Populates showcase blocks with clean live project records. < /span> < /
-                        button > <
-                        button onClick = {
-                            () => onSubmitPrompt("COMPLETELY REWRITE AND GENERATE professional academic background metrics.", "education")
-                        }
-                        className = "w-full p-4 text-left bg-white border border-slate-200 hover:border-blue-500 text-slate-800 text-xs rounded-xl shadow-sm transition-all flex flex-col gap-1.5" >
-                        <
-                        span className = "font-bold text-blue-600" > 🎓Generate Education < /span> <
-                        span className = "text-[10px] text-slate-500 font-medium leading-relaxed" > Fills in degree paths, GPA scores, and institution data. < /span> < /
-                        button > <
-                        button onClick = {
-                            () => onSubmitPrompt("COMPLETELY REWRITE AND GENERATE an inviting call-to-action text block to collaborate.", "contact")
-                        }
-                        className = "w-full p-4 text-left bg-white border border-slate-200 hover:border-blue-500 text-slate-800 text-xs rounded-xl shadow-sm transition-all flex flex-col gap-1.5" >
-                        <
-                        span className = "font-bold text-blue-600" > 📧Generate Contact CTA < /span> <
-                        span className = "text-[10px] text-slate-500 font-medium leading-relaxed" > Auto - drafts recruiter outreach prompts. < /span> < /
-                        button > <
-                        /div>
-                    )
-                }
+                        <div className="text-[9px] uppercase font-black tracking-widest text-slate-400 mb-2">Section Blueprints</div>
+                        <button onClick={() => onSubmitPrompt && onSubmitPrompt("COMPLETELY REWRITE AND GENERATE a new professional headline. Return keys: heading (Full Name in uppercase), subheading.", "hero")}
+                        className="w-full p-4 text-left bg-white border border-slate-200 hover:border-blue-500 text-slate-800 text-xs rounded-xl shadow-sm transition-all flex flex-col gap-1.5">
+                            <span className="font-bold text-blue-600">✨Generate Hero Section</span>
+                            <span className="text-[10px] text-slate-500 font-medium leading-relaxed">Assembles profile title structures, name fields, and headlines.</span>
+                        </button>
+                        <button onClick={() => onSubmitPrompt && onSubmitPrompt("COMPLETELY REWRITE AND GENERATE a new detailed profile narrative bio paragraph.", "about")}
+                        className="w-full p-4 text-left bg-white border border-slate-200 hover:border-blue-500 text-slate-800 text-xs rounded-xl shadow-sm transition-all flex flex-col gap-1.5">
+                            <span className="font-bold text-blue-600">👤Generate About Me Bio</span>
+                            <span className="text-[10px] text-slate-500 font-medium leading-relaxed">Auto-writes deep comprehensive profile summaries.</span>
+                        </button>
+                        <button onClick={() => onSubmitPrompt && onSubmitPrompt("COMPLETELY REWRITE AND GENERATE professional academic background metrics.", "education")}
+                        className="w-full p-4 text-left bg-white border border-slate-200 hover:border-blue-500 text-slate-800 text-xs rounded-xl shadow-sm transition-all flex flex-col gap-1.5">
+                            <span className="font-bold text-blue-600">🎓Generate Education</span>
+                            <span className="text-[10px] text-slate-500 font-medium leading-relaxed">Fills in degree paths, GPA scores, and institution data.</span>
+                        </button>
+                        <button onClick={() => onSubmitPrompt && onSubmitPrompt("COMPLETELY REWRITE AND GENERATE a full professional item array list of skills. Return array with 'name' and 'level'.", "skills")}
+                        className="w-full p-4 text-left bg-white border border-slate-200 hover:border-blue-500 text-slate-800 text-xs rounded-xl shadow-sm transition-all flex flex-col gap-1.5">
+                            <span className="font-bold text-blue-600">📊Generate Categorized Skills</span>
+                            <span className="text-[10px] text-slate-500 font-medium leading-relaxed">Fills metrics charts with specialized capabilities logs.</span>
+                        </button>
+                        <button onClick={() => onSubmitPrompt && onSubmitPrompt("COMPLETELY REWRITE AND GENERATE professional application project items.", "projects_grid")}
+                        className="w-full p-4 text-left bg-white border border-slate-200 hover:border-blue-500 text-slate-800 text-xs rounded-xl shadow-sm transition-all flex flex-col gap-1.5">
+                            <span className="font-bold text-blue-600">🚀Generate Projects Stack</span>
+                            <span className="text-[10px] text-slate-500 font-medium leading-relaxed">Populates showcase blocks with clean live project records.</span>
+                        </button>
+                        <button onClick={() => onSubmitPrompt && onSubmitPrompt("COMPLETELY REWRITE AND GENERATE an inviting call-to-action text block to collaborate.", "contact")}
+                        className="w-full p-4 text-left bg-white border border-slate-200 hover:border-blue-500 text-slate-800 text-xs rounded-xl shadow-sm transition-all flex flex-col gap-1.5">
+                            <span className="font-bold text-blue-600">📧Generate Contact CTA</span>
+                            <span className="text-[10px] text-slate-500 font-medium leading-relaxed">Auto-drafts recruiter outreach prompts.</span>
+                        </button>
+                    </div>
+                )}
 
                 {
                     studioSubTab === 'Improve' && ( <
@@ -375,12 +355,10 @@ export default function ReviewTool(props) {
                         div className = "text-center py-8 text-xs text-slate-500 italic" > No analysis payload returned from endpoint. < /div>
                     )
                 } <
-                /div>
-            )
-        } <
-        /div> { renderActivityBar() } { renderPromptBar() } < /
-        div >
-    );
-}
+                </div>
+            )}
+            {renderActivityBar && renderActivityBar()}
+            {renderPromptBar && renderPromptBar()}
+        </div>
     );
 }

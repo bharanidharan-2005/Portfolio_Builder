@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { X, User, Shield, HardDrive, Download, AlertTriangle, Trash2, Loader2, CheckCircle2, ExternalLink, LogOut, Globe } from "lucide-react";
+import { X, User, Shield, HardDrive, Download, AlertTriangle, Trash2, Loader2, CheckCircle2, ExternalLink, LogOut, Globe, Copy, Check } from "lucide-react";
 import { API } from "../../api"; 
 import { useAppContext } from "../../context/AppContext";
 import { Palette, Sun, Moon, Sparkles } from "lucide-react";
@@ -13,6 +13,15 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
     const [localAvatar, setLocalAvatar] = useState(userData?.avatar || "🐱");
     const [isSaving, setIsSaving] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [copied, setCopied] = useState(false);
+
+    const handleCopyUrl = (urlToCopy) => {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(urlToCopy);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
+    };
 
     // Keep it synced if user data loads slightly after the modal mounts
     useEffect(() => {
@@ -193,6 +202,23 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                                         
                                         <div className="flex items-center gap-2 shrink-0">
                                             <button 
+                                                onClick={() => handleCopyUrl(liveUrl)}
+                                                className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-colors flex items-center gap-1.5 cursor-pointer ${copied ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : (isLight ? 'border-slate-300 hover:bg-slate-200 text-slate-700' : 'border-slate-700 hover:bg-slate-800 text-slate-300')}`}
+                                                title="Copy Live Portfolio Link"
+                                            >
+                                                {copied ? (
+                                                    <>
+                                                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                                        <span>Copied</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Copy className="w-3.5 h-3.5" />
+                                                        <span>Copy</span>
+                                                    </>
+                                                )}
+                                            </button>
+                                            <button 
                                                 onClick={async () => {
                                                     if (onDeploy) await onDeploy();
                                                     onClose();
@@ -208,6 +234,22 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                                                 Visit <ExternalLink className="w-3 h-3" />
                                             </button>
                                         </div>
+                                    </div>
+
+                                    {/* Recruiter & Public Sharing Instructions */}
+                                    <div className={`p-4 rounded-xl border text-xs leading-relaxed ${isLight ? 'bg-blue-50/70 border-blue-200/80 text-slate-700' : 'bg-blue-950/20 border-blue-900/40 text-slate-300'}`}>
+                                        <div className="flex items-center gap-2 font-bold mb-1.5 text-blue-500">
+                                            <Sparkles className="w-4 h-4" />
+                                            <span>Recruiter & Public Sharing Instructions</span>
+                                        </div>
+                                        <p className="mb-2">
+                                            Share your public portfolio link (<span className="font-mono font-semibold text-blue-400">{liveUrl}</span>) on your resume, LinkedIn, GitHub bio, or job applications.
+                                        </p>
+                                        <ul className="list-disc pl-4 space-y-1 text-slate-400 text-[11px]">
+                                            <li>Recruiters and visitors do not need an account or login to view your public link.</li>
+                                            <li>Any edits saved or deployed in this workspace reflect instantaneously on your public page.</li>
+                                            <li>Your portfolio is responsive and optimized for mobile, tablet, and widescreen recruiters.</li>
+                                        </ul>
                                     </div>
                                 </div>
                             </div>
@@ -257,14 +299,14 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                                         {/* System Theme Card */}
                                         <button 
                                             onClick={() => setThemeSetting("system")}
-                                            className={`relative p-5 rounded-2xl flex flex-col items-center justify-center gap-3 border-2 transition-all cursor-pointer text-left h-[160px] overflow-hidden group ${themeSetting === "system" ? 'border-indigo-500 bg-indigo-500/5 shadow-md shadow-indigo-500/10' : (isLight ? 'border-slate-200 hover:border-slate-300 hover:bg-slate-50' : 'border-slate-800 hover:border-slate-700 hover:bg-slate-800/50')}`}
+                                            className={`relative p-5 rounded-2xl flex flex-col items-center justify-center gap-3 border-2 transition-all cursor-pointer text-left h-[160px] overflow-hidden group ${themeSetting === "system" ? 'border-[#7c00ff] bg-[#7c00ff]/10 shadow-lg shadow-[#7c00ff]/20 ring-1 ring-[#7c00ff]/30' : (isLight ? 'border-slate-200 hover:border-slate-300 hover:bg-slate-50' : 'border-slate-800 hover:border-slate-700 hover:bg-slate-800/50')}`}
                                         >
                                             {/* AuraBrand Background for System */}
-                                            <div className={`absolute inset-0 bg-gradient-to-br from-[#7B61FF]/20 via-[#4A6DF5]/15 to-[#0066FF]/20 transition-opacity ${themeSetting === "system" ? 'opacity-100' : 'opacity-30 group-hover:opacity-70'}`}></div>
+                                            <div className={`absolute inset-0 bg-gradient-to-br from-[#7c00ff]/25 via-[#9933ff]/15 to-[#5500bb]/20 transition-opacity ${themeSetting === "system" ? 'opacity-100' : 'opacity-30 group-hover:opacity-70'}`}></div>
                                             
-                                            {themeSetting === "system" && <div className="absolute top-3 right-3 bg-indigo-500 text-white rounded-full p-0.5 z-10"><CheckCircle2 className="w-4 h-4" /></div>}
+                                            {themeSetting === "system" && <div className="absolute top-3 right-3 bg-[#7c00ff] text-white rounded-full p-0.5 z-10 shadow-md shadow-[#7c00ff]/50"><CheckCircle2 className="w-4 h-4" /></div>}
                                             
-                                            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-[#7B61FF] via-[#4A6DF5] to-[#0066FF] shadow-[0_4px_20px_rgba(74,109,245,0.4)] border border-white/30 text-white relative z-10">
+                                            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-[#7c00ff] via-[#9400d3] to-[#5500bb] shadow-[0_4px_20px_rgba(124,0,255,0.5)] border border-white/30 text-white relative z-10">
                                                 <Sparkles className="w-6 h-6" />
                                             </div>
                                             <div className="text-center relative z-10">

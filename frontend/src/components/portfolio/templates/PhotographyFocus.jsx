@@ -72,8 +72,8 @@ const PhotographyFocus = ({ d }) => {
                             <button onClick={d.onVisualize} className="w-full py-4 bg-black text-white text-xs font-bold uppercase tracking-[0.2em] hover:bg-gray-800 transition-colors">
                                 View Portfolio
                             </button>
-                            <button onClick={() => alert("Proceed to portfolio")} className="w-full py-4 bg-white text-black border border-black text-xs font-bold uppercase tracking-[0.2em] hover:bg-gray-100 transition-colors flex items-center justify-center gap-2">
-                                <Download className="w-4 h-4" /> Download Resumé
+                            <button onClick={d.onVisualize} className="w-full py-4 bg-white text-black border border-black text-xs font-bold uppercase tracking-[0.2em] hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                                <Download className="w-4 h-4" /> Explore Resumé / CV
                             </button>
                         </div>
                     </motion.div>

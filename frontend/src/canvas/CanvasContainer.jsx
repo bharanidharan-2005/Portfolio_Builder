@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Undo2, Redo2, Layers, Sparkles, Menu, X } from 'lucide-react';
+import { Undo2, Redo2, Layers, Sparkles, Menu, X, FileUp, Plus, GripVertical, Copy, Trash2 } from 'lucide-react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { ResumePDF } from '../components/ResumePDF';
 import RenderPageContent from './RenderPageContent';
 import { PORTFOLIO_THEMES, PORTFOLIO_FONTS } from './themes';
+import { notify } from '../toast';
 
 function ParticleNetwork() {
     const canvasRef = useRef(null);
@@ -136,47 +137,57 @@ function SortableNavItem({ item, onClick, currentTheme }) {
     );
 }
 
-function EmptyCanvasState() {
+function EmptyCanvasState({ onAddSection }) {
+    const handleTriggerResume = () => {
+        const fileInput = document.querySelector('input[type="file"][accept*=".pdf"]');
+        if (fileInput) {
+            fileInput.click();
+        } else {
+            notify("Select 'Upload Resume' from the Left Sidebar", "info");
+        }
+    };
+
+    const handleTriggerStructure = () => {
+        if (onAddSection) {
+            onAddSection('hero');
+        } else {
+            notify("Choose a module from the Right Sidebar", "info");
+        }
+    };
+
     return (
-        <div className="w-full border-2 border-dashed rounded-3xl p-8 sm:p-12 flex flex-col items-center justify-center min-h-[500px] text-center transition-all duration-500 ease-out border-slate-700/50 bg-gradient-to-b from-slate-900/40 to-black/40 backdrop-blur-xl relative z-10 group hover:border-blue-500/50">
-            
-            {/* Animated Floating Icon */}
-            <div className="relative mb-6">
-                <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full group-hover:bg-blue-500/40 transition-all duration-700"></div>
-                <div className="p-4 rounded-2xl shadow-xl bg-gradient-to-b from-slate-800 to-slate-900 border border-slate-700 relative animate-[bounce_4s_infinite_ease-in-out]">
-                    <Layers className="w-8 h-8 text-blue-400" />
+        <div className="w-full max-w-xl mx-auto my-12 border border-slate-800/80 rounded-2xl p-8 sm:p-10 flex flex-col items-center justify-center text-center transition-all duration-300 bg-slate-900/60 backdrop-blur-xl relative z-10 shadow-2xl">
+            {/* Subtle glow badge */}
+            <div className="relative mb-5">
+                <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shadow-[0_0_24px_rgba(37,99,235,0.25)]">
+                    <Sparkles className="w-6 h-6 text-blue-400" />
                 </div>
             </div>
             
-            <h3 className="text-xl font-extrabold mb-3 tracking-tight text-white bg-clip-text">
-                Your Canvas is Empty
+            <h3 className="text-lg sm:text-xl font-bold mb-2 tracking-tight text-white font-sora">
+                Start Building Your Portfolio
             </h3>
-            <p className="text-sm max-w-md mb-10 leading-relaxed text-slate-400 font-medium">
-                Start building your portfolio by adding layout blocks manually, or let our AI generate the entire structure from your resume.
+            <p className="text-xs sm:text-sm max-w-md mb-8 leading-relaxed text-slate-400">
+                Let AI auto-generate your complete portfolio layout from your resume, or build it block by block using structural modules.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-5 w-full max-w-xl">
-                <div className="flex-1 p-6 rounded-2xl border text-left relative overflow-hidden bg-slate-900/50 border-slate-800 hover:border-blue-500/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(59,130,246,0.15)] group/card cursor-default">
-                    <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-blue-400 to-blue-600"></div>
-                    <span className="flex items-center gap-2 font-bold text-sm mb-2 text-blue-400">
-                        <span className="w-5 h-5 rounded-full bg-blue-500/10 flex items-center justify-center text-[10px]">1</span>
-                        Structure Builder
-                    </span>
-                    <span className="text-xs text-slate-400 leading-relaxed block group-hover/card:text-slate-300 transition-colors">
-                        Click the quick insert modules in the <strong>Right Sidebar</strong> to manually snap sections (Hero, About, Projects) into place.
-                    </span>
-                </div>
-                
-                <div className="flex-1 p-6 rounded-2xl border text-left relative overflow-hidden bg-slate-900/50 border-slate-800 hover:border-fuchsia-500/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(217,70,239,0.15)] group/card cursor-default">
-                    <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-fuchsia-400 to-fuchsia-600"></div>
-                    <span className="flex items-center gap-2 font-bold text-sm mb-2 text-fuchsia-400">
-                        <span className="w-5 h-5 rounded-full bg-fuchsia-500/10 flex items-center justify-center text-[10px]">2</span>
-                        Auto-Generate
-                    </span>
-                    <span className="text-xs text-slate-400 leading-relaxed block group-hover/card:text-slate-300 transition-colors">
-                        Open the <strong>Upload Resume</strong> tool in the Left Sidebar to automatically parse your data and build the layout.
-                    </span>
-                </div>
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-md">
+                <button
+                    type="button"
+                    onClick={handleTriggerResume}
+                    className="w-full sm:flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white transition-all shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+                >
+                    <FileUp className="w-4 h-4" />
+                    <span>Generate from Resume</span>
+                </button>
+                <button
+                    type="button"
+                    onClick={handleTriggerStructure}
+                    className="w-full sm:flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold bg-slate-800/90 hover:bg-slate-700/90 text-slate-200 border border-slate-700/80 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+                >
+                    <Plus className="w-4 h-4 text-blue-400" />
+                    <span>Add Hero Block</span>
+                </button>
             </div>
         </div>
     );
@@ -201,7 +212,8 @@ export default function CanvasContainer({
     onRedo,
     canRedo,
     activeHighlightSection,
-    aiSuggestionPreview
+    aiSuggestionPreview,
+    onAddSection
 }) {
     const currentTheme = PORTFOLIO_THEMES[portfolioTheme] || {};
     const currentFontObj = PORTFOLIO_FONTS.find(f => f.id === globalFont) || PORTFOLIO_FONTS[0];
@@ -337,12 +349,12 @@ export default function CanvasContainer({
     const initials = heroName.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
     return ( 
-        <div className="w-full flex flex-col items-center relative animate-in fade-in duration-500"> 
+        <div className="w-full min-w-0 max-w-full flex flex-col items-center relative animate-in fade-in duration-500"> 
 
             {/* Main Outer Container */}
-            <div className={`dark relative w-full min-h-[700px] transition-all duration-500 ease-out overflow-x-clip [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
+            <div className={`dark relative w-full min-w-0 max-w-full min-h-[700px] transition-all duration-500 ease-out overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
                 !isPreview ? `shadow-2xl rounded-[2rem] border ${currentTheme.border || 'border-slate-800/80'}` : 'min-h-screen'
-            } bg-[#030712]`} style={{ ...currentFontObj.style }}>
+            } bg-[#080D1C]`} style={{ ...currentFontObj.style }}>
                 
                 {/* --- PREMIUM GLOBAL BACKGROUND --- */}
                 <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
@@ -352,11 +364,11 @@ export default function CanvasContainer({
                 </div>
 
                 {/* --- FULL WIDTH NAVIGATION NAVBAR --- */}
-                <div className={`sticky top-0 z-50 w-full backdrop-blur-2xl ${currentTheme.cardBg || 'bg-black/20'} border-b ${currentTheme.border || 'border-slate-700/30'} shadow-lg transition-all duration-500`}>
-                    <div className="w-full px-6 py-4 flex items-center justify-between">
+                <div className={`sticky top-0 z-50 w-full backdrop-blur-2xl ${currentTheme.cardBg || 'bg-black/20'} border-b ${currentTheme.border || 'border-slate-700/30'} shadow-lg transition-all duration-500 overflow-hidden`}>
+                    <div className="w-full px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3">
                         {/* Logo / Initials */}
-                        <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg shadow-inner ${currentTheme.accentBg || 'bg-blue-600'} text-white`}>
+                        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+                            <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-black text-base sm:text-lg shadow-inner ${currentTheme.accentBg || 'bg-blue-600'} text-white`}>
                                 {initials}
                             </div>
                             <span className={`font-black tracking-widest uppercase hidden sm:block text-sm md:text-base leading-none translate-y-[1px] ${currentTheme.accentText || 'text-blue-400'}`}> 
@@ -365,7 +377,7 @@ export default function CanvasContainer({
                         </div>
 
                         {/* Navigation Links */}
-                        <div className="flex flex-wrap items-center justify-center gap-1 md:gap-4 opacity-90 hidden lg:flex"> 
+                        <div className="flex items-center justify-center gap-1 xl:gap-2.5 opacity-90 hidden xl:flex overflow-x-auto custom-scrollbar"> 
                             {!isPreview ? (
                                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleNavDragEnd}>
                                     <SortableContext items={dynamicNavItems.map(item => item.id)} strategy={horizontalListSortingStrategy}>
@@ -385,7 +397,7 @@ export default function CanvasContainer({
                                         key={navItem.id} 
                                         type="button" 
                                         onClick={() => handleNavClick(navItem.label)} 
-                                        className={`bg-transparent px-3 py-1.5 rounded-lg text-sm font-bold transition-all duration-300 whitespace-nowrap cursor-pointer ${currentTheme.textSecondary || 'text-slate-400'} hover:bg-white/10`}
+                                        className={`bg-transparent px-2.5 py-1.5 rounded-lg text-xs xl:text-sm font-bold transition-all duration-300 whitespace-nowrap cursor-pointer ${currentTheme.textSecondary || 'text-slate-400'} hover:bg-white/10`}
                                         style={{ color: 'inherit' }}
                                     > 
                                         <span className={`opacity-80 hover:opacity-100 transition-opacity ${currentTheme.textPrimary || 'text-white'}`}>
@@ -397,37 +409,38 @@ export default function CanvasContainer({
                         </div>
 
                         {/* Right Side - Resume & Mobile Toggle */}
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
                             {isPreview ? (
                                 <PDFDownloadLink
                                     document={pdfDocument}
                                     fileName="Portfolio_Resume.pdf"
-                                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-md hover:shadow-lg ${currentTheme.accentBg || 'bg-blue-600'} text-white flex items-center gap-2`}
+                                    className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-md hover:shadow-lg ${currentTheme.accentBg || 'bg-blue-600'} text-white flex items-center gap-2 whitespace-nowrap`}
                                 >
                                     {({ loading }) => (loading ? 'Preparing...' : 'Download Resume')}
                                 </PDFDownloadLink>
                             ) : (
                                 <button 
-                                    onClick={() => alert("Please test Resume Download in the Live Preview.")}
-                                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-md hover:shadow-lg ${currentTheme.accentBg || 'bg-blue-600'} text-white flex items-center gap-2`}
+                                    onClick={() => notify("Please test Resume Download in the Live Preview.", "info")}
+                                    className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-md hover:shadow-lg ${currentTheme.accentBg || 'bg-blue-600'} text-white flex items-center gap-2 whitespace-nowrap cursor-pointer`}
                                 >
                                     Download Resume
                                 </button>
                             )}
 
-                            {/* Mobile Menu Toggle Button */}
+                            {/* Mobile / Compact Menu Toggle Button */}
                             <button 
-                                className="lg:hidden p-2 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                                className="xl:hidden p-1.5 text-slate-300 hover:text-white transition-colors cursor-pointer"
                                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                                aria-label="Toggle navigation menu"
                             >
-                                {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                                {isMobileMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
                             </button>
                         </div>
                     </div>
 
                     {/* Mobile Dropdown Menu */}
                     {isMobileMenuOpen && (
-                        <div className="lg:hidden absolute top-full left-0 w-full border-b border-slate-800/50 bg-slate-900/95 backdrop-blur-3xl shadow-2xl overflow-hidden animate-in slide-in-from-top-2 duration-300 z-50">
+                        <div className="xl:hidden absolute top-full left-0 w-full border-b border-slate-800/50 bg-slate-900/95 backdrop-blur-3xl shadow-2xl overflow-hidden animate-in slide-in-from-top-2 duration-300 z-50">
                             <div className="flex flex-col py-4 px-6 gap-2">
                                 {dynamicNavItems.map((navItem) => (
                                     <button
@@ -448,13 +461,18 @@ export default function CanvasContainer({
                 </div>
 
                 {/* --- MAIN CONTENT WRAPPER --- */}
-                <div className={`relative z-10 w-full p-4 sm:p-10 flex flex-col ${isPreview ? 'max-w-7xl mx-auto' : ''}`}>
+                <div className={`relative z-10 w-full p-2 sm:p-6 md:p-10 flex flex-col ${isPreview ? 'max-w-7xl mx-auto' : ''}`}>
 
                     {isPreview ? (
-                        <div key={activePage} className="space-y-16 w-full animate-in slide-in-from-bottom-4 duration-700 ease-out">
+                        <div key={activePage} className="space-y-12 sm:space-y-16 w-full animate-in slide-in-from-bottom-4 duration-700 ease-out">
                             {displaySections.length > 0 ? (
-                                displaySections.map((section) => (
-                                    <div key={section.id} id={`preview-node-block-${section.id}`} className="w-full overflow-visible scroll-mt-24">
+                                displaySections.map((section, idx) => (
+                                    <div 
+                                        key={section.id} 
+                                        id={`preview-node-block-${section.id}`} 
+                                        className="w-full overflow-visible scroll-mt-24 relative"
+                                        style={{ zIndex: displaySections.length - idx }}
+                                    >
                                         <RenderPageContent 
                                             section={section} 
                                             portfolioTheme={portfolioTheme} 
@@ -464,15 +482,15 @@ export default function CanvasContainer({
                                     </div>
                                 ))
                             ) : (
-                                <EmptyCanvasState />
+                                <EmptyCanvasState onAddSection={onAddSection} />
                             )}
                         </div>
                     ) : (
                         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                             <SortableContext items={displaySections.map(s => s.id)} strategy={verticalListSortingStrategy}>
-                                <div key={activePage} className="space-y-6 w-full pb-20"> 
+                                <div key={activePage} className="space-y-4 sm:space-y-6 w-full pb-20"> 
                                     {displaySections.length > 0 ? (
-                                        displaySections.map((section) => {
+                                        displaySections.map((section, idx) => {
                                             const isActive = section.id === activeSectionId;
                                             return ( 
                                                 <SortableSection key={section.id} section={section}> 
@@ -487,29 +505,36 @@ export default function CanvasContainer({
                                                                 e.stopPropagation();
                                                                 setActiveSectionId(section.id);
                                                             }} 
-                                                            className={`relative group rounded-3xl border p-4 sm:p-6 transition-all duration-300 cursor-pointer w-full overflow-visible scroll-mt-24 ${
+                                                            style={{ zIndex: isActive ? 60 : (displaySections.length - idx) }}
+                                                            className={`relative group rounded-2xl sm:rounded-3xl border p-2.5 sm:p-4 md:p-6 transition-all duration-300 cursor-pointer w-full overflow-visible scroll-mt-24 ${
                                                                 isActive
-                                                                    ? 'border-blue-500/50 bg-blue-500/5 shadow-[0_0_30px_rgba(59,130,246,0.15)] ring-1 ring-blue-500/20 z-50'
+                                                                    ? 'border-blue-500/50 bg-blue-500/5 shadow-[0_0_30px_rgba(59,130,246,0.15)] ring-1 ring-blue-500/20'
                                                                     : globalBgImage
-                                                                        ? 'border-white/10 bg-black/20 hover:bg-black/30 backdrop-blur-sm z-10'
-                                                                        : 'border-transparent hover:border-slate-700/50 bg-slate-900/30 hover:bg-slate-900/60 z-10'
-                                                            } ${isDragging ? 'border-dashed border-blue-400 bg-blue-900/20' : ''} ${isDimmed ? 'opacity-30 scale-[0.98] grayscale-[30%]' : 'opacity-100'} ${isHighlighted ? 'ring-2 ring-blue-500/50 shadow-[0_0_40px_rgba(59,130,246,0.2)] z-40' : ''}`}
+                                                                        ? 'border-white/10 bg-black/20 hover:bg-black/30 backdrop-blur-sm'
+                                                                        : 'border-transparent hover:border-slate-700/50 bg-slate-900/30 hover:bg-slate-900/60'
+                                                            } ${isDragging ? 'border-dashed border-blue-400 bg-blue-900/20' : ''} ${isDimmed ? 'opacity-30 scale-[0.98] grayscale-[30%]' : 'opacity-100'} ${isHighlighted ? 'ring-2 ring-blue-500/50 shadow-[0_0_40px_rgba(59,130,246,0.2)]' : ''}`}
                                                         >
                                                             {/* Floating Action Menu */}
                                                             <div 
-                                                                className={`absolute -top-3 right-6 z-20 flex items-center gap-1 rounded-xl shadow-2xl p-1 text-[11px] font-bold transition-all duration-300 ease-out bg-slate-800/90 backdrop-blur-md border border-slate-700 text-slate-300 ${
+                                                                className={`absolute -top-3 right-3 sm:right-6 z-20 flex items-center gap-1 rounded-xl shadow-2xl p-1 text-[11px] font-bold transition-all duration-300 ease-out bg-slate-800/90 backdrop-blur-md border border-slate-700 text-slate-300 ${
                                                                     isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0'
                                                                 }`} 
                                                                 onClick={(e) => e.stopPropagation()}
                                                             >
-                                                                <button type="button" {...listeners} {...attributes} className="cursor-grab hover:bg-slate-700 px-2 py-1 rounded-lg transition-colors hover:text-white" title="Drag to reorder"> ⋮⋮ </button> 
-                                                                <div className="w-px h-3 bg-slate-600"></div>
-                                                                <button type="button" onClick={() => onDuplicateSection && onDuplicateSection(section.id)} className="cursor-pointer hover:bg-slate-700 px-2 py-1 rounded-lg transition-colors hover:text-blue-400" title="Duplicate Block"> ⧉ </button> 
-                                                                <div className="w-px h-3 bg-slate-600"></div>
-                                                                <button type="button" onClick={() => onDeleteSection && onDeleteSection(section.id)} className="cursor-pointer hover:bg-red-500/20 px-2 py-1 rounded-lg transition-colors hover:text-red-400" title="Delete Block"> ✕ </button> 
+                                                                <button type="button" {...listeners} {...attributes} className="cursor-grab hover:bg-slate-700/80 p-1.5 rounded-lg transition-colors hover:text-white" title="Drag to reorder">
+                                                                    <GripVertical className="w-3.5 h-3.5" />
+                                                                </button> 
+                                                                <div className="w-px h-3 bg-slate-600/60"></div>
+                                                                <button type="button" onClick={() => onDuplicateSection && onDuplicateSection(section.id)} className="cursor-pointer hover:bg-slate-700/80 p-1.5 rounded-lg transition-colors hover:text-blue-400" title="Duplicate Block">
+                                                                    <Copy className="w-3.5 h-3.5" />
+                                                                </button> 
+                                                                <div className="w-px h-3 bg-slate-600/60"></div>
+                                                                <button type="button" onClick={() => onDeleteSection && onDeleteSection(section.id)} className="cursor-pointer hover:bg-red-500/20 p-1.5 rounded-lg transition-colors hover:text-red-400" title="Delete Block">
+                                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                                </button> 
                                                             </div>
 
-                                                            <div className={isActive ? '' : 'pointer-events-none'}>
+                                                            <div className="w-full">
                                                                 <RenderPageContent 
                                                                     section={section} 
                                                                     portfolioTheme={portfolioTheme} 
@@ -525,7 +550,7 @@ export default function CanvasContainer({
                                             );
                                         })
                                     ) : ( 
-                                        <EmptyCanvasState />
+                                        <EmptyCanvasState onAddSection={onAddSection} />
                                     )} 
                                 </div> 
                             </SortableContext> 

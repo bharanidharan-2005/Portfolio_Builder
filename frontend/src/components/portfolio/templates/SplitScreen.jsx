@@ -39,8 +39,8 @@ const SplitScreen = ({ d }) => {
                         <button onClick={d.onVisualize} className="px-8 py-4 bg-blue-600 text-white rounded-none text-sm font-bold hover:bg-blue-500 transition-all flex items-center gap-3">
                             View Work <ArrowRight className="w-4 h-4" />
                         </button>
-                        <button onClick={() => alert("Please proceed to your main portfolio to download the dynamically generated PDF resume.")} className="px-8 py-4 bg-transparent border border-slate-700 text-slate-300 rounded-none text-sm font-bold hover:bg-white/5 transition-all flex items-center gap-2">
-                            <Download className="w-4 h-4" /> Resume
+                        <button onClick={d.onVisualize} className="px-8 py-4 bg-transparent border border-slate-700 text-slate-300 rounded-none text-sm font-bold hover:bg-white/5 transition-all flex items-center gap-2 cursor-pointer">
+                            <Download className="w-4 h-4" /> Explore Resume
                         </button>
                     </div>
                 </motion.div>

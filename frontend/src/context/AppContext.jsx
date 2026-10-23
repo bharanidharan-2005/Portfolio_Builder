@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { API } from '../api';
+import { API, clearAuthTokens } from '../api';
 
 const AppContext = createContext();
 
@@ -14,6 +14,34 @@ export function AppProvider({ children }) {
     });
 
     const [themeMode, setThemeMode] = useState("light");
+
+    // Session validation on app startup
+    useEffect(() => {
+        const verifySession = async () => {
+            const isLoggedIn = localStorage.getItem("aurabuild_is_logged_in");
+            if (isLoggedIn) {
+                try {
+                    const res = await API.get('auth/me/');
+                    if (res.data && (res.data.email || res.data.name)) {
+                        setUserData(prev => ({
+                            ...prev,
+                            name: res.data.name || prev.name,
+                            email: res.data.email || prev.email,
+                            code: res.data.workspace_code || prev.code
+                        }));
+                        setIsAuthenticated(true);
+                    }
+                } catch (err) {
+                    if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+                        clearAuthTokens();
+                        localStorage.removeItem("aurabuild_user");
+                        setIsAuthenticated(false);
+                    }
+                }
+            }
+        };
+        verifySession();
+    }, []);
 
     useEffect(() => {
         localStorage.setItem("aurabuild_workspace_theme", themeSetting);
@@ -73,13 +101,12 @@ export function AppProvider({ children }) {
 
     const logout = async () => {
         try {
-            // Call the backend to clear HttpOnly cookies
             await API.post('auth/logout/');
         } catch (error) {
             console.error("Failed to connect to logout endpoint", error);
         }
         
-        localStorage.removeItem("aurabuild_is_logged_in");
+        clearAuthTokens();
         localStorage.removeItem("aurabuild_user");
         setIsAuthenticated(false);
         setUserData({
@@ -91,6 +118,7 @@ export function AppProvider({ children }) {
         // Force a hard reload to the landing page to guarantee all memory/state is cleared
         window.location.href = "/";
     };
+
 
     const socialLogin = (userData, accessToken, refreshToken) => {
         setUserData(prev => ({ ...prev, ...userData }));

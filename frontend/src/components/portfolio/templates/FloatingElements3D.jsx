@@ -96,8 +96,8 @@ const FloatingElements3D = ({ d }) => {
                         <button onClick={d.onVisualize} className="px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-xl shadow-blue-600/30 hover:bg-blue-700 hover:-translate-y-1 transition-all flex items-center gap-3">
                             Start Exploring <ArrowRight className="w-5 h-5" />
                         </button>
-                        <button onClick={() => alert("Proceed to portfolio")} className="px-8 py-4 bg-white text-slate-700 rounded-2xl font-bold shadow-md border border-slate-100 hover:bg-slate-50 hover:-translate-y-1 transition-all flex items-center gap-2">
-                            <Download className="w-5 h-5" /> Get Resume
+                        <button onClick={d.onVisualize} className="px-8 py-4 bg-white text-slate-700 rounded-2xl font-bold shadow-md border border-slate-100 hover:bg-slate-50 hover:-translate-y-1 transition-all flex items-center gap-2 cursor-pointer">
+                            <Download className="w-5 h-5" /> Explore Portfolio
                         </button>
                     </motion.div>
                 </div>

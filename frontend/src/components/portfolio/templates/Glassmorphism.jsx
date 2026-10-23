@@ -62,8 +62,8 @@ const Glassmorphism = ({ d }) => {
                     <button onClick={d.onVisualize} className="px-8 py-4 bg-white text-slate-900 rounded-2xl text-sm font-black hover:scale-105 transition-all flex items-center gap-3 shadow-lg hover:shadow-white/20">
                         Explore Portfolio <ArrowRight className="w-4 h-4" />
                     </button>
-                    <button onClick={() => alert("Please proceed to your main portfolio to download the dynamically generated PDF resume.")} className="px-8 py-4 bg-white/10 text-white border border-white/30 rounded-2xl text-sm font-bold hover:bg-white/20 hover:scale-105 transition-all flex items-center gap-2 backdrop-blur-md">
-                        <Download className="w-4 h-4" /> Download CV
+                    <button onClick={d.onVisualize} className="px-8 py-4 bg-white/10 text-white border border-white/30 rounded-2xl text-sm font-bold hover:bg-white/20 hover:scale-105 transition-all flex items-center gap-2 backdrop-blur-md cursor-pointer">
+                        <Download className="w-4 h-4" /> Download CV / Resume
                     </button>
                 </div>
             </motion.div>

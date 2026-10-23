@@ -90,18 +90,19 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
     const badgeClass = `${themeDef.badgeBg || trackBg} ${themeDef.badgeText || 'text-slate-300'} border ${innerBorderClass} shadow-sm backdrop-blur-md font-mono text-xs`;
 
     // --- SMART TEXT ROUTER ---
-    const TextElement = ({ value, placeholder, onCommit, multiline = false }) => {
+    const TextElement = ({ value, placeholder, onCommit, multiline = false, as = 'span', className = '' }) => {
         if (isPreview) {
             if (!value) return null; // Do not show placeholders on the live polished site
+            const Tag = as;
             return (
-                <span className={`block w-full max-w-full break-words ${multiline ? "whitespace-pre-wrap" : "whitespace-normal"} break-words`}>
+                <Tag className={`inline-block w-full max-w-full break-words ${multiline ? "whitespace-pre-wrap" : "whitespace-normal"} ${className}`}>
                     {value}
-                </span>
+                </Tag>
             );
         }
         return (
-            <div className="w-full max-w-full whitespace-normal break-words">
-                <EditableText value={value} placeholder={placeholder} onCommit={onCommit} multiline={multiline} />
+            <div className={`inline-block w-full max-w-full whitespace-normal break-words ${className}`}>
+                <EditableText as={as} value={value} placeholder={placeholder} onCommit={onCommit} multiline={multiline} />
             </div>
         );
     };
@@ -237,33 +238,33 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                 return (
                 <motion.div 
                     {...fadeUpConfig}
-                    className={`py-12 sm:py-24 px-4 sm:px-10 relative rounded-3xl bg-transparent overflow-visible`}
+                    className={`py-8 sm:py-16 md:py-24 px-3 sm:px-6 md:px-10 relative rounded-3xl bg-transparent overflow-visible`}
                 >
                     <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
                         <HeroParticles isDark={true} />
                     </div>
                     
-                    <div className={`relative z-10 w-full max-w-7xl mx-auto flex flex-col-reverse lg:flex-row items-center gap-12 lg:gap-20 ${shouldCenterHero ? 'justify-center' : ''}`}>
+                    <div className={`relative z-10 w-full max-w-7xl mx-auto flex flex-col-reverse lg:flex-row items-center gap-8 sm:gap-12 lg:gap-20 ${shouldCenterHero ? 'justify-center' : ''}`}>
                         
                         {/* LEFT COLUMN: TEXT */}
-                        <div className={`flex-[1.5] space-y-8 flex flex-col w-full ${shouldCenterHero ? 'items-center text-center max-w-4xl' : 'items-center lg:items-start text-center lg:text-left'}`}>
+                        <div className={`flex-[1.5] space-y-6 sm:space-y-8 flex flex-col w-full ${shouldCenterHero ? 'items-center text-center max-w-4xl' : 'items-center lg:items-start text-center lg:text-left'}`}>
                             
                             {/* Status Indicator */}
                             <motion.div 
                                 initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}
-                                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold ${borderClass} border shadow-sm ${cardBg} backdrop-blur-md`}
+                                className={`inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-bold ${borderClass} border shadow-sm ${cardBg} backdrop-blur-md`}
                             >
                                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                                 <span className={textSecondary}>Open to opportunities</span>
                             </motion.div>
 
-                            <div className={`space-y-4 w-full ${fontSzClass} flex flex-col ${shouldCenterHero ? 'items-center text-center' : 'items-center lg:items-start text-center lg:text-left'}`}>
+                            <div className={`space-y-3 sm:space-y-4 w-full ${fontSzClass} flex flex-col ${shouldCenterHero ? 'items-center text-center' : 'items-center lg:items-start text-center lg:text-left'}`}>
                                 <motion.h1
                                     initial={{ opacity: 0, y: 15 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: false, amount: 0.1 }}
                                     transition={springTransition}
-                                    className={`font-display font-black tracking-tight leading-[1.05] w-full max-w-3xl text-4xl sm:text-5xl lg:text-6xl xl:text-7xl break-words text-white ${shouldCenterHero ? 'mx-auto text-center' : 'mx-auto lg:mx-0 text-center lg:text-left'}`}
+                                    className={`font-display font-black tracking-tight leading-tight w-full max-w-3xl text-3xl sm:text-5xl lg:text-6xl xl:text-7xl break-words text-white ${shouldCenterHero ? 'mx-auto text-center' : 'mx-auto lg:mx-0 text-center lg:text-left'}`}
                                 >
                                     <TextElement
                                         value={data.heading || "YOUR NAME"}
@@ -277,7 +278,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     whileInView={{ opacity: 1, y: 0 }} 
                                     viewport={{ once: false, amount: 0.1 }}
                                     transition={{ ...springTransition, delay: 0.1 }}
-                                    className={`text-xl md:text-2xl font-bold w-full max-w-full ${accentText} ${shouldCenterHero ? 'text-center' : 'text-center lg:text-left'}`}
+                                    className={`text-lg sm:text-xl md:text-2xl font-bold w-full max-w-full ${accentText} ${shouldCenterHero ? 'text-center' : 'text-center lg:text-left'}`}
                                 >
                                     <TextElement 
                                         value={data.subheading || "Professional Headline"}
@@ -291,7 +292,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     whileInView={{ opacity: 1, y: 0 }} 
                                     viewport={{ once: false, amount: 0.1 }}
                                     transition={{ ...springTransition, delay: 0.15 }}
-                                    className={`text-lg md:text-xl leading-relaxed w-full max-w-2xl font-medium text-slate-300 ${shouldCenterHero ? 'mx-auto text-center' : 'mx-auto lg:mx-0 text-center lg:text-left'}`}
+                                    className={`text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed w-full max-w-2xl font-medium text-slate-300 ${shouldCenterHero ? 'mx-auto text-center' : 'mx-auto lg:mx-0 text-center lg:text-left'}`}
                                 >
                                     <TextElement 
                                         multiline
@@ -307,9 +308,9 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 whileInView={{ opacity: 1, y: 0 }} 
                                 viewport={{ once: false, amount: 0.1 }}
                                 transition={{ ...springTransition, delay: 0.2 }}
-                                className={`flex flex-col gap-6 pt-4 w-full ${shouldCenterHero ? 'items-center' : 'items-center lg:items-start'}`}
+                                className={`flex flex-col gap-4 sm:gap-6 pt-2 sm:pt-4 w-full ${shouldCenterHero ? 'items-center' : 'items-center lg:items-start'}`}
                             >
-                                <div className={`flex flex-wrap items-center gap-4 w-full ${shouldCenterHero ? 'justify-center' : 'justify-center lg:justify-start'}`}>
+                                <div className={`flex flex-col sm:flex-row flex-wrap items-center gap-3 sm:gap-4 w-full ${shouldCenterHero ? 'justify-center' : 'justify-center lg:justify-start'}`}>
                                     <motion.button 
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
@@ -318,7 +319,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                             const projectsSection = document.getElementById('preview-node-block-' + (sections.find(s => s.section_type === 'projects_grid')?.id || ''));
                                             if (projectsSection) projectsSection.scrollIntoView({ behavior: 'smooth' });
                                         }}
-                                        className={`px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all shadow-[0_0_20px_rgba(59,130,246,0.15)] hover:shadow-[0_0_30px_rgba(59,130,246,0.3)] hover:-translate-y-1 ${accentBg} text-white flex items-center gap-2`}
+                                        className={`w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl text-sm md:text-base font-bold transition-all shadow-[0_0_20px_rgba(59,130,246,0.15)] hover:shadow-[0_0_30px_rgba(59,130,246,0.3)] hover:-translate-y-1 ${accentBg} text-white flex items-center justify-center gap-2`}
                                     >
                                         View My Work &rarr;
                                     </motion.button>
@@ -327,7 +328,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                         <PDFDownloadLink
                                             document={pdfDocument}
                                             fileName={`${data.heading?.replace(/\s+/g, '_') || 'Portfolio'}_Resume.pdf`}
-                                            className={`px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all hover:bg-white/5 border border-white/10 shadow-sm hover:shadow-md hover:-translate-y-1 ${textPrimary} ${cardBg}`}
+                                            className={`w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl text-sm md:text-base font-bold transition-all hover:bg-white/5 border border-white/10 shadow-sm hover:shadow-md hover:-translate-y-1 text-center justify-center ${textPrimary} ${cardBg}`}
                                         >
                                             {({ blob, url, loading, error }) => (loading ? 'Preparing...' : 'Download Resume')}
                                         </PDFDownloadLink>
@@ -460,30 +461,30 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
 
             {/* 2. ABOUT SECTION */}
             {currentType === "about" && (
-                <motion.div {...fadeUpConfig} className={`py-16 md:py-24 px-6 md:px-12 relative rounded-[3rem] border border-white/5 shadow-2xl ${cardBg} backdrop-blur-3xl overflow-hidden my-8 mx-2 sm:mx-8`}>
+                <motion.div {...fadeUpConfig} className={`py-10 sm:py-16 md:py-24 px-4 sm:px-6 md:px-12 relative rounded-2xl sm:rounded-[3rem] border border-white/5 shadow-2xl ${cardBg} backdrop-blur-3xl overflow-hidden my-6 sm:my-8 mx-0 sm:mx-4 md:mx-8`}>
                     {/* Subtle Internal Glow */}
                     <div className="absolute top-0 right-0 w-[50%] h-[50%] bg-blue-500/5 rounded-full blur-[80px]"></div>
                     <div className="absolute bottom-0 left-0 w-[50%] h-[50%] bg-purple-500/5 rounded-full blur-[80px]"></div>
                     
-                    <div className="flex flex-wrap justify-center items-center gap-12 relative z-10 w-full max-w-6xl mx-auto">
+                    <div className="flex flex-wrap justify-center items-center gap-8 sm:gap-12 relative z-10 w-full max-w-6xl mx-auto">
                         {customSideImage && !isImageHidden && (
                             <motion.div 
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 whileInView={{ opacity: 1, scale: 1 }}
                                 viewport={{ once: false, amount: 0.2 }}
                                 transition={springTransition}
-                                className="shrink-0 relative group w-56 h-56 md:w-72 md:h-72 mx-auto lg:mx-0"
+                                className="shrink-0 relative group w-44 h-44 sm:w-56 sm:h-56 md:w-72 md:h-72 mx-auto lg:mx-0"
                             >
-                                <div className={`absolute inset-0 rounded-[3rem] blur-xl opacity-30 bg-gradient-to-tr from-blue-500 to-purple-500 group-hover:opacity-50 transition-opacity duration-700`}></div>
+                                <div className={`absolute inset-0 rounded-2xl sm:rounded-[3rem] blur-xl opacity-30 bg-gradient-to-tr from-blue-500 to-purple-500 group-hover:opacity-50 transition-opacity duration-700`}></div>
                                 <img 
                                     src={customSideImage} 
                                     alt="Profile" 
-                                    className={`relative w-full h-full object-cover rounded-[3rem] border border-white/10 shadow-2xl transition-transform duration-700 group-hover:scale-[1.03]`}
+                                    className={`relative w-full h-full object-cover rounded-2xl sm:rounded-[3rem] border border-white/10 shadow-2xl transition-transform duration-700 group-hover:scale-[1.03]`}
                                     loading="lazy"
                                 />
                                 {!isPreview && (
                                     <>
-                                        <div className="absolute inset-0 rounded-[3rem] bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer">
+                                        <div className="absolute inset-0 rounded-2xl sm:rounded-[3rem] bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer">
                                             <span className="text-[10px] text-white font-bold uppercase tracking-widest bg-black/50 px-3 py-1.5 rounded-lg mb-2">Upload Image</span>
                                             <input 
                                                 type="file" 
@@ -506,32 +507,36 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                 }}
                                             />
                                         </div>
-                                            <button 
-                                                onClick={(e) => { 
-                                                    e.preventDefault();
-                                                    e.stopPropagation(); 
-                                                    onInlineEdit(section.id, { hideSideImage: true, customSideImage: "" });
-                                                }}
-                                                className="absolute top-4 right-4 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 hover:bg-red-600 z-20 shadow-md"
-                                                title="Remove Image"
-                                            >✕</button>
+                                        <button 
+                                            onClick={(e) => { 
+                                                e.preventDefault();
+                                                e.stopPropagation(); 
+                                                onInlineEdit(section.id, { hideSideImage: true, customSideImage: "" });
+                                            }}
+                                            className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-red-500 text-white rounded-full w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-xs opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:bg-red-600 z-20 shadow-md font-bold"
+                                            title="Remove Image"
+                                        >✕</button>
                                     </>
                                 )}
                             </motion.div>
                         )}
-                        <div className={`flex-[1_1_400px] space-y-6 w-full ${(!customSideImage || isImageHidden) ? 'text-center flex flex-col items-center' : 'text-center lg:text-left'}`}>
+                        <div className={`flex-[1_1_300px] space-y-4 sm:space-y-6 w-full ${(!customSideImage || isImageHidden) ? 'text-center flex flex-col items-center' : 'text-center lg:text-left'}`}>
                             <motion.div 
                                 initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
-                                className="flex items-center gap-4 w-full" style={{ justifyContent: (!customSideImage || isImageHidden) ? 'center' : 'flex-start' }}
+                                className="flex items-center gap-3 sm:gap-4 w-full" style={{ justifyContent: (!customSideImage || isImageHidden) ? 'center' : 'flex-start' }}
                             >
-                                <span className={`h-px w-12 bg-blue-500/50 hidden lg:block ${(!customSideImage || isImageHidden) ? 'lg:hidden' : ''}`}></span>
-                                <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-white`}>
-                                    About Me
+                                <span className={`h-px w-8 sm:w-12 bg-blue-500/50 hidden lg:block ${(!customSideImage || isImageHidden) ? 'lg:hidden' : ''}`}></span>
+                                <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-white`}>
+                                    <TextElement 
+                                        value={data.title || "About Me"} 
+                                        placeholder="About Me" 
+                                        onCommit={(v) => updateScalar("title", v)} 
+                                    />
                                 </h2>
-                                <span className={`h-px w-12 bg-blue-500/50 hidden lg:block ${(!customSideImage || isImageHidden) ? 'lg:hidden' : ''}`}></span>
+                                <span className={`h-px w-8 sm:w-12 bg-blue-500/50 hidden lg:block ${(!customSideImage || isImageHidden) ? 'lg:hidden' : ''}`}></span>
                             </motion.div>
                             
-                            <div className={`text-lg md:text-xl leading-relaxed break-words w-full max-w-3xl font-medium text-slate-300`}>
+                            <div className={`text-base sm:text-lg md:text-xl leading-relaxed break-words w-full max-w-3xl font-medium text-slate-300`}>
                                 <TextElement 
                                     multiline 
                                     value={data.bio || ""}
@@ -546,16 +551,20 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
 
             {/* 3. EDUCATION SECTION */}
             {currentType === "education" && (
-                <motion.div {...fadeUpConfig} className="space-y-6 py-12 md:py-16">
+                <motion.div {...fadeUpConfig} className="space-y-6 py-8 sm:py-12 md:py-16 px-2 sm:px-4">
                     <motion.div 
                         initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
-                        className="flex items-center justify-center gap-4 w-full mb-12"
+                        className="flex items-center justify-center gap-3 sm:gap-4 w-full mb-8 sm:mb-12"
                     >
-                        <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
-                        <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
-                            Educational Background
+                        <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
+                        <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                            <TextElement 
+                                value={data.title || "Educational Background"}
+                                placeholder="Educational Background"
+                                onCommit={(v) => updateScalar("title", v)}
+                            />
                         </h2>
-                        <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                        <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
                     </motion.div>
                     
                     <motion.div 
@@ -563,44 +572,45 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         initial="hidden"
                         whileInView="show"
                         viewport={{ once: false, margin: "-20px", amount: 0.1 }}
-                        className="space-y-0 relative border-l-2 ml-4 md:ml-8" style={{ borderColor: 'rgba(59,130,246,0.2)' }}
+                        className="space-y-6 sm:space-y-8 relative border-l-2 ml-3 sm:ml-6 md:ml-8" style={{ borderColor: 'rgba(59,130,246,0.2)' }}
                     >
                         {(data.schools || []).length === 0 && isPreview && (
-                            <div className={`p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full max-w-2xl mx-auto my-8 shadow-sm`}>
-                                <div className="w-16 h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
+                            <div className={`p-8 sm:p-12 flex flex-col items-center justify-center text-center rounded-2xl sm:rounded-3xl border ${borderClass} ${cardBg} w-full max-w-2xl mx-auto my-6 sm:my-8 shadow-sm`}>
+                                <div className="w-14 h-14 sm:w-16 sm:h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
                                 </div>
-                                <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>No Education Added</h3>
-                                <p className={`text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
+                                <h3 className={`text-base sm:text-lg font-bold mb-2 ${textPrimary}`}>No Education Added</h3>
+                                <p className={`text-xs sm:text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
                             </div>
                         )}
                         {(data.schools || []).map((school, i) => (
                             <motion.div 
                                 variants={staggerItem}
                                 key={i}
-                                className={`relative group pl-8 md:pl-12 py-6 transition-all`}
+                                className={`relative group pl-5 sm:pl-8 md:pl-10 transition-all`}
                             >
                                 {/* Timeline Node */}
-                                <div className={`absolute left-0 top-10 -translate-x-1/2 w-4 h-4 rounded-full border-2 ${borderClass} bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]`}></div>
+                                <div className={`absolute left-0 top-7 -translate-x-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border-2 ${borderClass} bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]`}></div>
                                 
-                                <div className={`relative p-6 rounded-2xl border transition-all ${cardBg} ${borderClass} ${!isPreview ? 'hover:shadow-md' : ''}`}>
+                                <div className={`relative p-4 sm:p-6 rounded-2xl border transition-all ${cardBg} ${borderClass} ${!isPreview ? 'hover:shadow-md' : ''}`}>
                                     {!isPreview && (
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); removeArrayItem('schools', i); }}
-                                            className="absolute -top-3 -right-3 w-7 h-7 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-20"
+                                            className="absolute -top-2.5 -right-2.5 w-7 h-7 flex items-center justify-center text-white opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-20 text-xs font-bold"
+                                            title="Delete Education"
                                         >✕</button>
                                     )}
                                     
-                                    <div className="flex flex-wrap justify-between items-start gap-4">
-                                        <div className="space-y-1.5 w-full sm:w-auto flex-1">
-                                            <h3 className={`text-lg font-display font-bold uppercase tracking-wide break-words max-w-full ${textPrimary}`}>
+                                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-4">
+                                        <div className="space-y-1 w-full sm:w-auto flex-1 min-w-0">
+                                            <h3 className={`text-base sm:text-lg font-display font-bold uppercase tracking-wide break-words max-w-full ${textPrimary}`}>
                                                 <TextElement 
                                                     value={school.institution || ""}
                                                     placeholder="Institution Name"
                                                     onCommit={(v) => updateArrayItem("schools", i, "institution", v)}
                                                 />
                                             </h3>
-                                            <p className={`text-base font-medium break-words max-w-full ${textSecondary}`}>
+                                            <p className={`text-sm sm:text-base font-medium break-words max-w-full ${textSecondary}`}>
                                                 <TextElement 
                                                     value={school.degree || ""}
                                                     placeholder="Degree / Major"
@@ -608,7 +618,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                 />
                                             </p>
                                         </div>
-                                        <span className={`text-sm font-mono px-4 py-1.5 rounded-lg shrink-0 transition-colors max-w-full truncate ${badgeClass}`}>
+                                        <span className={`text-xs sm:text-sm font-mono px-3 py-1 sm:px-4 sm:py-1.5 rounded-lg shrink-0 w-max transition-colors max-w-full ${badgeClass}`}>
                                             <TextElement 
                                                 value={school.years || ""}
                                                 placeholder="Years"
@@ -616,9 +626,21 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                             />
                                         </span>
                                     </div>
-                                    <div className={`mt-4 pt-4 border-t flex items-center gap-2 text-sm overflow-hidden ${innerBorderClass}`}>
+
+                                    {(school.description || !isPreview) && (
+                                        <div className={`mt-2.5 text-xs sm:text-sm leading-relaxed ${textSecondary}`}>
+                                            <TextElement 
+                                                multiline 
+                                                value={school.description || ""}
+                                                placeholder="Coursework, honors, or activities (optional)..."
+                                                onCommit={(v) => updateArrayItem("schools", i, "description", v)}
+                                            />
+                                        </div>
+                                    )}
+
+                                    <div className={`mt-3 pt-3 border-t flex flex-wrap items-center gap-2 text-xs sm:text-sm overflow-hidden ${innerBorderClass}`}>
                                         <span className={`shrink-0 ${textSecondary}`}>Performance:</span>
-                                        <span className={`font-mono font-bold truncate max-w-full ${accentText}`}>
+                                        <span className={`font-mono font-bold max-w-full ${accentText}`}>
                                             <TextElement 
                                                 value={school.score || ""}
                                                 placeholder="GPA / Score"
@@ -632,10 +654,10 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                     </motion.div>
                     
                     {!isPreview && (
-                        <div className="pt-4">
+                        <div className="pt-4 px-2">
                             <button 
-                                onClick={(e) => { e.stopPropagation(); addArrayItem('schools', { institution: "New Institution", degree: "New Degree", years: "Year - Year", score: "GPA: 0.0" }); }}
-                                className={`w-full py-4 rounded-xl border border-dashed text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex justify-center items-center gap-2 ${textPrimary} ${borderClass}`}
+                                onClick={(e) => { e.stopPropagation(); addArrayItem('schools', { institution: "New Institution", degree: "New Degree", years: "YYYY - YYYY", score: "GPA: 0.0" }); }}
+                                className={`w-full py-3.5 sm:py-4 rounded-xl border border-dashed text-sm sm:text-base font-bold opacity-60 hover:opacity-100 transition-all hover:bg-white/5 flex justify-center items-center gap-2 ${textPrimary} ${borderClass}`}
                             >
                                 + Add Education
                             </button>
@@ -646,26 +668,30 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
 
             {/* 4. SKILLS SECTION */}
             {currentType === "skills" && (
-                <motion.div {...fadeUpConfig} className="space-y-8 py-12 md:py-16">
+                <motion.div {...fadeUpConfig} className="space-y-6 sm:space-y-8 py-8 sm:py-12 md:py-16 px-2 sm:px-4">
                     <motion.div 
                         initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
-                        className="flex items-center justify-center gap-4 w-full mb-12"
+                        className="flex items-center justify-center gap-3 sm:gap-4 w-full mb-8 sm:mb-12"
                     >
-                        <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
-                        <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
-                            Core Expertise
+                        <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
+                        <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                            <TextElement 
+                                value={data.title || "Core Expertise"}
+                                placeholder="Core Expertise"
+                                onCommit={(v) => updateScalar("title", v)}
+                            />
                         </h2>
-                        <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                        <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
                     </motion.div>
                     
-                    <div className="flex flex-col gap-6 pt-2 w-full max-w-5xl mx-auto px-2">
+                    <div className="flex flex-col gap-4 sm:gap-6 pt-2 w-full max-w-5xl mx-auto px-1 sm:px-2">
                         {(data.items || []).length === 0 && isPreview && (
-                            <div className={`p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
-                                <div className="w-16 h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
+                            <div className={`p-8 sm:p-12 flex flex-col items-center justify-center text-center rounded-2xl sm:rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
+                                <div className="w-14 h-14 sm:w-16 sm:h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>
                                 </div>
-                                <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>No Skills Added</h3>
-                                <p className={`text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
+                                <h3 className={`text-base sm:text-lg font-bold mb-2 ${textPrimary}`}>No Skills Added</h3>
+                                <p className={`text-xs sm:text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
                             </div>
                         )}
                         {(data.items || []).map((skill, i) => {
@@ -678,14 +704,14 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     whileInView={{ opacity: 1, x: 0, scale: 1 }}
                                     viewport={{ once: false, margin: "-20px", amount: 0.1 }}
                                     transition={{ ...springTransition, delay: 0.1 }}
-                                    className={`relative group space-y-5 p-6 md:p-8 rounded-3xl transition-all w-full md:w-[70%] border shadow-md ${borderClass} ${cardBg} ${
+                                    className={`relative group space-y-4 sm:space-y-5 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl transition-all w-full md:w-[75%] border shadow-md ${borderClass} ${cardBg} ${
                                         isEven ? 'self-start' : 'self-end'
                                     } ${!isPreview ? 'hover:scale-[1.01] hover:bg-white/5' : ''}`}
                                 >
                                     {!isPreview && (
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); removeArrayItem('items', i); }}
-                                            className={`absolute -top-3 ${isEven ? '-right-3' : '-left-3'} w-8 h-8 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-20`}
+                                            className={`absolute -top-2.5 ${isEven ? '-right-2.5' : '-left-2.5'} w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-20 text-xs font-bold`}
                                         >✕</button>
                                     )}
 
@@ -758,7 +784,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                 />
                                             </span>
                                         </div>
-                                        <span className={`${accentText} font-mono text-sm flex items-center shrink-0 ${trackBg} px-4 py-2 rounded-xl border ${borderClass} shadow-inner`}>
+                                        <span className={`${themeDef.badgeText || accentText} font-mono font-bold text-sm flex items-center shrink-0 ${trackBg} px-4 py-2 rounded-xl border ${borderClass} shadow-inner`}>
                                             <TextElement 
                                                 value={String((skill.level !== undefined && skill.level !== null && skill.level !== '') ? skill.level : 50)}
                                                 placeholder="50"
@@ -788,7 +814,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                             whileInView={{ width: `${(skill.level !== undefined && skill.level !== null && skill.level !== '') ? skill.level : 50}%` }}
                                             viewport={{ once: false }}
                                             transition={{ duration: 1, ease: "easeOut" }}
-                                            style={{ boxShadow: 'inset 0 1px 3px rgba(255,255,255,0.2)' }}
+                                            style={{ boxShadow: 'inset 0 1px 3px rgba(255,255,255,0.3), 0 0 10px rgba(168,85,247,0.4)' }}
                                         />
                                         {!isPreview && <div className="absolute inset-0 bg-white/10 opacity-0 group-hover/bar:opacity-100 transition-opacity pointer-events-none" />}
                                     </div>
@@ -812,26 +838,30 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
 
             {/* 5. PROJECTS SECTION */}
             {currentType === "projects_grid" && (
-                <div className="space-y-8 py-12 md:py-16">
+                <div className="space-y-6 sm:space-y-8 py-8 sm:py-12 md:py-16">
                     <motion.div 
                         initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
-                        className="flex items-center justify-center gap-4 w-full mb-12"
+                        className="flex items-center justify-center gap-3 sm:gap-4 w-full mb-8 sm:mb-12"
                     >
-                        <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
-                        <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
-                            {data.title || "Showcase of Innovations"}
+                        <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
+                        <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                            <TextElement 
+                                value={data.title || "Showcase of Innovations"}
+                                placeholder="Showcase of Innovations"
+                                onCommit={(v) => updateScalar("title", v)}
+                            />
                         </h2>
-                        <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                        <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
                     </motion.div>
                     
-                    <div className="flex flex-col gap-10 w-full max-w-5xl mx-auto px-2">
+                    <div className="flex flex-col gap-6 sm:gap-10 w-full max-w-5xl mx-auto px-2">
                         {(data.projects || []).length === 0 && isPreview && (
-                            <div className={`p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
-                                <div className="w-16 h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
+                            <div className={`p-8 sm:p-12 flex flex-col items-center justify-center text-center rounded-2xl sm:rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
+                                <div className="w-14 h-14 sm:w-16 sm:h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
                                 </div>
-                                <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>No Projects Yet</h3>
-                                <p className={`text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
+                                <h3 className={`text-base sm:text-lg font-bold mb-2 ${textPrimary}`}>No Projects Yet</h3>
+                                <p className={`text-xs sm:text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
                             </div>
                         )}
                         {(data.projects || []).map((project, i) => {
@@ -842,14 +872,15 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             <div 
                                 key={i}
                                 id={`project-card-${i}`}
-                                className={`relative group p-6 md:p-8 rounded-[2rem] border flex flex-col md:flex-row gap-6 md:gap-8 items-stretch shadow-md backdrop-blur-xl w-full overflow-hidden transition-all duration-300 ${cardBg} ${borderClass} hover:shadow-[0_20px_40px_rgb(0,0,0,0.2)] hover:border-white/20 z-10 hover:z-20`}
+                                className={`relative group p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-[2rem] border flex flex-col md:flex-row gap-5 md:gap-8 items-stretch shadow-md backdrop-blur-xl w-full overflow-hidden transition-all duration-300 ${cardBg} ${borderClass} hover:shadow-[0_20px_40px_rgb(0,0,0,0.2)] hover:border-white/20 z-10 hover:z-20`}
                             >
                                 <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 transition-all duration-500 group-hover:w-full bg-current ${accentText}`}></div>
 
                                 {!isPreview && (
                                     <button 
                                         onClick={(e) => { e.stopPropagation(); removeArrayItem('projects', i); }}
-                                        className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-30"
+                                        className="absolute top-3 right-3 sm:top-4 sm:right-4 w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-white opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-30"
+                                        title="Delete Project"
                                     >✕</button>
                                 )}
 
@@ -1130,16 +1161,20 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg h-full max-h-96 bg-blue-500 rounded-full blur-[120px] pointer-events-none z-0"
                     />
 
-                    <div className="relative z-10">
+                    <div className="relative z-10 px-2 sm:px-4">
                         <motion.div 
                             initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
-                            className="flex items-center justify-center gap-4 w-full mb-6"
+                            className="flex items-center justify-center gap-3 sm:gap-4 w-full mb-6"
                         >
-                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
-                            <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
-                                Get In Touch
+                            <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
+                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                                <TextElement 
+                                    value={data.title || "Get In Touch"}
+                                    placeholder="Get In Touch"
+                                    onCommit={(v) => updateScalar("title", v)}
+                                />
                             </h2>
-                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                            <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
                         </motion.div>
                         
                         <motion.div 
@@ -1147,7 +1182,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             whileInView={{ opacity: 1 }}
                             viewport={{ once: false, amount: 0.1 }}
                             transition={{ delay: 0.1 }}
-                            className={`text-base max-w-lg mx-auto leading-relaxed break-words font-medium ${textSecondary}`}
+                            className={`text-sm sm:text-base max-w-lg mx-auto leading-relaxed break-words font-medium ${textSecondary}`}
                         >
                             <TextElement 
                                 multiline 
@@ -1163,25 +1198,25 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 initial="hidden"
                                 whileInView="show"
                                 viewport={{ once: false, amount: 0.1 }}
-                                className="flex flex-wrap justify-center gap-4 mt-8"
+                                className="flex flex-wrap justify-center gap-2.5 sm:gap-4 mt-6 sm:mt-8 max-w-full"
                             >
                                 {data.email && (
-                                    <motion.span variants={staggerItem} whileHover={{ scale: 1.03 }} className={`px-5 py-2.5 border rounded-full text-sm font-bold transition-colors shadow-sm ${badgeClass}`}>
+                                    <motion.span variants={staggerItem} whileHover={{ scale: 1.03 }} className={`px-4 sm:px-5 py-2 sm:py-2.5 border rounded-full text-xs sm:text-sm font-bold transition-colors shadow-sm max-w-full break-all ${badgeClass}`}>
                                         <TextElement value={data.email} placeholder="email" onCommit={(v) => updateScalar("email", v)} />
                                     </motion.span>
                                 )}
                                 {data.phone && (
-                                    <motion.span variants={staggerItem} whileHover={{ scale: 1.03 }} className={`px-5 py-2.5 border rounded-full text-sm font-bold transition-colors shadow-sm ${badgeClass}`}>
+                                    <motion.span variants={staggerItem} whileHover={{ scale: 1.03 }} className={`px-4 sm:px-5 py-2 sm:py-2.5 border rounded-full text-xs sm:text-sm font-bold transition-colors shadow-sm max-w-full break-all ${badgeClass}`}>
                                         <TextElement value={data.phone} placeholder="phone" onCommit={(v) => updateScalar("phone", v)} />
                                     </motion.span>
                                 )}
                                 {data.linkedin && (
-                                    <motion.a variants={staggerItem} whileHover={{ scale: 1.03 }} href={data.linkedin.startsWith("http") ? data.linkedin : `https://${data.linkedin}`} target="_blank" rel="noopener noreferrer" className={`px-5 py-2.5 border rounded-full text-sm font-bold transition-colors hover:bg-white/5 shadow-sm ${badgeClass}`}>
+                                    <motion.a variants={staggerItem} whileHover={{ scale: 1.03 }} href={data.linkedin.startsWith("http") ? data.linkedin : `https://${data.linkedin}`} target="_blank" rel="noopener noreferrer" className={`px-4 sm:px-5 py-2 sm:py-2.5 border rounded-full text-xs sm:text-sm font-bold transition-colors hover:bg-white/5 shadow-sm ${badgeClass}`}>
                                         LinkedIn
                                     </motion.a>
                                 )}
                                 {data.github && (
-                                    <motion.a variants={staggerItem} whileHover={{ scale: 1.03 }} href={data.github.startsWith("http") ? data.github : `https://${data.github}`} target="_blank" rel="noopener noreferrer" className={`px-5 py-2.5 border rounded-full text-sm font-bold transition-colors hover:bg-white/5 shadow-sm ${badgeClass}`}>
+                                    <motion.a variants={staggerItem} whileHover={{ scale: 1.03 }} href={data.github.startsWith("http") ? data.github : `https://${data.github}`} target="_blank" rel="noopener noreferrer" className={`px-4 sm:px-5 py-2 sm:py-2.5 border rounded-full text-xs sm:text-sm font-bold transition-colors hover:bg-white/5 shadow-sm ${badgeClass}`}>
                                         GitHub
                                     </motion.a>
                                 )}
@@ -1248,54 +1283,67 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
             )}
             {/* 6. WORK EXPERIENCE SECTION */}
             {currentType === 'experience' && (
-                <div className="py-12 sm:py-24 px-4">
-                    <motion.div {...fadeUpConfig} className="max-w-4xl mx-auto space-y-12">
+                <div className="py-8 sm:py-16 md:py-24 px-2 sm:px-4">
+                    <motion.div {...fadeUpConfig} className="max-w-4xl mx-auto space-y-8 sm:space-y-12">
                         <motion.div 
                             initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
-                            className="flex items-center justify-center gap-4 w-full mb-12"
+                            className="flex items-center justify-center gap-3 sm:gap-4 w-full mb-8 sm:mb-12"
                         >
-                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
-                            <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
-                                Work Experience
+                            <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
+                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                                <TextElement 
+                                    value={data.title || "Work Experience"}
+                                    placeholder="Work Experience"
+                                    onCommit={(v) => updateScalar("title", v)}
+                                />
                             </h2>
-                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                            <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
                         </motion.div>
-                        <div className="relative border-l-2 border-slate-700/30 ml-3 md:ml-0 md:space-y-12 space-y-8">
+                        <div className="relative border-l-2 ml-3 sm:ml-6 md:ml-8 space-y-6 sm:space-y-8" style={{ borderColor: 'rgba(59,130,246,0.2)' }}>
                             {(data.items || []).length === 0 && isPreview && (
-                                <div className={`p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full max-w-2xl mx-auto my-8 shadow-sm`}>
-                                    <div className="w-16 h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
+                                <div className={`p-8 sm:p-12 flex flex-col items-center justify-center text-center rounded-2xl sm:rounded-3xl border ${borderClass} ${cardBg} w-full max-w-2xl mx-auto my-6 sm:my-8 shadow-sm`}>
+                                    <div className="w-14 h-14 sm:w-16 sm:h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
                                     </div>
-                                    <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>No Experience Listed</h3>
-                                    <p className={`text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
+                                    <h3 className={`text-base sm:text-lg font-bold mb-2 ${textPrimary}`}>No Experience Listed</h3>
+                                    <p className={`text-xs sm:text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
                                 </div>
                             )}
                             {(data.items || []).map((item, idx) => (
-                                <motion.div key={idx} variants={staggerItem} className="relative pl-6 md:pl-8">
-                                    <div className="absolute w-4 h-4 bg-blue-500 rounded-full -left-[9px] top-1.5 shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
-                                    <div className={"p-6 rounded-2xl border backdrop-blur-md shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg " + cardBg + " " + borderClass}>
-                                        <h3 className={"text-xl font-bold mb-1 " + textPrimary}>
+                                <motion.div key={idx} variants={staggerItem} className="relative pl-5 sm:pl-8 md:pl-10">
+                                    <div className={`absolute left-0 top-7 -translate-x-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-blue-500 rounded-full border-2 ${borderClass} shadow-[0_0_15px_rgba(59,130,246,0.5)]`} />
+                                    <div className={"relative group p-4 sm:p-6 rounded-2xl border backdrop-blur-md shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg " + cardBg + " " + borderClass}>
+                                        {!isPreview && (
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); removeArrayItem('items', idx); }}
+                                                className="absolute -top-2.5 -right-2.5 w-7 h-7 flex items-center justify-center text-white opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-20 text-xs font-bold"
+                                                title="Remove Position"
+                                            >✕</button>
+                                        )}
+                                        <h3 className={"text-lg sm:text-xl font-bold mb-1.5 break-words " + textPrimary}>
                                             <TextElement value={item.title} placeholder="Job Title" onCommit={(v) => updateArrayItem('items', idx, 'title', v)} />
                                         </h3>
-                                        <div className={"text-sm font-semibold mb-3 text-blue-400"}>
-                                            <TextElement value={item.company} placeholder="Company" onCommit={(v) => updateArrayItem('items', idx, 'company', v)} />
-                                            <span className="mx-2 opacity-50">•</span>
-                                            <span className="opacity-80">
-                                                <TextElement value={item.dates} placeholder="Dates" onCommit={(v) => updateArrayItem('items', idx, 'dates', v)} />
+                                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold mb-3 text-blue-400">
+                                            <span className="font-bold">
+                                                <TextElement value={item.company} placeholder="Company Name" onCommit={(v) => updateArrayItem('items', idx, 'company', v)} />
+                                            </span>
+                                            <span className="opacity-50">•</span>
+                                            <span className={`px-2.5 py-0.5 rounded-md font-mono text-[11px] sm:text-xs ${badgeClass}`}>
+                                                <TextElement value={item.dates} placeholder="Dates (e.g. 2021 - Present)" onCommit={(v) => updateArrayItem('items', idx, 'dates', v)} />
                                             </span>
                                         </div>
-                                        <p className={"text-sm leading-relaxed " + textSecondary}>
+                                        <div className={"text-xs sm:text-sm leading-relaxed break-words " + textSecondary}>
                                             <TextElement multiline value={item.description} placeholder="Description of responsibilities and achievements." onCommit={(v) => updateArrayItem('items', idx, 'description', v)} />
-                                        </p>
+                                        </div>
                                     </div>
                                 </motion.div>
                             ))}
                         </div>
                         {!isPreview && (
-                            <div className="pt-10 w-full px-2">
+                            <div className="pt-6 sm:pt-10 w-full px-2">
                                 <button 
-                                    onClick={(e) => { e.stopPropagation(); addArrayItem('items', { title: "New Position", company: "Company", dates: "YYYY - YYYY", description: "Brief description of responsibilities." }); }}
-                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
+                                    onClick={(e) => { e.stopPropagation(); addArrayItem('items', { title: "New Position", company: "Company", dates: "YYYY - Present", description: "Brief description of responsibilities." }); }}
+                                    className={`w-full max-w-5xl mx-auto py-4 sm:py-5 rounded-xl border border-dashed text-sm sm:text-base font-bold opacity-60 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
                                 >
                                     + Add Another Experience
                                 </button>
@@ -1307,47 +1355,58 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
 
             {/* 7. SERVICES SECTION */}
             {currentType === 'services' && (
-                <div className="py-12 sm:py-24 px-4">
-                    <motion.div {...fadeUpConfig} className="max-w-6xl mx-auto space-y-12">
+                <div className="py-8 sm:py-16 md:py-24 px-3 sm:px-6">
+                    <motion.div {...fadeUpConfig} className="max-w-6xl mx-auto space-y-8 sm:space-y-12">
                         <motion.div 
                             initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
-                            className="flex items-center justify-center gap-4 w-full mb-12"
+                            className="flex items-center justify-center gap-3 sm:gap-4 w-full mb-8 sm:mb-12"
                         >
-                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
-                            <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
-                                Services & Offerings
+                            <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
+                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                                <TextElement 
+                                    value={data.title || "Services & Offerings"}
+                                    placeholder="Services & Offerings"
+                                    onCommit={(v) => updateScalar("title", v)}
+                                />
                             </h2>
-                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                            <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
                         </motion.div>
-                        <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                             {(data.items || []).length === 0 && isPreview && (
-                                <div className={`col-span-full p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
-                                    <div className="w-16 h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
+                                <div className={`col-span-full p-8 sm:p-12 flex flex-col items-center justify-center text-center rounded-2xl sm:rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
+                                    <div className="w-14 h-14 sm:w-16 sm:h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                                     </div>
-                                    <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>No Services Listed</h3>
-                                    <p className={`text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
+                                    <h3 className={`text-base sm:text-lg font-bold mb-2 ${textPrimary}`}>No Services Listed</h3>
+                                    <p className={`text-xs sm:text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
                                 </div>
                             )}
                             {(data.items || []).map((item, idx) => (
-                                <motion.div key={idx} variants={staggerItem} className={"p-6 sm:p-8 rounded-3xl border shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl " + cardBg + " " + borderClass}>
-                                    <div className="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center mb-6 text-2xl">
+                                <motion.div key={idx} variants={staggerItem} className={"relative group p-5 sm:p-8 rounded-2xl sm:rounded-3xl border shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl " + cardBg + " " + borderClass}>
+                                    {!isPreview && (
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); removeArrayItem('items', idx); }}
+                                            className="absolute top-3 right-3 sm:top-4 sm:right-4 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-30 text-xs"
+                                            title="Delete Service"
+                                        >✕</button>
+                                    )}
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center mb-4 sm:mb-6 text-xl sm:text-2xl">
                                         ⚡
                                     </div>
-                                    <h3 className={"text-xl font-bold mb-3 " + textPrimary}>
+                                    <h3 className={"text-lg sm:text-xl font-bold mb-2 sm:mb-3 " + textPrimary}>
                                         <TextElement value={item.title} placeholder="Service Name" onCommit={(v) => updateArrayItem('items', idx, 'title', v)} />
                                     </h3>
-                                    <p className={"text-sm leading-relaxed " + textSecondary}>
+                                    <p className={"text-xs sm:text-sm leading-relaxed " + textSecondary}>
                                         <TextElement multiline value={item.description} placeholder="Detailed description of what you offer." onCommit={(v) => updateArrayItem('items', idx, 'description', v)} />
                                     </p>
                                 </motion.div>
                             ))}
                         </motion.div>
                         {!isPreview && (
-                            <div className="pt-10 w-full px-2">
+                            <div className="pt-8 sm:pt-10 w-full px-2">
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); addArrayItem('items', { title: "New Service", description: "Detailed description of what you offer." }); }}
-                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
+                                    className={`w-full max-w-5xl mx-auto py-4 sm:py-5 rounded-xl border border-dashed text-sm sm:text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
                                 >
                                     + Add Another Service
                                 </button>
@@ -1359,41 +1418,52 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
 
             {/* 8. TESTIMONIALS SECTION */}
             {currentType === 'testimonials' && (
-                <div className="py-12 sm:py-24 px-4">
-                    <motion.div {...fadeUpConfig} className="max-w-6xl mx-auto space-y-12">
+                <div className="py-8 sm:py-16 md:py-24 px-3 sm:px-6">
+                    <motion.div {...fadeUpConfig} className="max-w-6xl mx-auto space-y-8 sm:space-y-12">
                         <motion.div 
                             initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
-                            className="flex items-center justify-center gap-4 w-full mb-12"
+                            className="flex items-center justify-center gap-3 sm:gap-4 w-full mb-8 sm:mb-12"
                         >
-                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
-                            <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
-                                Client Testimonials
+                            <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
+                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                                <TextElement 
+                                    value={data.title || "Client Testimonials"}
+                                    placeholder="Client Testimonials"
+                                    onCommit={(v) => updateScalar("title", v)}
+                                />
                             </h2>
-                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                            <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
                         </motion.div>
-                        <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
                             {(data.items || []).length === 0 && isPreview && (
-                                <div className={`col-span-full p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
-                                    <div className="w-16 h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
+                                <div className={`col-span-full p-8 sm:p-12 flex flex-col items-center justify-center text-center rounded-2xl sm:rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
+                                    <div className="w-14 h-14 sm:w-16 sm:h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                                     </div>
-                                    <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>No Testimonials</h3>
-                                    <p className={`text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
+                                    <h3 className={`text-base sm:text-lg font-bold mb-2 ${textPrimary}`}>No Testimonials</h3>
+                                    <p className={`text-xs sm:text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
                                 </div>
                             )}
                             {(data.items || []).map((item, idx) => (
-                                <motion.div key={idx} variants={staggerItem} className={"p-8 rounded-3xl border shadow-sm relative " + cardBg + " " + borderClass}>
-                                    <div className="absolute top-6 right-6 text-6xl text-blue-500/20 font-serif leading-none">
+                                <motion.div key={idx} variants={staggerItem} className={"p-5 sm:p-8 rounded-2xl sm:rounded-3xl border shadow-sm relative group " + cardBg + " " + borderClass}>
+                                    {!isPreview && (
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); removeArrayItem('items', idx); }}
+                                            className="absolute top-3 right-3 sm:top-4 sm:right-4 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-30 text-xs"
+                                            title="Delete Testimonial"
+                                        >✕</button>
+                                    )}
+                                    <div className="absolute top-4 right-4 sm:top-6 sm:right-6 text-4xl sm:text-6xl text-blue-500/20 font-serif leading-none select-none pointer-events-none">
                                         &quot;
                                     </div>
-                                    <p className={"text-lg md:text-xl italic leading-relaxed mb-8 relative z-10 " + textSecondary}>
+                                    <p className={"text-base sm:text-lg md:text-xl italic leading-relaxed mb-6 sm:mb-8 relative z-10 " + textSecondary}>
                                         <TextElement multiline value={item.quote} placeholder="A glowing recommendation from a client or colleague." onCommit={(v) => updateArrayItem('items', idx, 'quote', v)} />
                                     </p>
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 shadow-inner flex items-center justify-center text-white font-bold text-lg">
+                                    <div className="flex items-center gap-3 sm:gap-4">
+                                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 shadow-inner flex items-center justify-center text-white font-bold text-base sm:text-lg shrink-0">
                                             {(item.name || 'U').charAt(0).toUpperCase()}
                                         </div>
-                                        <div>
+                                        <div className="min-w-0 flex-1">
                                             <h4 className={"font-bold text-sm sm:text-base " + textPrimary}>
                                                 <TextElement value={item.name} placeholder="Person Name" onCommit={(v) => updateArrayItem('items', idx, 'name', v)} />
                                             </h4>
@@ -1406,10 +1476,10 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             ))}
                         </motion.div>
                         {!isPreview && (
-                            <div className="pt-10 w-full px-2">
+                            <div className="pt-8 sm:pt-10 w-full px-2">
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); addArrayItem('items', { quote: "A glowing recommendation.", name: "Client Name", role: "Role & Company" }); }}
-                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
+                                    className={`w-full max-w-5xl mx-auto py-4 sm:py-5 rounded-xl border border-dashed text-sm sm:text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
                                 >
                                     + Add Another Testimonial
                                 </button>
@@ -1421,54 +1491,65 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
 
             {/* 9. CERTIFICATIONS SECTION */}
             {currentType === 'certifications' && (
-                <div className="py-12 sm:py-24 px-4">
-                    <motion.div {...fadeUpConfig} className="max-w-4xl mx-auto space-y-12">
+                <div className="py-8 sm:py-16 md:py-24 px-3 sm:px-6">
+                    <motion.div {...fadeUpConfig} className="max-w-4xl mx-auto space-y-8 sm:space-y-12">
                         <motion.div 
                             initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
-                            className="flex items-center justify-center gap-4 w-full mb-12"
+                            className="flex items-center justify-center gap-3 sm:gap-4 w-full mb-8 sm:mb-12"
                         >
-                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
-                            <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
-                                Certifications & Awards
+                            <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
+                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                                <TextElement 
+                                    value={data.title || "Certifications & Awards"}
+                                    placeholder="Certifications & Awards"
+                                    onCommit={(v) => updateScalar("title", v)}
+                                />
                             </h2>
-                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                            <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
                         </motion.div>
-                        <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="flex flex-col gap-4">
+                        <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="flex flex-col gap-3 sm:gap-4">
                             {(data.items || []).length === 0 && isPreview && (
-                                <div className={`p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
-                                    <div className="w-16 h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
+                                <div className={`p-8 sm:p-12 flex flex-col items-center justify-center text-center rounded-2xl sm:rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
+                                    <div className="w-14 h-14 sm:w-16 sm:h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
                                     </div>
-                                    <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>No Certifications</h3>
-                                    <p className={`text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
+                                    <h3 className={`text-base sm:text-lg font-bold mb-2 ${textPrimary}`}>No Certifications</h3>
+                                    <p className={`text-xs sm:text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
                                 </div>
                             )}
                             {(data.items || []).map((item, idx) => (
-                                <motion.div key={idx} variants={staggerItem} className={"flex flex-col sm:flex-row sm:items-center justify-between p-6 rounded-2xl border transition-colors hover:bg-white/5 " + cardBg + " " + borderClass}>
-                                    <div className="flex items-center gap-4 mb-4 sm:mb-0">
-                                        <div className="w-10 h-10 rounded-full bg-amber-500/20 text-amber-500 flex items-center justify-center text-xl shrink-0">
+                                <motion.div key={idx} variants={staggerItem} className={"relative group flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-6 rounded-2xl border transition-colors hover:bg-white/5 " + cardBg + " " + borderClass}>
+                                    {!isPreview && (
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); removeArrayItem('items', idx); }}
+                                            className="absolute top-3 right-3 sm:top-4 sm:right-4 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-30 text-xs"
+                                            title="Delete Certification"
+                                        >✕</button>
+                                    )}
+                                    <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-0 min-w-0 pr-8 sm:pr-0">
+                                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-amber-500/20 text-amber-500 flex items-center justify-center text-lg sm:text-xl shrink-0">
                                             🏆
                                         </div>
-                                        <div>
-                                            <h3 className={"text-lg font-bold " + textPrimary}>
+                                        <div className="min-w-0 flex-1">
+                                            <h3 className={"text-base sm:text-lg font-bold " + textPrimary}>
                                                 <TextElement value={item.name} placeholder="Certification Name" onCommit={(v) => updateArrayItem('items', idx, 'name', v)} />
                                             </h3>
-                                            <p className={"text-sm " + textSecondary}>
+                                            <p className={"text-xs sm:text-sm " + textSecondary}>
                                                 <TextElement value={item.issuer} placeholder="Issuing Organization" onCommit={(v) => updateArrayItem('items', idx, 'issuer', v)} />
                                             </p>
                                         </div>
                                     </div>
-                                    <div className={"text-sm font-semibold sm:text-right " + accentText}>
+                                    <div className={"text-xs sm:text-sm font-semibold sm:text-right shrink-0 " + accentText}>
                                         <TextElement value={item.date} placeholder="Year/Date" onCommit={(v) => updateArrayItem('items', idx, 'date', v)} />
                                     </div>
                                 </motion.div>
                             ))}
                         </motion.div>
                         {!isPreview && (
-                            <div className="pt-10 w-full px-2">
+                            <div className="pt-8 sm:pt-10 w-full px-2">
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); addArrayItem('items', { name: "New Certification", issuer: "Issuing Organization", date: "Year/Date" }); }}
-                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
+                                    className={`w-full max-w-5xl mx-auto py-4 sm:py-5 rounded-xl border border-dashed text-sm sm:text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
                                 >
                                     + Add Another Certification
                                 </button>
@@ -1480,44 +1561,55 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
 
             {/* 10. STATS SECTION */}
             {currentType === 'stats' && (
-                <div className="py-12 sm:py-20 px-4">
-                    <motion.div {...fadeUpConfig} className="max-w-6xl mx-auto">
+                <div className="py-8 sm:py-16 md:py-20 px-3 sm:px-6">
+                    <motion.div {...fadeUpConfig} className="max-w-6xl mx-auto space-y-8 sm:space-y-12">
                         <motion.div 
                             initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
-                            className="flex items-center justify-center gap-4 w-full mb-12"
+                            className="flex items-center justify-center gap-3 sm:gap-4 w-full mb-8 sm:mb-12"
                         >
-                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
-                            <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
-                                By the Numbers
+                            <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
+                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                                <TextElement 
+                                    value={data.title || "By the Numbers"}
+                                    placeholder="By the Numbers"
+                                    onCommit={(v) => updateScalar("title", v)}
+                                />
                             </h2>
-                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                            <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
                         </motion.div>
-                        <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
                             {(data.items || []).length === 0 && isPreview && (
-                                <div className={`col-span-full p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
-                                    <div className="w-16 h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
+                                <div className={`col-span-full p-8 sm:p-12 flex flex-col items-center justify-center text-center rounded-2xl sm:rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
+                                    <div className="w-14 h-14 sm:w-16 sm:h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                                     </div>
-                                    <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>No Stats Available</h3>
-                                    <p className={`text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
+                                    <h3 className={`text-base sm:text-lg font-bold mb-2 ${textPrimary}`}>No Stats Available</h3>
+                                    <p className={`text-xs sm:text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
                                 </div>
                             )}
                             {(data.items || []).map((item, idx) => (
-                                <motion.div key={idx} variants={staggerItem} className={"text-center p-8 rounded-3xl border " + cardBg + " " + borderClass}>
-                                    <div className={"text-4xl sm:text-5xl font-black mb-2 " + accentText}>
+                                <motion.div key={idx} variants={staggerItem} className={"relative group text-center p-4 sm:p-8 rounded-2xl sm:rounded-3xl border " + cardBg + " " + borderClass}>
+                                    {!isPreview && (
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); removeArrayItem('items', idx); }}
+                                            className="absolute top-2 right-2 sm:top-3 sm:right-3 w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center text-white opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-30 text-xs"
+                                            title="Delete Stat"
+                                        >✕</button>
+                                    )}
+                                    <div className={"text-2xl sm:text-4xl md:text-5xl font-black mb-1 sm:mb-2 " + accentText}>
                                         <TextElement value={item.metric} placeholder="50+" onCommit={(v) => updateArrayItem('items', idx, 'metric', v)} />
                                     </div>
-                                    <div className={"text-xs sm:text-sm font-bold uppercase tracking-widest " + textSecondary}>
+                                    <div className={"text-[10px] sm:text-xs md:text-sm font-bold uppercase tracking-wider sm:tracking-widest " + textSecondary}>
                                         <TextElement value={item.label} placeholder="Projects" onCommit={(v) => updateArrayItem('items', idx, 'label', v)} />
                                     </div>
                                 </motion.div>
                             ))}
                         </motion.div>
                         {!isPreview && (
-                            <div className="pt-10 w-full px-2">
+                            <div className="pt-8 sm:pt-10 w-full px-2">
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); addArrayItem('items', { metric: "50+", label: "Projects" }); }}
-                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
+                                    className={`w-full max-w-5xl mx-auto py-4 sm:py-5 rounded-xl border border-dashed text-sm sm:text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
                                 >
                                     + Add Another Stat
                                 </button>
@@ -1527,53 +1619,137 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                 </div>
             )}
 
-            {/* 11. BLOG SECTION */}
-            {currentType === 'blog' && (
-                <div className="py-12 sm:py-24 px-4">
-                    <motion.div {...fadeUpConfig} className="max-w-6xl mx-auto space-y-12">
+            {/* 11. BLOG / ARTICLES SECTION */}
+            {(currentType === 'blog' || currentType === 'articles') && (
+                <div className="py-8 sm:py-16 md:py-24 px-3 sm:px-6">
+                    <motion.div {...fadeUpConfig} className="max-w-6xl mx-auto space-y-8 sm:space-y-12">
                         <motion.div 
                             initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
-                            className="flex items-center justify-center gap-4 w-full mb-12"
+                            className="flex items-center justify-center gap-3 sm:gap-4 w-full mb-8 sm:mb-12"
                         >
-                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
-                            <h2 className={`text-3xl sm:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
-                                Publications & Articles
+                            <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
+                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                                <TextElement 
+                                    value={data.title || "Publications & Articles"}
+                                    placeholder="Publications & Articles"
+                                    onCommit={(v) => updateScalar("title", v)}
+                                />
                             </h2>
-                            <span className={`h-px w-16 bg-blue-500/50 hidden sm:block`}></span>
+                            <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
                         </motion.div>
-                        <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                             {(data.articles || []).length === 0 && isPreview && (
-                                <div className={`col-span-full p-12 flex flex-col items-center justify-center text-center rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
-                                    <div className="w-16 h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
+                                <div className={`col-span-full p-8 sm:p-12 flex flex-col items-center justify-center text-center rounded-2xl sm:rounded-3xl border ${borderClass} ${cardBg} w-full shadow-sm`}>
+                                    <div className="w-14 h-14 sm:w-16 sm:h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
                                     </div>
-                                    <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>No Articles Yet</h3>
-                                    <p className={`text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
+                                    <h3 className={`text-base sm:text-lg font-bold mb-2 ${textPrimary}`}>No Articles Yet</h3>
+                                    <p className={`text-xs sm:text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
                                 </div>
                             )}
-                            {(data.articles || []).map((item, idx) => (
-                                <motion.a key={idx} variants={staggerItem} href={item.link ? (item.link.startsWith('http') ? item.link : 'https://'+item.link) : '#'} target="_blank" rel="noopener noreferrer" className={"block p-6 sm:p-8 rounded-3xl border shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl group " + cardBg + " " + borderClass}>
-                                    <div className={"text-xs font-bold uppercase tracking-wider mb-3 flex items-center justify-between " + accentText}>
+                            {(data.articles || []).map((item, idx) => {
+                                const CardComponent = isPreview ? motion.a : motion.div;
+                                const linkProps = isPreview ? {
+                                    href: item.link ? (item.link.startsWith('http') ? item.link : 'https://' + item.link) : '#',
+                                    target: "_blank",
+                                    rel: "noopener noreferrer"
+                                } : {};
+
+                                return (
+                                <CardComponent 
+                                    key={idx} 
+                                    variants={staggerItem} 
+                                    {...linkProps}
+                                    className={"relative group block p-5 sm:p-8 rounded-2xl sm:rounded-3xl border shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl " + cardBg + " " + borderClass}
+                                >
+                                    {!isPreview && (
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); removeArrayItem('articles', idx); }}
+                                            className="absolute top-3 right-3 sm:top-4 sm:right-4 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-30 text-xs"
+                                            title="Delete Article"
+                                        >✕</button>
+                                    )}
+                                    <div className={"text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-2 sm:mb-3 flex items-center justify-between " + accentText}>
                                         <span><TextElement value={item.publisher} placeholder="Publisher" onCommit={(v) => updateArrayItem('articles', idx, 'publisher', v)} /></span>
                                         <span><TextElement value={item.date} placeholder="Date" onCommit={(v) => updateArrayItem('articles', idx, 'date', v)} /></span>
                                     </div>
-                                    <h3 className={"text-xl font-bold mb-4 group-hover:text-blue-400 transition-colors " + textPrimary}>
+                                    <h3 className={"text-lg sm:text-xl font-bold mb-3 sm:mb-4 group-hover:text-blue-400 transition-colors " + textPrimary}>
                                         <TextElement value={item.title} placeholder="Article Title" onCommit={(v) => updateArrayItem('articles', idx, 'title', v)} />
                                     </h3>
-                                    <div className={"text-sm font-bold flex items-center gap-2 " + textSecondary}>
-                                        Read Article <span>→</span>
-                                    </div>
-                                </motion.a>
-                            ))}
+                                    {!isPreview ? (
+                                        <div className={`mt-2 text-xs font-mono flex items-center gap-2 p-2 rounded-lg ${trackBgLight} border ${borderClass}`}>
+                                            <span className="shrink-0 font-bold opacity-60">🔗</span>
+                                            <div className="flex-1 truncate">
+                                                <TextElement 
+                                                    value={item.link || ""} 
+                                                    placeholder="Paste Article Link URL" 
+                                                    onCommit={(v) => updateArrayItem('articles', idx, 'link', v)} 
+                                                />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className={"text-xs sm:text-sm font-bold flex items-center gap-2 " + textSecondary}>
+                                            Read Article <span>→</span>
+                                        </div>
+                                    )}
+                                </CardComponent>
+                            );})}
                         </motion.div>
                         {!isPreview && (
-                            <div className="pt-10 w-full px-2">
+                            <div className="pt-8 sm:pt-10 w-full px-2">
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); addArrayItem('articles', { publisher: "Publisher", date: "Date", title: "Article Title", link: "" }); }}
-                                    className={`w-full max-w-5xl mx-auto py-5 rounded-xl border border-dashed text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
+                                    className={`w-full max-w-5xl mx-auto py-4 sm:py-5 rounded-xl border border-dashed text-sm sm:text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
                                 >
                                     + Add Another Article
                                 </button>
+                            </div>
+                        )}
+                    </motion.div>
+                </div>
+            )}
+
+            {/* GITHUB ACTIVITY STANDALONE BLOCK */}
+            {currentType === 'github_activity' && (
+                <div className="py-8 sm:py-16 md:py-20 px-3 sm:px-6">
+                    <motion.div {...fadeUpConfig} className="max-w-5xl mx-auto space-y-8 sm:space-y-12">
+                        <motion.div 
+                            initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false }}
+                            className="flex items-center justify-center gap-3 sm:gap-4 w-full mb-8 sm:mb-12"
+                        >
+                            <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
+                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                                <TextElement 
+                                    value={data.title || "Open Source Activity"}
+                                    placeholder="Open Source Activity"
+                                    onCommit={(v) => updateScalar("title", v)}
+                                />
+                            </h2>
+                            <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
+                        </motion.div>
+                        <div className={`p-4 sm:p-8 rounded-2xl sm:rounded-3xl border shadow-lg overflow-hidden ${cardBg} ${borderClass}`}>
+                            <div className={`w-full overflow-x-auto pb-4 ${textPrimary}`}>
+                                <div className="w-max mx-auto px-2" style={{ color: 'inherit' }}>
+                                    <GitHubCalendar 
+                                        username={(data.githubUsername || "torvalds").trim()} 
+                                        colorScheme={themeDef.bodyBg?.includes('black') || themeDef.bodyBg?.includes('#0') || themeDef.bodyBg?.includes('950') || themeDef.id !== 'minimal_executive' ? 'dark' : 'light'}
+                                        blockSize={12}
+                                        blockMargin={4}
+                                        fontSize={12}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        {!isPreview && (
+                            <div className={`text-sm font-mono w-full ${textSecondary} flex items-center gap-3 p-3 rounded-xl ${trackBgLight} border ${borderClass} max-w-md mx-auto`}>
+                                <span className="text-xl shrink-0">🐙</span>
+                                <div className="flex-1 truncate w-full">
+                                    <TextElement 
+                                        value={data.githubUsername || ""}
+                                        placeholder="Enter GitHub Username (e.g. torvalds)"
+                                        onCommit={(v) => updateScalar("githubUsername", v)}
+                                    />
+                                </div>
                             </div>
                         )}
                     </motion.div>

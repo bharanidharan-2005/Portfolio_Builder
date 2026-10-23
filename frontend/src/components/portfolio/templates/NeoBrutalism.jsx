@@ -72,8 +72,8 @@ const NeoBrutalism = ({ d }) => {
                         <button onClick={d.onVisualize} className="px-8 py-4 bg-[#ff5e5e] text-black border-4 border-black text-xl font-black uppercase shadow-[8px_8px_0_0_rgba(0,0,0,1)] hover:translate-y-2 hover:translate-x-2 hover:shadow-none transition-all flex items-center justify-center gap-3 w-full sm:w-auto">
                             Projects <ArrowRight className="w-6 h-6" />
                         </button>
-                        <button onClick={() => alert("Proceed to portfolio")} className="px-8 py-4 bg-white text-black border-4 border-black text-xl font-black uppercase shadow-[8px_8px_0_0_rgba(0,0,0,1)] hover:translate-y-2 hover:translate-x-2 hover:shadow-none transition-all flex items-center justify-center gap-3 w-full sm:w-auto">
-                            <Download className="w-6 h-6" /> CV
+                        <button onClick={d.onVisualize} className="px-8 py-4 bg-white text-black border-4 border-black text-xl font-black uppercase shadow-[8px_8px_0_0_rgba(0,0,0,1)] hover:translate-y-2 hover:translate-x-2 hover:shadow-none transition-all flex items-center justify-center gap-3 w-full sm:w-auto cursor-pointer">
+                            <Download className="w-6 h-6" /> Explore CV
                         </button>
                     </motion.div>
                 </div>

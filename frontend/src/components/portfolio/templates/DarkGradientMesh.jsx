@@ -69,8 +69,8 @@ const DarkGradientMesh = ({ d }) => {
                     <button onClick={d.onVisualize} className="px-8 py-4 bg-white text-black rounded-full font-bold hover:bg-gray-200 transition-all flex items-center justify-center gap-3">
                         View Projects <ArrowRight className="w-5 h-5" />
                     </button>
-                    <button onClick={() => alert("Proceed to portfolio")} className="px-8 py-4 bg-white/10 text-white backdrop-blur-md border border-white/20 rounded-full font-bold hover:bg-white/20 transition-all flex items-center justify-center gap-3">
-                        <Download className="w-5 h-5" /> Resume
+                    <button onClick={d.onVisualize} className="px-8 py-4 bg-white/10 text-white backdrop-blur-md border border-white/20 rounded-full font-bold hover:bg-white/20 transition-all flex items-center justify-center gap-3 cursor-pointer">
+                        <Download className="w-5 h-5" /> Explore Portfolio
                     </button>
                 </motion.div>
                 

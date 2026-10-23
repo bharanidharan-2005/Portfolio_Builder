@@ -97,8 +97,8 @@ const ParticleNetwork = ({ d }) => {
                         <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform"></span>
                         <span className="relative flex items-center gap-2">Initialize <ArrowRight className="w-5 h-5" /></span>
                     </button>
-                    <button onClick={() => alert("Proceed to portfolio")} className="px-8 py-4 bg-transparent border border-slate-700 text-white rounded-full font-bold hover:bg-slate-800 transition-all flex items-center justify-center gap-3">
-                        <Download className="w-5 h-5" /> Download Log
+                    <button onClick={d.onVisualize} className="px-8 py-4 bg-transparent border border-slate-700 text-white rounded-full font-bold hover:bg-slate-800 transition-all flex items-center justify-center gap-3 cursor-pointer">
+                        <Download className="w-5 h-5" /> Explore Portfolio
                     </button>
                 </motion.div>
                 

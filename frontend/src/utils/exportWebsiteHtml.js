@@ -421,7 +421,7 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
             sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl stagger-container"><h2 class="text-3xl sm:text-4xl uppercase font-black tracking-widest mb-12 text-center ${theme.textPrimary} stagger-item stagger-fade-down">${escapeHtml(data.title) || 'Showcase of Innovations'}</h2><div class="flex flex-col gap-12 w-full max-w-5xl mx-auto">${projectsHtml}</div></section>`;
         } else if (type === 'contact') {
             const formHtml = `
-            <form class="max-w-xl mx-auto space-y-6 mt-12 bg-black/30 p-10 rounded-3xl border ${theme.border} shadow-2xl text-left stagger-item stagger-fade-up hover:border-white/20 transition-colors duration-500" style="transition-delay: 0.3s" onsubmit="event.preventDefault(); alert('Form submitted! (Demo only in static export)');">
+            <form class="max-w-xl mx-auto space-y-6 mt-12 bg-black/30 p-10 rounded-3xl border ${theme.border} shadow-2xl text-left stagger-item stagger-fade-up hover:border-white/20 transition-colors duration-500" style="transition-delay: 0.3s" onsubmit="event.preventDefault(); const btn = this.querySelector('button'); if (btn) { const orig = btn.innerText; btn.innerText = '✓ Message Sent!'; btn.style.background = '#10b981'; setTimeout(() => { btn.innerText = orig; btn.style.background = ''; }, 3000); }">
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Name</label>
                     <input type="text" placeholder="Your name" class="w-full px-6 py-4 rounded-xl border ${theme.border} bg-black/50 ${theme.textPrimary} focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all shadow-inner focus:scale-[1.02]" />
@@ -434,7 +434,7 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Message</label>
                     <textarea placeholder="Tell me about your project..." rows="5" class="w-full px-6 py-4 rounded-xl border ${theme.border} bg-black/50 ${theme.textPrimary} focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all shadow-inner resize-none focus:scale-[1.02]"></textarea>
                 </div>
-                <button class="w-full px-6 py-4 rounded-xl ${theme.accentBg || 'bg-blue-600'} text-white font-bold hover:shadow-[0_15px_30px_rgba(59,130,246,0.4)] hover:-translate-y-2 transition-all flex items-center justify-center gap-2 text-lg mt-6">
+                <button type="submit" class="w-full px-6 py-4 rounded-xl ${theme.accentBg || 'bg-blue-600'} text-white font-bold hover:shadow-[0_15px_30px_rgba(59,130,246,0.4)] hover:-translate-y-2 transition-all flex items-center justify-center gap-2 text-lg mt-6 cursor-pointer">
                     Send Message
                 </button>
             </form>

@@ -135,6 +135,50 @@ export default function HelpModal({ isOpen, onClose, isLight }) {
                         </div>
                     </div>
 
+                    {/* Section 3: Portfolio Sharing & Recruiter Guide */}
+                    <div>
+                        <h3 className={`text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-2 ${isLight ? 'text-blue-600' : 'text-blue-400'}`}>
+                            <Target className="w-4 h-4" /> How to Share Your Portfolio With Recruiters
+                        </h3>
+                        <div className={`p-6 rounded-2xl border space-y-4 ${isLight ? 'bg-blue-50/50 border-blue-200' : 'bg-[#0f1422] border-blue-900/40'}`}>
+                            <div className="flex items-start gap-3 text-xs">
+                                <div className="p-1 rounded-full bg-blue-500/20 text-blue-400 shrink-0 mt-0.5">
+                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                </div>
+                                <div>
+                                    <strong className={isLight ? 'text-slate-800' : 'text-white'}>Universal Public Access:</strong>
+                                    <p className="mt-0.5 opacity-90 leading-relaxed">
+                                        Your portfolio URL requires zero login for hiring managers. Anyone with your link can view your interactive 3D portfolio, live demos, and download your dynamically compiled PDF resume.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-start gap-3 text-xs">
+                                <div className="p-1 rounded-full bg-purple-500/20 text-purple-400 shrink-0 mt-0.5">
+                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                </div>
+                                <div>
+                                    <strong className={isLight ? 'text-slate-800' : 'text-white'}>Live URL Format:</strong>
+                                    <p className="mt-0.5 opacity-90 leading-relaxed font-mono text-[11px] bg-slate-900/40 p-2 rounded-lg border border-slate-700/50 text-blue-300">
+                                        https://your-domain.com/preview/&#123;username&#125;/public
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-start gap-3 text-xs">
+                                <div className="p-1 rounded-full bg-emerald-500/20 text-emerald-400 shrink-0 mt-0.5">
+                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                </div>
+                                <div>
+                                    <strong className={isLight ? 'text-slate-800' : 'text-white'}>Recommended Placement:</strong>
+                                    <p className="mt-0.5 opacity-90 leading-relaxed">
+                                        Add your AuraBuild link directly to your Resume header under your contact information, your LinkedIn profile featured section, and your GitHub bio.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
                 {/* Footer */}

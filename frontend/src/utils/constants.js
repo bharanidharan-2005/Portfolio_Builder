@@ -16,9 +16,9 @@ export const SECTION_LABELS = {
 export const SECTION_ORDER_WEIGHTS = {
     hero: 10,
     about: 20,
-    education: 30,
-    skills: 40,
-    experience: 50,
+    experience: 30,
+    education: 40,
+    skills: 50,
     projects_grid: 60,
     services: 70,
     certifications: 80,

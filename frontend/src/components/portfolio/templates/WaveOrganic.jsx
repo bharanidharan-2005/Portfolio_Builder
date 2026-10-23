@@ -81,8 +81,8 @@ const WaveOrganic = ({ d }) => {
                         <button onClick={d.onVisualize} className="px-8 py-4 bg-[#8eb042] text-white rounded-[2rem] font-bold shadow-lg shadow-[#8eb042]/30 hover:bg-[#799638] transition-all flex items-center justify-center gap-3">
                             Explore Work <ArrowRight className="w-5 h-5" />
                         </button>
-                        <button onClick={() => alert("Proceed to portfolio")} className="px-8 py-4 bg-white text-[#6a8039] border-2 border-[#d9e5a3] rounded-[2rem] font-bold hover:bg-[#f4f7eb] transition-all flex items-center justify-center gap-2">
-                            <Download className="w-5 h-5" /> Resume
+                        <button onClick={d.onVisualize} className="px-8 py-4 bg-white text-[#6a8039] border-2 border-[#d9e5a3] rounded-[2rem] font-bold hover:bg-[#f4f7eb] transition-all flex items-center justify-center gap-2 cursor-pointer">
+                            <Download className="w-5 h-5" /> Explore Resume
                         </button>
                     </motion.div>
                 </div>

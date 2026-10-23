@@ -89,9 +89,9 @@ const BentoBoxGrid = ({ d }) => {
                 </motion.div>
                 
                 {/* Resume Box */}
-                <motion.div variants={item} className="col-span-1 md:col-span-1 row-span-1 bg-zinc-900 text-white rounded-3xl p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-zinc-800 transition-colors" onClick={() => alert("Proceed to portfolio")}>
+                <motion.div variants={item} className="col-span-1 md:col-span-1 row-span-1 bg-zinc-900 text-white rounded-3xl p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-zinc-800 transition-colors" onClick={d.onVisualize}>
                     <Download className="w-8 h-8 text-zinc-400 mb-3" />
-                    <span className="font-semibold text-sm uppercase tracking-widest">Download CV</span>
+                    <span className="font-semibold text-sm uppercase tracking-widest">Explore Portfolio</span>
                 </motion.div>
 
             </motion.div>

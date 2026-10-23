@@ -63,8 +63,8 @@ const MinimalistCentered = ({ d }) => {
                     <button onClick={d.onVisualize} className="px-10 py-5 bg-slate-900 text-white rounded-full text-sm font-bold hover:bg-slate-800 transition-all flex items-center gap-3 hover:gap-5 hover:pr-8">
                         View Projects <ArrowRight className="w-4 h-4" />
                     </button>
-                    <button onClick={() => alert("Please proceed to your main portfolio to download the dynamically generated PDF resume.")} className="px-10 py-5 bg-white text-slate-900 border border-slate-200 rounded-full text-sm font-bold hover:bg-slate-50 transition-all flex items-center gap-2">
-                        <Download className="w-4 h-4" /> Download CV
+                    <button onClick={d.onVisualize} className="px-10 py-5 bg-white text-slate-900 border border-slate-200 rounded-full text-sm font-bold hover:bg-slate-50 transition-all flex items-center gap-2 cursor-pointer">
+                        <Download className="w-4 h-4" /> Download CV / Resume
                     </button>
                 </motion.div>
             </main>

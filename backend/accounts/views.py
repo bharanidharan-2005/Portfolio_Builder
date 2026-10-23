@@ -1,6 +1,7 @@
 import logging
 import os
 import secrets
+from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -149,13 +150,59 @@ def send_login_code_email(email, code, subject=None, message=None):
     return True
 
 
-class RegisterView(APIView):
-    """Initialize a workspace: name + email + password -> unique workspace code.
+def set_auth_cookies(response, access_token, refresh_token):
+    """Attach secure HTTPOnly cookies to the response for cross-site browser sessions."""
+    cookie_max_age_access = int(settings.SIMPLE_JWT.get('ACCESS_TOKEN_LIFETIME', timedelta(minutes=120)).total_seconds()) if hasattr(settings.SIMPLE_JWT.get('ACCESS_TOKEN_LIFETIME'), 'total_seconds') else 7200
+    cookie_max_age_refresh = int(settings.SIMPLE_JWT.get('REFRESH_TOKEN_LIFETIME', timedelta(days=14)).total_seconds()) if hasattr(settings.SIMPLE_JWT.get('REFRESH_TOKEN_LIFETIME'), 'total_seconds') else 1209600
 
-    The account and its unique workspace login code are created immediately —
-    there is no OTP step. The code is emailed (Resend -> Gmail SMTP -> console)
-    and returned so the user can save it. Logging in later only needs the code.
-    """
+    cookie_secure = settings.SIMPLE_JWT.get('AUTH_COOKIE_SECURE', False)
+    cookie_samesite = settings.SIMPLE_JWT.get('AUTH_COOKIE_SAMESITE', 'Lax')
+    cookie_path = settings.SIMPLE_JWT.get('AUTH_COOKIE_PATH', '/')
+
+    # Primary cookies
+    response.set_cookie(
+        key=settings.SIMPLE_JWT.get('AUTH_COOKIE', 'aurabuild_access'),
+        value=str(access_token),
+        max_age=cookie_max_age_access,
+        secure=cookie_secure,
+        httponly=True,
+        samesite=cookie_samesite,
+        path=cookie_path,
+    )
+    response.set_cookie(
+        key=settings.SIMPLE_JWT.get('AUTH_COOKIE_REFRESH', 'aurabuild_refresh'),
+        value=str(refresh_token),
+        max_age=cookie_max_age_refresh,
+        secure=cookie_secure,
+        httponly=True,
+        samesite=cookie_samesite,
+        path=cookie_path,
+    )
+    # Legacy fallbacks
+    response.set_cookie(
+        key='access_token',
+        value=str(access_token),
+        max_age=cookie_max_age_access,
+        secure=cookie_secure,
+        httponly=True,
+        samesite=cookie_samesite,
+        path='/',
+    )
+    response.set_cookie(
+        key='refresh_token',
+        value=str(refresh_token),
+        max_age=cookie_max_age_refresh,
+        secure=cookie_secure,
+        httponly=True,
+        samesite=cookie_samesite,
+        path='/',
+    )
+    return response
+
+
+class RegisterView(APIView):
+    """Register a new user account with Name, Email, and Password.
+    Immediately generates tokens, sets HTTPOnly cookies, and logs the user in."""
 
     permission_classes = [permissions.AllowAny]
 
@@ -163,37 +210,17 @@ class RegisterView(APIView):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        name = serializer.validated_data['name']
-        email = serializer.validated_data['email']
+        name = serializer.validated_data['name'].strip()
+        email = serializer.validated_data['email'].strip().lower()
         password = serializer.validated_data['password']
 
-        if User.objects.filter(email=email).exists():
-            # Account already exists: recover (don't regenerate) the unique
-            # workspace code and email it, so the user can log in with it.
-            user = User.objects.get(email=email)
-            code = get_or_create_workspace_code(user)
-            send_login_code_email(
-                email,
-                code,
-                subject='Your AuraBuild Workspace Login Code',
-                message=(
-                    "An account with this email already exists.\n\n"
-                    f"Your AuraBuild workspace login code is: {code}\n\n"
-                    "Log in using only this code."
-                ),
-            )
+        if User.objects.filter(email__iexact=email).exists():
             return Response({
                 'account_exists': True,
-                'error': (
-                    'An account with this email already exists. '
-                    'We have emailed your workspace login code — use it to log in.'
-                ),
-                'message': (
-                    'An account with this email already exists. '
-                    'We have emailed your workspace login code — use it to log in.'
-                ),
+                'error': 'An account with this email already exists. Please log in instead.',
             }, status=status.HTTP_409_CONFLICT)
 
+        # Create user with properly hashed password
         user = User.objects.create_user(
             username=email,
             email=email,
@@ -202,30 +229,34 @@ class RegisterView(APIView):
         )
         profile = UserProfile.objects.create(user=user, workspace_code=generate_workspace_code())
 
+        # Send workspace key email asynchronously / non-blocking
         send_login_code_email(
             email,
             profile.workspace_code,
-            subject='Your AuraBuild Workspace Login Code',
+            subject='Welcome to AuraBuild — Your Workspace Code',
             message=(
                 f"Welcome to AuraBuild, {name}!\n\n"
-                f"Your workspace login code is: {profile.workspace_code}\n\n"
-                "Save it — you will use it (by itself) to log in from now on."
+                f"Your account has been created. Your permanent workspace login code is: {profile.workspace_code}\n\n"
+                "You can log in anytime using your Email and Password, or using this Workspace Code."
             ),
         )
 
-        return Response({
+        tokens = get_tokens_for_user(user)
+        response = Response({
             'success': True,
+            'access': tokens['access'],
+            'refresh': tokens['refresh'],
             'workspace_code': profile.workspace_code,
-            'user': {'name': name, 'email': email},
-            'message': (
-                'Workspace initialized. Your unique workspace login code has '
-                'been emailed to you — save it, you will use it to log in.'
-            ),
-        })
+            'user': {'name': user.first_name, 'email': user.email},
+            'message': 'Account created successfully! Entering workspace...',
+        }, status=status.HTTP_201_CREATED)
+
+        return set_auth_cookies(response, tokens['access'], tokens['refresh'])
 
 
 class LoginView(APIView):
-    """Log in with the workspace code only. The code is unique per account."""
+    """Authenticate with either (Email + Password) OR (Workspace Access Code).
+    Sets HTTPOnly cookies and returns session tokens."""
 
     permission_classes = [permissions.AllowAny]
 
@@ -233,81 +264,111 @@ class LoginView(APIView):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        code = serializer.validated_data['code'].strip()
-        norm = normalize_code(code)
+        email = serializer.validated_data.get('email', '').strip().lower()
+        password = serializer.validated_data.get('password', '')
+        code = serializer.validated_data.get('code', '').strip()
 
-        if not norm:
-            return Response(
-                {'error': 'Invalid workspace code.'},
-                status=status.HTTP_401_UNAUTHORIZED,
+        user = None
+
+        # 1. Flow A: Authenticate with Email & Password
+        if email and password:
+            from django.contrib.auth import authenticate
+            user = authenticate(request, username=email, password=password)
+            if user is None:
+                user = authenticate(request, email=email, password=password)
+
+            if user is None:
+                return Response(
+                    {'error': 'Invalid email or password. Please verify your credentials and try again.'},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+
+        # 2. Flow B: Authenticate with Workspace Access Code
+        elif code:
+            norm = normalize_code(code)
+            if not norm:
+                return Response(
+                    {'error': 'Invalid workspace access code format.'},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+
+            profile = (
+                UserProfile.objects.select_related('user')
+                .filter(workspace_code__iexact=code)
+                .first()
             )
 
-        # Fast path: exact match (case-insensitive).
-        profile = (
-            UserProfile.objects.select_related('user')
-            .filter(workspace_code__iexact=code)
-            .first()
-        )
+            # Fallback for ambiguous 0/O and 1/l/I
+            if profile is None and ('0' in norm or '1' in norm):
+                for candidate in UserProfile.objects.select_related('user').all():
+                    if normalize_code(candidate.workspace_code) == norm:
+                        profile = candidate
+                        break
 
-        # Fallback: tolerate 0/O and 1/l/I mixups (and case) in older codes.
-        # Only scan when the normalized code actually contains an ambiguous
-        # digit (0 or 1) — unambiguous new codes can never require this, so the
-        # common path stays O(1) instead of scanning every profile.
-        if profile is None and ('0' in norm or '1' in norm):
-            for candidate in UserProfile.objects.select_related('user').all():
-                if normalize_code(candidate.workspace_code) == norm:
-                    profile = candidate
-                    break
+            if profile is None:
+                return Response(
+                    {'error': 'Workspace code not found. Please check your code or log in with your email and password.'},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
 
-        if profile is None:
+            user = profile.user
+
+        else:
             return Response(
-                {'error': 'Invalid workspace code.'},
-                status=status.HTTP_401_UNAUTHORIZED,
+                {'error': 'Please provide either your Email and Password or a Workspace Access Code.'},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-        user = profile.user
+        workspace_code = get_or_create_workspace_code(user)
         tokens = get_tokens_for_user(user)
-        return Response({
+
+        response = Response({
+            'success': True,
             'access': tokens['access'],
             'refresh': tokens['refresh'],
-            'workspace_code': profile.workspace_code,
-            'user': {'name': user.first_name, 'email': user.email},
-        })
+            'workspace_code': workspace_code,
+            'user': {'name': user.first_name or user.username, 'email': user.email},
+            'message': 'Authenticated successfully.',
+        }, status=status.HTTP_200_OK)
+
+        return set_auth_cookies(response, tokens['access'], tokens['refresh'])
 
 
 class MeView(APIView):
+    """Verify session and retrieve current user profile."""
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         workspace_code = get_or_create_workspace_code(request.user)
         return Response({
-            'name': request.user.first_name,
+            'success': True,
+            'id': request.user.id,
+            'name': request.user.first_name or request.user.username,
             'email': request.user.email,
             'workspace_code': workspace_code,
         })
 
+
 class LogoutView(APIView):
-    """
-    Log out the user by clearing the HttpOnly cookies containing the JWT tokens.
-    """
+    """Log out the user by clearing all session cookies."""
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         response = Response({"success": True, "message": "Successfully logged out."})
         
-        # Clear access token cookie
-        auth_cookie_name = settings.SIMPLE_JWT.get('AUTH_COOKIE', 'access_token')
-        response.delete_cookie(
-            auth_cookie_name,
-            samesite=settings.SIMPLE_JWT.get('AUTH_COOKIE_SAMESITE', 'Lax'),
-            domain=settings.SIMPLE_JWT.get('AUTH_COOKIE_DOMAIN', None)
-        )
-        
-        # Clear refresh token cookie
-        response.delete_cookie(
+        cookie_names = [
+            settings.SIMPLE_JWT.get('AUTH_COOKIE', 'aurabuild_access'),
+            settings.SIMPLE_JWT.get('AUTH_COOKIE_REFRESH', 'aurabuild_refresh'),
+            'access_token',
             'refresh_token',
-            samesite=settings.SIMPLE_JWT.get('AUTH_COOKIE_SAMESITE', 'Lax'),
-            domain=settings.SIMPLE_JWT.get('AUTH_COOKIE_DOMAIN', None)
-        )
+            'sessionid',
+        ]
+        
+        cookie_domain = settings.SIMPLE_JWT.get('AUTH_COOKIE_DOMAIN', None)
+        cookie_samesite = settings.SIMPLE_JWT.get('AUTH_COOKIE_SAMESITE', 'Lax')
+
+        for cookie_name in cookie_names:
+            response.delete_cookie(cookie_name, samesite=cookie_samesite, domain=cookie_domain, path='/')
         
         return response
+

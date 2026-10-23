@@ -61,8 +61,8 @@ const RetroArcade = ({ d }) => {
                         <button onClick={d.onVisualize} className="px-8 py-4 bg-[#ff0055] text-white border-2 border-white font-bold uppercase tracking-widest hover:bg-[#ff00ff] transition-colors flex items-center justify-center gap-3 w-full sm:w-auto shadow-[0_0_15px_#ff0055]">
                             PRESS START <ArrowRight className="w-5 h-5" />
                         </button>
-                        <button onClick={() => alert("Proceed to portfolio")} className="px-8 py-4 bg-[#00ffff] text-[#110022] border-2 border-white font-bold uppercase tracking-widest hover:bg-white transition-colors flex items-center justify-center gap-3 w-full sm:w-auto shadow-[0_0_15px_#00ffff]">
-                            <Download className="w-5 h-5" /> GET_CV
+                        <button onClick={d.onVisualize} className="px-8 py-4 bg-[#00ffff] text-[#110022] border-2 border-white font-bold uppercase tracking-widest hover:bg-white transition-colors flex items-center justify-center gap-3 w-full sm:w-auto shadow-[0_0_15px_#00ffff] cursor-pointer">
+                            <Download className="w-5 h-5" /> EXPLORE_CV
                         </button>
                     </div>
                 </motion.div>

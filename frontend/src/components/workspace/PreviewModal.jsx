@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { 
-    X, Monitor, Smartphone, Tablet as TabletIcon, ExternalLink, Copy, LayoutTemplate, ChevronDown
+    X, Monitor, Smartphone, Tablet as TabletIcon, ExternalLink, Copy, LayoutTemplate, ChevronDown, Check
 } from "lucide-react";
 import CanvasContainer from "../../canvas/CanvasContainer.jsx";
 import { PORTFOLIO_THEMES } from "../../canvas/themes.js";
@@ -24,6 +24,7 @@ export default function PreviewModal({
     setTerminalLogs
 }) {
     const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
+    const [copied, setCopied] = useState(false);
     const themeDropdownRef = useRef(null);
 
     useEffect(() => {
@@ -130,12 +131,14 @@ export default function PreviewModal({
                             const cleanUsername = (userData?.name || "developer").toLowerCase().replace(/[^a-z0-9]/g, '');
                             const liveUrl = `${window.location.protocol}//${window.location.host}/preview/${cleanUsername}/public`;
                             navigator.clipboard.writeText(liveUrl);
-                            setTerminalLogs(prev => [...prev, { type: "system", text: "[SYSTEM] Portfolio link copied to clipboard." }]);
+                            setCopied(true);
+                            setTimeout(() => setCopied(false), 2000);
+                            if (setTerminalLogs) setTerminalLogs(prev => [...prev, { type: "system", text: "[SYSTEM] Portfolio link copied to clipboard." }]);
                         }}
-                        className={`p-2 rounded-xl transition-all ${isLight ? 'text-slate-500 hover:text-slate-800 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
-                        title="Copy Shareable Link"
+                        className={`p-2 rounded-xl transition-all ${copied ? 'text-emerald-400 bg-emerald-500/10' : (isLight ? 'text-slate-500 hover:text-slate-800 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-white/10')}`}
+                        title={copied ? "Link Copied!" : "Copy Shareable Link"}
                     >
-                        <Copy className="w-4 h-4" />
+                        {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                     </button>
 
                     <button 

@@ -79,8 +79,8 @@ const Cyberpunk = ({ d }) => {
                         <span className="absolute inset-0 w-full h-full border-2 border-cyan-400 scale-105 group-hover:scale-110 transition-transform"></span>
                         Access Grid <ArrowRight className="w-5 h-5" />
                     </button>
-                    <button onClick={() => alert("Proceed to portfolio")} className="group relative px-8 py-4 bg-transparent border-2 border-pink-500 text-pink-500 font-black uppercase tracking-widest hover:bg-pink-500/10 transition-colors flex items-center justify-center gap-3 w-full sm:w-auto shadow-[0_0_20px_rgba(236,72,153,0.3)]">
-                        <Download className="w-5 h-5" /> DL_Resume
+                    <button onClick={d.onVisualize} className="group relative px-8 py-4 bg-transparent border-2 border-pink-500 text-pink-500 font-black uppercase tracking-widest hover:bg-pink-500/10 transition-colors flex items-center justify-center gap-3 w-full sm:w-auto shadow-[0_0_20px_rgba(236,72,153,0.3)] cursor-pointer">
+                        <Download className="w-5 h-5" /> Explore Portfolio
                     </button>
                 </motion.div>
                 

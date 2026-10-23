@@ -5,12 +5,14 @@ import {
     LayoutTemplate, PenTool, Activity, Link2, ShieldCheck, 
     GraduationCap, Mail, Crosshair, BarChart, 
     Share2, Send, Copy, Edit3, Download,
-    ChevronDown, Check
+    ChevronDown, Check, ChevronRight,
+    Briefcase, Wrench, MessageSquare, Award, BarChart3, BookOpen
 } from "lucide-react";
 import { PORTFOLIO_THEMES, PORTFOLIO_FONTS } from "../../canvas/themes.js";
 import { API } from "../../api";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { downloadPortfolioHtml } from "../../utils/exportWebsiteHtml";
+import { notify } from "../../toast";
 
 
 
@@ -27,7 +29,7 @@ const BROAD_JOB_CONCEPTS = [
 ];
 
 const UNSPLASH_GALLERY = [
-    { id: 'particles_3d', url: 'PARTICLES_3D', label: '✨ Interactive Particles' },
+    { id: 'particles_3d', url: 'PARTICLES_3D', label: 'Interactive Particles' },
     { id: 'abs_particles', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1920&q=80', label: '3D Particles' },
     { id: 'abs_platform', url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=1920&q=80', label: 'Cyber Platform' },
     { id: 'abs_blocks', url: 'https://images.unsplash.com/photo-1605810230434-7631ac76ec81?auto=format&fit=crop&w=1920&q=80', label: 'Dark Blocks' },
@@ -155,7 +157,8 @@ export default function RightSidebar({
     onDeploy,
     onExportZip,
     userData,
-    onTemplateChange
+    onTemplateChange,
+    onClose
 }) {
     const { 
         pages,
@@ -837,33 +840,40 @@ export default function RightSidebar({
 
             {genTab === "generate" && (
                 <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-500">
-                    <div className="space-y-3 pb-8">
+                    <div className="grid grid-cols-2 gap-2.5 pb-8">
                         {[
-                            { title: "Generate Hero Section", sub: "Assembles profile structures & headlines.", icon: Sparkles, type: 'hero' },
-                            { title: "Generate About Me Bio", sub: "Auto-writes deep professional summaries.", icon: User, type: 'about' },
-                            { title: "Generate Education", sub: "Formats academic history and degrees.", icon: GraduationCap, type: 'education' },
-                            { title: "Generate Skills Map", sub: "Quantifies technical and soft skill proficiency.", icon: Zap, type: 'skills' },
-                            { title: "Generate Project Grid", sub: "Populates showcase grids and case studies.", icon: Rocket, type: 'projects_grid' },
-                            { title: "Generate Contact Form", sub: "Builds a functional reach-out section.", icon: Mail, type: 'contact' },
-                        ].map((bp, i) => (
-                            <button
-                                key={i}
-                                disabled={isProcessing}
-                                onClick={() => handleGenerateSection(bp.title, bp.type)}
-                                className={`p-4 border rounded-2xl flex items-start gap-4 text-left transition-all duration-300 group cursor-pointer relative overflow-hidden ${
-                                    isLight 
-                                    ? 'bg-gradient-to-b from-white to-slate-50 border-slate-200 hover:border-blue-400 hover:shadow-[0_10px_30px_rgba(37,99,235,0.12)] hover:-translate-y-1' 
-                                    : 'bg-gradient-to-b from-[#1A1C23] to-[#121319] border-slate-800 hover:border-blue-500/50 hover:shadow-[0_10px_30px_rgba(59,130,246,0.15)] hover:-translate-y-1'
-                                }`}
-                            >
-                                <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-gradient-to-r from-blue-500 to-purple-500`}></div>
-                                <bp.icon className={`w-4 h-4 mt-0.5 shrink-0 transition-colors ${isLight ? 'text-blue-500 group-hover:text-blue-600' : 'text-blue-400 group-hover:text-blue-300'}`} />
-                                <div>
-                                    <div className={`text-xs font-bold transition-colors ${isLight ? 'text-slate-800' : 'text-slate-200'}`}> {bp.title} </div>
-                                    <div className={`text-[10px] mt-1 leading-relaxed transition-colors ${isLight ? 'text-slate-500' : 'text-slate-400 group-hover:text-slate-300'}`}> {bp.sub} </div>
-                                </div>
-                            </button>
-                        ))}
+                            { title: "Hero Section", sub: "Profile & headline", icon: Sparkles, type: 'hero' },
+                            { title: "About Me", sub: "Bio & summary", icon: User, type: 'about' },
+                            { title: "Education", sub: "Academic degrees", icon: GraduationCap, type: 'education' },
+                            { title: "Skills Map", sub: "Skill proficiency", icon: Zap, type: 'skills' },
+                            { title: "Project Grid", sub: "Showcase grids", icon: Rocket, type: 'projects_grid' },
+                            { title: "Contact Form", sub: "Reach-out block", icon: Mail, type: 'contact' },
+                        ].map((bp, i) => {
+                            const IconComponent = bp.icon;
+                            return (
+                                <button
+                                    key={i}
+                                    type="button"
+                                    disabled={isProcessing}
+                                    onClick={() => handleGenerateSection(bp.title, bp.type)}
+                                    className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer group text-center ${
+                                        isLight 
+                                            ? 'bg-white border-slate-200 hover:border-blue-400 hover:bg-blue-50/50 text-slate-700' 
+                                            : 'bg-slate-900/60 backdrop-blur-md border-slate-800 hover:border-blue-500/60 hover:bg-slate-800/80 text-slate-300'
+                                    }`}
+                                >
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                                        isLight 
+                                            ? 'bg-slate-100 group-hover:bg-blue-100 text-slate-600 group-hover:text-blue-600' 
+                                            : 'bg-slate-800/80 group-hover:bg-blue-900/40 text-slate-400 group-hover:text-blue-400'
+                                    }`}>
+                                        <IconComponent className="w-4 h-4" />
+                                    </div>
+                                    <span className="text-[11px] font-medium tracking-tight leading-tight line-clamp-1">{bp.title}</span>
+                                    <span className={`text-[9px] line-clamp-1 ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>{bp.sub}</span>
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -1297,13 +1307,13 @@ export default function RightSidebar({
                         <div className="space-y-2 pt-2">
                             <span className="text-[11px] font-semibold text-slate-500">Custom Accent Color</span>
                             <div className="flex gap-2">
-                                {["#3b82f6", "#8b5cf6", "#ec4899", "#10b981", "#f59e0b", null].map((color, i) => (
+                                {["#7c00ff", "#3b82f6", "#8b5cf6", "#ec4899", "#10b981", "#f59e0b", null].map((color, i) => (
                                     <button 
                                         key={i}
                                         onClick={() => setCustomAccentColor(color)}
                                         className={`w-8 h-8 rounded-full border-2 transition-all ${customAccentColor === color ? 'border-white scale-110 shadow-lg' : 'border-transparent hover:scale-105'}`}
                                         style={{ backgroundColor: color || (isLight ? '#e2e8f0' : '#1e293b') }}
-                                        title={color ? "Set accent color" : "Reset to default"}
+                                        title={color ? (color === "#7c00ff" ? "System Accent (#7c00ff)" : "Set accent color") : "Reset to default"}
                                     >
                                         {!color && <span className="text-[10px] text-slate-400">↺</span>}
                                     </button>
@@ -1637,7 +1647,7 @@ export default function RightSidebar({
                                                 <span key={index} className="inline-flex items-center gap-1.5 break-all">
                                                     <a href={part} target="_blank" rel="noopener noreferrer" className="underline hover:text-white transition-colors">{part}</a>
                                                     <button 
-                                                        onClick={(e) => { e.preventDefault(); navigator.clipboard.writeText(part); alert("Copied to clipboard!"); }}
+                                                        onClick={(e) => { e.preventDefault(); navigator.clipboard.writeText(part); notify("Copied to clipboard!", "success"); }}
                                                         className="p-1 rounded-md bg-white/10 hover:bg-white/20 transition-all cursor-pointer inline-flex items-center"
                                                         title="Copy URL"
                                                     >
@@ -1760,18 +1770,18 @@ export default function RightSidebar({
         }
 
         const quickInsertModules = [
-            { label: "Hero Header", type: "hero", icon: "✨" },
-            { label: "About Bio", type: "about", icon: "👤" },
-            { label: "Experience", type: "experience", icon: "💼" },
-            { label: "Education", type: "education", icon: "🎓" },
-            { label: "Skills Map", type: "skills", icon: "⚡" },
-            { label: "Project Grid", type: "projects_grid", icon: "🚀" },
-            { label: "Services", type: "services", icon: "🛠️" },
-            { label: "Testimonials", type: "testimonials", icon: "💬" },
-            { label: "Certifications", type: "certifications", icon: "📜" },
-            { label: "Key Stats", type: "stats", icon: "📊" },
-            { label: "Blog", type: "blog", icon: "📝" },
-            { label: "Contact Form", type: "contact", icon: "✉️" },
+            { label: "Hero Header", type: "hero", icon: Sparkles },
+            { label: "About Bio", type: "about", icon: User },
+            { label: "Education", type: "education", icon: GraduationCap },
+            { label: "Skills Map", type: "skills", icon: Zap },
+            { label: "Project Grid", type: "projects_grid", icon: Rocket },
+            { label: "Contact Form", type: "contact", icon: Mail },
+            { label: "Experience", type: "experience", icon: Briefcase },
+            { label: "Services", type: "services", icon: Wrench },
+            { label: "Testimonials", type: "testimonials", icon: MessageSquare },
+            { label: "Certifications", type: "certifications", icon: Award },
+            { label: "Key Stats", type: "stats", icon: BarChart3 },
+            { label: "Blog", type: "blog", icon: BookOpen },
         ];
 
         return (
@@ -1783,17 +1793,31 @@ export default function RightSidebar({
 
                 <div className="space-y-4">
                     <label className={`block text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}> Quick Insert Modules </label>
-                    <div className="grid grid-cols-2 gap-3">
-                        {quickInsertModules.map(block => (
-                            <button
-                                key={block.type}
-                                onClick={() => onAddSection && onAddSection(block.type)}
-                                className={`p-5 rounded-2xl border flex flex-col items-center justify-center gap-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer group ${isLight ? 'bg-white border-slate-200 hover:border-blue-400 hover:bg-blue-50/50 text-slate-700' : 'bg-slate-900/40 backdrop-blur-md border-slate-800 hover:border-blue-500 hover:bg-slate-800 text-slate-300 shadow-[0_4px_20px_rgba(0,0,0,0.1)]'}`}
-                            >
-                                <span className="text-2xl group-hover:scale-110 transition-transform duration-300">{block.icon}</span>
-                                <span className="text-[10px] font-bold tracking-wide">{block.label}</span>
-                            </button>
-                        ))}
+                    <div className="grid grid-cols-2 gap-2.5">
+                        {quickInsertModules.map(block => {
+                            const IconComponent = block.icon;
+                            return (
+                                <button
+                                    key={block.type}
+                                    type="button"
+                                    onClick={() => onAddSection && onAddSection(block.type)}
+                                    className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer group text-center ${
+                                        isLight 
+                                            ? 'bg-white border-slate-200 hover:border-blue-400 hover:bg-blue-50/50 text-slate-700' 
+                                            : 'bg-slate-900/60 backdrop-blur-md border-slate-800 hover:border-blue-500/60 hover:bg-slate-800/80 text-slate-300'
+                                    }`}
+                                >
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                                        isLight 
+                                            ? 'bg-slate-100 group-hover:bg-blue-100 text-slate-600 group-hover:text-blue-600' 
+                                            : 'bg-slate-800/80 group-hover:bg-blue-900/40 text-slate-400 group-hover:text-blue-400'
+                                    }`}>
+                                        <IconComponent className="w-4 h-4" />
+                                    </div>
+                                    <span className="text-[11px] font-medium tracking-tight leading-tight line-clamp-1">{block.label}</span>
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             </div>
@@ -1831,7 +1855,7 @@ export default function RightSidebar({
                 <p className={`text-[10px] leading-relaxed mb-4 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                     Select a visually stunning introductory landing page for your generated portfolio.
                 </p>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
                     {templates.map(tpl => (
                         <button
                             key={tpl.id}
@@ -1843,7 +1867,7 @@ export default function RightSidebar({
                             }`}
                         >
                             {tpl.visual}
-                            <div className={`p-3 w-full flex items-center justify-between ${currentTemplate === tpl.id ? (isLight ? 'bg-blue-50' : 'bg-blue-900/30') : ''}`}>
+                            <div className={`p-2.5 sm:p-3 w-full flex items-center justify-between ${currentTemplate === tpl.id ? (isLight ? 'bg-blue-50' : 'bg-blue-900/30') : ''}`}>
                                 <span className={`text-[10px] font-bold tracking-wide truncate ${currentTemplate === tpl.id ? (isLight ? 'text-blue-700' : 'text-blue-400') : (isLight ? 'text-slate-700' : 'text-slate-300')}`}>{tpl.name}</span>
                                 {currentTemplate === tpl.id && <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0" />}
                             </div>
@@ -1856,7 +1880,27 @@ export default function RightSidebar({
 
     return (
         <div className={`h-full w-full flex flex-col transition-colors duration-500 ${isLight ? 'bg-slate-50/50 backdrop-blur-xl' : 'bg-[#0B0C10]/80 backdrop-blur-2xl'}`}>
-            <div className="flex-1 flex flex-col overflow-y-auto p-6 custom-scrollbar">
+            {/* Top Studio Panel Header */}
+            <div className={`px-4 py-2.5 border-b flex items-center justify-between shrink-0 ${isLight ? 'border-slate-200/80 bg-white/70' : 'border-white/10 bg-white/[0.02]'}`}>
+                <div className="flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+                    <span className={`text-[11px] font-black uppercase tracking-wider ${isLight ? 'text-slate-700' : 'text-slate-200'}`}>
+                        {activeTool ? activeTool.replace('_', ' ') : 'AI Studio'}
+                    </span>
+                </div>
+                {onClose && (
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        title="Close Studio Panel"
+                        className={`p-1 rounded-lg transition-colors cursor-pointer ${isLight ? 'text-slate-400 hover:text-slate-700 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+                    >
+                        <ChevronRight className="w-4 h-4" />
+                    </button>
+                )}
+            </div>
+
+            <div className="flex-1 flex flex-col overflow-y-auto p-4 sm:p-5 custom-scrollbar overflow-x-hidden">
                 {activeTool === "generator" && renderContentGenerator()}
                 {activeTool === "matcher" && renderRoleMatcher()}
                 {activeTool === "impact" && renderImpactQuantifier()}
@@ -1869,7 +1913,7 @@ export default function RightSidebar({
                 {(activeTool === "structure" || (!activeTool && activeTool !== "activity_log")) && renderStructureBuilder()}
             </div>
 
-            <div className={`shrink-0 border-t p-6 flex flex-col gap-4 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-10 ${isLight ? 'border-slate-200 bg-white' : 'border-slate-800/80 bg-[#0F111A]'}`}>
+            <div className={`shrink-0 border-t p-4 sm:p-5 flex flex-col gap-3.5 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-10 ${isLight ? 'border-slate-200 bg-white' : 'border-slate-800/80 bg-[#0F111A]'}`}>
                 {/* Sleek Terminal Logs - Hidden on Desktop so the full view takes over, but visible on mobile */}
                 <div ref={logContainerRef} className={`lg:hidden text-[10px] font-mono h-28 overflow-y-auto space-y-2 custom-scrollbar p-3 rounded-xl border shadow-inner ${isLight ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-[#090A0F] border-slate-800 text-slate-400'}`}>
                     <div className="flex items-center gap-1.5 mb-2 opacity-50 pb-2 border-b border-slate-700/50">
@@ -1880,7 +1924,7 @@ export default function RightSidebar({
                     </div>
                     {terminalLogs && terminalLogs.map((log, i) => (
                         <div key={i} className={`flex items-start gap-2 animate-in fade-in slide-in-from-bottom-1 duration-300 ${
-                            log.type === 'system' ? 'opacity-70' : log.type === 'success' ? 'text-emerald-400 font-bold' : log.type === 'error' ? 'text-red-400 font-bold' : log.type === 'user' ? (isLight ? 'text-blue-600 font-bold' : 'text-orange-400 font-bold') : 'italic opacity-50'
+                            log.type === 'system' ? 'opacity-70' : log.type === 'success' ? 'text-emerald-400 font-bold' : log.type === 'error' ? 'text-red-400 font-bold' : log.type === 'user' ? (isLight ? 'text-blue-600 font-bold' : 'text-blue-400 font-bold') : 'italic opacity-50'
                         }`}>
                             <span className="opacity-50 select-none">{">"}</span>
                             <span>{log.text}</span>
@@ -1889,19 +1933,19 @@ export default function RightSidebar({
                 </div>
 
                 {/* AI Chat Input */}
-                <form onSubmit={handleSendMessage} className={`relative flex items-center w-full border rounded-2xl overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-orange-500/50 focus-within:border-transparent shadow-md ${isLight ? 'bg-white border-slate-300' : 'bg-slate-900/40 backdrop-blur-md border-slate-700'}`}>
-                    <div className={`pl-4 ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
-                        <Paperclip className="w-4 h-4 cursor-pointer hover:text-orange-500 transition-colors" />
+                <form onSubmit={handleSendMessage} className={`relative flex items-center w-full border rounded-xl overflow-hidden transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500/40 focus-within:border-blue-500/60 shadow-sm ${isLight ? 'bg-white border-slate-300' : 'bg-slate-900/60 backdrop-blur-md border-slate-700/80'}`}>
+                    <div className={`pl-3.5 ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
+                        <Paperclip className="w-4 h-4 cursor-pointer hover:text-blue-500 transition-colors" />
                     </div>
                     <input
                         type="text"
                         value={chatInput}
                         onChange={(e) => setChatInput(e.target.value)}
                         placeholder="Ask AI Studio anything..."
-                        className={`w-full text-[11px] px-3 py-4 outline-none bg-transparent font-medium ${isLight ? 'text-slate-800 placeholder-slate-400' : 'text-slate-200 placeholder-slate-500'}`}
+                        className={`w-full text-xs px-3 py-3 outline-none bg-transparent font-medium ${isLight ? 'text-slate-800 placeholder-slate-400' : 'text-slate-200 placeholder-slate-500'}`}
                     />
-                    <button type="submit" className="pr-4 text-orange-500 hover:text-orange-400 transition-colors cursor-pointer group">
-                        <Zap className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
+                    <button type="submit" className="pr-3.5 text-blue-500 hover:text-blue-400 transition-colors cursor-pointer group">
+                        <Send className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                     </button>
                 </form>
             </div>

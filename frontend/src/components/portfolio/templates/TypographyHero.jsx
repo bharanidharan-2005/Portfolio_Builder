@@ -59,8 +59,8 @@ const TypographyHero = ({ d }) => {
                             <button onClick={d.onVisualize} className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors group">
                                 <ArrowDownRight className="w-6 h-6 group-hover:rotate-45 transition-transform" />
                             </button>
-                            <button onClick={() => alert("Proceed to portfolio")} className="h-12 px-6 border-2 border-black rounded-full font-bold uppercase text-sm hover:bg-gray-100 transition-colors flex items-center gap-2">
-                                <Download className="w-4 h-4" /> CV
+                            <button onClick={d.onVisualize} className="h-12 px-6 border-2 border-black rounded-full font-bold uppercase text-sm hover:bg-gray-100 transition-colors flex items-center gap-2 cursor-pointer">
+                                <Download className="w-4 h-4" /> Explore CV
                             </button>
                         </div>
                     </motion.div>

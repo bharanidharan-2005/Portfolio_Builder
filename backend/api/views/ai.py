@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import re
+import ast
 import uuid
 import string
 import random
@@ -147,17 +148,110 @@ def generate_text_with_fallback(clients, prompt):
         raise Exception(f"AI generation failed completely. Last Groq error: {last_error} | Gemini error: {e}")
 
 def extract_clean_json_payload(raw_text):
+    if not raw_text or not isinstance(raw_text, str):
+        raise ValueError("AI response was empty or not a string.")
+
+    # 1. Strip markdown fences if present
+    match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', raw_text, re.IGNORECASE)
+    cleaned = match.group(1).strip() if match else raw_text.strip()
+
+    # 2. Extract substring between outermost braces or brackets
+    start_brace = cleaned.find('{')
+    start_bracket = cleaned.find('[')
+    if start_brace != -1 and (start_bracket == -1 or start_brace < start_bracket):
+        end_brace = cleaned.rfind('}')
+        if end_brace != -1:
+            cleaned = cleaned[start_brace:end_brace + 1]
+    elif start_bracket != -1:
+        end_bracket = cleaned.rfind(']')
+        if end_bracket != -1:
+            cleaned = cleaned[start_bracket:end_bracket + 1]
+
+    # 3. Direct parse with strict=False
     try:
-        return json.loads(raw_text)
-    except json.JSONDecodeError:
-        match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', raw_text, re.IGNORECASE)
-        if match:
-            return json.loads(match.group(1))
-        start = raw_text.find('{')
-        end = raw_text.rfind('}')
-        if start != -1 and end != -1:
-            return json.loads(raw_text[start:end + 1])
-        raise ValueError(f"Could not extract JSON from AI response. Raw output starts with: {raw_text[:100]}...")
+        return json.loads(cleaned, strict=False)
+    except Exception:
+        pass
+
+    # 4. Standard syntax cleanup (trailing commas, missing object commas)
+    cur = re.sub(r',\s*([\]}])', r'\1', cleaned)
+    cur = re.sub(r'}\s*{', '}, {', cur)
+    cur = re.sub(r'\]\s*\[', '], [', cur)
+
+    try:
+        return json.loads(cur, strict=False)
+    except Exception:
+        pass
+
+    # 5. Iterative quote and delimiter repair
+    working = cur
+    for _ in range(30):
+        try:
+            return json.loads(working, strict=False)
+        except json.JSONDecodeError as err:
+            pos = err.pos
+            msg = str(err)
+            if ("Expecting ',' delimiter" in msg or "Expecting ':' delimiter" in msg) and pos > 0:
+                last_quote = working.rfind('"', 0, pos)
+                if last_quote > 0 and (last_quote == 0 or working[last_quote - 1] != '\\'):
+                    working = working[:last_quote] + '\\"' + working[last_quote + 1:]
+                    continue
+            elif "Unterminated string" in msg:
+                working = working[:pos] + '"' + working[pos:]
+                continue
+            elif "Expecting property name" in msg or "Expecting value" in msg:
+                fixed = re.sub(r',\s*([\]}])', r'\1', working)
+                if fixed != working:
+                    working = fixed
+                    continue
+            break
+        except Exception:
+            break
+
+    # 6. Try Python ast.literal_eval with boolean mapping
+    try:
+        py_repr = re.sub(r'\btrue\b', 'True', working)
+        py_repr = re.sub(r'\bfalse\b', 'False', py_repr)
+        py_repr = re.sub(r'\bnull\b', 'None', py_repr)
+        res = ast.literal_eval(py_repr)
+        if isinstance(res, (dict, list)):
+            return res
+    except Exception:
+        pass
+
+    # 7. Regex fallback field extraction for structured dictionaries
+    extracted = {}
+    for key in ['name', 'headline', 'about', 'email', 'phone', 'location', 'linkedin', 'github', 'website', 'action', 'section_type']:
+        m = re.search(rf'"{key}"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"', raw_text, re.IGNORECASE)
+        if m:
+            extracted[key] = m.group(1).replace('\\"', '"').replace('\\n', '\n').strip()
+
+    # Extract lists like skills, projects, experience, education, certifications
+    for list_key in ['skills', 'projects', 'experience', 'education', 'certifications', 'publications', 'schools', 'items']:
+        m = re.search(rf'"{list_key}"\s*:\s*\[([\s\S]*?)\]\s*(?:,|$|\}})', raw_text, re.IGNORECASE)
+        if m:
+            items_str = m.group(1)
+            objs = re.findall(r'\{([\s\S]*?)\}', items_str)
+            item_list = []
+            for obj_str in objs:
+                item_dict = {}
+                pairs = re.findall(r'"([a-zA-Z0-9_]+)"\s*:\s*(?:"([^"\\]*(?:\\.[^"\\]*)*)"|([0-9]+)|(\[[^\]]*\]))', obj_str)
+                for pk, pv_str, pv_num, pv_arr in pairs:
+                    if pv_str:
+                        item_dict[pk] = pv_str.replace('\\"', '"')
+                    elif pv_num:
+                        item_dict[pk] = int(pv_num)
+                    elif pv_arr:
+                        item_dict[pk] = [s.strip(' "') for s in pv_arr.strip('[]').split(',') if s.strip()]
+                if item_dict:
+                    item_list.append(item_dict)
+            if item_list:
+                extracted[list_key] = item_list
+
+    if extracted:
+        return extracted
+
+    raise ValueError(f"Could not extract JSON from AI response. Raw output starts with: {raw_text[:120]}...")
 
 # -----------------------------------------------------------------
 # 5. AI SECTION REFINEMENT

@@ -3,6 +3,7 @@ import { API } from '../api';
 import { useAppContext } from './AppContext';
 import { DEFAULT_BLOCK_DATA, SECTION_ORDER_WEIGHTS } from '../utils/constants';
 import { deployAnimatedSite } from '../utils/deploymentUtils';
+import { notify } from '../toast';
 
 export const WorkspaceContext = createContext(null);
 
@@ -105,6 +106,76 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         sectionsRef.current = sections;
     }, [sections]);
 
+    // Helper to ensure projects are not trapped in experience and sections are in canonical portfolio order
+    const sanitizeAndSortSections = (rawSections) => {
+        if (!Array.isArray(rawSections)) return [];
+        
+        let processed = rawSections;
+        const experienceSec = rawSections.find(s => s.section_type === 'experience');
+        
+        if (experienceSec && experienceSec.content_data && Array.isArray(experienceSec.content_data.items)) {
+            const expItems = experienceSec.content_data.items;
+            const projectIndicators = [
+                'assistant', 'builder', 'portal', 'shortlister', 'app', 'system',
+                'platform', 'rag', 'intelligence', 'analyzer', 'dashboard', 'tool',
+                'bot', 'website', 'clone', 'tracker', 'portfolio'
+            ];
+            
+            const projectsToMigrate = [];
+            const genuineExp = [];
+            
+            for (const item of expItems) {
+                const title = String(item.title || '').trim().toLowerCase();
+                const company = String(item.company || '').trim().toLowerCase();
+                const isProj = !company || company === 'company' || company === 'n/a' || projectIndicators.some(ind => title.includes(ind));
+                
+                if (isProj) {
+                    projectsToMigrate.push({
+                        title: item.title,
+                        desc: item.description || item.desc || '',
+                        tags: item.tags || [],
+                        projectUrl: item.projectUrl || item.url || ''
+                    });
+                } else {
+                    genuineExp.push(item);
+                }
+            }
+            
+            if (projectsToMigrate.length > 0) {
+                processed = processed.map(s => {
+                    if (s.section_type === 'projects_grid') {
+                        const currentProjects = s.content_data?.projects || [];
+                        const titles = new Set(currentProjects.map(p => String(p.title || '').toLowerCase()));
+                        const newProjects = [...currentProjects];
+                        for (const p of projectsToMigrate) {
+                            if (!titles.has(p.title.toLowerCase())) {
+                                newProjects.push(p);
+                                titles.add(p.title.toLowerCase());
+                            }
+                        }
+                        return {
+                            ...s,
+                            content_data: { ...s.content_data, projects: newProjects }
+                        };
+                    }
+                    if (s.section_type === 'experience') {
+                        return {
+                            ...s,
+                            content_data: { ...s.content_data, items: genuineExp }
+                        };
+                    }
+                    return s;
+                });
+            }
+        }
+        
+        return [...processed].sort((a, b) => {
+            const wA = SECTION_ORDER_WEIGHTS[a.section_type] ?? a.order ?? 100;
+            const wB = SECTION_ORDER_WEIGHTS[b.section_type] ?? b.order ?? 100;
+            return wA - wB;
+        });
+    };
+
     // BOOT SEQUENCE
     useEffect(() => {
         const loadWorkspace = async () => {
@@ -142,7 +213,7 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
                     setPages(pagesData);
                     const firstPage = pagesData[0];
                     setActivePage(firstPage.name);
-                    setSections(firstPage.sections || []);
+                    setSections(sanitizeAndSortSections(firstPage.sections || []));
                     lastLoadedPage.current = firstPage.name;
                     setTerminalLogs(prev => [...prev, { type: "success", text: "[SUCCESS] Workspace synchronized with backend database." }]);
                 } else {
@@ -160,7 +231,7 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         if (pages.length > 0 && lastLoadedPage.current !== activePage) {
             const pageObj = pages.find(p => p.name === activePage);
             if (pageObj) {
-                setSections(pageObj.sections || []);
+                setSections(sanitizeAndSortSections(pageObj.sections || []));
                 setHistory({ past: [], future: [] }); 
                 lastLoadedPage.current = activePage;
             }
@@ -382,7 +453,7 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
     const handleApplyResumeData = (mode) => {
         if (!resumeReviewData || !resumeReviewData.sections) return;
         
-        const newSections = resumeReviewData.sections;
+        const newSections = sanitizeAndSortSections(resumeReviewData.sections);
         
         if (mode === 'replace') {
             setHistory({ past: [], future: [] }); 
@@ -390,7 +461,7 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
             setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Canvas replaced with extracted sections!` }]);
         } else if (mode === 'append') {
             const currentSections = sectionsRef.current;
-            const updatedSections = [...currentSections, ...newSections];
+            const updatedSections = sanitizeAndSortSections([...currentSections, ...newSections]);
             setSections(updatedSections);
             commitHistory(updatedSections, currentSections);
             setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Extracted sections appended to canvas!` }]);
@@ -421,15 +492,15 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         }
         
         setTerminalLogs(prev => [...prev, { type: "system", text: "[SYSTEM] Initiating secure backend deployment..." }]);
-        alert("Deploying your portfolio to Vercel edge... This may take up to 20 seconds.");
+        notify("Deploying your portfolio to Vercel edge... This may take up to 20 seconds.", "info");
         const result = await deployAnimatedSite({ pages, activePage, selectedSection, localContent, userData });
         if (result.success) {
             setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Deployed successfully to ${result.data.projectUrl}` }]);
-            alert(`Deployed successfully! View it here: ${result.data.projectUrl}`);
+            notify(`Deployed successfully! View it at: ${result.data.projectUrl}`, "success");
             window.open(result.data.projectUrl, '_blank');
         } else {
             setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] ${result.error}` }]);
-            alert(`Deployment Failed: ${result.error}`);
+            notify(`Deployment Failed: ${result.error}`, "error");
         }
     };
 

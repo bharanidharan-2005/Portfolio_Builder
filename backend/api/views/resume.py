@@ -75,17 +75,31 @@ class ResumeUploadAPIView(APIView):
 
         try:
             prompt = (
-                "Parse this resume text into structured JSON with keys: "
-                "name, headline, about, email, phone, location, linkedin, github, website, "
-                "experience[], education[], skills[], projects[], certifications[], publications[]. "
-                "experience[] items use {title, company, dates, description}. "
-                "education[] items use {institution, degree, years, score}. "
-                "skills[] items use {name, level} where level is an integer 0-100. "
-                "projects[] items use {title, desc, tags, projectUrl}. "
-                "certifications[] items use {name, issuer, date}. "
-                "publications[] items use {title, publisher, date, link}. "
-                "linkedin, github and website must be full URLs starting with https://. "
-                "Return ONLY JSON.\n\n" + text
+                "You are an expert resume analyzer. Extract and structure the following resume text into a strictly valid RFC 8259 JSON object.\n"
+                "Return ONLY a JSON object with NO markdown codeblock markers, explanations, or commentary.\n"
+                "Keys must include:\n"
+                "- name: string (Candidate's full name)\n"
+                "- headline: string (Professional title)\n"
+                "- about: string (Professional summary or objective)\n"
+                "- email: string\n"
+                "- phone: string\n"
+                "- location: string\n"
+                "- linkedin: string (Full URL starting with https://)\n"
+                "- github: string (Full URL starting with https://)\n"
+                "- website: string (Full URL starting with https://)\n"
+                "- projects: array of {title, desc, tags, projectUrl}\n"
+                "  CRITICAL RULE FOR PROJECTS: Extract ALL personal projects, academic projects, software applications, web apps, portals, platforms, RAG systems, AI assistants, and developer tools (e.g., AuraBuild, RAG Assistant, Grievance Portal, Resume Shortlister, etc.) into 'projects'. DO NOT put projects into 'experience'.\n"
+                "- experience: array of {title, company, dates, description}\n"
+                "  CRITICAL RULE FOR EXPERIENCE: Only extract ACTUAL employment, corporate jobs, or company internships where the candidate was employed by a recognized company or organization. If there are no formal employer jobs, return an empty array []. NEVER place software projects into 'experience'.\n"
+                "- education: array of {institution, degree, years, score}\n"
+                "- skills: array of {name, level} where level is an integer 0-100\n"
+                "- certifications: array of {name, issuer, date}\n"
+                "- publications: array of {title, publisher, date, link}\n\n"
+                "CRITICAL JSON RULES:\n"
+                "1. Output MUST be valid JSON.\n"
+                "2. All quotes inside string values must be escaped with a backslash (\\\").\n"
+                "3. NO trailing commas before } or ].\n\n"
+                "Resume Content:\n" + text
             )
             
             # Using the new robust fallback handler
@@ -94,6 +108,62 @@ class ResumeUploadAPIView(APIView):
             
             if not isinstance(parsed, dict):
                 raise ValueError("AI response was not a JSON object.")
+
+            # --- INTELLIGENT PROJECT VS WORK EXPERIENCE NORMALIZATION ---
+            # Guard against AI incorrectly placing candidate software projects into 'experience'
+            extracted_projects = parsed.get('projects') or []
+            extracted_experience = parsed.get('experience') or []
+
+            PROJECT_INDICATORS = [
+                'assistant', 'builder', 'portal', 'shortlister', 'app', 'application', 'system',
+                'platform', 'rag', 'intelligence', 'analyzer', 'dashboard', 'tool', 'bot', 'website',
+                'clone', 'tracker', 'detector', 'generator', 'engine', 'classifier', 'etl', 'shortlist',
+                'portfolio'
+            ]
+
+            cleaned_experience = []
+            migrated_projects = []
+
+            for exp in extracted_experience:
+                if not isinstance(exp, dict):
+                    continue
+                title = str(exp.get('title', '')).strip()
+                company = str(exp.get('company', '')).strip()
+                company_lower = company.lower()
+                desc = str(exp.get('description', '') or exp.get('desc', '')).strip()
+                title_lower = title.lower()
+
+                # Determine if this item is actually a software project
+                is_project = False
+                if not company or company_lower in ['', 'company', 'n/a', 'none', 'self', 'personal', 'academic', 'project', 'freelance']:
+                    is_project = True
+                elif any(ind in title_lower for ind in PROJECT_INDICATORS):
+                    is_project = True
+
+                if is_project:
+                    tags = exp.get('tags') or []
+                    if not tags:
+                        common_tech = ['Python', 'React', 'React.js', 'Node.js', 'Django', 'Flask', 'SQL', 'PostgreSQL', 'SQLite', 'Docker', 'Vercel', 'Render', 'Pandas', 'FAISS', 'LLM', 'AI', 'JavaScript', 'HTML5', 'CSS3', 'REST API', 'ETL', 'RAG', 'openpyxl']
+                        tags = [tech for tech in common_tech if tech.lower() in (desc.lower() + " " + title_lower)]
+                    migrated_projects.append({
+                        'title': title,
+                        'desc': desc or title,
+                        'tags': tags,
+                        'projectUrl': exp.get('projectUrl') or exp.get('url') or ''
+                    })
+                else:
+                    cleaned_experience.append(exp)
+
+            # Combine projects without duplicates
+            combined_projects = list(extracted_projects)
+            existing_titles = {str(p.get('title', '')).lower() for p in combined_projects if isinstance(p, dict)}
+            for mp in migrated_projects:
+                if mp['title'].lower() not in existing_titles:
+                    combined_projects.append(mp)
+                    existing_titles.add(mp['title'].lower())
+
+            parsed['projects'] = combined_projects
+            parsed['experience'] = cleaned_experience
         except AIKeyMissingError as e:
             logger.error("AI key missing during resume parse: %s", e)
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
@@ -129,6 +199,22 @@ class ResumeUploadAPIView(APIView):
                 else:
                     skill_items.append({'name': str(s), 'level': 50})
 
+            # Canonical section ordering weights (Contact is always concluding section)
+            SECTION_ORDER_WEIGHTS = {
+                'hero': 10,
+                'about': 20,
+                'experience': 30,
+                'education': 40,
+                'skills': 50,
+                'projects_grid': 60,
+                'services': 70,
+                'certifications': 80,
+                'testimonials': 90,
+                'stats': 100,
+                'blog': 110,
+                'contact': 120,
+            }
+
             mapping = {
                 'hero': {
                     'heading': parsed.get('name'),
@@ -138,21 +224,16 @@ class ResumeUploadAPIView(APIView):
                     'github': parsed.get('github'),
                 },
                 'about': {'bio': parsed.get('about')},
+                'experience': {'items': parsed.get('experience') or []},
                 'education': {'schools': parsed.get('education') or []},
                 'skills': {'items': skill_items},
                 'projects_grid': {
                     'title': parsed.get('projects_title', 'Showcase of Innovations'),
                     'projects': parsed.get('projects') or [],
                 },
-                'experience': {
-                    'items': parsed.get('experience') or [],
-                },
-                'certifications': {
-                    'items': parsed.get('certifications') or [],
-                },
-                'blog': {
-                    'articles': parsed.get('publications') or [],
-                },
+                'services': {'items': parsed.get('services') or []},
+                'certifications': {'items': parsed.get('certifications') or []},
+                'blog': {'articles': parsed.get('publications') or []},
                 'contact': {
                     'text': "Let's connect — reach me via email or any of my channels below.",
                     'email': parsed.get('email'),
@@ -162,17 +243,17 @@ class ResumeUploadAPIView(APIView):
                 },
             }
             for stype, cdata in mapping.items():
-                if cdata:
-                    if stype in sections:
-                        existing = sections[stype].content_data or {}
-                        existing.update({k: v for k, v in cdata.items() if v is not None})
-                        sections[stype].content_data = existing
-                        sections[stype].save()
-                    else:
-                        max_order = page.sections.aggregate(models.Max('order'))['order__max'] or -1
-                        sections[stype] = PortfolioSection.objects.create(
-                            page=page, section_type=stype, order=max_order + 1, content_data=cdata
-                        )
+                order_val = SECTION_ORDER_WEIGHTS.get(stype, 100)
+                if stype in sections:
+                    existing = sections[stype].content_data or {}
+                    existing.update({k: v for k, v in cdata.items() if v is not None})
+                    sections[stype].content_data = existing
+                    sections[stype].order = order_val
+                    sections[stype].save()
+                elif cdata and (stype not in ['experience', 'services', 'certifications', 'blog'] or cdata.get('items') or cdata.get('articles')):
+                    sections[stype] = PortfolioSection.objects.create(
+                        page=page, section_type=stype, order=order_val, content_data=cdata
+                    )
 
             word_count = len(text.split())
             log = AISessionLog.objects.create(

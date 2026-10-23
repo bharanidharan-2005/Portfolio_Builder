@@ -2,9 +2,9 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
 // Full-screen WebGL particle field used as the landing backdrop.
-// Purple/blue/teal "constellation" with mouse parallax, slow drift and a
-// twinkle pass. Respects prefers-reduced-motion by rendering one static frame.
-export default function ThreeBackground({ density = 1500, className = '' }) {
+// Restrained, elegant purple/blue/teal constellation with subtle mouse parallax.
+// Respects prefers-reduced-motion by rendering one static frame.
+export default function ThreeBackground({ density = 950, className = '' }) {
     const mountRef = useRef(null);
 
     useEffect(() => {
@@ -28,7 +28,7 @@ export default function ThreeBackground({ density = 1500, className = '' }) {
         mount.appendChild(renderer.domElement);
 
         // --- Constellation particles (vertex-coloured) ---------------------
-        const colors = [new THREE.Color('#a855f7'), new THREE.Color('#3b82f6'), new THREE.Color('#2dd4bf')];
+        const colors = [new THREE.Color('#818cf8'), new THREE.Color('#3b82f6'), new THREE.Color('#2dd4bf'), new THREE.Color('#a855f7')];
         const positions = new Float32Array(density * 3);
         const colData = new Float32Array(density * 3);
         for (let i = 0; i < density; i += 1) {
@@ -45,10 +45,10 @@ export default function ThreeBackground({ density = 1500, className = '' }) {
         particleGeo.setAttribute('color', new THREE.BufferAttribute(colData, 3));
 
         const particleMat = new THREE.PointsMaterial({
-            size: 0.055,
+            size: 0.045,
             vertexColors: true,
             transparent: true,
-            opacity: 0.9,
+            opacity: 0.55,
             blending: THREE.AdditiveBlending,
             depthWrite: false,
             sizeAttenuation: true,
@@ -56,8 +56,8 @@ export default function ThreeBackground({ density = 1500, className = '' }) {
         const particles = new THREE.Points(particleGeo, particleMat);
         scene.add(particles);
 
-        // --- Second sparse layer of larger glowing sparks ------------------
-        const sparkCount = Math.round(density / 8);
+        // --- Second sparse layer of subtle glowing sparks ------------------
+        const sparkCount = Math.round(density / 10);
         const sparkPos = new Float32Array(sparkCount * 3);
         const sparkCol = new Float32Array(sparkCount * 3);
         for (let i = 0; i < sparkCount; i += 1) {
@@ -73,10 +73,10 @@ export default function ThreeBackground({ density = 1500, className = '' }) {
         sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPos, 3));
         sparkGeo.setAttribute('color', new THREE.BufferAttribute(sparkCol, 3));
         const sparkMat = new THREE.PointsMaterial({
-            size: 0.14,
+            size: 0.09,
             vertexColors: true,
             transparent: true,
-            opacity: 0.55,
+            opacity: 0.30,
             blending: THREE.AdditiveBlending,
             depthWrite: false,
             sizeAttenuation: true,
@@ -106,13 +106,13 @@ export default function ThreeBackground({ density = 1500, className = '' }) {
             rafId = requestAnimationFrame(animate);
             const t = clock.getElapsedTime();
 
-            particles.rotation.y += 0.0006;
-            particles.rotation.x = THREE.MathUtils.lerp(particles.rotation.x, targetY * 0.12, 0.04);
-            particles.rotation.y = THREE.MathUtils.lerp(particles.rotation.y, targetX * 0.3, 0.04);
+            particles.rotation.y += 0.0004;
+            particles.rotation.x = THREE.MathUtils.lerp(particles.rotation.x, targetY * 0.08, 0.025);
+            particles.rotation.y = THREE.MathUtils.lerp(particles.rotation.y, targetX * 0.18, 0.025);
             sparks.rotation.copy(particles.rotation);
 
-            // Gentle breathing "twinkle" of the spark layer.
-            sparkMat.opacity = 0.45 + Math.sin(t * 1.4) * 0.12;
+            // Subtle, restrained breathing twinkle of the spark layer
+            sparkMat.opacity = 0.26 + Math.sin(t * 1.0) * 0.08;
 
             renderer.render(scene, camera);
         };
