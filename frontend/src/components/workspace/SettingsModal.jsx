@@ -79,57 +79,71 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-            <div className={`rounded-2xl shadow-2xl max-w-3xl w-full flex overflow-hidden h-[500px] border animate-in zoom-in-95 ${
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 backdrop-blur-md p-2.5 sm:p-4 animate-in fade-in duration-200">
+            <div className={`rounded-2xl shadow-2xl max-w-3xl w-full flex flex-col md:flex-row overflow-hidden max-h-[92vh] h-[92vh] md:h-[540px] border animate-in zoom-in-95 ${
                 isSystem 
                     ? 'bg-[#0c051a]/95 backdrop-blur-2xl border-[#7c00ff]/40 shadow-[0_0_60px_rgba(124,0,255,0.35)] text-slate-100' 
                     : (isLight ? 'bg-white border-slate-200 text-slate-800' : 'bg-[#0B0C10] border-slate-800 text-slate-100')
             }`}>
                 
-                {/* Settings Sidebar */}
-                <div className={`w-48 sm:w-56 p-4 border-r shrink-0 flex flex-col gap-1 ${
+                {/* Settings Navigation Header / Sidebar */}
+                <div className={`w-full md:w-56 p-3 md:p-4 border-b md:border-b-0 md:border-r shrink-0 flex flex-col justify-between ${
                     isSystem 
                         ? 'bg-[#080314]/90 border-[#7c00ff]/25' 
                         : (isLight ? 'bg-slate-50/50 border-slate-200' : 'bg-[#05050A] border-slate-800')
                 }`}>
-                    <div className="flex items-center justify-between mb-4 px-2">
-                        <h2 className={`text-lg font-bold ${isSystem ? 'text-white drop-shadow-[0_0_8px_rgba(124,0,255,0.5)]' : (isLight ? 'text-slate-800' : 'text-slate-100')}`}>Settings</h2>
-                    </div>
-                    
-                    <button onClick={() => setActiveTab("account")} className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${getTabBtnClass("account")}`}>
-                        <div className="flex items-center gap-2">
-                            <User className="w-4 h-4" /> Account
+                    <div>
+                        {/* Top row with Title and Mobile Close button */}
+                        <div className="flex items-center justify-between mb-2 md:mb-4 px-1 md:px-2">
+                            <h2 className={`text-base md:text-lg font-bold ${isSystem ? 'text-white drop-shadow-[0_0_8px_rgba(124,0,255,0.5)]' : (isLight ? 'text-slate-800' : 'text-slate-100')}`}>Settings</h2>
+                            <button 
+                                onClick={onClose} 
+                                className={`md:hidden p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                    isSystem 
+                                        ? 'text-purple-300 hover:text-white hover:bg-[#7c00ff]/20' 
+                                        : (isLight ? 'text-slate-500 hover:bg-slate-200' : 'text-slate-400 hover:bg-slate-800')
+                                }`}
+                                aria-label="Close Settings"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
                         </div>
-                        {isSaving && <Loader2 className="w-3 h-3 animate-spin opacity-50" />}
-                    </button>
-                    
-                    <button onClick={() => setActiveTab("workspace")} className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${getTabBtnClass("workspace")}`}>
-                        <Shield className="w-4 h-4" /> Workspace
-                    </button>
-                    
-                    <button onClick={() => setActiveTab("appearance")} className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${getTabBtnClass("appearance")}`}>
-                        <Palette className="w-4 h-4" /> Appearance
-                    </button>
+                        
+                        {/* Horizontal scroll on mobile, vertical stack on desktop */}
+                        <div className="flex md:flex-col gap-1.5 overflow-x-auto pb-1 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                            <button onClick={() => setActiveTab("account")} className={`shrink-0 flex items-center justify-between px-3 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all cursor-pointer ${getTabBtnClass("account")}`}>
+                                <div className="flex items-center gap-2">
+                                    <User className="w-3.5 h-3.5 md:w-4 md:h-4" /> Account
+                                </div>
+                                {isSaving && <Loader2 className="w-3 h-3 animate-spin opacity-50 ml-1.5" />}
+                            </button>
+                            
+                            <button onClick={() => setActiveTab("workspace")} className={`shrink-0 flex items-center gap-2 px-3 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all cursor-pointer ${getTabBtnClass("workspace")}`}>
+                                <Shield className="w-3.5 h-3.5 md:w-4 md:h-4" /> Workspace
+                            </button>
+                            
+                            <button onClick={() => setActiveTab("appearance")} className={`shrink-0 flex items-center gap-2 px-3 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all cursor-pointer ${getTabBtnClass("appearance")}`}>
+                                <Palette className="w-3.5 h-3.5 md:w-4 md:h-4" /> Appearance
+                            </button>
 
-                    <button onClick={() => setActiveTab("data")} className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${getTabBtnClass("data")}`}>
-                        <HardDrive className="w-4 h-4" /> Data & Privacy
-                    </button>
+                            <button onClick={() => setActiveTab("data")} className={`shrink-0 flex items-center gap-2 px-3 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all cursor-pointer ${getTabBtnClass("data")}`}>
+                                <HardDrive className="w-3.5 h-3.5 md:w-4 md:h-4" /> Data & Privacy
+                            </button>
+                        </div>
+                    </div>
 
-                    <div className={`mt-auto pt-4 border-t ${isSystem ? 'border-[#7c00ff]/25' : (isLight ? 'border-slate-200' : 'border-slate-800')}`}>
+                    {/* Desktop Logout Button */}
+                    <div className={`mt-auto pt-4 border-t hidden md:block ${isSystem ? 'border-[#7c00ff]/25' : (isLight ? 'border-slate-200' : 'border-slate-800')}`}>
                         <button 
                             onClick={async () => {
                                 setIsLoggingOut(true);
                                 try {
-                                    // 1. Call backend to destroy HttpOnly cookies
                                     await API.post('auth/logout/');
                                 } catch (e) {
                                     console.warn("Backend logout failed or was blocked, forcing local logout", e);
                                 } finally {
-                                    // 2. Destroy all local storage traces
                                     localStorage.removeItem("aurabuild_is_logged_in");
                                     localStorage.removeItem("aurabuild_user");
-                                    
-                                    // 3. Force hard redirect to landing page (wipes all React state)
                                     window.location.href = "/";
                                 }
                             }}
@@ -142,17 +156,17 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                     </div>
                 </div>
 
-                {/* Settings Content */}
-                <div className="flex-1 flex flex-col relative overflow-hidden">
-                    <button onClick={onClose} className={`absolute top-4 right-4 p-1.5 rounded-md transition-colors cursor-pointer z-10 ${
+                {/* Settings Content Area */}
+                <div className="flex-1 flex flex-col relative overflow-hidden min-w-0">
+                    <button onClick={onClose} className={`hidden md:flex absolute top-4 right-4 p-1.5 rounded-md transition-colors cursor-pointer z-10 ${
                         isSystem 
                             ? 'text-purple-300 hover:text-white hover:bg-[#7c00ff]/20' 
                             : (isLight ? 'text-slate-400 hover:bg-slate-100 hover:text-slate-700' : 'text-slate-500 hover:bg-slate-800 hover:text-slate-200')
-                    }`}>
+                    }`} aria-label="Close Settings">
                         <X className="w-5 h-5" />
                     </button>
 
-                    <div className="p-8 overflow-y-auto custom-scrollbar h-full">
+                    <div className="p-4 sm:p-6 md:p-8 overflow-y-auto custom-scrollbar h-full min-w-0 w-full">
                         {activeTab === "account" && (
                             <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
                                 <div>
@@ -201,6 +215,29 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                                             defaultValue={userData?.code || "Auth Token"} 
                                             className={`w-full max-w-md px-4 py-3 rounded-xl border text-sm font-mono opacity-70 cursor-not-allowed ${isLight ? 'bg-slate-100 border-slate-200 text-slate-500' : 'bg-slate-900/50 border-slate-800 text-slate-500'}`} 
                                         />
+                                    </div>
+
+                                    {/* Mobile Logout Option */}
+                                    <div className="md:hidden pt-4 mt-2 border-t border-slate-700/30">
+                                        <button 
+                                            onClick={async () => {
+                                                setIsLoggingOut(true);
+                                                try {
+                                                    await API.post('auth/logout/');
+                                                } catch (e) {
+                                                    console.warn("Backend logout failed", e);
+                                                } finally {
+                                                    localStorage.removeItem("aurabuild_is_logged_in");
+                                                    localStorage.removeItem("aurabuild_user");
+                                                    window.location.href = "/";
+                                                }
+                                            }}
+                                            disabled={isLoggingOut}
+                                            className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all cursor-pointer text-red-500 bg-red-500/10 hover:bg-red-500/20 ${isLoggingOut ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        >
+                                            {isLoggingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
+                                            {isLoggingOut ? 'Logging out...' : 'Logout Session'}
+                                        </button>
                                     </div>
                                 </div>
                             </div>

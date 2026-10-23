@@ -88,10 +88,13 @@ export default function EditableText({
         }
     };
 
-    // Auto-focus and auto-expand height when edit mode opens
+    // Auto-focus, auto-select all text, and auto-expand height when edit mode opens
     useEffect(() => {
         if (editing && inputRef.current) {
             inputRef.current.focus();
+            try {
+                inputRef.current.select();
+            } catch (e) {}
             if (multiline) {
                 inputRef.current.style.height = 'auto';
                 inputRef.current.style.height = `${Math.max(inputRef.current.scrollHeight, 40)}px`;
@@ -108,13 +111,8 @@ export default function EditableText({
     };
 
     const handleTouchEnd = (e) => {
-        const now = Date.now();
-        if (now - lastTapTime.current < 300) {
-            // Quick double tap on mobile
-            e.preventDefault();
-            beginEdit();
-        }
-        lastTapTime.current = now;
+        e.stopPropagation();
+        beginEdit();
     };
 
     if (editing) {
@@ -130,11 +128,14 @@ export default function EditableText({
                         ref={inputRef}
                         value={draft}
                         onChange={handleTextareaInput}
+                        onFocus={(e) => {
+                            try { e.target.select(); } catch (_) {}
+                        }}
                         onBlur={handleBlur}
                         onKeyDown={onKeyDown}
                         placeholder={placeholder}
                         rows={2}
-                        className="w-full max-w-full rounded-lg px-2.5 py-1.5 outline-none border-2 border-[#7c00ff] bg-slate-900/95 text-white font-inherit text-inherit leading-relaxed shadow-[0_0_15px_rgba(124,0,255,0.3)] ring-2 ring-[#7c00ff]/20 resize-y min-h-[50px] max-h-[300px] block"
+                        className="w-full max-w-full rounded-lg px-2.5 py-1.5 outline-none border-2 border-[#7c00ff] bg-slate-900/95 text-white font-inherit text-base sm:text-inherit leading-relaxed shadow-[0_0_15px_rgba(124,0,255,0.3)] ring-2 ring-[#7c00ff]/20 resize-y min-h-[50px] max-h-[300px] block"
                     />
                 ) : (
                     <input
@@ -146,10 +147,13 @@ export default function EditableText({
                             setDraft(val);
                             triggerDebouncedAutosave(val);
                         }}
+                        onFocus={(e) => {
+                            try { e.target.select(); } catch (_) {}
+                        }}
                         onBlur={handleBlur}
                         onKeyDown={onKeyDown}
                         placeholder={placeholder}
-                        className="w-full max-w-full rounded-lg px-2 py-1 outline-none border-2 border-[#7c00ff] bg-slate-900/95 text-white font-inherit text-inherit leading-relaxed shadow-[0_0_15px_rgba(124,0,255,0.3)] ring-2 ring-[#7c00ff]/20 block"
+                        className="w-full max-w-full rounded-lg px-2 py-1 outline-none border-2 border-[#7c00ff] bg-slate-900/95 text-white font-inherit text-base sm:text-inherit leading-relaxed shadow-[0_0_15px_rgba(124,0,255,0.3)] ring-2 ring-[#7c00ff]/20 block"
                     />
                 )}
             </span>
@@ -158,18 +162,25 @@ export default function EditableText({
 
     return (
         <Tag
-            className={`group/editable relative rounded-md transition-all cursor-pointer inline-block max-w-full hover:ring-1 hover:ring-[#7c00ff]/50 hover:bg-[#7c00ff]/10 px-1 -mx-1 ${className} ${
+            className={`group/editable relative rounded-md transition-all cursor-pointer inline-flex items-center gap-1 max-w-full hover:ring-1 hover:ring-[#7c00ff]/50 hover:bg-[#7c00ff]/10 px-1 -mx-1 ${className} ${
                 !value ? 'opacity-60 italic' : ''
             }`}
+            onClick={(e) => {
+                e.stopPropagation();
+                beginEdit();
+            }}
             onDoubleClick={(e) => {
                 e.stopPropagation();
                 beginEdit();
             }}
             onTouchEnd={handleTouchEnd}
-            title="Double-click to edit"
+            title="Click to edit text"
         >
             <span className={multiline ? "break-words" : ""}>
                 {value || placeholder}
+            </span>
+            <span className="opacity-0 group-hover/editable:opacity-70 transition-opacity text-[10px] text-[#7c00ff] select-none shrink-0" title="Click to edit">
+                ✎
             </span>
         </Tag>
     );

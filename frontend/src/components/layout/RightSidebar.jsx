@@ -1903,25 +1903,7 @@ function RightSidebar({
                 {(activeTool === "structure" || (!activeTool && activeTool !== "activity_log")) && renderStructureBuilder()}
             </div>
 
-            <div className={`shrink-0 border-t p-4 sm:p-5 flex flex-col gap-3.5 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-10 ${isSystem ? 'border-[#7c00ff]/25 bg-[#0e0720]/90' : (isLight ? 'border-slate-200 bg-white' : 'border-slate-800/80 bg-[#0F111A]')}`}>
-                {/* Sleek Terminal Logs - Hidden on Desktop so the full view takes over, but visible on mobile */}
-                <div ref={logContainerRef} className={`lg:hidden text-[10px] font-mono h-28 overflow-y-auto space-y-2 custom-scrollbar p-3 rounded-xl border shadow-inner ${isSystem ? 'bg-[#080314] border-[#7c00ff]/30 text-purple-200/80' : (isLight ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-[#090A0F] border-slate-800 text-slate-400')}`}>
-                    <div className="flex items-center gap-1.5 mb-2 opacity-50 pb-2 border-b border-slate-700/50">
-                        <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                        <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                        <span className="ml-2 text-[9px] uppercase tracking-widest">Studio Terminal v2.1</span>
-                    </div>
-                    {terminalLogs && terminalLogs.map((log, i) => (
-                        <div key={i} className={`flex items-start gap-2 animate-in fade-in slide-in-from-bottom-1 duration-300 ${
-                            log.type === 'system' ? 'opacity-70' : log.type === 'success' ? 'text-emerald-400 font-bold' : log.type === 'error' ? 'text-red-400 font-bold' : log.type === 'user' ? (isSystem ? 'text-[#c084fc] font-bold' : (isLight ? 'text-blue-600 font-bold' : 'text-blue-400 font-bold')) : 'italic opacity-50'
-                        }`}>
-                            <span className="opacity-50 select-none">{">"}</span>
-                            <span>{log.text}</span>
-                        </div>
-                    ))}
-                </div>
-
+            <div className={`shrink-0 border-t p-3 sm:p-4 flex flex-col gap-2.5 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-10 ${isSystem ? 'border-[#7c00ff]/25 bg-[#0e0720]/90' : (isLight ? 'border-slate-200 bg-white' : 'border-slate-800/80 bg-[#0F111A]')}`}>
                 {/* AI Chat Input */}
                 <form onSubmit={handleSendMessage} className={`relative flex items-center w-full border rounded-xl overflow-hidden transition-all duration-200 focus-within:ring-2 shadow-sm ${
                     isSystem 

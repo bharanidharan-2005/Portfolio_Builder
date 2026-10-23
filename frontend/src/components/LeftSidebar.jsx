@@ -88,8 +88,8 @@ function LeftSidebar({
         <div className="h-full w-full flex flex-col justify-between py-3 px-2 lg:px-2.5 bg-transparent select-none overflow-y-auto custom-scrollbar overflow-x-hidden">
             <div className="space-y-4">
                 
-                {/* TOP HEADER & PIN TOGGLE */}
-                <div className={`flex items-center pb-2.5 mb-1 border-b transition-all duration-300 ${
+                {/* TOP HEADER & PIN TOGGLE - Hidden on Mobile */}
+                <div className={`hidden lg:flex items-center pb-2.5 mb-1 border-b transition-all duration-300 ${
                     isSystem ? 'border-[#7c00ff]/25' : (isLight ? 'border-slate-200/80' : 'border-white/10')
                 } ${isPinned ? 'justify-between px-1' : 'justify-center lg:group-hover:justify-between px-1'}`}>
                     <div className={`flex items-center gap-1.5 overflow-hidden transition-all duration-300 ${headerClasses}`}>
