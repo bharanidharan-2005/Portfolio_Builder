@@ -171,6 +171,7 @@ export default function RightSidebar({
         customAccentColor, setCustomAccentColor
     } = useWorkspace();
     const isLight = themeMode === 'light';
+    const isSystem = themeMode === 'system';
     const [genTab, setGenTab] = useState("generate");
     const [paletteTab, setPaletteTab] = useState("themes");
     const [chatInput, setChatInput] = useState("");
@@ -1879,12 +1880,12 @@ export default function RightSidebar({
     };
 
     return (
-        <div className={`h-full w-full flex flex-col transition-colors duration-500 ${isLight ? 'bg-slate-50/50 backdrop-blur-xl' : 'bg-[#0B0C10]/80 backdrop-blur-2xl'}`}>
+        <div className={`h-full w-full flex flex-col transition-colors duration-500 ${isSystem ? 'bg-[#0c051a]/95 backdrop-blur-2xl' : (isLight ? 'bg-slate-50/50 backdrop-blur-xl' : 'bg-[#0B0C10]/80 backdrop-blur-2xl')}`}>
             {/* Top Studio Panel Header */}
-            <div className={`px-4 py-2.5 border-b flex items-center justify-between shrink-0 ${isLight ? 'border-slate-200/80 bg-white/70' : 'border-white/10 bg-white/[0.02]'}`}>
+            <div className={`px-4 py-2.5 border-b flex items-center justify-between shrink-0 ${isSystem ? 'border-[#7c00ff]/25 bg-[#0e0720]/80' : (isLight ? 'border-slate-200/80 bg-white/70' : 'border-white/10 bg-white/[0.02]')}`}>
                 <div className="flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-                    <span className={`text-[11px] font-black uppercase tracking-wider ${isLight ? 'text-slate-700' : 'text-slate-200'}`}>
+                    <Sparkles className={`w-3.5 h-3.5 ${isSystem ? 'text-[#c084fc]' : 'text-blue-500'}`} />
+                    <span className={`text-[11px] font-black uppercase tracking-wider ${isSystem ? 'text-purple-200' : (isLight ? 'text-slate-700' : 'text-slate-200')}`}>
                         {activeTool ? activeTool.replace('_', ' ') : 'AI Studio'}
                     </span>
                 </div>
@@ -1893,7 +1894,7 @@ export default function RightSidebar({
                         type="button"
                         onClick={onClose}
                         title="Close Studio Panel"
-                        className={`p-1 rounded-lg transition-colors cursor-pointer ${isLight ? 'text-slate-400 hover:text-slate-700 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+                        className={`p-1 rounded-lg transition-colors cursor-pointer ${isSystem ? 'text-purple-300 hover:text-white hover:bg-[#7c00ff]/20' : (isLight ? 'text-slate-400 hover:text-slate-700 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-white/10')}`}
                     >
                         <ChevronRight className="w-4 h-4" />
                     </button>
@@ -1913,9 +1914,9 @@ export default function RightSidebar({
                 {(activeTool === "structure" || (!activeTool && activeTool !== "activity_log")) && renderStructureBuilder()}
             </div>
 
-            <div className={`shrink-0 border-t p-4 sm:p-5 flex flex-col gap-3.5 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-10 ${isLight ? 'border-slate-200 bg-white' : 'border-slate-800/80 bg-[#0F111A]'}`}>
+            <div className={`shrink-0 border-t p-4 sm:p-5 flex flex-col gap-3.5 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-10 ${isSystem ? 'border-[#7c00ff]/25 bg-[#0e0720]/90' : (isLight ? 'border-slate-200 bg-white' : 'border-slate-800/80 bg-[#0F111A]')}`}>
                 {/* Sleek Terminal Logs - Hidden on Desktop so the full view takes over, but visible on mobile */}
-                <div ref={logContainerRef} className={`lg:hidden text-[10px] font-mono h-28 overflow-y-auto space-y-2 custom-scrollbar p-3 rounded-xl border shadow-inner ${isLight ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-[#090A0F] border-slate-800 text-slate-400'}`}>
+                <div ref={logContainerRef} className={`lg:hidden text-[10px] font-mono h-28 overflow-y-auto space-y-2 custom-scrollbar p-3 rounded-xl border shadow-inner ${isSystem ? 'bg-[#080314] border-[#7c00ff]/30 text-purple-200/80' : (isLight ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-[#090A0F] border-slate-800 text-slate-400')}`}>
                     <div className="flex items-center gap-1.5 mb-2 opacity-50 pb-2 border-b border-slate-700/50">
                         <div className="w-2 h-2 rounded-full bg-red-500"></div>
                         <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
@@ -1924,7 +1925,7 @@ export default function RightSidebar({
                     </div>
                     {terminalLogs && terminalLogs.map((log, i) => (
                         <div key={i} className={`flex items-start gap-2 animate-in fade-in slide-in-from-bottom-1 duration-300 ${
-                            log.type === 'system' ? 'opacity-70' : log.type === 'success' ? 'text-emerald-400 font-bold' : log.type === 'error' ? 'text-red-400 font-bold' : log.type === 'user' ? (isLight ? 'text-blue-600 font-bold' : 'text-blue-400 font-bold') : 'italic opacity-50'
+                            log.type === 'system' ? 'opacity-70' : log.type === 'success' ? 'text-emerald-400 font-bold' : log.type === 'error' ? 'text-red-400 font-bold' : log.type === 'user' ? (isSystem ? 'text-[#c084fc] font-bold' : (isLight ? 'text-blue-600 font-bold' : 'text-blue-400 font-bold')) : 'italic opacity-50'
                         }`}>
                             <span className="opacity-50 select-none">{">"}</span>
                             <span>{log.text}</span>
@@ -1933,18 +1934,22 @@ export default function RightSidebar({
                 </div>
 
                 {/* AI Chat Input */}
-                <form onSubmit={handleSendMessage} className={`relative flex items-center w-full border rounded-xl overflow-hidden transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500/40 focus-within:border-blue-500/60 shadow-sm ${isLight ? 'bg-white border-slate-300' : 'bg-slate-900/60 backdrop-blur-md border-slate-700/80'}`}>
-                    <div className={`pl-3.5 ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
-                        <Paperclip className="w-4 h-4 cursor-pointer hover:text-blue-500 transition-colors" />
+                <form onSubmit={handleSendMessage} className={`relative flex items-center w-full border rounded-xl overflow-hidden transition-all duration-200 focus-within:ring-2 shadow-sm ${
+                    isSystem 
+                        ? 'bg-[#120826] border-[#7c00ff]/40 focus-within:ring-[#7c00ff]/50 focus-within:border-[#7c00ff]' 
+                        : (isLight ? 'bg-white border-slate-300 focus-within:ring-blue-500/40 focus-within:border-blue-500/60' : 'bg-slate-900/60 backdrop-blur-md border-slate-700/80 focus-within:ring-blue-500/40 focus-within:border-blue-500/60')
+                }`}>
+                    <div className={`pl-3.5 ${isSystem ? 'text-[#c084fc]' : (isLight ? 'text-slate-400' : 'text-slate-500')}`}>
+                        <Paperclip className={`w-4 h-4 cursor-pointer transition-colors ${isSystem ? 'hover:text-purple-300' : 'hover:text-blue-500'}`} />
                     </div>
                     <input
                         type="text"
                         value={chatInput}
                         onChange={(e) => setChatInput(e.target.value)}
                         placeholder="Ask AI Studio anything..."
-                        className={`w-full text-xs px-3 py-3 outline-none bg-transparent font-medium ${isLight ? 'text-slate-800 placeholder-slate-400' : 'text-slate-200 placeholder-slate-500'}`}
+                        className={`w-full text-xs px-3 py-3 outline-none bg-transparent font-medium ${isSystem ? 'text-slate-100 placeholder-purple-300/40' : (isLight ? 'text-slate-800 placeholder-slate-400' : 'text-slate-200 placeholder-slate-500')}`}
                     />
-                    <button type="submit" className="pr-3.5 text-blue-500 hover:text-blue-400 transition-colors cursor-pointer group">
+                    <button type="submit" className={`pr-3.5 transition-colors cursor-pointer group ${isSystem ? 'text-[#c084fc] hover:text-white' : 'text-blue-500 hover:text-blue-400'}`}>
                         <Send className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                     </button>
                 </form>

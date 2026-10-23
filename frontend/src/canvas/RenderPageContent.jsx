@@ -95,13 +95,13 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
             if (!value) return null; // Do not show placeholders on the live polished site
             const Tag = as;
             return (
-                <Tag className={`inline-block w-full max-w-full break-words ${multiline ? "whitespace-pre-wrap" : "whitespace-normal"} ${className}`}>
+                <Tag className={`inline-block ${multiline ? "w-full max-w-full break-words whitespace-pre-wrap" : "max-w-full"} ${className}`}>
                     {value}
                 </Tag>
             );
         }
         return (
-            <div className={`inline-block w-full max-w-full whitespace-normal break-words ${className}`}>
+            <div className={`inline-block ${multiline ? "w-full max-w-full whitespace-normal break-words" : "max-w-full"} ${className}`}>
                 <EditableText as={as} value={value} placeholder={placeholder} onCommit={onCommit} multiline={multiline} />
             </div>
         );
@@ -640,11 +640,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
 
                                     <div className={`mt-3 pt-3 border-t flex flex-wrap items-center gap-2 text-xs sm:text-sm overflow-hidden ${innerBorderClass}`}>
                                         <span className={`shrink-0 ${textSecondary}`}>Performance:</span>
-                                        <span className={`font-mono font-bold max-w-full ${accentText}`}>
+                                        <span className={`font-mono font-bold whitespace-nowrap shrink-0 ${accentText}`}>
                                             <TextElement 
                                                 value={school.score || ""}
                                                 placeholder="GPA / Score"
                                                 onCommit={(v) => updateArrayItem("schools", i, "score", v)}
+                                                className="whitespace-nowrap"
                                             />
                                         </span>
                                     </div>

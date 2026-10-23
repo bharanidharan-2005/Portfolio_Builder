@@ -64,6 +64,7 @@ export default function WorkspaceLayout() {
     };
 
     const isLight = themeMode === 'light';
+    const isSystem = themeMode === 'system';
 
     // 3. Render Public Preview Frontpage Override
     if (isPublicPreview && !isFrontpageViewed && sections.length > 0) {
@@ -79,16 +80,30 @@ export default function WorkspaceLayout() {
 
     // 4. Render Main Builder UI
     return (
-        <div className={`h-screen w-full flex flex-col overflow-hidden select-none transition-colors duration-500 font-inter relative ${themeMode === 'dark' ? 'bg-slate-950 text-slate-200' : 'bg-slate-50 text-slate-800'}`}>
-            {themeMode === 'dark' && (
-                <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-slate-950">
+        <div className={`h-screen w-full flex flex-col overflow-hidden select-none transition-colors duration-500 font-inter relative ${
+            isSystem 
+                ? 'bg-[#080314] text-slate-100' 
+                : (isLight ? 'bg-slate-50 text-slate-800' : 'bg-slate-950 text-slate-200')
+        }`}>
+            {(themeMode === 'dark' || isSystem) && (
+                <div className={`fixed inset-0 z-0 pointer-events-none overflow-hidden ${isSystem ? 'bg-[#080314]' : 'bg-slate-950'}`}>
                     <Suspense fallback={null}>
                         <ThreeBackground theme="dark" />
                     </Suspense>
                     {/* Deep Space Gradients */}
-                    <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] bg-indigo-900/10 blur-[150px] rounded-full mix-blend-screen" />
-                    <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-purple-900/10 blur-[150px] rounded-full mix-blend-screen" />
-                    <div className="absolute top-[20%] left-[30%] w-[40%] h-[40%] bg-blue-900/5 blur-[120px] rounded-full mix-blend-screen" />
+                    {isSystem ? (
+                        <>
+                            <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] bg-[#7c00ff]/20 blur-[150px] rounded-full mix-blend-screen" />
+                            <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-[#9933ff]/20 blur-[150px] rounded-full mix-blend-screen" />
+                            <div className="absolute top-[20%] left-[30%] w-[40%] h-[40%] bg-[#5500bb]/20 blur-[120px] rounded-full mix-blend-screen" />
+                        </>
+                    ) : (
+                        <>
+                            <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] bg-indigo-900/10 blur-[150px] rounded-full mix-blend-screen" />
+                            <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-purple-900/10 blur-[150px] rounded-full mix-blend-screen" />
+                            <div className="absolute top-[20%] left-[30%] w-[40%] h-[40%] bg-blue-900/5 blur-[120px] rounded-full mix-blend-screen" />
+                        </>
+                    )}
                     
                     {/* Subtle Starlight Grid overlay */}
                     <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wMykiLz48L3N2Zz4=')] opacity-50"></div>
@@ -143,7 +158,7 @@ export default function WorkspaceLayout() {
                         isLeftPinned ? 'w-60 lg:w-64' : 'w-16 hover:w-60 lg:hover:w-64'
                     } overflow-hidden z-40 shadow-2xl ${
                         isLeftOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-                    } ${isLight ? 'bg-white border-r border-slate-200' : 'bg-white/[0.02] backdrop-blur-2xl border-r border-white/10'}`}>
+                    } ${isSystem ? 'bg-[#0c051a]/95 backdrop-blur-2xl border-r border-[#7c00ff]/25 shadow-[4px_0_24px_rgba(124,0,255,0.12)]' : (isLight ? 'bg-white border-r border-slate-200' : 'bg-white/[0.02] backdrop-blur-2xl border-r border-white/10')}`}>
                         <LeftSidebar 
                             pages={pages}
                             activePage={activePage}
@@ -169,7 +184,7 @@ export default function WorkspaceLayout() {
                 )}
 
                 {/* CENTER: CLEAN LIVE PREVIEW CANVAS */}
-                <main className={`flex-1 min-w-0 h-full flex flex-col relative z-10 overflow-hidden ${isLight ? 'bg-slate-100/50' : 'bg-transparent'}`}>
+                <main className={`flex-1 min-w-0 h-full flex flex-col relative z-10 overflow-hidden ${isSystem ? 'bg-[#06020c]' : (isLight ? 'bg-slate-100/50' : 'bg-transparent')}`}>
                     
 
 
@@ -178,7 +193,11 @@ export default function WorkspaceLayout() {
                         <button
                             onClick={() => setIsRightOpen(true)}
                             title="Open AI Studio Panel"
-                            className="absolute top-1/2 -translate-y-1/2 right-0 z-50 bg-blue-600 hover:bg-blue-500 text-white py-2.5 px-2 rounded-l-2xl shadow-2xl flex items-center gap-1 text-xs font-bold transition-all cursor-pointer hover:pl-3 group border border-r-0 border-blue-400/30"
+                            className={`absolute top-1/2 -translate-y-1/2 right-0 z-50 text-white py-2.5 px-2 rounded-l-2xl shadow-2xl flex items-center gap-1 text-xs font-bold transition-all cursor-pointer hover:pl-3 group ${
+                                isSystem 
+                                    ? 'bg-[#7c00ff] hover:bg-[#6b00dc] shadow-[0_0_22px_rgba(124,0,255,0.7)] border border-r-0 border-[#7c00ff]/60' 
+                                    : 'bg-blue-600 hover:bg-blue-500 border border-r-0 border-blue-400/30'
+                            }`}
                         >
                             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
                             <span className="hidden sm:inline">Studio</span>
@@ -219,7 +238,7 @@ export default function WorkspaceLayout() {
                         isRightOpen 
                             ? 'w-[310px] md:w-[330px] xl:w-[360px] translate-x-0 opacity-100' 
                             : 'w-0 border-l-0 translate-x-full lg:translate-x-0 opacity-0 pointer-events-none'
-                    } ${isLight ? 'bg-white border-slate-200' : 'bg-white/[0.02] backdrop-blur-2xl border-white/10'}`}>
+                    } ${isSystem ? 'bg-[#0c051a]/95 backdrop-blur-2xl border-l border-[#7c00ff]/25 shadow-[-4px_0_24px_rgba(124,0,255,0.12)]' : (isLight ? 'bg-white border-slate-200' : 'bg-white/[0.02] backdrop-blur-2xl border-white/10')}`}>
                         <RightSidebar 
                             userData={userData}
                             activeSectionId={activeSectionId}

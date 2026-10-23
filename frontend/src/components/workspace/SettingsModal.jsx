@@ -7,6 +7,7 @@ import { Palette, Sun, Moon, Sparkles } from "lucide-react";
 export default function SettingsModal({ isOpen, onClose, userData, setUserData, themeMode, onLogout, onDeploy, onExportZip, onResetWorkspace }) {
     const { themeSetting, setThemeSetting } = useAppContext();
     const isLight = themeMode === 'light';
+    const isSystem = themeMode === 'system';
     const [activeTab, setActiveTab] = useState("account");
     
     const [localName, setLocalName] = useState(userData?.name || "Developer");
@@ -65,36 +66,56 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
     
     const liveUrl = `${protocol}//${host}/preview/${cleanUsername}/public`;
 
+    const getTabBtnClass = (tabId) => {
+        const isActive = activeTab === tabId;
+        if (isActive) {
+            if (isSystem) return 'bg-[#7c00ff]/25 text-[#d8b4fe] border border-[#7c00ff]/40 shadow-[0_0_12px_rgba(124,0,255,0.3)]';
+            if (isLight) return 'bg-blue-100 text-blue-700 shadow-sm';
+            return 'bg-blue-900/40 text-blue-400 ring-1 ring-blue-500/20';
+        }
+        if (isSystem) return 'text-purple-300/70 hover:bg-[#7c00ff]/15 hover:text-white';
+        if (isLight) return 'text-slate-600 hover:bg-slate-200';
+        return 'text-slate-400 hover:bg-slate-800';
+    };
+
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className={`rounded-2xl shadow-2xl max-w-3xl w-full flex overflow-hidden h-[500px] border animate-in zoom-in-95 ${isLight ? 'bg-white border-slate-200' : 'bg-[#0B0C10] border-slate-800'}`}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
+            <div className={`rounded-2xl shadow-2xl max-w-3xl w-full flex overflow-hidden h-[500px] border animate-in zoom-in-95 ${
+                isSystem 
+                    ? 'bg-[#0c051a]/95 backdrop-blur-2xl border-[#7c00ff]/40 shadow-[0_0_60px_rgba(124,0,255,0.35)] text-slate-100' 
+                    : (isLight ? 'bg-white border-slate-200 text-slate-800' : 'bg-[#0B0C10] border-slate-800 text-slate-100')
+            }`}>
                 
                 {/* Settings Sidebar */}
-                <div className={`w-48 sm:w-56 p-4 border-r shrink-0 flex flex-col gap-1 ${isLight ? 'bg-slate-50/50 border-slate-200' : 'bg-[#05050A] border-slate-800'}`}>
+                <div className={`w-48 sm:w-56 p-4 border-r shrink-0 flex flex-col gap-1 ${
+                    isSystem 
+                        ? 'bg-[#080314]/90 border-[#7c00ff]/25' 
+                        : (isLight ? 'bg-slate-50/50 border-slate-200' : 'bg-[#05050A] border-slate-800')
+                }`}>
                     <div className="flex items-center justify-between mb-4 px-2">
-                        <h2 className={`text-lg font-bold ${isLight ? 'text-slate-800' : 'text-slate-100'}`}>Settings</h2>
+                        <h2 className={`text-lg font-bold ${isSystem ? 'text-white drop-shadow-[0_0_8px_rgba(124,0,255,0.5)]' : (isLight ? 'text-slate-800' : 'text-slate-100')}`}>Settings</h2>
                     </div>
                     
-                    <button onClick={() => setActiveTab("account")} className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${activeTab === "account" ? (isLight ? 'bg-blue-100 text-blue-700 shadow-sm' : 'bg-blue-900/40 text-blue-400 ring-1 ring-blue-500/20') : (isLight ? 'text-slate-600 hover:bg-slate-200' : 'text-slate-400 hover:bg-slate-800')}`}>
+                    <button onClick={() => setActiveTab("account")} className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${getTabBtnClass("account")}`}>
                         <div className="flex items-center gap-2">
                             <User className="w-4 h-4" /> Account
                         </div>
                         {isSaving && <Loader2 className="w-3 h-3 animate-spin opacity-50" />}
                     </button>
                     
-                    <button onClick={() => setActiveTab("workspace")} className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${activeTab === "workspace" ? (isLight ? 'bg-blue-100 text-blue-700 shadow-sm' : 'bg-blue-900/40 text-blue-400 ring-1 ring-blue-500/20') : (isLight ? 'text-slate-600 hover:bg-slate-200' : 'text-slate-400 hover:bg-slate-800')}`}>
+                    <button onClick={() => setActiveTab("workspace")} className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${getTabBtnClass("workspace")}`}>
                         <Shield className="w-4 h-4" /> Workspace
                     </button>
                     
-                    <button onClick={() => setActiveTab("appearance")} className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${activeTab === "appearance" ? (isLight ? 'bg-blue-100 text-blue-700 shadow-sm' : 'bg-blue-900/40 text-blue-400 ring-1 ring-blue-500/20') : (isLight ? 'text-slate-600 hover:bg-slate-200' : 'text-slate-400 hover:bg-slate-800')}`}>
+                    <button onClick={() => setActiveTab("appearance")} className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${getTabBtnClass("appearance")}`}>
                         <Palette className="w-4 h-4" /> Appearance
                     </button>
 
-                    <button onClick={() => setActiveTab("data")} className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${activeTab === "data" ? (isLight ? 'bg-blue-100 text-blue-700 shadow-sm' : 'bg-blue-900/40 text-blue-400 ring-1 ring-blue-500/20') : (isLight ? 'text-slate-600 hover:bg-slate-200' : 'text-slate-400 hover:bg-slate-800')}`}>
+                    <button onClick={() => setActiveTab("data")} className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${getTabBtnClass("data")}`}>
                         <HardDrive className="w-4 h-4" /> Data & Privacy
                     </button>
 
-                    <div className={`mt-auto pt-4 border-t ${isLight ? 'border-slate-200' : 'border-slate-800'}`}>
+                    <div className={`mt-auto pt-4 border-t ${isSystem ? 'border-[#7c00ff]/25' : (isLight ? 'border-slate-200' : 'border-slate-800')}`}>
                         <button 
                             onClick={async () => {
                                 setIsLoggingOut(true);
@@ -123,7 +144,11 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
 
                 {/* Settings Content */}
                 <div className="flex-1 flex flex-col relative overflow-hidden">
-                    <button onClick={onClose} className={`absolute top-4 right-4 p-1.5 rounded-md transition-colors cursor-pointer z-10 ${isLight ? 'text-slate-400 hover:bg-slate-100 hover:text-slate-700' : 'text-slate-500 hover:bg-slate-800 hover:text-slate-200'}`}>
+                    <button onClick={onClose} className={`absolute top-4 right-4 p-1.5 rounded-md transition-colors cursor-pointer z-10 ${
+                        isSystem 
+                            ? 'text-purple-300 hover:text-white hover:bg-[#7c00ff]/20' 
+                            : (isLight ? 'text-slate-400 hover:bg-slate-100 hover:text-slate-700' : 'text-slate-500 hover:bg-slate-800 hover:text-slate-200')
+                    }`}>
                         <X className="w-5 h-5" />
                     </button>
 
@@ -258,60 +283,78 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                         {activeTab === "appearance" && (
                             <div className="space-y-6 animate-in slide-in-from-right-4 duration-300 h-full flex flex-col">
                                 <div>
-                                    <h3 className={`text-xl font-bold mb-1 uppercase tracking-widest ${isLight ? 'text-slate-800' : 'text-slate-100'}`}>Appearance</h3>
-                                    <p className={`text-sm ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Customize how your AuraBuild workspace looks.</p>
+                                    <h3 className={`text-xl font-bold mb-1 uppercase tracking-widest ${isSystem ? 'text-white drop-shadow-[0_0_8px_rgba(124,0,255,0.4)]' : (isLight ? 'text-slate-800' : 'text-slate-100')}`}>Appearance</h3>
+                                    <p className={`text-sm ${isSystem ? 'text-purple-200/70' : (isLight ? 'text-slate-500' : 'text-slate-400')}`}>Customize how your AuraBuild workspace looks.</p>
                                 </div>
                                 
                                 <div className="space-y-4 pt-2">
-                                    <h4 className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>Theme</h4>
+                                    <h4 className={`text-xs font-bold uppercase tracking-wider ${isSystem ? 'text-[#c084fc]' : (isLight ? 'text-slate-400' : 'text-slate-500')}`}>Theme</h4>
                                     
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                         {/* Light Theme Card */}
                                         <button 
                                             onClick={() => setThemeSetting("light")}
-                                            className={`relative p-5 rounded-2xl flex flex-col items-center justify-center gap-3 border-2 transition-all cursor-pointer text-left h-[160px] ${themeSetting === "light" ? 'border-blue-500 bg-blue-500/5 shadow-md shadow-blue-500/10' : (isLight ? 'border-slate-200 hover:border-slate-300 hover:bg-slate-50' : 'border-slate-800 hover:border-slate-700 hover:bg-slate-800/50')}`}
+                                            className={`relative p-5 rounded-2xl flex flex-col items-center justify-center gap-3 border-2 transition-all cursor-pointer text-left h-[160px] ${
+                                                themeSetting === "light" 
+                                                    ? 'border-blue-500 bg-blue-500/5 shadow-md shadow-blue-500/10' 
+                                                    : (isSystem 
+                                                        ? 'border-[#7c00ff]/20 bg-[#080314]/50 hover:border-[#7c00ff]/40 hover:bg-[#7c00ff]/10' 
+                                                        : (isLight ? 'border-slate-200 hover:border-slate-300 hover:bg-slate-50' : 'border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'))
+                                            }`}
                                         >
                                             {themeSetting === "light" && <div className="absolute top-3 right-3 bg-blue-500 text-white rounded-full p-0.5"><CheckCircle2 className="w-4 h-4" /></div>}
                                             <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white shadow-sm border border-slate-200 text-slate-700">
                                                 <Sun className="w-6 h-6" />
                                             </div>
                                             <div className="text-center">
-                                                <div className={`font-bold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>Light</div>
-                                                <div className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Clean workspace</div>
+                                                <div className={`font-bold ${isSystem ? 'text-purple-100' : (isLight ? 'text-slate-800' : 'text-slate-200')}`}>Light</div>
+                                                <div className={`text-xs mt-0.5 ${isSystem ? 'text-purple-300/60' : (isLight ? 'text-slate-500' : 'text-slate-400')}`}>Clean workspace</div>
                                             </div>
                                         </button>
 
                                         {/* Dark Theme Card */}
                                         <button 
                                             onClick={() => setThemeSetting("dark")}
-                                            className={`relative p-5 rounded-2xl flex flex-col items-center justify-center gap-3 border-2 transition-all cursor-pointer text-left h-[160px] ${themeSetting === "dark" ? 'border-blue-500 bg-blue-500/5 shadow-md shadow-blue-500/10' : (isLight ? 'border-slate-200 hover:border-slate-300 hover:bg-slate-50' : 'border-slate-800 hover:border-slate-700 hover:bg-slate-800/50')}`}
+                                            className={`relative p-5 rounded-2xl flex flex-col items-center justify-center gap-3 border-2 transition-all cursor-pointer text-left h-[160px] ${
+                                                themeSetting === "dark" 
+                                                    ? 'border-blue-500 bg-blue-500/5 shadow-md shadow-blue-500/10' 
+                                                    : (isSystem 
+                                                        ? 'border-[#7c00ff]/20 bg-[#080314]/50 hover:border-[#7c00ff]/40 hover:bg-[#7c00ff]/10' 
+                                                        : (isLight ? 'border-slate-200 hover:border-slate-300 hover:bg-slate-50' : 'border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'))
+                                            }`}
                                         >
                                             {themeSetting === "dark" && <div className="absolute top-3 right-3 bg-blue-500 text-white rounded-full p-0.5"><CheckCircle2 className="w-4 h-4" /></div>}
                                             <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-slate-900 shadow-sm border border-slate-700 text-slate-200">
                                                 <Moon className="w-6 h-6" />
                                             </div>
                                             <div className="text-center">
-                                                <div className={`font-bold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>Dark</div>
-                                                <div className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Dark workspace</div>
+                                                <div className={`font-bold ${isSystem ? 'text-purple-100' : (isLight ? 'text-slate-800' : 'text-slate-200')}`}>Dark</div>
+                                                <div className={`text-xs mt-0.5 ${isSystem ? 'text-purple-300/60' : (isLight ? 'text-slate-500' : 'text-slate-400')}`}>Dark workspace</div>
                                             </div>
                                         </button>
 
                                         {/* System Theme Card */}
                                         <button 
                                             onClick={() => setThemeSetting("system")}
-                                            className={`relative p-5 rounded-2xl flex flex-col items-center justify-center gap-3 border-2 transition-all cursor-pointer text-left h-[160px] overflow-hidden group ${themeSetting === "system" ? 'border-[#7c00ff] bg-[#7c00ff]/10 shadow-lg shadow-[#7c00ff]/20 ring-1 ring-[#7c00ff]/30' : (isLight ? 'border-slate-200 hover:border-slate-300 hover:bg-slate-50' : 'border-slate-800 hover:border-slate-700 hover:bg-slate-800/50')}`}
+                                            className={`relative p-5 rounded-2xl flex flex-col items-center justify-center gap-3 border-2 transition-all cursor-pointer text-left h-[160px] overflow-hidden group ${
+                                                themeSetting === "system" 
+                                                    ? 'border-[#7c00ff] bg-[#7c00ff]/15 shadow-xl shadow-[#7c00ff]/30 ring-2 ring-[#7c00ff]' 
+                                                    : (isSystem 
+                                                        ? 'border-[#7c00ff]/30 bg-[#0d061c] hover:border-[#7c00ff]/60 hover:bg-[#7c00ff]/10' 
+                                                        : (isLight ? 'border-slate-200 hover:border-slate-300 hover:bg-slate-50' : 'border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'))
+                                            }`}
                                         >
                                             {/* AuraBrand Background for System */}
-                                            <div className={`absolute inset-0 bg-gradient-to-br from-[#7c00ff]/25 via-[#9933ff]/15 to-[#5500bb]/20 transition-opacity ${themeSetting === "system" ? 'opacity-100' : 'opacity-30 group-hover:opacity-70'}`}></div>
+                                            <div className={`absolute inset-0 bg-gradient-to-br from-[#7c00ff]/30 via-[#9933ff]/20 to-[#5500bb]/25 transition-opacity ${themeSetting === "system" ? 'opacity-100' : 'opacity-40 group-hover:opacity-80'}`}></div>
                                             
-                                            {themeSetting === "system" && <div className="absolute top-3 right-3 bg-[#7c00ff] text-white rounded-full p-0.5 z-10 shadow-md shadow-[#7c00ff]/50"><CheckCircle2 className="w-4 h-4" /></div>}
+                                            {themeSetting === "system" && <div className="absolute top-3 right-3 bg-[#7c00ff] text-white rounded-full p-0.5 z-10 shadow-[0_0_12px_rgba(124,0,255,0.7)]"><CheckCircle2 className="w-4 h-4" /></div>}
                                             
-                                            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-[#7c00ff] via-[#9400d3] to-[#5500bb] shadow-[0_4px_20px_rgba(124,0,255,0.5)] border border-white/30 text-white relative z-10">
+                                            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-[#7c00ff] via-[#9400d3] to-[#5500bb] shadow-[0_4px_25px_rgba(124,0,255,0.6)] border border-white/40 text-white relative z-10">
                                                 <Sparkles className="w-6 h-6" />
                                             </div>
                                             <div className="text-center relative z-10">
-                                                <div className={`font-bold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>System</div>
-                                                <div className={`text-[10px] sm:text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Follow device</div>
+                                                <div className={`font-bold ${themeSetting === "system" ? 'text-white' : (isSystem ? 'text-purple-200' : (isLight ? 'text-slate-800' : 'text-slate-200'))}`}>System</div>
+                                                <div className={`text-[10px] sm:text-xs mt-0.5 font-semibold ${themeSetting === "system" ? 'text-[#c084fc]' : (isSystem ? 'text-purple-300/70' : (isLight ? 'text-slate-500' : 'text-slate-400'))}`}>Blue-Violet (#7c00ff)</div>
                                             </div>
                                         </button>
                                     </div>

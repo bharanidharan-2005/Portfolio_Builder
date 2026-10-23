@@ -34,17 +34,20 @@ export default function LeftSidebar({
     onTogglePin
 }) {
     const isLight = themeMode === 'light';
+    const isSystem = themeMode === 'system';
 
     const fileInputRef = useRef(null);
     const [uploadedFileName, setUploadedFileName] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
 
-    const textMuted = isLight ? "text-slate-500" : "text-slate-400";
-    const textDefault = isLight ? "text-slate-700" : "text-slate-200";
-    const hoverBg = isLight ? "hover:bg-slate-100/80" : "hover:bg-slate-800/60";
-    const activeBg = isLight 
-        ? "bg-blue-50/90 border-blue-200/90 text-blue-700 shadow-xs" 
-        : "bg-blue-600/15 border-blue-500/30 text-blue-400 shadow-xs";
+    const textMuted = isSystem ? "text-purple-300/70" : (isLight ? "text-slate-500" : "text-slate-400");
+    const textDefault = isSystem ? "text-slate-100" : (isLight ? "text-slate-700" : "text-slate-200");
+    const hoverBg = isSystem ? "hover:bg-[#7c00ff]/15 hover:text-[#c084fc]" : (isLight ? "hover:bg-slate-100/80" : "hover:bg-slate-800/60");
+    const activeBg = isSystem 
+        ? "bg-[#7c00ff]/20 border-[#7c00ff]/40 text-[#c084fc] shadow-[0_0_12px_rgba(124,0,255,0.35)]" 
+        : (isLight 
+            ? "bg-blue-50/90 border-blue-200/90 text-blue-700 shadow-xs" 
+            : "bg-blue-600/15 border-blue-500/30 text-blue-400 shadow-xs");
 
     // Dynamic visibility classes depending on whether the sidebar is pinned or collapsible on hover
     const labelClasses = isPinned
@@ -87,10 +90,10 @@ export default function LeftSidebar({
                 
                 {/* TOP HEADER & PIN TOGGLE */}
                 <div className={`flex items-center pb-2.5 mb-1 border-b transition-all duration-300 ${
-                    isLight ? 'border-slate-200/80' : 'border-white/10'
+                    isSystem ? 'border-[#7c00ff]/25' : (isLight ? 'border-slate-200/80' : 'border-white/10')
                 } ${isPinned ? 'justify-between px-1' : 'justify-center lg:group-hover:justify-between px-1'}`}>
                     <div className={`flex items-center gap-1.5 overflow-hidden transition-all duration-300 ${headerClasses}`}>
-                        <span className={`text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${isSystem ? 'text-purple-200' : (isLight ? 'text-slate-600' : 'text-slate-300')}`}>
                             Navigation
                         </span>
                     </div>
@@ -100,13 +103,15 @@ export default function LeftSidebar({
                         title={isPinned ? "Unpin sidebar (collapse to rail on leave)" : "Pin sidebar (keep stably open)"}
                         className={`p-1.5 rounded-lg transition-all duration-200 flex items-center justify-center shrink-0 cursor-pointer ${
                             isPinned 
-                                ? (isLight ? 'bg-blue-100/80 text-blue-700 border border-blue-300 hover:bg-blue-200 shadow-xs' : 'bg-blue-500/25 text-blue-400 border border-blue-500/40 hover:bg-blue-500/35 shadow-xs') 
-                                : (isLight ? 'text-slate-400 hover:text-slate-700 hover:bg-slate-100' : 'text-slate-400 hover:text-slate-200 hover:bg-white/10')
+                                ? (isSystem 
+                                    ? 'bg-[#7c00ff]/25 text-[#c084fc] border border-[#7c00ff]/50 hover:bg-[#7c00ff]/35 shadow-[0_0_12px_rgba(124,0,255,0.35)]' 
+                                    : (isLight ? 'bg-blue-100/80 text-blue-700 border border-blue-300 hover:bg-blue-200 shadow-xs' : 'bg-blue-500/25 text-blue-400 border border-blue-500/40 hover:bg-blue-500/35 shadow-xs')) 
+                                : (isSystem ? 'text-purple-300/60 hover:text-purple-100 hover:bg-[#7c00ff]/20' : (isLight ? 'text-slate-400 hover:text-slate-700 hover:bg-slate-100' : 'text-slate-400 hover:text-slate-200 hover:bg-white/10'))
                         }`}
                         aria-label={isPinned ? "Unpin sidebar" : "Pin sidebar"}
                     >
                         {isPinned ? (
-                            <Pin className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 fill-blue-500/30 rotate-45 transition-transform" />
+                            <Pin className={`w-3.5 h-3.5 rotate-45 transition-transform ${isSystem ? 'text-[#c084fc] fill-[#7c00ff]/40' : 'text-blue-600 dark:text-blue-400 fill-blue-500/30'}`} />
                         ) : (
                             <PinOff className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100 transition-opacity" />
                         )}
@@ -121,7 +126,11 @@ export default function LeftSidebar({
                         </span> 
                         <button 
                             onClick={() => onAddPage && onAddPage("New Page")} 
-                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors whitespace-nowrap cursor-pointer px-1 py-0.5 rounded hover:bg-blue-50 dark:hover:bg-blue-950/30" 
+                            className={`inline-flex items-center gap-1 text-[11px] font-semibold transition-colors whitespace-nowrap cursor-pointer px-1 py-0.5 rounded ${
+                                isSystem 
+                                    ? 'text-[#c084fc] hover:text-[#d8b4fe] hover:bg-[#7c00ff]/20' 
+                                    : 'text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/30'
+                            }`} 
                             type="button"
                             title="Add new page"
                         >
@@ -152,7 +161,7 @@ export default function LeftSidebar({
                                     }`}
                                 >
                                     <span className="shrink-0 w-6 h-6 rounded-lg flex justify-center items-center">
-                                        <FileText className={`w-4 h-4 ${isCurrent ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
+                                        <FileText className={`w-4 h-4 ${isCurrent ? (isSystem ? 'text-[#c084fc]' : 'text-blue-600 dark:text-blue-400') : (isSystem ? 'text-purple-300/60' : 'text-slate-400')}`} />
                                     </span>
                                     <span className={`truncate whitespace-nowrap transition-all duration-300 ${labelClasses}`}>
                                         {pageName}
@@ -193,16 +202,18 @@ export default function LeftSidebar({
                         onClick={() => fileInputRef.current && fileInputRef.current.click()}
                         className={`w-full flex items-center py-2.5 px-2 rounded-xl border border-dashed text-xs font-semibold transition-all overflow-hidden whitespace-nowrap cursor-pointer ${
                             isUploading 
-                                ? 'opacity-70 cursor-not-allowed bg-blue-500/10 border-blue-500/50 text-blue-500'
+                                ? (isSystem ? 'opacity-70 cursor-not-allowed bg-[#7c00ff]/10 border-[#7c00ff]/50 text-[#c084fc]' : 'opacity-70 cursor-not-allowed bg-blue-500/10 border-blue-500/50 text-blue-500')
                                 : uploadedFileName 
                                     ? (isLight ? 'border-emerald-400 text-emerald-700 bg-emerald-50/80' : 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10')
-                                    : (isLight ? 'border-blue-300 text-blue-600 hover:bg-blue-50/70 hover:border-blue-400' : 'border-blue-500/40 text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/70')
+                                    : (isSystem 
+                                        ? 'border-[#7c00ff]/40 text-[#c084fc] hover:bg-[#7c00ff]/15 hover:border-[#7c00ff]/70 shadow-[0_0_10px_rgba(124,0,255,0.15)]' 
+                                        : (isLight ? 'border-blue-300 text-blue-600 hover:bg-blue-50/70 hover:border-blue-400' : 'border-blue-500/40 text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/70'))
                         }`}
                     >
                         {isUploading ? (
                             <>
                                 <span className="shrink-0 w-6 h-6 flex justify-center items-center">
-                                    <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                                    <Loader2 className={`w-4 h-4 animate-spin ${isSystem ? 'text-[#c084fc]' : 'text-blue-500'}`} />
                                 </span>
                                 <span className={`transition-all duration-300 ${labelClasses}`}>Parsing...</span>
                             </>
@@ -216,7 +227,7 @@ export default function LeftSidebar({
                         ) : (
                             <>
                                 <span className="shrink-0 w-6 h-6 flex justify-center items-center">
-                                    <FileUp className="w-4 h-4 text-blue-500" />
+                                    <FileUp className={`w-4 h-4 ${isSystem ? 'text-[#c084fc]' : 'text-blue-500'}`} />
                                 </span>
                                 <span className={`transition-all duration-300 ${labelClasses}`}>Upload Resume</span>
                             </>
@@ -244,12 +255,14 @@ export default function LeftSidebar({
                                     onClick={() => onSelectTool && onSelectTool(tool.id)}
                                     className={`w-full flex items-center px-2 py-2 rounded-xl text-xs font-semibold transition-all text-left border cursor-pointer ${
                                         isSelected
-                                            ? "bg-blue-600 text-white font-bold shadow-md shadow-blue-600/20 border-blue-600"
+                                            ? (isSystem 
+                                                ? "bg-[#7c00ff] text-white font-bold shadow-[0_0_16px_rgba(124,0,255,0.6)] border-[#7c00ff]" 
+                                                : "bg-blue-600 text-white font-bold shadow-md shadow-blue-600/20 border-blue-600")
                                             : `border-transparent ${textMuted} ${hoverBg} hover:${textDefault}`
                                     }`}
                                 >
                                     <span className="shrink-0 w-6 h-6 rounded-lg flex justify-center items-center">
-                                        <IconComponent className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
+                                        <IconComponent className={`w-4 h-4 ${isSelected ? 'text-white' : (isSystem ? 'text-purple-300/70' : 'text-slate-400')}`} />
                                     </span>
                                     <span className={`truncate whitespace-nowrap transition-all duration-300 ${labelClasses}`}>
                                         {tool.name}
@@ -262,20 +275,22 @@ export default function LeftSidebar({
             </div>
 
             {/* Settings & Version attached to the bottom */}
-            <div className={`mt-auto border-t pt-3 flex items-center transition-all duration-300 ${isLight ? 'border-slate-200' : 'border-slate-800'} ${isPinned ? 'justify-between px-1' : 'justify-center lg:group-hover:justify-between px-1'}`}>
+            <div className={`mt-auto border-t pt-3 flex items-center transition-all duration-300 ${isSystem ? 'border-[#7c00ff]/25' : (isLight ? 'border-slate-200' : 'border-slate-800')} ${isPinned ? 'justify-between px-1' : 'justify-center lg:group-hover:justify-between px-1'}`}>
                 <div className={`flex items-center gap-1.5 overflow-hidden transition-all duration-300 pl-1 ${headerClasses}`}>
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                    <span className={`text-[10px] font-medium tracking-wide whitespace-nowrap ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                    <span className={`text-[10px] font-medium tracking-wide whitespace-nowrap ${isSystem ? 'text-purple-200/70' : (isLight ? 'text-slate-500' : 'text-slate-400')}`}>
                         AuraBuild v1.0.0
                     </span>
                 </div>
                 
                 <button
                     onClick={onOpenSettings}
-                    className={`p-2 rounded-xl transition-all shadow-xs cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 ${
-                        isLight 
-                            ? 'text-slate-600 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:text-slate-900' 
-                            : 'text-slate-400 bg-slate-900/60 border border-slate-800 hover:bg-slate-800 hover:text-slate-100'
+                    className={`p-2 rounded-xl transition-all shadow-xs cursor-pointer focus-visible:ring-2 ${
+                        isSystem 
+                            ? 'text-[#c084fc] bg-[#7c00ff]/20 border border-[#7c00ff]/40 hover:bg-[#7c00ff]/35 hover:text-white shadow-[0_0_12px_rgba(124,0,255,0.35)] focus-visible:ring-[#7c00ff]' 
+                            : (isLight 
+                                ? 'text-slate-600 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-blue-500' 
+                                : 'text-slate-400 bg-slate-900/60 border border-slate-800 hover:bg-slate-800 hover:text-slate-100 focus-visible:ring-blue-500')
                     }`}
                     title="Account Settings"
                     aria-label="Account Settings"

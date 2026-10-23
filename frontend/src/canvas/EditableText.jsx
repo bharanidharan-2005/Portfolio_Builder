@@ -168,7 +168,7 @@ export default function EditableText({
             onTouchEnd={handleTouchEnd}
             title="Double-click to edit"
         >
-            <span className="break-words">
+            <span className={multiline ? "break-words" : ""}>
                 {value || placeholder}
             </span>
         </Tag>
