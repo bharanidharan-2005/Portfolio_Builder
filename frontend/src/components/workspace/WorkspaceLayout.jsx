@@ -1,8 +1,10 @@
 import { useState, useCallback, lazy, Suspense } from "react";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { useAppContext } from "../../context/AppContext";
+import { API } from "../../api";
 import { TopNav } from "../layout/TopNav.jsx";
 import LeftSidebar from "../LeftSidebar.jsx";
+
 import RightSidebar from "../layout/RightSidebar.jsx"; 
 import CanvasContainer from "../../canvas/CanvasContainer.jsx";
 import SettingsModal from "./SettingsModal.jsx";
@@ -74,6 +76,12 @@ export default function WorkspaceLayout() {
     const handleToggleRight = useCallback(() => setIsRightOpen(prev => !prev), []);
     const handleCloseRight = useCallback(() => setIsRightOpen(false), []);
     const handleOpenRight = useCallback(() => setIsRightOpen(true), []);
+    const handleThemeChange = useCallback((newTheme) => {
+        setUserData(prev => ({ ...prev, theme: newTheme }));
+        if (!isPublicPreview) {
+            API.patch('portfolio-settings/', { theme: newTheme }).catch(() => {});
+        }
+    }, [setUserData, isPublicPreview]);
     const handleTemplateChange = useCallback((newTpl) => {
         setUserData(prev => ({ ...prev, frontpageTemplate: newTpl }));
         if (typeof window !== 'undefined') {
@@ -92,11 +100,13 @@ export default function WorkspaceLayout() {
         }
         setTerminalLogs(prev => [...prev, { type: "info", text: `[FRONTPAGE] Switched landing template to: ${newTpl}` }]);
     }, [setUserData, userData?.name, isPublicPreview, sections, handleUpdateSectionContent, setTerminalLogs]);
+    const handleOpenHelp = useCallback(() => setIsHelpModalOpen(true), []);
     const handleCloseHelp = useCallback(() => setIsHelpModalOpen(false), []);
     const handleOpenSettings = useCallback(() => setIsSettingsModalOpen(true), []);
     const handleCloseSettings = useCallback(() => setIsSettingsModalOpen(false), []);
     const handleTogglePreview = useCallback(() => setIsInternalPreviewOpen(prev => !prev), []);
     const handleClosePreview = useCallback(() => setIsInternalPreviewOpen(false), []);
+
 
     const isLight = themeMode === 'light';
     const isSystem = themeMode === 'system';
