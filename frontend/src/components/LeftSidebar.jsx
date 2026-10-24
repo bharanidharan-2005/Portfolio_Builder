@@ -3,13 +3,13 @@ import {
     FileText, CheckCircle2, AlertCircle, Loader2, Settings, Pin, PinOff, Plus, Trash2, 
     FileUp, Activity, Sparkles, Target, TrendingUp, Palette, Image, 
     Search, LayoutTemplate, FileCode, X, Eye, Undo2, Redo2, ChevronDown, 
-    Check, HelpCircle, LogOut, LayoutDashboard 
+    Check, HelpCircle, LogOut, LayoutDashboard, MessageSquare 
 } from "lucide-react";
 import { uploadAndParseResume } from "../utils/aiUtils";
 import { PORTFOLIO_THEMES } from "../canvas/themes";
 
 const AI_TOOLS_LIST = [
-    { id: "activity_log", icon: Activity, name: "Activity Log" },
+    { id: "activity_log", icon: MessageSquare, name: "Claude AI Chat" },
     { id: "generator", icon: Sparkles, name: "Content Generator" },
     { id: "matcher", icon: Target, name: "Target Role Matcher" },
     { id: "impact", icon: TrendingUp, name: "Impact Quantifier" },

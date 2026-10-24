@@ -1,4 +1,4 @@
-import { useState, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { useAppContext } from "../../context/AppContext";
 import { API } from "../../api";
@@ -344,6 +344,7 @@ export default function WorkspaceLayout() {
                             activeSectionId={activeSectionId}
                             themeMode={themeMode}
                             activeTool={activeTool}
+                            onSelectTool={handleSelectTool}
                             terminalLogs={terminalLogs}
                             setTerminalLogs={setTerminalLogs}
                             activeTheme={currentTheme}
