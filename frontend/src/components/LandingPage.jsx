@@ -6,8 +6,9 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
-import { API, setAuthTokens } from '../api';
+import { API, setAuthTokens, clearAuthTokens } from '../api';
 import { GoogleLogin } from '@react-oauth/google';
+
 
 const ThreeBackground = lazy(() => import('./ThreeBackground'));
 
@@ -188,7 +189,13 @@ export default function LandingPage() {
             if (!err.response) {
                 setAuthError("Unable to connect to the backend server. Please verify that the backend server is running.");
             } else {
-                const msg = err.response?.data?.error || err.response?.data?.detail || "Invalid credentials. Please verify your email and password.";
+                let msg = err.response?.data?.error || err.response?.data?.detail;
+                if (msg && msg.toLowerCase().includes("token")) {
+                    clearAuthTokens();
+                    msg = "Invalid credentials or previous session expired. Please try again.";
+                } else if (!msg) {
+                    msg = "Invalid credentials. Please verify your email and password.";
+                }
                 setAuthError(msg);
             }
         } finally {
@@ -223,6 +230,9 @@ export default function LandingPage() {
         setIsLoading(true);
 
         try {
+            // Clear any stale tokens before registering
+            clearAuthTokens();
+
             const res = await API.post('auth/register/', {
                 name: formData.name.trim(),
                 email: formData.email.trim(),
@@ -249,13 +259,20 @@ export default function LandingPage() {
             } else if (!err.response) {
                 setAuthError("Unable to connect to the backend server. Please verify that the backend server is running.");
             } else {
-                const msg = err.response?.data?.error || err.response?.data?.detail || "Registration failed. Please check your details and try again.";
+                let msg = err.response?.data?.error || err.response?.data?.detail;
+                if (msg && msg.toLowerCase().includes("token")) {
+                    clearAuthTokens();
+                    msg = "Registration failed. Please check your details and try again.";
+                } else if (!msg) {
+                    msg = "Registration failed. Please check your details and try again.";
+                }
                 setAuthError(msg);
             }
         } finally {
             setIsLoading(false);
         }
     };
+
 
     const handleAvatarSelect = (emoji) => {
         setFormData(prev => ({ ...prev, avatar: emoji }));

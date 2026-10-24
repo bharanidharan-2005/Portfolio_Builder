@@ -43,9 +43,13 @@ export function clearAuthTokens() {
 API.interceptors.request.use(
     (config) => {
         try {
-            const token = sessionStorage.getItem('aurabuild_access_token');
-            if (token && !config.headers['Authorization']) {
-                config.headers['Authorization'] = `Bearer ${token}`;
+            const url = config.url || '';
+            const isPublicAuth = ['auth/register/', 'auth/login/', 'auth/social/', 'token/', 'token/refresh/', 'send-key/'].some(ep => url.includes(ep));
+            if (!isPublicAuth) {
+                const token = sessionStorage.getItem('aurabuild_access_token');
+                if (token && !config.headers['Authorization']) {
+                    config.headers['Authorization'] = `Bearer ${token}`;
+                }
             }
         } catch (e) {}
         return config;
@@ -96,6 +100,13 @@ API.interceptors.response.use(
             }
         }
 
+        // Never attempt token refresh on login or register endpoints
+        const reqUrl = originalRequest.url || '';
+        const isAuthRoute = ['auth/register/', 'auth/login/', 'auth/social/', 'token/'].some(ep => reqUrl.includes(ep));
+        if (isAuthRoute) {
+            return Promise.reject(error);
+        }
+
         if (!error.response || error.response.status !== 401 || originalRequest._retry) {
             return Promise.reject(error);
         }
@@ -106,6 +117,7 @@ API.interceptors.response.use(
             clearAuthTokens();
             return Promise.reject(error);
         }
+
 
         if (isRefreshing) {
             return new Promise((resolve, reject) => {

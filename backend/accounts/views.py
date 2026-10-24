@@ -205,6 +205,7 @@ class RegisterView(APIView):
     Immediately generates tokens, sets HTTPOnly cookies, and logs the user in."""
 
     permission_classes = [permissions.AllowAny]
+    authentication_classes = []
 
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
@@ -259,6 +260,7 @@ class LoginView(APIView):
     Sets HTTPOnly cookies and returns session tokens."""
 
     permission_classes = [permissions.AllowAny]
+    authentication_classes = []
 
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
@@ -352,6 +354,7 @@ class MeView(APIView):
 class LogoutView(APIView):
     """Log out the user by clearing all session cookies."""
     permission_classes = [permissions.AllowAny]
+    authentication_classes = []
 
     def post(self, request):
         response = Response({"success": True, "message": "Successfully logged out."})
