@@ -253,36 +253,39 @@ export default function AIRefinementPanel({
             );
         };
 
-        const renderPromptBar = () => ( <
-            form onSubmit = { handleSubmit }
-            className = "p-3 border-t border-slate-200 bg-white shrink-0" >
-            <
-            div className = "relative flex items-center bg-slate-50 border border-slate-200 rounded-lg focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all" >
-            <
-            input type = "file"
-            ref = { fileInputRef }
-            onChange = { handleFileChange }
-            accept = ".pdf,.docx,.txt"
-            className = "hidden" / >
-            <
-            button type = "button"
-            onClick = {
-                () => fileInputRef.current && fileInputRef.current.click()
-            }
-            title = "Import Resume"
-            className = "pl-3 pr-2 text-slate-400 hover:text-blue-600" > 📎 < /button> <
-            input type = "text"
-            placeholder = "Ask AI Studio anything..."
-            className = "w-full bg-transparent pl-2 pr-10 py-2.5 text-xs text-slate-800 outline-none font-medium"
-            value = { promptText }
-            onChange = {
-                (e) => setPromptText(e.target.value)
-            }
-            /> <
-            button type = "submit"
-            className = "absolute right-3 text-blue-600 hover:text-blue-700 font-bold" > ⚡ < /button> < /
-            div > <
-            /form>
+        const renderPromptBar = () => (
+            <form onSubmit={handleSubmit} className="p-3 border-t border-slate-200 bg-white shrink-0">
+                <div className="relative flex items-center bg-slate-50 border border-slate-200 rounded-2xl p-1 focus-within:border-blue-500/80 focus-within:bg-white focus-within:shadow-[0_0_20px_rgba(59,130,246,0.18)] transition-all">
+                    <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        onChange={handleFileChange} 
+                        accept=".pdf,.docx,.txt" 
+                        className="hidden" 
+                    />
+                    <button 
+                        type="button" 
+                        onClick={() => fileInputRef.current && fileInputRef.current.click()} 
+                        title="Import Resume" 
+                        className="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-slate-200/50 transition-colors"
+                    >
+                        📎
+                    </button>
+                    <input 
+                        type="text" 
+                        placeholder="Ask AI Studio anything..." 
+                        className="w-full bg-transparent px-2.5 py-1.5 text-xs text-slate-800 outline-none font-medium border-none ring-0 focus:ring-0 focus:outline-none" 
+                        value={promptText} 
+                        onChange={(e) => setPromptText(e.target.value)} 
+                    />
+                    <button 
+                        type="submit" 
+                        className="p-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-all hover:scale-105 active:scale-95 shadow-sm"
+                    >
+                        ⚡
+                    </button>
+                </div>
+            </form>
         );
 
         // 1. Workspace Themes Tool

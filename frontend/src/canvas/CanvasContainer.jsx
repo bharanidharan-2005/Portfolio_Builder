@@ -243,7 +243,7 @@ function CanvasContainer({
         <div className="w-full min-w-0 max-w-full flex flex-col items-center relative animate-in fade-in duration-500"> 
 
             {/* Main Outer Container */}
-            <div className={`dark relative w-full min-w-0 max-w-full min-h-[700px] transition-all duration-500 ease-out overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
+            <div className={`dark relative w-full min-w-0 max-w-full min-h-[700px] transition-all duration-500 ease-out overflow-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
                 !isPreview ? `shadow-2xl rounded-[2rem] border ${currentTheme.border || 'border-slate-800/80'}` : 'min-h-screen'
             } bg-[#080D1C]`} style={{ ...currentFontObj.style }}>
                 
@@ -352,7 +352,7 @@ function CanvasContainer({
                 </div>
 
                 {/* --- MAIN CONTENT WRAPPER --- */}
-                <div className={`relative z-10 w-full p-2 sm:p-6 md:p-10 flex flex-col ${isPreview ? 'max-w-7xl mx-auto' : ''}`}>
+                <div className={`relative z-10 w-full min-w-0 max-w-full p-2 sm:p-5 md:p-8 flex flex-col ${isPreview ? 'max-w-7xl mx-auto' : ''}`}>
 
                     {isPreview ? (
                         <div key={activePage} className="space-y-12 sm:space-y-16 w-full animate-in slide-in-from-bottom-4 duration-700 ease-out">

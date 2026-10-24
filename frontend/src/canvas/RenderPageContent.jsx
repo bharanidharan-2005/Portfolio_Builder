@@ -95,13 +95,13 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
             if (!value) return null; // Do not show placeholders on the live polished site
             const Tag = as;
             return (
-                <Tag className={`inline-block ${multiline ? "w-full max-w-full break-words whitespace-pre-wrap" : "max-w-full"} ${className}`}>
+                <Tag className={`inline-block w-full max-w-full min-w-0 break-words ${multiline ? "whitespace-pre-wrap" : ""} ${className}`}>
                     {value}
                 </Tag>
             );
         }
         return (
-            <div className={`inline-block ${multiline ? "w-full max-w-full whitespace-normal break-words" : "max-w-full"} ${className}`}>
+            <div className={`inline-block w-full max-w-full min-w-0 break-words ${multiline ? "whitespace-normal" : ""} ${className}`}>
                 <EditableText as={as} value={value} placeholder={placeholder} onCommit={onCommit} multiline={multiline} />
             </div>
         );
@@ -238,16 +238,16 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                 return (
                 <motion.div 
                     {...fadeUpConfig}
-                    className={`py-8 sm:py-16 md:py-24 px-3 sm:px-6 md:px-10 relative rounded-3xl bg-transparent overflow-visible`}
+                    className={`py-8 sm:py-12 md:py-16 px-4 sm:px-8 md:px-12 relative rounded-3xl bg-transparent overflow-hidden`}
                 >
                     <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
                         <HeroParticles isDark={true} />
                     </div>
                     
-                    <div className={`relative z-10 w-full max-w-7xl mx-auto flex flex-col-reverse lg:flex-row items-center gap-8 sm:gap-12 lg:gap-20 ${shouldCenterHero ? 'justify-center' : ''}`}>
+                    <div className={`relative z-10 w-full max-w-6xl mx-auto flex flex-col-reverse lg:flex-row items-center justify-between gap-8 sm:gap-10 lg:gap-8 xl:gap-12 min-w-0 ${shouldCenterHero ? 'justify-center' : ''}`}>
                         
                         {/* LEFT COLUMN: TEXT */}
-                        <div className={`flex-[1.5] space-y-6 sm:space-y-8 flex flex-col w-full ${shouldCenterHero ? 'items-center text-center max-w-4xl' : 'items-center lg:items-start text-center lg:text-left'}`}>
+                        <div className={`flex-1 min-w-0 space-y-5 sm:space-y-6 flex flex-col w-full ${shouldCenterHero ? 'items-center text-center max-w-4xl' : 'items-center lg:items-start text-center lg:text-left'}`}>
                             
                             {/* Status Indicator */}
                             <motion.div 
@@ -258,13 +258,13 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 <span className={textSecondary}>Open to opportunities</span>
                             </motion.div>
 
-                            <div className={`space-y-3 sm:space-y-4 w-full ${fontSzClass} flex flex-col ${shouldCenterHero ? 'items-center text-center' : 'items-center lg:items-start text-center lg:text-left'}`}>
+                            <div className={`space-y-3 sm:space-y-4 w-full min-w-0 ${fontSzClass} flex flex-col ${shouldCenterHero ? 'items-center text-center' : 'items-center lg:items-start text-center lg:text-left'}`}>
                                 <motion.h1
                                     initial={{ opacity: 0, y: 15 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: false, amount: 0.1 }}
                                     transition={springTransition}
-                                    className={`font-display font-black tracking-tight leading-tight w-full max-w-3xl text-3xl sm:text-5xl lg:text-6xl xl:text-7xl break-words text-white ${shouldCenterHero ? 'mx-auto text-center' : 'mx-auto lg:mx-0 text-center lg:text-left'}`}
+                                    className={`font-display font-black tracking-tight leading-[1.08] w-full max-w-full text-2xl sm:text-4xl md:text-5xl lg:text-4xl xl:text-5xl 2xl:text-6xl break-words hyphens-auto text-white overflow-hidden ${shouldCenterHero ? 'mx-auto text-center' : 'mx-auto lg:mx-0 text-center lg:text-left'}`}
                                 >
                                     <TextElement
                                         value={data.heading || "YOUR NAME"}
@@ -278,7 +278,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     whileInView={{ opacity: 1, y: 0 }} 
                                     viewport={{ once: false, amount: 0.1 }}
                                     transition={{ ...springTransition, delay: 0.1 }}
-                                    className={`text-lg sm:text-xl md:text-2xl font-bold w-full max-w-full ${accentText} ${shouldCenterHero ? 'text-center' : 'text-center lg:text-left'}`}
+                                    className={`text-base sm:text-xl md:text-2xl font-bold w-full max-w-full min-w-0 break-words ${accentText} ${shouldCenterHero ? 'text-center' : 'text-center lg:text-left'}`}
                                 >
                                     <TextElement 
                                         value={data.subheading || "Professional Headline"}
@@ -292,7 +292,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     whileInView={{ opacity: 1, y: 0 }} 
                                     viewport={{ once: false, amount: 0.1 }}
                                     transition={{ ...springTransition, delay: 0.15 }}
-                                    className={`text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed w-full max-w-2xl font-medium text-slate-300 ${shouldCenterHero ? 'mx-auto text-center' : 'mx-auto lg:mx-0 text-center lg:text-left'}`}
+                                    className={`text-xs sm:text-sm md:text-base lg:text-lg leading-relaxed w-full max-w-2xl min-w-0 font-medium text-slate-300 break-words ${shouldCenterHero ? 'mx-auto text-center' : 'mx-auto lg:mx-0 text-center lg:text-left'}`}
                                 >
                                     <TextElement 
                                         multiline
@@ -401,19 +401,19 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 initial={{ opacity: 0, scale: 0.8, rotateY: -15 }}
                                 whileInView={{ opacity: 1, scale: 1, rotateY: 0 }}
                                 transition={{ type: "spring", damping: 20, stiffness: 40, delay: 0.3 }}
-                                className="flex-1 w-full flex justify-center lg:justify-end relative"
+                                className="flex-1 min-w-0 w-full flex justify-center lg:justify-end relative shrink-0"
                             >
                             <motion.div 
-                                animate={{ y: [-15, 15, -15], rotateZ: [-2, 2, -2] }}
+                                animate={{ y: [-10, 10, -10], rotateZ: [-1, 1, -1] }}
                                 whileHover={{ y: 0, rotateZ: 0, scale: 1.02, transition: { duration: 0.3 } }}
                                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                                className="relative group w-[300px] h-[300px] md:w-[450px] md:h-[450px] lg:w-[500px] lg:h-[500px]"
+                                className="relative group w-[220px] h-[220px] sm:w-[280px] sm:h-[280px] md:w-[320px] md:h-[320px] lg:w-[300px] lg:h-[300px] xl:w-[360px] xl:h-[360px] 2xl:w-[400px] 2xl:h-[400px] max-w-full aspect-square shrink-0 rounded-3xl overflow-hidden shadow-2xl"
                             >
-                                <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-[100px]"></div>
+                                <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-[80px] pointer-events-none"></div>
                                 <img 
                                     src={customSideImage || getRoleImage(data.subheading || "")} 
                                     alt="3D Workspace" 
-                                    className={`absolute inset-0 w-full h-full object-cover opacity-90 transition-all duration-500 rounded-3xl ${!customSideImage ? 'mix-blend-screen' : 'shadow-2xl'}`}
+                                    className={`w-full h-full object-cover opacity-90 transition-all duration-500 rounded-3xl ${!customSideImage ? 'mix-blend-screen' : 'shadow-2xl'}`}
                                     style={{ filter: "drop-shadow(0 0 30px rgba(59,130,246,0.3))" }}
                                 />
                                 {!isPreview && (

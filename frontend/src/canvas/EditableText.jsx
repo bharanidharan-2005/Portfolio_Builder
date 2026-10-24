@@ -162,7 +162,7 @@ export default function EditableText({
 
     return (
         <Tag
-            className={`group/editable relative rounded-md transition-all cursor-pointer inline-flex items-center gap-1 max-w-full hover:ring-1 hover:ring-[#7c00ff]/50 hover:bg-[#7c00ff]/10 px-1 -mx-1 ${className} ${
+            className={`group/editable relative rounded-md transition-all cursor-pointer inline-flex flex-wrap items-baseline gap-1 max-w-full min-w-0 hover:ring-1 hover:ring-[#7c00ff]/50 hover:bg-[#7c00ff]/10 px-0.5 ${className} ${
                 !value ? 'opacity-60 italic' : ''
             }`}
             onClick={(e) => {
@@ -176,7 +176,7 @@ export default function EditableText({
             onTouchEnd={handleTouchEnd}
             title="Click to edit text"
         >
-            <span className={multiline ? "break-words" : ""}>
+            <span className="break-words max-w-full min-w-0">
                 {value || placeholder}
             </span>
             <span className="opacity-0 group-hover/editable:opacity-70 transition-opacity text-[10px] text-[#7c00ff] select-none shrink-0" title="Click to edit">

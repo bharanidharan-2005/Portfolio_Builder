@@ -200,6 +200,18 @@ function RightSidebar({
 
     const logContainerRef = useRef(null);
     const largeLogContainerRef = useRef(null);
+    const chatFileInputRef = useRef(null);
+
+    const handleChatFileUpload = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) {
+            notify("File too large (max 5MB)", "error");
+            return;
+        }
+        setChatInput(prev => (prev ? `${prev} [Attached file: ${file.name}]` : `Analyze uploaded file: ${file.name}`));
+        notify(`Attached: ${file.name}`, "success");
+    };
 
     useEffect(() => {
         if (logContainerRef.current) {
@@ -1906,27 +1918,96 @@ function RightSidebar({
                 {(activeTool === "structure" || (!activeTool && activeTool !== "activity_log")) && renderStructureBuilder()}
             </div>
 
-            <div className={`shrink-0 border-t p-3 sm:p-4 flex flex-col gap-2.5 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-10 ${isSystem ? 'border-[#7c00ff]/25 bg-[#0e0720]/90' : (isLight ? 'border-slate-200 bg-white' : 'border-slate-800/80 bg-[#0F111A]')}`}>
-                {/* AI Chat Input */}
-                <form onSubmit={handleSendMessage} className={`relative flex items-center w-full border rounded-xl overflow-hidden transition-all duration-200 focus-within:ring-2 shadow-sm ${
-                    isSystem 
-                        ? 'bg-[#120826] border-[#7c00ff]/40 focus-within:ring-[#7c00ff]/50 focus-within:border-[#7c00ff]' 
-                        : (isLight ? 'bg-white border-slate-300 focus-within:ring-blue-500/40 focus-within:border-blue-500/60' : 'bg-slate-900/60 backdrop-blur-md border-slate-700/80 focus-within:ring-blue-500/40 focus-within:border-blue-500/60')
-                }`}>
-                    <div className={`pl-3.5 ${isSystem ? 'text-[#c084fc]' : (isLight ? 'text-slate-400' : 'text-slate-500')}`}>
-                        <Paperclip className={`w-4 h-4 cursor-pointer transition-colors ${isSystem ? 'hover:text-purple-300' : 'hover:text-blue-500'}`} />
-                    </div>
+            {/* AI Copilot Response Bar */}
+            <div className={`shrink-0 border-t p-3 sm:p-3.5 flex flex-col gap-2 z-10 transition-colors duration-300 ${
+                isSystem 
+                    ? 'border-[#7c00ff]/20 bg-[#0e0720]/95 backdrop-blur-2xl' 
+                    : isLight 
+                        ? 'border-slate-200/80 bg-white/95 backdrop-blur-xl' 
+                        : 'border-white/10 bg-[#0b0f19]/95 backdrop-blur-2xl'
+            }`}>
+                <form 
+                    onSubmit={handleSendMessage} 
+                    className={`relative flex items-center w-full rounded-2xl p-1.5 transition-all duration-300 border ${
+                        isSystem 
+                            ? 'bg-[#150a2e]/90 border-[#7c00ff]/30 focus-within:border-[#a855f7] focus-within:shadow-[0_0_24px_rgba(168,85,247,0.25)]' 
+                            : isLight 
+                                ? 'bg-slate-100/90 border-slate-200 focus-within:border-blue-500/80 focus-within:bg-white focus-within:shadow-[0_0_20px_rgba(59,130,246,0.18)]' 
+                                : 'bg-slate-900/80 border-slate-700/60 focus-within:border-blue-500/80 focus-within:bg-slate-900 focus-within:shadow-[0_0_24px_rgba(59,130,246,0.22)]'
+                    }`}
+                >
+                    <input
+                        type="file"
+                        ref={chatFileInputRef}
+                        className="hidden"
+                        accept=".pdf,.docx,.txt,image/*"
+                        onChange={handleChatFileUpload}
+                    />
+
+                    <button
+                        type="button"
+                        onClick={() => chatFileInputRef.current?.click()}
+                        title="Attach Document or Image"
+                        className={`p-2 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center shrink-0 ${
+                            isSystem 
+                                ? 'text-purple-300/70 hover:text-purple-200 hover:bg-[#7c00ff]/20' 
+                                : isLight 
+                                    ? 'text-slate-400 hover:text-blue-600 hover:bg-slate-200/60' 
+                                    : 'text-slate-400 hover:text-blue-400 hover:bg-white/5'
+                        }`}
+                    >
+                        <Paperclip className="w-4 h-4" />
+                    </button>
+
                     <input
                         type="text"
                         value={chatInput}
                         onChange={(e) => setChatInput(e.target.value)}
                         placeholder="Ask AI Studio anything..."
-                        className={`w-full text-xs px-3 py-3 outline-none bg-transparent font-medium ${isSystem ? 'text-slate-100 placeholder-purple-300/40' : (isLight ? 'text-slate-800 placeholder-slate-400' : 'text-slate-200 placeholder-slate-500')}`}
+                        disabled={isProcessing}
+                        className={`w-full text-xs sm:text-[13px] px-2.5 py-1.5 outline-none bg-transparent font-medium border-0 ring-0 focus:ring-0 focus:outline-none transition-colors ${
+                            isSystem 
+                                ? 'text-slate-100 placeholder-purple-300/40' 
+                                : isLight 
+                                    ? 'text-slate-800 placeholder-slate-400' 
+                                    : 'text-slate-200 placeholder-slate-500'
+                        }`}
                     />
-                    <button type="submit" className={`pr-3.5 transition-colors cursor-pointer group ${isSystem ? 'text-[#c084fc] hover:text-white' : 'text-blue-500 hover:text-blue-400'}`}>
-                        <Send className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+
+                    <button 
+                        type="submit" 
+                        disabled={isProcessing || !chatInput.trim()}
+                        title="Send to AI Studio"
+                        className={`p-2 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center shrink-0 ${
+                            chatInput.trim()
+                                ? (isSystem 
+                                    ? 'bg-gradient-to-r from-[#7c00ff] to-[#a855f7] text-white shadow-md shadow-purple-900/40 hover:scale-105 active:scale-95' 
+                                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-900/40 hover:scale-105 active:scale-95')
+                                : (isSystem
+                                    ? 'text-purple-400/40 hover:text-purple-300/60'
+                                    : isLight 
+                                        ? 'text-slate-300 hover:text-slate-400' 
+                                        : 'text-slate-600 hover:text-slate-400')
+                        } ${isProcessing ? 'opacity-80 cursor-wait' : ''}`}
+                    >
+                        {isProcessing ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-white" />
+                        ) : (
+                            <Send className="w-4 h-4" />
+                        )}
                     </button>
                 </form>
+
+                {/* Subtext info */}
+                <div className="flex items-center justify-between px-1.5 text-[10px]">
+                    <span className="flex items-center gap-1.5 text-slate-400">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span className="font-semibold tracking-tight">AI Copilot</span>
+                    </span>
+                    <span className="text-[9px] uppercase tracking-wider text-slate-400/60 font-mono">
+                        Press ↵
+                    </span>
+                </div>
             </div>
         </div>
     );
