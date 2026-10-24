@@ -209,8 +209,8 @@ export const TopNav = memo(function TopNav({
                     )}
                 </div>
 
-                {/* Theme Selector Dropdown */}
-                <div className="relative max-w-[170px] sm:max-w-[210px] w-full" ref={dropdownRef}>
+                {/* Theme Selector Dropdown (Hidden on < sm since it's prominently accessible in mobile drawer) */}
+                <div className="relative hidden sm:block max-w-[170px] sm:max-w-[210px] w-full" ref={dropdownRef}>
                     <button 
                         type="button" 
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)} 

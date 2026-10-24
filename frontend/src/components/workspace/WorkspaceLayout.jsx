@@ -36,8 +36,8 @@ export default function WorkspaceLayout() {
     // 2. Local UI State (Only presentation logic remains here!)
     const [activeSectionId, setActiveSectionId] = useState(null);
     const [activeTool, setActiveTool] = useState("structure"); 
-    const [isLeftOpen, setIsLeftOpen] = useState(true);        
-    const [isRightOpen, setIsRightOpen] = useState(true);      
+    const [isLeftOpen, setIsLeftOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 1024 : true));        
+    const [isRightOpen, setIsRightOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 1280 : true));      
     const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     
@@ -46,6 +46,19 @@ export default function WorkspaceLayout() {
     const [previewViewport, setPreviewViewport] = useState("desktop"); 
     const [isLandscape, setIsLandscape] = useState(false);
     const [isFrontpageViewed, setIsFrontpageViewed] = useState(false);
+
+    // Prevent body scrolling when mobile drawers are open
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        if (window.innerWidth < 1024 && (isLeftOpen || isRightOpen)) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isLeftOpen, isRightOpen]);
     
     // Left Sidebar Pin State (persisted in localStorage)
     const [isLeftPinned, setIsLeftPinned] = useState(() => {
@@ -73,6 +86,7 @@ export default function WorkspaceLayout() {
     }, []);
 
     const handleToggleLeft = useCallback(() => setIsLeftOpen(prev => !prev), []);
+    const handleCloseLeft = useCallback(() => setIsLeftOpen(false), []);
     const handleToggleRight = useCallback(() => setIsRightOpen(prev => !prev), []);
     const handleCloseRight = useCallback(() => setIsRightOpen(false), []);
     const handleOpenRight = useCallback(() => setIsRightOpen(true), []);
@@ -189,21 +203,22 @@ export default function WorkspaceLayout() {
                 {/* Mobile Overlay */}
                 {!isPublicPreview && (isLeftOpen || isRightOpen) && (
                     <div 
-                        className="fixed inset-0 bg-black/60 z-30 lg:hidden backdrop-blur-sm"
+                        className="fixed inset-0 bg-black/60 z-30 lg:hidden backdrop-blur-xs transition-opacity"
                         onClick={() => {
                             setIsLeftOpen(false);
                             setIsRightOpen(false);
                         }}
+                        aria-hidden="true"
                     />
                 )}
 
-                {/* LEFT SIDEBAR */}
+                {/* LEFT SIDEBAR (Desktop 3-Panel + Mobile Slide-out Drawer) */}
                 {!isPublicPreview && (
-                    <aside className={`absolute lg:relative group h-full shrink-0 transition-all duration-300 ease-in-out ${
-                        isLeftPinned ? 'w-60 lg:w-64' : 'w-16 hover:w-60 lg:hover:w-64'
+                    <aside className={`fixed lg:relative group h-full shrink-0 transition-all duration-300 ease-in-out ${
+                        isLeftPinned ? 'w-64 lg:w-64' : 'w-72 sm:w-80 max-w-[85vw] lg:w-16 lg:hover:w-64'
                     } overflow-hidden z-40 shadow-2xl ${
                         isLeftOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-                    } ${isSystem ? 'bg-[#0c051a]/95 backdrop-blur-2xl border-r border-[#7c00ff]/25 shadow-[4px_0_24px_rgba(124,0,255,0.12)]' : (isLight ? 'bg-white border-r border-slate-200' : 'bg-white/[0.02] backdrop-blur-2xl border-r border-white/10')}`}>
+                    } ${isSystem ? 'bg-[#0c051a]/95 backdrop-blur-2xl border-r border-[#7c00ff]/25 shadow-[4px_0_24px_rgba(124,0,255,0.12)]' : (isLight ? 'bg-white border-r border-slate-200' : 'bg-[#0B0F19]/95 backdrop-blur-2xl border-r border-white/10')}`}>
                         <LeftSidebar 
                             pages={pages}
                             activePage={activePage}
@@ -218,6 +233,18 @@ export default function WorkspaceLayout() {
                             onOpenSettings={handleOpenSettings}
                             isPinned={isLeftPinned}
                             onTogglePin={handleTogglePin}
+                            onClose={handleCloseLeft}
+                            onTogglePreview={handleTogglePreview}
+                            onUndo={handleUndo}
+                            canUndo={history.past.length > 0}
+                            onRedo={handleRedo}
+                            canRedo={history.future.length > 0}
+                            activeTheme={currentTheme}
+                            onThemeChange={handleThemeChange}
+                            sections={sections}
+                            onHelpClick={handleOpenHelp}
+                            onLogout={logout}
+                            userData={userData}
                         />
                     </aside>
                 )}
@@ -305,13 +332,13 @@ export default function WorkspaceLayout() {
                     </div>
                 </main>
 
-                {/* RIGHT SIDEBAR */}
+                {/* RIGHT SIDEBAR (Responsive Inspector) */}
                 {!isPublicPreview && (
-                    <aside className={`absolute right-0 lg:relative h-full shrink-0 border-l transition-all duration-300 ease-in-out z-40 shadow-2xl overflow-hidden ${
+                    <aside className={`fixed lg:relative right-0 h-full shrink-0 border-l transition-all duration-300 ease-in-out z-40 shadow-2xl overflow-hidden ${
                         isRightOpen 
-                            ? 'w-[310px] md:w-[330px] xl:w-[360px] translate-x-0 opacity-100' 
+                            ? 'w-[320px] sm:w-[350px] xl:w-[360px] max-w-[90vw] translate-x-0 opacity-100' 
                             : 'w-0 border-l-0 translate-x-full lg:translate-x-0 opacity-0 pointer-events-none'
-                    } ${isSystem ? 'bg-[#0c051a]/95 backdrop-blur-2xl border-l border-[#7c00ff]/25 shadow-[-4px_0_24px_rgba(124,0,255,0.12)]' : (isLight ? 'bg-white border-slate-200' : 'bg-white/[0.02] backdrop-blur-2xl border-white/10')}`}>
+                    } ${isSystem ? 'bg-[#0c051a]/95 backdrop-blur-2xl border-l border-[#7c00ff]/25 shadow-[-4px_0_24px_rgba(124,0,255,0.12)]' : (isLight ? 'bg-white border-slate-200' : 'bg-[#0B0F19]/95 backdrop-blur-2xl border-white/10')}`}>
                         <RightSidebar 
                             userData={userData}
                             activeSectionId={activeSectionId}

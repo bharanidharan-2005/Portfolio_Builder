@@ -27,7 +27,7 @@ function SortableSection({ section, children }) {
     );
 }
 
-function SortableNavItem({ item, onClick, currentTheme }) {
+function SortableNavItem({ item, onClick, currentTheme, isActive }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
     return (
         <button
@@ -36,16 +36,25 @@ function SortableNavItem({ item, onClick, currentTheme }) {
             onClick={() => onClick(item.label)}
             {...attributes}
             {...listeners}
-            className={`bg-transparent px-3 py-1.5 rounded-lg text-sm font-bold transition-all duration-300 whitespace-nowrap ${isDragging ? 'cursor-grabbing opacity-50 scale-105 z-50' : 'cursor-grab'} ${currentTheme.textSecondary || 'text-slate-400'} hover:bg-white/10`}
+            className={`relative px-3 py-1.5 rounded-lg text-sm font-bold transition-all duration-300 whitespace-nowrap cursor-pointer ${
+                isDragging ? 'cursor-grabbing opacity-50 scale-105 z-50' : 'cursor-grab'
+            } ${
+                isActive 
+                    ? `${currentTheme.accentText || 'text-blue-400'} bg-white/10 shadow-xs` 
+                    : `${currentTheme.textSecondary || 'text-slate-400'} hover:bg-white/5 hover:text-white`
+            }`}
             style={{
                 color: 'inherit',
                 transform: CSS.Transform.toString(transform),
                 transition
             }}
         >
-            <span className={`transition-opacity ${currentTheme.textPrimary || 'text-white'}`}>
+            <span className={`transition-opacity ${isActive ? (currentTheme.accentText || 'text-blue-400') : (currentTheme.textPrimary || 'text-white')}`}>
                 {item.label}
             </span>
+            {isActive && (
+                <span className={`absolute bottom-0 left-2.5 right-2.5 h-[2px] rounded-full ${currentTheme.accentBg || 'bg-blue-500'}`} />
+            )}
         </button>
     );
 }
@@ -136,18 +145,67 @@ function CanvasContainer({
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [activeNavSection, setActiveNavSection] = useState('Home');
 
+    // Derive dynamic nav items from displaySections
+    const dynamicNavItems = useMemo(() => {
+        if (!displaySections || displaySections.length === 0) return [];
+        const ignoredTypes = ['footer', 'resume', 'banner'];
+        
+        const items = [];
+        const seenLabels = new Set();
+        
+        // Put Home first if hero exists
+        const heroSection = displaySections.find(s => (s.section_type || '').toLowerCase().trim() === 'hero');
+        if (heroSection) {
+            seenLabels.add('home');
+            items.push({
+                id: `nav-${heroSection.id}`,
+                sectionId: heroSection.id,
+                label: 'Home',
+                type: 'hero'
+            });
+        }
+
+        displaySections.forEach(s => {
+            const rawType = (s.section_type || '').toLowerCase().trim();
+            if (rawType && !ignoredTypes.includes(rawType) && rawType !== 'hero') {
+                let label = rawType;
+                if (label === 'projects_grid') label = 'projects';
+                
+                const formattedLabel = label.charAt(0).toUpperCase() + label.slice(1);
+                if (!seenLabels.has(label)) {
+                    seenLabels.add(label);
+                    items.push({
+                        id: `nav-${s.id}`,
+                        sectionId: s.id,
+                        label: formattedLabel,
+                        type: rawType
+                    });
+                }
+            }
+        });
+            
+        return items;
+    }, [displaySections]);
+
+    // Handle Nav link click with smooth scroll offset and reduced motion check
     const handleNavClick = (navLabel) => {
         if (!displaySections.length) return;
+        setActiveNavSection(navLabel);
+
         let targetType = navLabel.toLowerCase().trim();
+        if (targetType === 'home') targetType = 'hero';
         if (targetType === 'projects') targetType = 'projects_grid';
 
         const foundSection = displaySections.find(s => {
             const stype = (s.section_type || '').toLowerCase().trim();
             return stype === targetType || 
                    (targetType === 'projects_grid' && stype === 'projects') ||
-                   (targetType === 'projects' && stype === 'projects_grid');
+                   (targetType === 'projects' && stype === 'projects_grid') ||
+                   (targetType === 'hero' && stype === 'home');
         });
+
         if (foundSection) {
             if (!isPreview && setActiveSectionId) {
                 setActiveSectionId(foundSection.id);
@@ -159,32 +217,117 @@ function CanvasContainer({
                 if (targetElement) {
                     const previewContainer = document.getElementById('preview-scroll-container');
                     const workspaceContainer = document.getElementById('workspace-scroll-container');
+                    const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                    const scrollBehavior = prefersReducedMotion ? 'auto' : 'smooth';
                     
                     if (isPreview && previewContainer) {
                         const containerRect = previewContainer.getBoundingClientRect();
                         const targetRect = targetElement.getBoundingClientRect();
                         previewContainer.scrollTo({
-                            top: previewContainer.scrollTop + (targetRect.top - containerRect.top) - 90,
-                            behavior: 'smooth'
+                            top: previewContainer.scrollTop + (targetRect.top - containerRect.top) - 80,
+                            behavior: scrollBehavior
                         });
                     } else if (workspaceContainer) {
                         const containerRect = workspaceContainer.getBoundingClientRect();
                         const targetRect = targetElement.getBoundingClientRect();
                         workspaceContainer.scrollTo({
-                            top: workspaceContainer.scrollTop + (targetRect.top - containerRect.top) - 90,
-                            behavior: 'smooth'
+                            top: workspaceContainer.scrollTop + (targetRect.top - containerRect.top) - 80,
+                            behavior: scrollBehavior
                         });
                     } else {
                         const topPos = targetElement.getBoundingClientRect().top + window.scrollY;
                         window.scrollTo({
-                            top: topPos - 90,
-                            behavior: 'smooth'
+                            top: topPos - 80,
+                            behavior: scrollBehavior
                         });
                     }
                 }
             }, 50);
         }
     };
+
+    // Scroll-Spy: Automatically highlight active section on manual scrolling
+    useEffect(() => {
+        const handleScroll = () => {
+            if (!displaySections || displaySections.length === 0 || dynamicNavItems.length === 0) return;
+
+            const previewContainer = document.getElementById('preview-scroll-container');
+            const workspaceContainer = document.getElementById('workspace-scroll-container');
+            const container = isPreview 
+                ? (previewContainer || window) 
+                : (workspaceContainer || window);
+
+            const isWin = container === window;
+            const scrollTop = isWin ? window.scrollY : container.scrollTop;
+            const scrollHeight = isWin ? document.documentElement.scrollHeight : container.scrollHeight;
+            const clientHeight = isWin ? window.innerHeight : container.clientHeight;
+
+            // If at the very top, activate Home or the first item
+            if (scrollTop < 80) {
+                const firstItem = dynamicNavItems[0];
+                if (firstItem && activeNavSection !== firstItem.label) {
+                    setActiveNavSection(firstItem.label);
+                }
+                return;
+            }
+
+            // If at the very bottom, activate the last item
+            if (scrollTop + clientHeight >= scrollHeight - 60) {
+                const lastItem = dynamicNavItems[dynamicNavItems.length - 1];
+                if (lastItem && activeNavSection !== lastItem.label) {
+                    setActiveNavSection(lastItem.label);
+                }
+                return;
+            }
+
+            // Find the active section based on top offset
+            let currentActive = null;
+            for (const navItem of dynamicNavItems) {
+                const targetId = isPreview 
+                    ? `preview-node-block-${navItem.sectionId}` 
+                    : `live-node-block-${navItem.sectionId}`;
+                const el = document.getElementById(targetId);
+                if (el) {
+                    const rect = el.getBoundingClientRect();
+                    const containerTop = isWin ? 0 : container.getBoundingClientRect().top;
+                    const relativeTop = rect.top - containerTop;
+                    
+                    if (relativeTop <= 160 && rect.bottom - containerTop > 100) {
+                        currentActive = navItem.label;
+                    }
+                }
+            }
+
+            if (currentActive && currentActive !== activeNavSection) {
+                setActiveNavSection(currentActive);
+            }
+        };
+
+        const previewContainer = document.getElementById('preview-scroll-container');
+        const workspaceContainer = document.getElementById('workspace-scroll-container');
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        if (previewContainer) previewContainer.addEventListener('scroll', handleScroll, { passive: true });
+        if (workspaceContainer) workspaceContainer.addEventListener('scroll', handleScroll, { passive: true });
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            if (previewContainer) previewContainer.removeEventListener('scroll', handleScroll);
+            if (workspaceContainer) workspaceContainer.removeEventListener('scroll', handleScroll);
+        };
+    }, [displaySections, dynamicNavItems, isPreview, activeNavSection]);
+
+    // Close mobile menu on Escape key
+    useEffect(() => {
+        if (!isMobileMenuOpen) return;
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                setIsMobileMenuOpen(false);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isMobileMenuOpen]);
 
     // Auto-scroll when activeHighlightSection changes
     useEffect(() => {
@@ -198,34 +341,6 @@ function CanvasContainer({
             onDropSection(active.id, over.id);
         }
     };
-
-    // Derive dynamic nav items from displaySections
-    const dynamicNavItems = useMemo(() => {
-        if (!displaySections) return [];
-        const ignoredTypes = ['hero', 'footer', 'resume', 'banner'];
-        
-        const items = [];
-        const seenTypes = new Set();
-        
-        displaySections.forEach(s => {
-            if (s.section_type && !ignoredTypes.includes(s.section_type)) {
-                let name = s.section_type;
-                if (name === 'projects_grid') name = 'projects';
-                
-                // Only add unique types to avoid multiple nav links for the same section type
-                if (!seenTypes.has(name)) {
-                    seenTypes.add(name);
-                    items.push({
-                        id: `nav-${s.id}`, // prefix ID to avoid collision with section DnD
-                        sectionId: s.id,
-                        label: name.charAt(0).toUpperCase() + name.slice(1)
-                    });
-                }
-            }
-        });
-            
-        return items;
-    }, [displaySections]);
 
     const handleNavDragEnd = ({ active, over }) => {
         if (over && active.id !== over.id && onDropSection) {
@@ -242,10 +357,10 @@ function CanvasContainer({
     return ( 
         <div className="w-full min-w-0 max-w-full flex flex-col items-center relative animate-in fade-in duration-500"> 
 
-            {/* Main Outer Container */}
-            <div className={`dark relative w-full min-w-0 max-w-full min-h-[700px] transition-all duration-500 ease-out overflow-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
-                !isPreview ? `shadow-2xl rounded-[2rem] border ${currentTheme.border || 'border-slate-800/80'}` : 'min-h-screen'
-            } bg-[#080D1C]`} style={{ ...currentFontObj.style }}>
+            {/* Main Outer Container: when isPreview, overflow-visible enables position: sticky on browser window */}
+            <div className={`dark relative w-full min-w-0 max-w-full min-h-[700px] transition-all duration-500 ease-out ${
+                !isPreview ? `shadow-2xl rounded-[2rem] border ${currentTheme.border || 'border-slate-800/80'} overflow-hidden` : 'min-h-screen overflow-visible'
+            } bg-[#080D1C] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`} style={{ ...currentFontObj.style }}>
                 
                 {/* --- PREMIUM GLOBAL BACKGROUND --- */}
                 <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
@@ -254,11 +369,11 @@ function CanvasContainer({
                     <div className="absolute top-[40%] right-[20%] w-[30%] h-[30%] rounded-full bg-indigo-900/10 blur-[100px]"></div>
                 </div>
 
-                {/* --- FULL WIDTH NAVIGATION NAVBAR --- */}
-                <div className={`sticky top-0 z-50 w-full backdrop-blur-2xl ${currentTheme.cardBg || 'bg-black/20'} border-b ${currentTheme.border || 'border-slate-700/30'} shadow-lg transition-all duration-500 overflow-hidden`}>
+                {/* --- FULL WIDTH NAVIGATION NAVBAR (Persistent Sticky) --- */}
+                <div className={`sticky top-0 z-50 w-full backdrop-blur-2xl ${currentTheme.cardBg || 'bg-black/30'} border-b ${currentTheme.border || 'border-slate-700/30'} shadow-lg transition-all duration-500`}>
                     <div className="w-full px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3">
                         {/* Logo / Initials */}
-                        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+                        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 cursor-pointer" onClick={() => handleNavClick('Home')}>
                             <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-black text-base sm:text-lg shadow-inner ${currentTheme.accentBg || 'bg-blue-600'} text-white`}>
                                 {initials}
                             </div>
@@ -272,30 +387,43 @@ function CanvasContainer({
                             {!isPreview ? (
                                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleNavDragEnd}>
                                     <SortableContext items={dynamicNavItems.map(item => item.id)} strategy={horizontalListSortingStrategy}>
-                                        {dynamicNavItems.map((navItem) => (
-                                            <SortableNavItem 
-                                                key={navItem.id} 
-                                                item={navItem} 
-                                                onClick={handleNavClick} 
-                                                currentTheme={currentTheme} 
-                                            />
-                                        ))}
+                                        {dynamicNavItems.map((navItem) => {
+                                            const isActive = activeNavSection.toLowerCase() === navItem.label.toLowerCase();
+                                            return (
+                                                <SortableNavItem 
+                                                    key={navItem.id} 
+                                                    item={navItem} 
+                                                    onClick={handleNavClick} 
+                                                    currentTheme={currentTheme}
+                                                    isActive={isActive}
+                                                />
+                                            );
+                                        })}
                                     </SortableContext>
                                 </DndContext>
                             ) : (
-                                dynamicNavItems.map((navItem) => ( 
-                                    <button 
-                                        key={navItem.id} 
-                                        type="button" 
-                                        onClick={() => handleNavClick(navItem.label)} 
-                                        className={`bg-transparent px-2.5 py-1.5 rounded-lg text-xs xl:text-sm font-bold transition-all duration-300 whitespace-nowrap cursor-pointer ${currentTheme.textSecondary || 'text-slate-400'} hover:bg-white/10`}
-                                        style={{ color: 'inherit' }}
-                                    > 
-                                        <span className={`opacity-80 hover:opacity-100 transition-opacity ${currentTheme.textPrimary || 'text-white'}`}>
-                                            {navItem.label}
-                                        </span>
-                                    </button>
-                                ))
+                                dynamicNavItems.map((navItem) => {
+                                    const isActive = activeNavSection.toLowerCase() === navItem.label.toLowerCase();
+                                    return ( 
+                                        <button 
+                                            key={navItem.id} 
+                                            type="button" 
+                                            onClick={() => handleNavClick(navItem.label)} 
+                                            className={`relative px-3 py-1.5 rounded-lg text-xs xl:text-sm font-bold transition-all duration-300 whitespace-nowrap cursor-pointer ${
+                                                isActive 
+                                                    ? `${currentTheme.accentText || 'text-blue-400'} bg-white/10 shadow-xs` 
+                                                    : `${currentTheme.textSecondary || 'text-slate-400'} hover:bg-white/5 hover:text-white`
+                                            }`}
+                                        > 
+                                            <span className={`transition-opacity ${isActive ? (currentTheme.accentText || 'text-blue-400') : (currentTheme.textPrimary || 'text-white')}`}>
+                                                {navItem.label}
+                                            </span>
+                                            {isActive && (
+                                                <span className={`absolute bottom-0 left-2.5 right-2.5 h-[2px] rounded-full ${currentTheme.accentBg || 'bg-blue-500'}`} />
+                                            )}
+                                        </button>
+                                    );
+                                })
                             )}
                         </div>
 
@@ -320,34 +448,50 @@ function CanvasContainer({
 
                             {/* Mobile / Compact Menu Toggle Button */}
                             <button 
-                                className="xl:hidden p-1.5 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                                className="xl:hidden p-1.5 text-slate-300 hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-white/10"
                                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                                 aria-label="Toggle navigation menu"
+                                aria-expanded={isMobileMenuOpen}
                             >
                                 {isMobileMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
                             </button>
                         </div>
                     </div>
 
-                    {/* Mobile Dropdown Menu */}
+                    {/* Mobile Dropdown Menu with Accessible Backdrop & Auto-Close */}
                     {isMobileMenuOpen && (
-                        <div className="xl:hidden absolute top-full left-0 w-full border-b border-slate-800/50 bg-slate-900/95 backdrop-blur-3xl shadow-2xl overflow-hidden animate-in slide-in-from-top-2 duration-300 z-50">
-                            <div className="flex flex-col py-4 px-6 gap-2">
-                                {dynamicNavItems.map((navItem) => (
-                                    <button
-                                        key={`mobile-${navItem.id}`}
-                                        type="button"
-                                        onClick={() => {
-                                            handleNavClick(navItem.label);
-                                            setIsMobileMenuOpen(false);
-                                        }}
-                                        className={`w-full text-left px-4 py-3 rounded-xl font-bold transition-all ${currentTheme.textPrimary || 'text-white'} hover:bg-white/10 active:bg-white/20`}
-                                    >
-                                        {navItem.label}
-                                    </button>
-                                ))}
+                        <>
+                            <div 
+                                className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 xl:hidden"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                aria-hidden="true"
+                            />
+                            <div className={`xl:hidden absolute top-full left-0 w-full border-b ${currentTheme.border || 'border-slate-800/80'} ${currentTheme.cardBg || 'bg-slate-950/95'} backdrop-blur-3xl shadow-2xl overflow-y-auto max-h-[75vh] animate-in slide-in-from-top-2 duration-300 z-50 custom-scrollbar`}>
+                                <div className="flex flex-col py-3 px-4 sm:px-6 gap-1.5">
+                                    {dynamicNavItems.map((navItem) => {
+                                        const isActive = activeNavSection.toLowerCase() === navItem.label.toLowerCase();
+                                        return (
+                                            <button
+                                                key={`mobile-${navItem.id}`}
+                                                type="button"
+                                                onClick={() => {
+                                                    handleNavClick(navItem.label);
+                                                    setIsMobileMenuOpen(false);
+                                                }}
+                                                className={`w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center justify-between cursor-pointer ${
+                                                    isActive 
+                                                        ? `${currentTheme.accentText || 'text-blue-400'} bg-white/15 shadow-xs` 
+                                                        : `${currentTheme.textPrimary || 'text-white'} hover:bg-white/10 active:bg-white/20`
+                                                }`}
+                                            >
+                                                <span>{navItem.label}</span>
+                                                {isActive && <div className={`w-2 h-2 rounded-full ${currentTheme.accentBg || 'bg-blue-500'}`} />}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
-                        </div>
+                        </>
                     )}
                 </div>
 

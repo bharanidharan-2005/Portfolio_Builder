@@ -47,9 +47,9 @@ export default function PreviewModal({
     if (previewViewport === 'desktop') {
         frameStyle += "w-full max-w-[1440px] h-full rounded-2xl ring-1 ring-slate-700/50";
     } else if (previewViewport === 'tablet') {
-        frameStyle += "w-[768px] h-[1024px] max-h-full rounded-[2rem] ring-[8px] ring-slate-800 shadow-[0_20px_50px_rgba(0,0,0,0.5)]";
+        frameStyle += "w-full max-w-[768px] h-full rounded-[1.5rem] sm:rounded-[2rem] ring-[4px] sm:ring-[8px] ring-slate-800 shadow-[0_20px_50px_rgba(0,0,0,0.5)]";
     } else if (previewViewport === 'mobile') {
-        frameStyle += "w-[375px] h-[812px] max-h-full rounded-[3rem] ring-[12px] ring-slate-900 shadow-[0_20px_50px_rgba(0,0,0,0.5)]";
+        frameStyle += "w-full max-w-[375px] h-full rounded-[2rem] sm:rounded-[3rem] ring-[6px] sm:ring-[12px] ring-slate-900 shadow-[0_20px_50px_rgba(0,0,0,0.5)]";
     }
 
     return (
@@ -62,7 +62,7 @@ export default function PreviewModal({
             </div>
 
             {/* Toolbar */}
-            <div className={`relative z-50 h-16 px-4 md:px-6 flex items-center justify-between border-b transition-colors ${isLight ? 'bg-white border-slate-200 text-slate-800 shadow-sm' : 'bg-[#05050A] border-slate-800 text-slate-100'}`}>
+            <div className={`relative z-50 h-14 md:h-16 px-2 sm:px-4 md:px-6 flex items-center justify-between border-b gap-1.5 sm:gap-4 transition-colors ${isLight ? 'bg-white border-slate-200 text-slate-800 shadow-sm' : 'bg-[#05050A] border-slate-800 text-slate-100'}`}>
                 <div className="flex items-center gap-2 md:gap-4">
                     <span className="hidden lg:block text-sm font-bold uppercase tracking-wider text-blue-500">Live Preview</span>
                     
