@@ -27,9 +27,10 @@ export const useWorkspace = () => {
 export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUserData = null }) => {
     const appContext = useAppContext();
     
-    // For public previews, we override the user data
-    const userData = isPublicPreview ? previewUserData : appContext.userData;
-    const setUserData = isPublicPreview ? () => {} : appContext.setUserData;
+    // For public previews, we override the user data with reactive local state
+    const [publicUserData, setPublicUserData] = useState(previewUserData || {});
+    const userData = isPublicPreview ? publicUserData : appContext.userData;
+    const setUserData = isPublicPreview ? setPublicUserData : appContext.setUserData;
     const themeMode = appContext.themeMode;
 
     // --- Centralized Backend State ---
@@ -82,6 +83,17 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
             API.patch('portfolio-settings/', { theme: userData.theme }).catch(() => {});
         }
     }, [userData?.theme, isPublicPreview]);
+
+    // --- Sync Frontpage Template to Backend & LocalStorage ---
+    useEffect(() => {
+        if (userData?.frontpageTemplate) {
+            localStorage.setItem(`aurabuild_frontpage_${userData?.name || 'default'}`, userData.frontpageTemplate);
+            localStorage.setItem(`aurabuild_frontpage_default`, userData.frontpageTemplate);
+            if (!isPublicPreview) {
+                API.patch('portfolio-settings/', { frontpageTemplate: userData.frontpageTemplate }).catch(() => {});
+            }
+        }
+    }, [userData?.frontpageTemplate, userData?.name, isPublicPreview]);
 
     // Local fallback for theme in public preview mode
     const [localTheme, setLocalTheme] = useState(userData?.theme || 'modern_glass');
@@ -197,8 +209,19 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
                     if (res.data.settings) {
                         setGlobalBg(res.data.settings.globalBg || null);
                         setGlobalFont(res.data.settings.globalFont || 'font-inter');
+                        const fpTpl = res.data.settings.frontpageTemplate 
+                            || localStorage.getItem(`aurabuild_frontpage_${cleanUsername}`) 
+                            || localStorage.getItem('aurabuild_frontpage_default') 
+                            || 'template1';
+                        if (setUserData) {
+                            setUserData(prev => ({
+                                ...prev,
+                                frontpageTemplate: fpTpl,
+                                ...(res.data.settings.theme ? { theme: res.data.settings.theme } : {}),
+                                ...(res.data.owner_name ? { name: res.data.owner_name } : {})
+                            }));
+                        }
                         if (res.data.settings.theme) {
-                            if (setUserData) setUserData(prev => ({...prev, theme: res.data.settings.theme}));
                             setLocalTheme(res.data.settings.theme);
                         }
                     }
@@ -210,8 +233,18 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
                         if (settingsRes.data) {
                             setGlobalBg(settingsRes.data.globalBg || null);
                             setGlobalFont(settingsRes.data.globalFont || 'font-inter');
+                            const fpTpl = settingsRes.data.frontpageTemplate 
+                                || localStorage.getItem(`aurabuild_frontpage_${userData?.name || 'default'}`) 
+                                || localStorage.getItem('aurabuild_frontpage_default') 
+                                || 'template1';
+                            if (setUserData) {
+                                setUserData(prev => ({
+                                    ...prev,
+                                    frontpageTemplate: fpTpl,
+                                    ...(settingsRes.data.theme ? { theme: settingsRes.data.theme } : {})
+                                }));
+                            }
                             if (settingsRes.data.theme) {
-                                if (setUserData) setUserData(prev => ({...prev, theme: settingsRes.data.theme}));
                                 setLocalTheme(settingsRes.data.theme);
                             }
                         }

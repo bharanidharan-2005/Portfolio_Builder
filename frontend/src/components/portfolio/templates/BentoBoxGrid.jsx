@@ -26,20 +26,20 @@ const BentoBoxGrid = ({ d }) => {
                 className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 auto-rows-[200px] md:auto-rows-[250px]"
             >
                 {/* Main Intro Box */}
-                <motion.div variants={item} className="col-span-1 md:col-span-2 row-span-2 bg-white rounded-3xl p-8 flex flex-col justify-between shadow-sm border border-zinc-200">
+                <motion.div variants={item} className="col-span-1 md:col-span-2 row-span-2 bg-white rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-sm border border-zinc-200">
                     <div>
-                        <div className="w-12 h-12 bg-zinc-900 text-white rounded-full flex items-center justify-center text-xl font-bold mb-6">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-zinc-900 text-white rounded-full flex items-center justify-center text-lg sm:text-xl font-bold mb-4 sm:mb-6">
                             {d.initials}
                         </div>
-                        <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
+                        <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-3 sm:mb-4 break-words max-w-full">
                             Hi, I'm {d.name}
                         </h1>
-                        <p className="text-xl text-zinc-500 font-medium">
+                        <p className="text-base sm:text-xl text-zinc-500 font-medium break-words max-w-full">
                             {d.headline}
                         </p>
                     </div>
-                    <div className="flex gap-4">
-                        <button onClick={d.onVisualize} className="px-6 py-3 bg-zinc-900 text-white rounded-full font-semibold hover:bg-zinc-800 transition-colors flex items-center gap-2">
+                    <div className="flex gap-4 mt-6">
+                        <button onClick={d.onVisualize} className="px-6 py-3 bg-zinc-900 text-white rounded-full font-semibold hover:bg-zinc-800 transition-colors flex items-center gap-2 cursor-pointer shadow-md active:scale-95">
                             View Work <ArrowRight className="w-4 h-4" />
                         </button>
                     </div>

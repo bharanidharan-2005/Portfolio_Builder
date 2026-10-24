@@ -3,6 +3,7 @@ import {
     X, Monitor, Smartphone, Tablet as TabletIcon, ExternalLink, Copy, LayoutTemplate, ChevronDown, Check
 } from "lucide-react";
 import CanvasContainer from "../../canvas/CanvasContainer.jsx";
+import PortfolioFrontpage from "../portfolio/PortfolioFrontpage.jsx";
 import { PORTFOLIO_THEMES } from "../../canvas/themes.js";
 
 export default function PreviewModal({
@@ -23,6 +24,7 @@ export default function PreviewModal({
     globalFont,
     setTerminalLogs
 }) {
+    const [activeViewMode, setActiveViewMode] = useState('landing'); // 'landing' or 'canvas'
     const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
     const [copied, setCopied] = useState(false);
     const themeDropdownRef = useRef(null);
@@ -86,6 +88,22 @@ export default function PreviewModal({
                             title="Mobile View"
                         >
                             <Smartphone className="w-4 h-4" /> <span className="hidden sm:inline">Mobile</span>
+                        </button>
+                    </div>
+
+                    {/* View Mode: Frontpage vs Full Portfolio */}
+                    <div className={`flex items-center gap-1 p-1 rounded-xl border transition-colors ${isLight ? 'bg-slate-100 border-slate-200' : 'bg-black/40 border-slate-800'}`}>
+                        <button 
+                            onClick={() => setActiveViewMode('landing')}
+                            className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${activeViewMode === 'landing' ? 'bg-indigo-600 text-white shadow-md' : isLight ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-white'}`}
+                        >
+                            Landing
+                        </button>
+                        <button 
+                            onClick={() => setActiveViewMode('canvas')}
+                            className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${activeViewMode === 'canvas' ? 'bg-indigo-600 text-white shadow-md' : isLight ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-white'}`}
+                        >
+                            Sections
                         </button>
                     </div>
                 </div>
@@ -175,19 +193,30 @@ export default function PreviewModal({
 
                     {/* Scrollable container that houses the actual portfolio */}
                     <div id="preview-scroll-container" className="flex-1 overflow-x-hidden overflow-y-auto w-full h-full relative z-10 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                        <div className={`pb-24 w-full h-full ${previewViewport === 'mobile' ? 'pt-8 px-0' : 'pt-0 px-0'}`}>
-                            <CanvasContainer 
-                                activePage={activePage}
-                                sections={sections}
-                                activeSectionId={null} 
-                                setActiveSectionId={() => {}} 
-                                portfolioTheme={currentTheme}
-                                themeMode={themeMode}
-                                globalBgImage={globalBg} 
-                                globalFont={globalFont}
-                                isPreview={true} 
-                            />
-                        </div>
+                        {activeViewMode === 'landing' ? (
+                            <div className={`w-full min-h-full ${previewViewport === 'mobile' ? 'pt-6' : ''}`}>
+                                <PortfolioFrontpage 
+                                    userData={userData}
+                                    sections={sections}
+                                    themeMode={themeMode}
+                                    onVisualize={() => setActiveViewMode('canvas')}
+                                />
+                            </div>
+                        ) : (
+                            <div className={`pb-24 w-full h-full ${previewViewport === 'mobile' ? 'pt-8 px-0' : 'pt-0 px-0'}`}>
+                                <CanvasContainer 
+                                    activePage={activePage}
+                                    sections={sections}
+                                    activeSectionId={null} 
+                                    setActiveSectionId={() => {}} 
+                                    portfolioTheme={currentTheme}
+                                    themeMode={themeMode}
+                                    globalBgImage={globalBg} 
+                                    globalFont={globalFont}
+                                    isPreview={true} 
+                                />
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

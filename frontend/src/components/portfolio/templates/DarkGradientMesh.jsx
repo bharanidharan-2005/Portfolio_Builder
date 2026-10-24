@@ -33,11 +33,11 @@ const DarkGradientMesh = ({ d }) => {
                     className="flex flex-col items-center"
                 >
                     {d.roleImage && (
-                        <div className="w-32 h-32 mb-8 rounded-full overflow-hidden border-2 border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                        <div className="w-20 h-20 sm:w-32 sm:h-32 mb-6 sm:mb-8 rounded-full overflow-hidden border-2 border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
                             <img src={d.roleImage} alt={d.name} className="w-full h-full object-cover" />
                         </div>
                     )}
-                    <h1 className="text-6xl md:text-8xl lg:text-9xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white via-white/80 to-white/40 mb-6">
+                    <h1 className="text-3xl sm:text-6xl md:text-8xl lg:text-9xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white via-white/80 to-white/40 mb-4 sm:mb-6 break-words max-w-full px-2">
                         {d.name}
                     </h1>
                 </motion.div>
@@ -46,7 +46,7 @@ const DarkGradientMesh = ({ d }) => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 1, delay: 0.2 }}
-                    className="text-2xl md:text-4xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-violet-400 mb-8"
+                    className="text-lg sm:text-2xl md:text-4xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-violet-400 mb-6 sm:mb-8 break-words max-w-full px-2"
                 >
                     {d.headline}
                 </motion.p>
@@ -55,7 +55,7 @@ const DarkGradientMesh = ({ d }) => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 1, delay: 0.4 }}
-                    className="text-lg md:text-xl font-light text-white/60 max-w-2xl leading-relaxed mb-12"
+                    className="text-sm sm:text-lg md:text-xl font-light text-white/60 max-w-2xl leading-relaxed mb-8 sm:mb-12 px-2"
                 >
                     {d.bio}
                 </motion.p>

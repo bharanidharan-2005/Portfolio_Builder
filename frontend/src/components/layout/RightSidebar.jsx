@@ -1841,6 +1841,9 @@ function RightSidebar({
                     <span className={`text-[11px] font-black uppercase tracking-widest flex items-center gap-2 ${isLight ? 'text-slate-800' : 'text-slate-200'}`}> 
                         <LayoutTemplate className="w-4 h-4 text-blue-500" /> Frontpage Templates
                     </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Live on Canvas
+                    </span>
                 </div>
                 <p className={`text-[10px] leading-relaxed mb-4 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                     Select a visually stunning introductory landing page for your generated portfolio.

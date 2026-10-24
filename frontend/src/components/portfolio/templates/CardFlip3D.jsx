@@ -14,12 +14,12 @@ const CardFlip3D = ({ d }) => {
                 <div className="absolute inset-0 w-full h-full bg-white rounded-[2rem] shadow-2xl p-8 md:p-12 flex flex-col md:flex-row gap-8 backface-hidden [backface-visibility:hidden]">
                     <div className="flex-1 flex flex-col justify-between">
                         <header>
-                            <div className="w-16 h-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center text-2xl font-bold shadow-lg shadow-blue-600/30 mb-8">
+                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center text-xl sm:text-2xl font-bold shadow-lg shadow-blue-600/30 mb-6 sm:mb-8">
                                 {d.initials}
                             </div>
-                            <h1 className="text-5xl md:text-6xl font-black text-slate-900 tracking-tight mb-4">{d.name}</h1>
-                            <p className="text-2xl font-bold text-blue-600 mb-6">{d.headline}</p>
-                            <p className="text-lg text-slate-600 font-medium max-w-md line-clamp-4">{d.bio}</p>
+                            <h1 className="text-2xl sm:text-4xl md:text-6xl font-black text-slate-900 tracking-tight mb-3 sm:mb-4 break-words max-w-full">{d.name}</h1>
+                            <p className="text-base sm:text-2xl font-bold text-blue-600 mb-4 sm:mb-6 break-words max-w-full">{d.headline}</p>
+                            <p className="text-sm sm:text-lg text-slate-600 font-medium max-w-md line-clamp-4">{d.bio}</p>
                         </header>
                         
                         <div className="mt-8">

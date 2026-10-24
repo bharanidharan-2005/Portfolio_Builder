@@ -353,3 +353,32 @@ class WorkspaceAPITests(TestCase):
         home = PortfolioPage.objects.get(portfolio__owner=self.owner, name='Home')
         denied = self.client.delete(reverse('page-detail', args=[home.id]), **other_headers)
         self.assertEqual(denied.status_code, 404)
+
+    def test_frontpage_template_get_and_patch(self):
+        headers = auth_client(self.client, self.owner)
+        res = self.client.get(reverse('portfolio-settings'), **headers)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn('frontpageTemplate', res.json())
+
+        # Update frontpageTemplate
+        patch_res = self.client.patch(
+            reverse('portfolio-settings'),
+            {'frontpageTemplate': 'template4'},
+            content_type='application/json',
+            **headers,
+        )
+        self.assertEqual(patch_res.status_code, 200)
+        self.assertEqual(patch_res.json()['frontpageTemplate'], 'template4')
+
+        # Check GET returns updated value
+        check_res = self.client.get(reverse('portfolio-settings'), **headers)
+        self.assertEqual(check_res.status_code, 200)
+        self.assertEqual(check_res.json()['frontpageTemplate'], 'template4')
+
+        # Check Public Portfolio returns the template in settings
+        public_res = self.client.get(reverse('public-portfolio', args=[self.owner.username]))
+        self.assertEqual(public_res.status_code, 200)
+        self.assertEqual(public_res.json().get('settings', {}).get('frontpageTemplate'), 'template4')
+
+
+

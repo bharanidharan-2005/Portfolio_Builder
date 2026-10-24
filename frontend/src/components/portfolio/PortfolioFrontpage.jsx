@@ -24,11 +24,15 @@ export const getRoleImage = (subheading) => {
     return 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1000&q=80';
 };
 
-const PortfolioFrontpage = ({ userData, sections, themeMode, onVisualize }) => {
-    const templateId = userData?.frontpageTemplate || "template1";
-
+const PortfolioFrontpage = ({ userData, sections = [], themeMode, onVisualize }) => {
     const heroSec = sections.find(s => s.section_type === 'hero');
     const aboutSec = sections.find(s => s.section_type === 'about');
+
+    const templateId = userData?.frontpageTemplate 
+        || heroSec?.content_data?.frontpageTemplate 
+        || (typeof window !== 'undefined' && localStorage.getItem(`aurabuild_frontpage_${userData?.name || 'default'}`))
+        || (typeof window !== 'undefined' && localStorage.getItem('aurabuild_frontpage_default'))
+        || "template1";
 
     const name = heroSec?.content_data?.heading || userData?.name || "Professional Developer";
     const headline = heroSec?.content_data?.subheading || "Software Engineer | Tech Enthusiast";

@@ -110,14 +110,18 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
     const frontFirstName = escapeHtml(fullName.split(' ')[0]);
     const roleImageUrl = getAbsoluteUrl(getRoleImage(heroData.subheading || ""));
 
-    const templateKey = userData?.frontpageTemplate || 'template1';
+    const templateKey = userData?.frontpageTemplate 
+        || heroData?.frontpageTemplate 
+        || (typeof window !== 'undefined' && localStorage.getItem(`aurabuild_frontpage_${userData?.name || 'default'}`))
+        || (typeof window !== 'undefined' && localStorage.getItem('aurabuild_frontpage_default'))
+        || 'template1';
     const tplConfig = FRONT_PAGE_TEMPLATES[templateKey] || FRONT_PAGE_TEMPLATES.template1;
 
     const heroCustomImage = heroData.customSideImage ? getAbsoluteUrl(heroData.customSideImage) : '';
     const heroVisualImageUrl = heroCustomImage || roleImageUrl;
 
     const rawHtml = renderToString(React.createElement(PortfolioFrontpage, {
-        userData: userData,
+        userData: { ...userData, frontpageTemplate: templateKey },
         sections: activeSections,
         themeMode: isDark ? 'dark' : 'light',
         onVisualize: null

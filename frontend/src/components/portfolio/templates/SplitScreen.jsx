@@ -8,9 +8,9 @@ const SplitScreen = ({ d }) => {
     return (
         <div className="min-h-screen w-full flex flex-col lg:flex-row relative overflow-hidden bg-slate-900">
             {/* Left Text Half */}
-            <div className="flex-1 lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 lg:px-24 py-20 relative z-10 bg-slate-950">
-                <header className="absolute top-0 left-0 w-full px-8 sm:px-16 lg:px-24 py-8 flex justify-between items-center">
-                    <div className="text-xl font-black tracking-widest text-white">{d.firstName}.</div>
+            <div className="flex-1 lg:w-1/2 flex flex-col justify-center px-5 sm:px-12 lg:px-20 py-16 sm:py-20 relative z-10 bg-slate-950">
+                <header className="absolute top-0 left-0 w-full px-5 sm:px-12 lg:px-20 py-6 sm:py-8 flex justify-between items-center">
+                    <div className="text-lg sm:text-xl font-black tracking-widest text-white truncate max-w-[200px] sm:max-w-none">{d.firstName}.</div>
                 </header>
 
                 <motion.div 
@@ -19,27 +19,27 @@ const SplitScreen = ({ d }) => {
                     transition={{ duration: 0.8, ease: "easeOut" }}
                     className="w-full max-w-xl"
                 >
-                    <div className="w-16 h-1 bg-blue-500 mb-8"></div>
+                    <div className="w-12 sm:w-16 h-1 bg-blue-500 mb-6 sm:mb-8"></div>
                     
-                    <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.1] text-white mb-6">
+                    <h1 className="text-3xl sm:text-5xl lg:text-7xl font-black tracking-tight leading-[1.1] text-white mb-6 break-words max-w-full">
                         {d.name.split(' ').map((word, i) => (
-                            <span key={i} className="block">{word}</span>
+                            <span key={i} className="block break-words">{word}</span>
                         ))}
                     </h1>
                     
-                    <p className="text-xl font-bold text-blue-400 mb-6">
+                    <p className="text-lg sm:text-xl font-bold text-blue-400 mb-4 sm:mb-6">
                         {d.headline}
                     </p>
                     
-                    <p className="text-lg font-medium text-slate-400 leading-relaxed mb-10 max-w-lg">
+                    <p className="text-base sm:text-lg font-medium text-slate-400 leading-relaxed mb-8 sm:mb-10 max-w-lg">
                         {d.bio}
                     </p>
                     
-                    <div className="flex flex-col sm:flex-row items-start gap-4">
-                        <button onClick={d.onVisualize} className="px-8 py-4 bg-blue-600 text-white rounded-none text-sm font-bold hover:bg-blue-500 transition-all flex items-center gap-3">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-4">
+                        <button onClick={d.onVisualize} className="px-8 py-3.5 sm:py-4 bg-blue-600 text-white rounded-none text-sm font-bold hover:bg-blue-500 transition-all flex items-center justify-center gap-3 cursor-pointer shadow-lg active:scale-95">
                             View Work <ArrowRight className="w-4 h-4" />
                         </button>
-                        <button onClick={d.onVisualize} className="px-8 py-4 bg-transparent border border-slate-700 text-slate-300 rounded-none text-sm font-bold hover:bg-white/5 transition-all flex items-center gap-2 cursor-pointer">
+                        <button onClick={d.onVisualize} className="px-8 py-3.5 sm:py-4 bg-transparent border border-slate-700 text-slate-300 rounded-none text-sm font-bold hover:bg-white/5 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95">
                             <Download className="w-4 h-4" /> Explore Resume
                         </button>
                     </div>

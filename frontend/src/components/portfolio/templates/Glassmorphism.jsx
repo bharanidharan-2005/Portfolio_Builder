@@ -37,32 +37,32 @@ const Glassmorphism = ({ d }) => {
                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/20 to-transparent opacity-50 pointer-events-none"></div>
                 
                 {d.roleImage && (
-                    <div className="w-28 h-28 mb-8 rounded-full border-4 border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.2)] overflow-hidden bg-white/10 backdrop-blur-md z-10 relative">
+                    <div className="w-20 h-20 sm:w-28 sm:h-28 mb-6 sm:mb-8 rounded-full border-4 border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.2)] overflow-hidden bg-white/10 backdrop-blur-md z-10 relative">
                         <img src={d.roleImage} alt={d.name} className="w-full h-full object-cover" />
                     </div>
                 )}
 
-                <span className="px-6 py-2 rounded-full bg-white/10 border border-white/20 text-xs font-bold uppercase tracking-widest text-white mb-8 relative z-10">
+                <span className="px-4 sm:px-6 py-1.5 sm:py-2 rounded-full bg-white/10 border border-white/20 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-white mb-6 sm:mb-8 relative z-10">
                     Welcome to my space
                 </span>
                 
-                <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-white mb-6 drop-shadow-md">
+                <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-white mb-4 sm:mb-6 drop-shadow-md break-words max-w-full px-2">
                     {d.name}
                 </h1>
                 
-                <p className="text-xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300 mb-8 max-w-3xl">
+                <p className="text-base sm:text-xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300 mb-6 sm:mb-8 max-w-3xl px-2">
                     {d.headline}
                 </p>
                 
-                <p className="text-lg md:text-xl font-medium text-white/80 leading-relaxed mb-12 max-w-2xl">
+                <p className="text-sm sm:text-lg md:text-xl font-medium text-white/80 leading-relaxed mb-8 sm:mb-12 max-w-2xl px-2">
                     {d.bio}
                 </p>
                 
-                <div className="flex flex-col sm:flex-row items-center gap-6">
-                    <button onClick={d.onVisualize} className="px-8 py-4 bg-white text-slate-900 rounded-2xl text-sm font-black hover:scale-105 transition-all flex items-center gap-3 shadow-lg hover:shadow-white/20">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 w-full sm:w-auto">
+                    <button onClick={d.onVisualize} className="w-full sm:w-auto px-8 py-3.5 sm:py-4 bg-white text-slate-900 rounded-2xl text-xs sm:text-sm font-black hover:scale-105 transition-all flex items-center justify-center gap-3 shadow-lg hover:shadow-white/20 cursor-pointer active:scale-95">
                         Explore Portfolio <ArrowRight className="w-4 h-4" />
                     </button>
-                    <button onClick={d.onVisualize} className="px-8 py-4 bg-white/10 text-white border border-white/30 rounded-2xl text-sm font-bold hover:bg-white/20 hover:scale-105 transition-all flex items-center gap-2 backdrop-blur-md cursor-pointer">
+                    <button onClick={d.onVisualize} className="w-full sm:w-auto px-8 py-3.5 sm:py-4 bg-white/10 text-white border border-white/30 rounded-2xl text-xs sm:text-sm font-bold hover:bg-white/20 hover:scale-105 transition-all flex items-center justify-center gap-2 backdrop-blur-md cursor-pointer active:scale-95">
                         <Download className="w-4 h-4" /> Download CV / Resume
                     </button>
                 </div>

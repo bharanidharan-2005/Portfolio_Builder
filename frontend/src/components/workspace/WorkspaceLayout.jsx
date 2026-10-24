@@ -74,9 +74,24 @@ export default function WorkspaceLayout() {
     const handleToggleRight = useCallback(() => setIsRightOpen(prev => !prev), []);
     const handleCloseRight = useCallback(() => setIsRightOpen(false), []);
     const handleOpenRight = useCallback(() => setIsRightOpen(true), []);
-    const handleThemeChange = useCallback((newTheme) => setUserData(prev => ({ ...prev, theme: newTheme })), [setUserData]);
-    const handleTemplateChange = useCallback((newTpl) => setUserData(prev => ({ ...prev, frontpageTemplate: newTpl })), [setUserData]);
-    const handleOpenHelp = useCallback(() => setIsHelpModalOpen(true), []);
+    const handleTemplateChange = useCallback((newTpl) => {
+        setUserData(prev => ({ ...prev, frontpageTemplate: newTpl }));
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(`aurabuild_frontpage_${userData?.name || 'default'}`, newTpl);
+            localStorage.setItem('aurabuild_frontpage_default', newTpl);
+        }
+        if (!isPublicPreview) {
+            API.patch('portfolio-settings/', { frontpageTemplate: newTpl }).catch(() => {});
+        }
+        const heroSec = sections.find(s => s.section_type === 'hero');
+        if (heroSec && handleUpdateSectionContent) {
+            handleUpdateSectionContent(heroSec.id, {
+                ...heroSec.content_data,
+                frontpageTemplate: newTpl
+            });
+        }
+        setTerminalLogs(prev => [...prev, { type: "info", text: `[FRONTPAGE] Switched landing template to: ${newTpl}` }]);
+    }, [setUserData, userData?.name, isPublicPreview, sections, handleUpdateSectionContent, setTerminalLogs]);
     const handleCloseHelp = useCallback(() => setIsHelpModalOpen(false), []);
     const handleOpenSettings = useCallback(() => setIsSettingsModalOpen(true), []);
     const handleCloseSettings = useCallback(() => setIsSettingsModalOpen(false), []);
@@ -220,28 +235,62 @@ export default function WorkspaceLayout() {
 
                     <div id="workspace-scroll-container" className={`flex-1 min-w-0 overflow-y-auto overflow-x-hidden w-full h-full ${!isPublicPreview ? 'p-3 sm:p-5 lg:p-6' : 'p-0'} [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`}>
                         <div className={`w-full min-w-0 max-w-full transition-all duration-300 ${!isPublicPreview ? 'max-w-[1440px] mx-auto' : ''}`}>
-                            <CanvasContainer 
-                                activePage={activePage}
-                                sections={sections}
-                                activeSectionId={!isPublicPreview ? activeSectionId : null}
-                                setActiveSectionId={setActiveSectionId}
-                                portfolioTheme={currentTheme}
-                                themeMode={themeMode}
-                                globalBgImage={globalBg}
-                                globalFont={globalFont}
-                                onInlineEdit={!isPublicPreview ? handleUpdateSectionContent : undefined} 
-                                onDropSection={!isPublicPreview ? handleDropSection : undefined} 
-                                onDeleteSection={!isPublicPreview ? handleDeleteSection : undefined}
-                                onDuplicateSection={!isPublicPreview ? handleDuplicateSection : undefined}
-                                onAddSection={!isPublicPreview ? handleAddManualSection : undefined}
-                                onUndo={!isPublicPreview ? handleUndo : undefined}
-                                onRedo={!isPublicPreview ? handleRedo : undefined}
-                                canUndo={history.past.length > 0}
-                                canRedo={history.future.length > 0}
-                                isPreview={isPublicPreview} 
-                                activeHighlightSection={activeHighlightSection}
-                                aiSuggestionPreview={aiSuggestionPreview}
-                            />
+                            {activeTool === "templates" ? (
+                                <div className="w-full rounded-2xl overflow-hidden shadow-2xl border border-blue-500/30 flex flex-col mb-12">
+                                    <div className={`p-3 sm:p-4 border-b flex items-center justify-between z-20 ${isLight ? 'bg-white border-slate-200' : 'bg-slate-900/90 backdrop-blur-md border-slate-800'}`}>
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            <span className="text-xs font-bold uppercase tracking-wider text-blue-500">
+                                                Live Frontpage Landing Preview
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className={`text-[11px] font-medium ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                                                Template: <strong className="text-blue-500 capitalize">{userData?.frontpageTemplate || "template1"}</strong>
+                                            </span>
+                                            <button 
+                                                onClick={() => handleSelectTool(null)}
+                                                className="text-xs px-2.5 py-1 rounded-md bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-colors cursor-pointer"
+                                            >
+                                                Back to Canvas
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="w-full relative min-h-[600px] overflow-hidden">
+                                        <PortfolioFrontpage 
+                                            userData={userData}
+                                            sections={sections}
+                                            themeMode={themeMode}
+                                            onVisualize={() => {
+                                                handleSelectTool(null);
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            ) : (
+                                <CanvasContainer 
+                                    activePage={activePage}
+                                    sections={sections}
+                                    activeSectionId={!isPublicPreview ? activeSectionId : null}
+                                    setActiveSectionId={setActiveSectionId}
+                                    portfolioTheme={currentTheme}
+                                    themeMode={themeMode}
+                                    globalBgImage={globalBg}
+                                    globalFont={globalFont}
+                                    onInlineEdit={!isPublicPreview ? handleUpdateSectionContent : undefined} 
+                                    onDropSection={!isPublicPreview ? handleDropSection : undefined} 
+                                    onDeleteSection={!isPublicPreview ? handleDeleteSection : undefined}
+                                    onDuplicateSection={!isPublicPreview ? handleDuplicateSection : undefined}
+                                    onAddSection={!isPublicPreview ? handleAddManualSection : undefined}
+                                    onUndo={!isPublicPreview ? handleUndo : undefined}
+                                    onRedo={!isPublicPreview ? handleRedo : undefined}
+                                    canUndo={history.past.length > 0}
+                                    canRedo={history.future.length > 0}
+                                    isPreview={isPublicPreview} 
+                                    activeHighlightSection={activeHighlightSection}
+                                    aiSuggestionPreview={aiSuggestionPreview}
+                                />
+                            )}
                         </div>
                     </div>
                 </main>

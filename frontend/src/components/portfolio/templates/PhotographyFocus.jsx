@@ -38,10 +38,10 @@ const PhotographyFocus = ({ d }) => {
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 1, delay: 0.5 }}
-                        className="absolute bottom-12 left-6 md:left-12 text-5xl sm:text-7xl lg:text-8xl font-black text-white uppercase tracking-tighter leading-none"
+                        className="absolute bottom-6 sm:bottom-12 left-4 sm:left-6 md:left-12 text-3xl sm:text-6xl lg:text-8xl font-black text-white uppercase tracking-tighter leading-none break-words max-w-[90%]"
                     >
                         {d.name.split(' ').map((word, i) => (
-                            <span key={i} className="block">{word}</span>
+                            <span key={i} className="block break-words">{word}</span>
                         ))}
                     </motion.h1>
                 </div>

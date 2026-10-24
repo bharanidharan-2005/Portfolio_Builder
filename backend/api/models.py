@@ -11,6 +11,7 @@ class Portfolio(models.Model):
     global_theme = models.CharField(max_length=50, default="modern_glass", blank=True)
     global_bg_image = models.TextField(blank=True, null=True)
     global_font = models.CharField(max_length=50, default="font-inter", blank=True)
+    frontpage_template = models.CharField(max_length=50, default="template1", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

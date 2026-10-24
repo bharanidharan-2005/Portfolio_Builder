@@ -49,7 +49,7 @@ const WaveOrganic = ({ d }) => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8, delay: 0.1 }}
-                        className="text-5xl sm:text-7xl font-black tracking-tight text-[#2c3614] mb-6 leading-tight"
+                        className="text-3xl sm:text-6xl lg:text-7xl font-black tracking-tight text-[#2c3614] mb-4 sm:mb-6 leading-tight break-words max-w-full"
                     >
                         {d.name}
                     </motion.h1>
@@ -58,7 +58,7 @@ const WaveOrganic = ({ d }) => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8, delay: 0.2 }}
-                        className="text-2xl font-medium text-[#6a8039] mb-8"
+                        className="text-lg sm:text-2xl font-medium text-[#6a8039] mb-6 sm:mb-8 break-words max-w-full"
                     >
                         {d.headline}
                     </motion.p>

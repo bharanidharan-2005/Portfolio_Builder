@@ -43,17 +43,17 @@ const ElegantSerif = ({ d }) => {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 1, delay: 0.1 }}
-                            className="text-6xl sm:text-7xl lg:text-8xl font-normal leading-tight mb-8"
+                            className="text-3xl sm:text-6xl lg:text-8xl font-normal leading-tight mb-6 sm:mb-8 break-words max-w-full"
                         >
                             {d.name.split(' ')[0]} <br />
-                            <span className="italic text-[#666]">{d.name.split(' ')[1] || ''}</span>
+                            <span className="italic text-[#666] break-words">{d.name.split(' ').slice(1).join(' ')}</span>
                         </motion.h1>
                         
                         <motion.p 
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 1, delay: 0.2 }}
-                            className="text-2xl sm:text-3xl font-medium text-[#444] mb-10 max-w-2xl leading-snug"
+                            className="text-lg sm:text-2xl lg:text-3xl font-medium text-[#444] mb-8 sm:mb-10 max-w-2xl leading-snug break-words"
                         >
                             {d.headline}
                         </motion.p>

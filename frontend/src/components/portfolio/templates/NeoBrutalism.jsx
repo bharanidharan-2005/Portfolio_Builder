@@ -26,12 +26,12 @@ const NeoBrutalism = ({ d }) => {
                 <div className="absolute top-10 right-10 w-24 h-24 bg-[#ff5e5e] border-4 border-black rounded-full shadow-[8px_8px_0_0_rgba(0,0,0,1)] hidden lg:block animate-[bounce_4s_infinite]"></div>
                 <div className="absolute bottom-20 left-10 w-32 h-16 bg-[#5698f4] border-4 border-black shadow-[8px_8px_0_0_rgba(0,0,0,1)] hidden lg:block transform -rotate-12"></div>
 
-                <div className="flex-1 w-full flex flex-col items-start bg-white border-4 border-black p-8 sm:p-12 shadow-[12px_12px_0_0_rgba(0,0,0,1)] relative z-20">
+                <div className="flex-1 w-full flex flex-col items-start bg-white border-4 border-black p-5 sm:p-10 md:p-12 shadow-[8px_8px_0_0_rgba(0,0,0,1)] sm:shadow-[12px_12px_0_0_rgba(0,0,0,1)] relative z-20">
                     <motion.div 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
-                        className="bg-black text-white text-sm sm:text-base font-bold uppercase px-4 py-2 mb-8 border-4 border-black transform -rotate-2"
+                        className="bg-black text-white text-xs sm:text-base font-bold uppercase px-3 sm:px-4 py-1.5 sm:py-2 mb-6 sm:mb-8 border-2 sm:border-4 border-black transform -rotate-2"
                     >
                         Portfolio 2026
                     </motion.div>
@@ -40,7 +40,7 @@ const NeoBrutalism = ({ d }) => {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.5, delay: 0.2 }}
-                        className="text-5xl sm:text-7xl lg:text-8xl font-black uppercase tracking-tighter leading-none mb-6"
+                        className="text-3xl sm:text-6xl lg:text-8xl font-black uppercase tracking-tighter leading-none mb-6 break-words max-w-full"
                     >
                         {d.name}
                     </motion.h1>
@@ -49,7 +49,7 @@ const NeoBrutalism = ({ d }) => {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.5, delay: 0.3 }}
-                        className="text-2xl sm:text-3xl font-bold bg-[#5698f4] px-4 py-2 border-4 border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] mb-8"
+                        className="text-lg sm:text-2xl lg:text-3xl font-bold bg-[#5698f4] px-3 sm:px-4 py-1.5 sm:py-2 border-2 sm:border-4 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] sm:shadow-[6px_6px_0_0_rgba(0,0,0,1)] mb-6 sm:mb-8 break-words max-w-full"
                     >
                         {d.headline}
                     </motion.p>
@@ -58,7 +58,7 @@ const NeoBrutalism = ({ d }) => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.5, delay: 0.4 }}
-                        className="text-lg sm:text-xl font-medium mb-12 max-w-xl leading-relaxed"
+                        className="text-base sm:text-lg lg:text-xl font-medium mb-8 sm:mb-12 max-w-xl leading-relaxed"
                     >
                         {d.bio}
                     </motion.p>

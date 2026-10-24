@@ -64,7 +64,7 @@ const ParticleNetwork = ({ d }) => {
                     <span className="px-4 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-400 text-xs font-bold uppercase tracking-widest mb-8 inline-block">
                         System Online
                     </span>
-                    <h1 className="text-6xl md:text-8xl font-black tracking-tight text-white mb-6">
+                    <h1 className="text-3xl sm:text-6xl md:text-8xl font-black tracking-tight text-white mb-4 sm:mb-6 break-words max-w-full px-2">
                         {d.name}
                     </h1>
                 </motion.div>
@@ -73,7 +73,7 @@ const ParticleNetwork = ({ d }) => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 1, delay: 0.2 }}
-                    className="text-2xl md:text-4xl font-medium text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-8"
+                    className="text-lg sm:text-2xl md:text-4xl font-medium text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-6 sm:mb-8 break-words max-w-full px-2"
                 >
                     {d.headline}
                 </motion.p>

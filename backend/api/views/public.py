@@ -61,6 +61,7 @@ class PublicPortfolioAPIView(APIView):
                 'globalBg': matched_portfolio.global_bg_image,
                 'theme': matched_portfolio.global_theme,
                 'globalFont': matched_portfolio.global_font,
+                'frontpageTemplate': getattr(matched_portfolio, 'frontpage_template', 'template1') or 'template1',
             },
             'pages': data
         }, status=status.HTTP_200_OK)

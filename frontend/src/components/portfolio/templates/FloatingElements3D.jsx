@@ -64,16 +64,16 @@ const FloatingElements3D = ({ d }) => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.1 }}
-                        className="text-5xl sm:text-7xl font-black tracking-tighter text-slate-900 mb-6 leading-tight"
+                        className="text-3xl sm:text-5xl lg:text-7xl font-black tracking-tighter text-slate-900 mb-4 sm:mb-6 leading-tight break-words max-w-full"
                     >
-                        Designing <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">future</span> experiences.
+                        {d.name} &mdash; Designing <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">future</span> experiences.
                     </motion.h1>
                     
                     <motion.p 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.2 }}
-                        className="text-xl sm:text-2xl font-bold text-slate-600 mb-6"
+                        className="text-base sm:text-2xl font-bold text-slate-600 mb-4 sm:mb-6 break-words max-w-full"
                     >
                         {d.headline}
                     </motion.p>

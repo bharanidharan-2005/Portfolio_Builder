@@ -23,11 +23,11 @@ const Cyberpunk = ({ d }) => {
                 </div>
             </header>
 
-            <main className="relative z-10 w-full max-w-5xl bg-black/60 backdrop-blur-sm border border-cyan-500/50 p-8 sm:p-16 border-l-4 border-l-pink-500 shadow-[0_0_30px_rgba(34,211,238,0.15)] flex flex-col items-start skew-x-[-2deg]">
+            <main className="relative z-10 w-full max-w-5xl bg-black/60 backdrop-blur-sm border border-cyan-500/50 p-5 sm:p-10 md:p-16 border-l-4 border-l-pink-500 shadow-[0_0_30px_rgba(34,211,238,0.15)] flex flex-col items-start skew-x-[-2deg]">
                 
-                <div className="flex items-center gap-4 mb-8">
-                    <div className="w-4 h-4 bg-pink-500 animate-pulse shadow-[0_0_10px_#ec4899]"></div>
-                    <span className="text-cyan-400 font-bold tracking-widest text-sm drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]">CONNECTION ESTABLISHED</span>
+                <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-pink-500 animate-pulse shadow-[0_0_10px_#ec4899]"></div>
+                    <span className="text-cyan-400 font-bold tracking-widest text-xs sm:text-sm drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]">CONNECTION ESTABLISHED</span>
                 </div>
 
                 {d.roleImage && (
@@ -35,7 +35,7 @@ const Cyberpunk = ({ d }) => {
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.4, delay: 0.1 }}
-                        className="w-32 h-32 mb-6 border-2 border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)] relative p-1"
+                        className="w-24 h-24 sm:w-32 sm:h-32 mb-6 border-2 border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)] relative p-1"
                     >
                         <div className="absolute inset-0 bg-cyan-400/20 mix-blend-overlay z-10 pointer-events-none"></div>
                         <img src={d.roleImage} alt={d.name} className="w-full h-full object-cover grayscale contrast-125" />
@@ -46,7 +46,7 @@ const Cyberpunk = ({ d }) => {
                     initial={{ opacity: 0, x: -50 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.4 }}
-                    className="text-5xl sm:text-7xl lg:text-8xl font-black text-white uppercase tracking-tighter mb-4 drop-shadow-[2px_2px_0px_#ec4899,-2px_-2px_0px_#22d3ee]"
+                    className="text-3xl sm:text-6xl lg:text-8xl font-black text-white uppercase tracking-tighter mb-4 drop-shadow-[2px_2px_0px_#ec4899,-2px_-2px_0px_#22d3ee] break-words max-w-full"
                 >
                     {d.name}
                 </motion.h1>
@@ -55,7 +55,7 @@ const Cyberpunk = ({ d }) => {
                     initial={{ opacity: 0, x: -30 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.4, delay: 0.2 }}
-                    className="text-xl sm:text-2xl lg:text-3xl font-bold text-cyan-300 mb-8 uppercase tracking-wide bg-cyan-900/40 px-4 py-2 border-l-2 border-cyan-400"
+                    className="text-base sm:text-2xl lg:text-3xl font-bold text-cyan-300 mb-6 sm:mb-8 uppercase tracking-wide bg-cyan-900/40 px-3 sm:px-4 py-1.5 sm:py-2 border-l-2 border-cyan-400 break-words max-w-full"
                 >
                     {d.headline}
                 </motion.p>

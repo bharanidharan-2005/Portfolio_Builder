@@ -45,11 +45,11 @@ const RetroArcade = ({ d }) => {
                         Ready Player One
                     </h2>
                     
-                    <h1 className="text-5xl sm:text-7xl font-black text-[#00ffff] uppercase tracking-tighter mb-6 drop-shadow-[4px_4px_0_#ff0055]">
+                    <h1 className="text-3xl sm:text-6xl lg:text-7xl font-black text-[#00ffff] uppercase tracking-tighter mb-4 sm:mb-6 drop-shadow-[4px_4px_0_#ff0055] break-words max-w-full px-2">
                         {d.name}
                     </h1>
                     
-                    <p className="text-xl sm:text-3xl font-bold text-[#ffaa00] mb-8 uppercase tracking-widest">
+                    <p className="text-base sm:text-2xl lg:text-3xl font-bold text-[#ffaa00] mb-6 sm:mb-8 uppercase tracking-widest break-words max-w-full px-2">
                         &gt; {d.headline} &lt;
                     </p>
                     

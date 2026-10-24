@@ -175,6 +175,7 @@ class PortfolioSettingsAPIView(APIView):
             'globalBg': portfolio.global_bg_image,
             'theme': portfolio.global_theme,
             'globalFont': portfolio.global_font,
+            'frontpageTemplate': getattr(portfolio, 'frontpage_template', 'template1') or 'template1',
         }, status=status.HTTP_200_OK)
 
     def patch(self, request):
@@ -186,5 +187,14 @@ class PortfolioSettingsAPIView(APIView):
             portfolio.global_theme = data['theme']
         if 'globalFont' in data:
             portfolio.global_font = data['globalFont']
+        if 'frontpageTemplate' in data:
+            portfolio.frontpage_template = data['frontpageTemplate']
         portfolio.save()
-        return Response({'success': True}, status=status.HTTP_200_OK)
+        return Response({
+            'success': True,
+            'globalBg': portfolio.global_bg_image,
+            'theme': portfolio.global_theme,
+            'globalFont': portfolio.global_font,
+            'frontpageTemplate': getattr(portfolio, 'frontpage_template', 'template1') or 'template1',
+        }, status=status.HTTP_200_OK)
+
