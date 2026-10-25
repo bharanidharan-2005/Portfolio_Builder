@@ -869,6 +869,19 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             const isProjImgHidden = project.hideProjectImage === true || String(project.hideProjectImage).toLowerCase() === 'true';
                             const hasProjImg = project.projectImage && !isProjImgHidden;
 
+                            let effectiveGithubUrl = project.githubUrl || project.github || project.repo || project.repo_url || project.html_url || "";
+                            let effectiveProjectUrl = project.projectUrl || project.liveUrl || project.demo_link || project.url || "";
+
+                            // If projectUrl is a GitHub repo link and githubUrl is empty, route it to githubUrl
+                            if (effectiveProjectUrl && (effectiveProjectUrl.includes("github.com") || effectiveProjectUrl.includes("gitlab.com") || effectiveProjectUrl.endsWith(".git"))) {
+                                if (!effectiveGithubUrl) {
+                                    effectiveGithubUrl = effectiveProjectUrl;
+                                    effectiveProjectUrl = "";
+                                } else if (effectiveGithubUrl === effectiveProjectUrl) {
+                                    effectiveProjectUrl = "";
+                                }
+                            }
+
                             return (
                             <div 
                                 key={i}
@@ -1037,7 +1050,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     )}
 
                                     <div className="mt-8 flex flex-wrap gap-3 mt-auto pt-4 border-t border-dashed" style={{ borderColor: 'inherit' }}>
-                                        {project.projectUrl && project.projectUrl.trim() !== "" && (
+                                        {effectiveProjectUrl && effectiveProjectUrl.trim() !== "" && (
                                             <motion.button 
                                                 initial={{ scale: 0.9, opacity: 0 }}
                                                 whileInView={{ scale: 1, opacity: 1 }}
@@ -1056,19 +1069,19 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                     opacity: { repeat: Infinity, duration: 3, ease: "easeInOut" },
                                                     boxShadow: { repeat: Infinity, duration: 3, ease: "easeInOut" }
                                                 }}
-                                                onClick={(e) => { e.stopPropagation(); openExternal(project.projectUrl); }}
+                                                onClick={(e) => { e.stopPropagation(); openExternal(effectiveProjectUrl); }}
                                                 className={`inline-flex items-center justify-center px-6 py-2.5 rounded-xl text-sm font-bold transition-all border shadow-sm ${badgeClass}`}
                                             >
                                                 Live Demo ↗
                                             </motion.button>
                                         )}
-                                        {project.githubUrl && project.githubUrl.trim() !== "" && (
+                                        {effectiveGithubUrl && effectiveGithubUrl.trim() !== "" && (
                                             <motion.button 
                                                 initial={{ scale: 0.9, opacity: 0 }}
                                                 whileInView={{ scale: 1, opacity: 1 }}
                                                 viewport={{ once: false, amount: 0.1 }}
                                                 whileHover={{ scale: 1.03 }}
-                                                onClick={(e) => { e.stopPropagation(); openExternal(project.githubUrl); }}
+                                                onClick={(e) => { e.stopPropagation(); openExternal(effectiveGithubUrl); }}
                                                 className={`inline-flex items-center justify-center px-6 py-2.5 rounded-xl text-sm font-bold transition-all border shadow-sm ${trackBg} ${textPrimary} ${borderClass} hover:bg-white/5`}
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="mr-2" viewBox="0 0 16 16">
@@ -1085,9 +1098,17 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                 <span className="text-xs shrink-0 font-bold">🔗 Live:</span>
                                                 <div className="flex-1 truncate w-full">
                                                     <TextElement 
-                                                        value={project.projectUrl || ""}
+                                                        value={effectiveProjectUrl || ""}
                                                         placeholder="Paste Live URL"
-                                                        onCommit={(v) => updateArrayItem("projects", i, "projectUrl", v)}
+                                                        onCommit={(v) => {
+                                                            const val = (v || "").trim();
+                                                            if (val.includes("github.com") || val.includes("gitlab.com") || val.endsWith(".git")) {
+                                                                updateArrayItem("projects", i, "githubUrl", val);
+                                                                updateArrayItem("projects", i, "projectUrl", "");
+                                                            } else {
+                                                                updateArrayItem("projects", i, "projectUrl", val);
+                                                            }
+                                                        }}
                                                     />
                                                 </div>
                                             </div>
@@ -1095,9 +1116,15 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                 <span className="text-xs shrink-0 font-bold">🐙 Git:</span>
                                                 <div className="flex-1 truncate w-full">
                                                     <TextElement 
-                                                        value={project.githubUrl || ""}
+                                                        value={effectiveGithubUrl || ""}
                                                         placeholder="Paste GitHub Repo URL"
-                                                        onCommit={(v) => updateArrayItem("projects", i, "githubUrl", v)}
+                                                        onCommit={(v) => {
+                                                            const val = (v || "").trim();
+                                                            updateArrayItem("projects", i, "githubUrl", val);
+                                                            if (project.projectUrl && (project.projectUrl.includes("github.com") || project.projectUrl === val)) {
+                                                                updateArrayItem("projects", i, "projectUrl", "");
+                                                            }
+                                                        }}
                                                     />
                                                 </div>
                                             </div>

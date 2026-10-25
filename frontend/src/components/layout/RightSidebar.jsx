@@ -1189,11 +1189,18 @@ function RightSidebar({
                                     const projSec = sections.find(s => s.section_type === 'projects_grid');
 
                                     const formattedSkills = (skills || []).map(skill => ({ name: skill, level: 80 }));
-                                    const formattedProjects = (projects || []).map(p => ({
-                                        title: p.title || "",
-                                        desc: p.description || p.desc || "",
-                                        projectUrl: p.demo_link || p.projectUrl || ""
-                                    }));
+                                    const formattedProjects = (projects || []).map(p => {
+                                        const rawDemo = p.demo_link || p.projectUrl || "";
+                                        const rawGithub = p.github_url || p.githubUrl || p.repo_url || p.html_url || "";
+                                        const isDemoGit = /github\.com|gitlab\.com|\.git$/i.test(rawDemo);
+                                        return {
+                                            title: p.title || "",
+                                            desc: p.description || p.desc || "",
+                                            tags: p.tags || p.tech_stack || [],
+                                            projectUrl: isDemoGit ? "" : rawDemo,
+                                            githubUrl: isDemoGit ? rawDemo : rawGithub
+                                        };
+                                    });
                                     
                                     if (skillsSec && onUpdateSectionContent) onUpdateSectionContent(skillsSec.id, 'items', formattedSkills);
                                     if (projSec && onUpdateSectionContent) onUpdateSectionContent(projSec.id, 'projects', formattedProjects);

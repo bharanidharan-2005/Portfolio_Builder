@@ -312,13 +312,29 @@ export default function RenderPageContent({ section, portfolioTheme }) {
                         >
                             <h3 className={\`text-2xl md:text-3xl font-black uppercase \${textPrimary}\`}>{project.title}</h3>
                             <div className={\`text-base leading-relaxed whitespace-pre-wrap \${textSecondary}\`}>{project.desc}</div>
-                            {project.projectUrl && (
-                                <div className="pt-2">
-                                    <a href={project.projectUrl} target="_blank" rel="noopener noreferrer" className={\`inline-flex w-max items-center justify-center px-8 py-3.5 rounded-xl text-sm font-bold transition-all border \${badgeClass}\`}>
-                                        View Live ->
-                                    </a>
-                                </div>
-                            )}
+                            {(() => {
+                                let live = project.projectUrl || '';
+                                let gh = project.githubUrl || '';
+                                if (/github\.com|gitlab\.com|\.git$/i.test(live) && !gh) {
+                                    gh = live;
+                                    live = '';
+                                }
+                                if (!live && !gh) return null;
+                                return (
+                                    <div className="pt-2 flex flex-wrap gap-4 items-center">
+                                        {live && (
+                                            <a href={live} target="_blank" rel="noopener noreferrer" className={\`inline-flex w-max items-center justify-center px-8 py-3.5 rounded-xl text-sm font-bold transition-all border \${badgeClass}\`}>
+                                                View Live ->
+                                            </a>
+                                        )}
+                                        {gh && (
+                                            <a href={gh} target="_blank" rel="noopener noreferrer" className={\`inline-flex w-max items-center justify-center px-8 py-3.5 rounded-xl text-sm font-bold transition-all border border-slate-700 bg-slate-900 text-white hover:border-slate-500\`}>
+                                                GitHub Code ->
+                                            </a>
+                                        )}
+                                    </div>
+                                );
+                            })()}
                         </div>
                     ))}
                 </div>

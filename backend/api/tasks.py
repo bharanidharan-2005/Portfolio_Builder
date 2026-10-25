@@ -23,7 +23,7 @@ def process_ai_refinement_task(self, section_id, prompt, section_type, current_c
             "- about: bio\n"
             "- education: schools (array of {institution, degree, years, score})\n"
             "- skills: items (array of {name, level (integer percent)})\n"
-            "- projects_grid: title, projects (array of {title, desc, tags, projectUrl})\n"
+            "- projects_grid: title, projects (array of {title, desc, tags, projectUrl, githubUrl}) — note: put GitHub repository URLs in githubUrl and deployed live URLs in projectUrl\n"
             "- contact: text, email, phone, linkedin, github (full https:// URLs)\n"
         )
         full = f"{sys_prompt}\nSection type: {section_type}\nCurrent content: {json.dumps(current_content)}\nInstruction: {prompt}"
@@ -33,6 +33,17 @@ def process_ai_refinement_task(self, section_id, prompt, section_type, current_c
         
         if not isinstance(new_data, dict):
             new_data = {}
+
+        if section_type == 'projects_grid' and isinstance(new_data, dict) and 'projects' in new_data:
+            for p in new_data.get('projects', []):
+                if isinstance(p, dict):
+                    p_url = p.get('projectUrl') or ''
+                    gh_url = p.get('githubUrl') or ''
+                    if ('github.com' in p_url.lower() or 'gitlab.com' in p_url.lower() or p_url.lower().endswith('.git')) and not gh_url:
+                        gh_url = p_url
+                        p_url = ''
+                    p['projectUrl'] = p_url
+                    p['githubUrl'] = gh_url
 
         if section_id:
             section = PortfolioSection.objects.get(id=section_id)

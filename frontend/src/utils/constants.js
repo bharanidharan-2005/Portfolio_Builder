@@ -120,13 +120,15 @@ export const DEFAULT_SHOWCASE_SECTIONS = [
                     title: "Bharani's Bistro",
                     desc: "Interactive restaurant web platform with dynamic menu ordering, table booking, and real-time order tracking.",
                     tags: ["React", "Django", "Tailwind CSS"],
-                    projectUrl: "https://github.com"
+                    projectUrl: "",
+                    githubUrl: "https://github.com"
                 },
                 {
                     title: "AuraBuild Portfolio Engine",
                     desc: "Intelligent portfolio builder with multi-agent layout generation, live canvas editing, and dynamic ATS resume export.",
                     tags: ["React", "Python", "Vite"],
-                    projectUrl: "https://github.com"
+                    projectUrl: "",
+                    githubUrl: "https://github.com"
                 }
             ]
         }

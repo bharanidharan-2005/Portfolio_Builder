@@ -233,7 +233,10 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
             const heroDesignOptions = [];
             if (data.designUrl) heroDesignOptions.push({ label: "Design Repository", url: data.designUrl });
             heroProjects.forEach((project) => {
-                heroDesignOptions.push({ label: project.title || "Untitled Project", url: project.projectUrl });
+                const projGh = project.githubUrl || (/github\.com|gitlab\.com|\.git$/i.test(project.projectUrl) ? project.projectUrl : '');
+                if (projGh) {
+                    heroDesignOptions.push({ label: project.title || "Untitled Project", url: projGh });
+                }
             });
 
             let seeLiveDropdown = '';
@@ -398,6 +401,17 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                 const isProjImgHidden = p.hideProjectImage === true || String(p.hideProjectImage).toLowerCase() === 'true';
                 const projImg = (isProjImgHidden || !p.projectImage) ? '' : getAbsoluteUrl(p.projectImage);
                 const tagsList = Array.isArray(p.tags) ? p.tags : (p.tags ? String(p.tags).split(',') : []);
+                let live = p.projectUrl || '';
+                let gh = p.githubUrl || '';
+                if (/github\.com|gitlab\.com|\.git$/i.test(live) && !gh) {
+                    gh = live;
+                    live = '';
+                }
+                const actionsHtml = (live || gh) ? `
+                    <div class="pt-8 stagger-fade-up flex flex-wrap gap-4 items-center ${projImg ? '' : 'justify-center'}" style="transition-delay: ${(i*0.2) + 0.4}s">
+                        ${live ? `<a href="${escapeHtml(live)}" target="_blank" class="inline-flex px-8 py-4 text-sm font-bold rounded-xl ${theme.accentBg || 'bg-blue-600'} text-white hover:scale-110 hover:-translate-y-2 transition-all shadow-lg hover:shadow-[0_15px_30px_rgba(59,130,246,0.4)]">Live Demo &rarr;</a>` : ''}
+                        ${gh ? `<a href="${escapeHtml(gh)}" target="_blank" class="inline-flex items-center gap-2 px-8 py-4 text-sm font-bold rounded-xl bg-slate-900 border border-slate-700 hover:border-slate-500 text-white hover:scale-110 hover:-translate-y-2 transition-all shadow-lg"><svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> GitHub &rarr;</a>` : ''}
+                    </div>` : '';
                 return `
                 <div class="group relative flex flex-col lg:flex-row items-center gap-10 rounded-[2.5rem] border ${theme.border} bg-white/5 overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-all duration-700 hover:bg-white/10 p-10 hover:-translate-y-3 hover:border-white/20">
                     <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-1 transition-all duration-700 group-hover:w-full ${theme.accentBg || 'bg-blue-500'} shadow-[0_0_15px_rgba(59,130,246,0.8)]"></div>
@@ -422,7 +436,7 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                             }).join('')}
                         </div>
                         ` : ''}
-                        ${p.projectUrl ? `<div class="pt-8 stagger-fade-up" style="transition-delay: ${(i*0.2) + 0.4}s"><a href="${escapeHtml(p.projectUrl)}" target="_blank" class="inline-flex px-8 py-4 text-sm font-bold rounded-xl ${theme.accentBg || 'bg-blue-600'} text-white hover:scale-110 hover:-translate-y-2 transition-all shadow-lg hover:shadow-[0_15px_30px_rgba(59,130,246,0.4)]">View Project &rarr;</a></div>` : ''}
+                        ${actionsHtml}
                     </div>
                 </div>
             `;

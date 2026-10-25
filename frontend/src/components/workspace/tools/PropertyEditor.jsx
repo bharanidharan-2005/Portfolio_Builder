@@ -261,7 +261,23 @@ return ( <
                                 className = "w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-[11px] text-blue-600 outline-none focus:border-blue-500"
                                 value = { project.projectUrl || '' }
                                 onChange = {
-                                    (e) => handleArrayItemChange('projects', idx, 'projectUrl', e.target.value)
+                                    (e) => {
+                                        const val = e.target.value;
+                                        if (/github\.com|gitlab\.com|\.git$/i.test(val)) {
+                                            handleArrayItemChange('projects', idx, 'githubUrl', val);
+                                            handleArrayItemChange('projects', idx, 'projectUrl', '');
+                                        } else {
+                                            handleArrayItemChange('projects', idx, 'projectUrl', val);
+                                        }
+                                    }
+                                }
+                                /> <
+                                input type = "text"
+                                placeholder = "GitHub Repo URL..."
+                                className = "w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-[11px] text-slate-700 outline-none focus:border-blue-500"
+                                value = { project.githubUrl || '' }
+                                onChange = {
+                                    (e) => handleArrayItemChange('projects', idx, 'githubUrl', e.target.value)
                                 }
                                 /> < /
                                 div >
@@ -643,7 +659,23 @@ return ( <
                                 className = "w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-[11px] text-blue-600 outline-none focus:border-blue-500"
                                 value = { project.projectUrl || '' }
                                 onChange = {
-                                    (e) => handleArrayItemChange('projects', idx, 'projectUrl', e.target.value)
+                                    (e) => {
+                                        const val = e.target.value;
+                                        if (/github\.com|gitlab\.com|\.git$/i.test(val)) {
+                                            handleArrayItemChange('projects', idx, 'githubUrl', val);
+                                            handleArrayItemChange('projects', idx, 'projectUrl', '');
+                                        } else {
+                                            handleArrayItemChange('projects', idx, 'projectUrl', val);
+                                        }
+                                    }
+                                }
+                                /> <
+                                input type = "text"
+                                placeholder = "GitHub Repo URL..."
+                                className = "w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-[11px] text-slate-700 outline-none focus:border-blue-500"
+                                value = { project.githubUrl || '' }
+                                onChange = {
+                                    (e) => handleArrayItemChange('projects', idx, 'githubUrl', e.target.value)
                                 }
                                 /> < /
                                 div >

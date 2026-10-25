@@ -180,11 +180,14 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
                 const isProj = !company || company === 'company' || company === 'n/a' || projectIndicators.some(ind => title.includes(ind));
                 
                 if (isProj) {
+                    const candidateUrl = item.projectUrl || item.url || '';
+                    const isGit = /github\.com|gitlab\.com|\.git$/i.test(candidateUrl);
                     projectsToMigrate.push({
                         title: item.title,
                         desc: item.description || item.desc || '',
                         tags: item.tags || [],
-                        projectUrl: item.projectUrl || item.url || ''
+                        projectUrl: isGit ? '' : candidateUrl,
+                        githubUrl: isGit ? candidateUrl : (item.githubUrl || '')
                     });
                 } else {
                     genuineExp.push(item);
@@ -218,6 +221,34 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
                 });
             }
         }
+
+        // Sanitize all projects in projects_grid sections to ensure clean separation of live vs github repo links
+        processed = processed.map(s => {
+            if (s.section_type === 'projects_grid' && s.content_data && Array.isArray(s.content_data.projects)) {
+                const normalizedProjects = s.content_data.projects.map(p => {
+                    let pUrl = String(p.projectUrl || p.liveUrl || p.demo_link || '').trim();
+                    let ghUrl = String(p.githubUrl || p.repoUrl || p.repo_url || '').trim();
+                    const isPUrlGit = /github\.com|gitlab\.com|\.git$/i.test(pUrl);
+                    if (isPUrlGit && !ghUrl) {
+                        ghUrl = pUrl;
+                        pUrl = '';
+                    }
+                    return {
+                        ...p,
+                        projectUrl: pUrl,
+                        githubUrl: ghUrl
+                    };
+                });
+                return {
+                    ...s,
+                    content_data: {
+                        ...s.content_data,
+                        projects: normalizedProjects
+                    }
+                };
+            }
+            return s;
+        });
         
         return [...processed].sort((a, b) => {
             const wA = SECTION_ORDER_WEIGHTS[a.section_type] ?? a.order ?? 100;

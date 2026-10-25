@@ -87,7 +87,8 @@ class ResumeUploadAPIView(APIView):
                 "- linkedin: string (Full URL starting with https://)\n"
                 "- github: string (Full URL starting with https://)\n"
                 "- website: string (Full URL starting with https://)\n"
-                "- projects: array of {title, desc, tags, projectUrl}\n"
+                "- projects: array of {title, desc, tags, projectUrl, githubUrl}\n"
+                "  CRITICAL RULE FOR PROJECT URLS: If a link points to GitHub or Git (e.g. github.com/user/repo), assign it to 'githubUrl'. Only assign deployed live URLs to 'projectUrl'.\n"
                 "  CRITICAL RULE FOR PROJECTS: Extract ALL personal projects, academic projects, software applications, web apps, portals, platforms, RAG systems, AI assistants, and developer tools (e.g., AuraBuild, RAG Assistant, Grievance Portal, Resume Shortlister, etc.) into 'projects'. DO NOT put projects into 'experience'.\n"
                 "- experience: array of {title, company, dates, description}\n"
                 "  CRITICAL RULE FOR EXPERIENCE: Only extract ACTUAL employment, corporate jobs, or company internships where the candidate was employed by a recognized company or organization. If there are no formal employer jobs, return an empty array []. NEVER place software projects into 'experience'.\n"
@@ -145,11 +146,19 @@ class ResumeUploadAPIView(APIView):
                     if not tags:
                         common_tech = ['Python', 'React', 'React.js', 'Node.js', 'Django', 'Flask', 'SQL', 'PostgreSQL', 'SQLite', 'Docker', 'Vercel', 'Render', 'Pandas', 'FAISS', 'LLM', 'AI', 'JavaScript', 'HTML5', 'CSS3', 'REST API', 'ETL', 'RAG', 'openpyxl']
                         tags = [tech for tech in common_tech if tech.lower() in (desc.lower() + " " + title_lower)]
+                    
+                    cand_url = exp.get('projectUrl') or exp.get('url') or ''
+                    gh_url = exp.get('githubUrl') or ''
+                    if ('github.com' in cand_url.lower() or 'gitlab.com' in cand_url.lower() or cand_url.lower().endswith('.git')) and not gh_url:
+                        gh_url = cand_url
+                        cand_url = ''
+
                     migrated_projects.append({
                         'title': title,
                         'desc': desc or title,
                         'tags': tags,
-                        'projectUrl': exp.get('projectUrl') or exp.get('url') or ''
+                        'projectUrl': cand_url,
+                        'githubUrl': gh_url
                     })
                 else:
                     cleaned_experience.append(exp)
@@ -161,6 +170,17 @@ class ResumeUploadAPIView(APIView):
                 if mp['title'].lower() not in existing_titles:
                     combined_projects.append(mp)
                     existing_titles.add(mp['title'].lower())
+
+            # Normalize projectUrl vs githubUrl across all combined projects
+            for p in combined_projects:
+                if isinstance(p, dict):
+                    p_url = p.get('projectUrl') or p.get('url') or p.get('demo_link') or ''
+                    gh_url = p.get('githubUrl') or p.get('github_url') or p.get('repo_url') or ''
+                    if ('github.com' in p_url.lower() or 'gitlab.com' in p_url.lower() or p_url.lower().endswith('.git')) and not gh_url:
+                        gh_url = p_url
+                        p_url = ''
+                    p['projectUrl'] = p_url
+                    p['githubUrl'] = gh_url
 
             parsed['projects'] = combined_projects
             parsed['experience'] = cleaned_experience

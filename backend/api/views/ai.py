@@ -537,7 +537,8 @@ Return ONLY a strictly valid JSON object exactly in this schema:
       "title": "Clean Title",
       "description": "Professional 2-sentence description of the impact and architecture.",
       "tech_stack": ["React", "Python"],
-      "demo_link": "https://github.com/{username}/repo_name"
+      "github_url": "https://github.com/{username}/repo_name",
+      "demo_link": ""
     }}
   ]
 }}
@@ -545,6 +546,19 @@ DO NOT include any markdown blocks like ```json.
 """
             res = generate_text_with_fallback(None, prompt)
             structured_data = extract_clean_json_payload(res.text)
+
+            if isinstance(structured_data, dict):
+                for proj in structured_data.get('projects', []):
+                    if isinstance(proj, dict):
+                        gh = proj.get('github_url') or proj.get('githubUrl') or ''
+                        demo = proj.get('demo_link') or proj.get('projectUrl') or ''
+                        if ('github.com' in demo.lower() or 'gitlab.com' in demo.lower() or demo.lower().endswith('.git')) and not gh:
+                            gh = demo
+                            demo = ''
+                        proj['github_url'] = gh
+                        proj['githubUrl'] = gh
+                        proj['demo_link'] = demo
+                        proj['projectUrl'] = demo
 
             return Response({'success': True, 'data': structured_data})
 

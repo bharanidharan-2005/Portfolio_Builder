@@ -139,12 +139,13 @@ export default function AIRefinementPanel({
             const mapped = repos.filter(r => !r.fork && !r.archived).map(r => ({
                 title: r.name || 'Untitled',
                 desc: r.description || '',
-                link: r.html_url,
-                projectUrl: r.html_url,
+                link: r.homepage || '',
+                projectUrl: r.homepage || '',
+                githubUrl: r.html_url || '',
                 tags: r.language ? [r.language] : [],
             }));
-            const existingUrls = new Set((localContent.projects || []).map(p => p.projectUrl || p.link).filter(Boolean));
-            const merged = [...(localContent.projects || []), ...mapped.filter(p => !existingUrls.has(p.link))];
+            const existingUrls = new Set((localContent.projects || []).map(p => p.githubUrl || p.projectUrl || p.link).filter(Boolean));
+            const merged = [...(localContent.projects || []), ...mapped.filter(p => !existingUrls.has(p.githubUrl) && !existingUrls.has(p.projectUrl))];
             const updated = {...localContent, projects: merged };
             setLocalContent(updated);
             onManualUpdate(selectedSection.id, updated);
