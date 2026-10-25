@@ -1,7 +1,24 @@
 @import "tailwindcss";
 
 /* ==================================================================
-   GLOBAL GOOGLE FONT TYPOGRAPHY UTILITIES (23 FONTS)
+   CUSTOM & CLASSIC EDITORIAL FONTS (CRALETTO & LUXURY SERIFS)
+   ================================================================== */
+@font-face {
+  font-family: 'Craletto';
+  src: url('/fonts/Craletto.woff') format('woff'),
+       url('/fonts/Craletto.ttf') format('truetype'),
+       url('/fonts/Craletto.otf') format('opentype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+.font-craletto { font-family: 'Craletto', 'Bodoni Moda', 'Cormorant Garamond', 'Playfair Display', Georgia, serif !important; }
+.font-bodoni { font-family: 'Bodoni Moda', 'Craletto', serif !important; }
+.font-cormorant { font-family: 'Cormorant Garamond', 'Craletto', serif !important; }
+
+/* ==================================================================
+   GLOBAL GOOGLE FONT TYPOGRAPHY UTILITIES (25 FONTS)
    ================================================================== */
 .font-inter { font-family: 'Inter', sans-serif !important; }
 .font-sora { font-family: 'Sora', sans-serif !important; }

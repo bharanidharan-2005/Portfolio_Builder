@@ -412,12 +412,12 @@ export default function LandingPage() {
                             </div>
 
                             {/* Hero Headline */}
-                            <h1 className={`text-4xl sm:text-5xl md:text-6xl lg:text-[4.25rem] xl:text-[4.75rem] font-extrabold tracking-[-0.03em] leading-[1.08] ${
+                            <h1 className={`font-craletto text-4xl sm:text-5xl md:text-6xl lg:text-[4.5rem] xl:text-[5.25rem] font-normal tracking-[-0.01em] leading-[1.08] ${
                                 themeMode === "light" ? "text-slate-900" : "text-white"
                             }`}>
-                                Engineer your <br className="hidden sm:inline" />
+                                Build your <br className="hidden sm:inline" />
                                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-violet-500 to-teal-400">
-                                    digital legacy.
+                                    professional legacy.
                                 </span>
                             </h1>
 
