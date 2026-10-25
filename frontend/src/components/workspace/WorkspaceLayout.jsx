@@ -12,6 +12,7 @@ import HelpModal from "./HelpModal.jsx";
 import PreviewModal from "./PreviewModal.jsx";
 import ResumeReviewModal from "./ResumeReviewModal.jsx";
 import PortfolioFrontpage from "../portfolio/PortfolioFrontpage.jsx";
+import PortfolioSkeleton from "../portfolio/PortfolioSkeleton.jsx";
 import { Undo2, Redo2, ChevronLeft } from "lucide-react";
 import SEOUpdater from "../../utils/SEOUpdater";
 
@@ -23,7 +24,7 @@ export default function WorkspaceLayout() {
     const { logout } = useAppContext();
     const {
         isPublicPreview, userData, setUserData, themeMode, currentTheme,
-        pages, activePage, setActivePage, sections,
+        pages, activePage, setActivePage, sections, isSectionsLoading,
         globalBg, setGlobalBg, globalFont, setGlobalFont,
         terminalLogs, setTerminalLogs, history,
         handleUndo, handleRedo, handleAddPage, handleDeletePage,
@@ -126,15 +127,20 @@ export default function WorkspaceLayout() {
     const isSystem = themeMode === 'system';
 
     // 3. Render Public Preview Frontpage Override
-    if (isPublicPreview && !isFrontpageViewed && sections.length > 0) {
-        return (
-            <PortfolioFrontpage 
-                userData={userData}
-                sections={sections}
-                themeMode={themeMode}
-                onVisualize={() => setIsFrontpageViewed(true)}
-            />
-        );
+    if (isPublicPreview && !isFrontpageViewed) {
+        if (sections && sections.length > 0) {
+            return (
+                <PortfolioFrontpage 
+                    userData={userData}
+                    sections={sections}
+                    themeMode={themeMode}
+                    onVisualize={() => setIsFrontpageViewed(true)}
+                />
+            );
+        }
+        if (isSectionsLoading) {
+            return <PortfolioSkeleton themeMode={themeMode} isPreview={true} />;
+        }
     }
 
     // 4. Render Main Builder UI
@@ -324,6 +330,7 @@ export default function WorkspaceLayout() {
                                     canUndo={history.past.length > 0}
                                     canRedo={history.future.length > 0}
                                     isPreview={isPublicPreview} 
+                                    isLoading={isSectionsLoading}
                                     activeHighlightSection={activeHighlightSection}
                                     aiSuggestionPreview={aiSuggestionPreview}
                                 />

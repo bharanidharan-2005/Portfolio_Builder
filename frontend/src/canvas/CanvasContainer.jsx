@@ -8,6 +8,7 @@ import { ResumePDF } from '../components/ResumePDF';
 import RenderPageContent from './RenderPageContent';
 import { PORTFOLIO_THEMES, PORTFOLIO_FONTS } from './themes';
 import { notify } from '../toast';
+import PortfolioSkeleton from '../components/portfolio/PortfolioSkeleton';
 
 
 function SortableSection({ section, children }) {
@@ -135,7 +136,8 @@ function CanvasContainer({
     canRedo,
     activeHighlightSection,
     aiSuggestionPreview,
-    onAddSection
+    onAddSection,
+    isLoading = false
 }) {
     const currentTheme = PORTFOLIO_THEMES[portfolioTheme] || {};
     const currentFontObj = PORTFOLIO_FONTS.find(f => f.id === globalFont) || PORTFOLIO_FONTS[0];
@@ -351,8 +353,8 @@ function CanvasContainer({
     };
 
     const heroSectionData = displaySections.find(s => (s.section_type || '').toLowerCase().trim() === 'hero');
-    const heroName = heroSectionData?.content_data?.heading || 'DEV';
-    const initials = heroName.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    const heroName = heroSectionData?.content_data?.heading || 'BHARANIDHARAN MARIAPPAN';
+    const initials = heroName.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'BM';
 
     return ( 
         <div className="w-full min-w-0 max-w-full flex flex-col items-center relative animate-in fade-in duration-500"> 
@@ -516,8 +518,17 @@ function CanvasContainer({
                                         />
                                     </div>
                                 ))
+                            ) : isLoading ? (
+                                <PortfolioSkeleton isPreview={true} themeMode={themeMode} />
                             ) : (
-                                <EmptyCanvasState onAddSection={onAddSection} />
+                                <div className="w-full max-w-xl mx-auto my-12 border border-slate-800/80 rounded-2xl p-8 sm:p-10 text-center bg-slate-900/60 backdrop-blur-xl shadow-2xl">
+                                    <h3 className="text-lg sm:text-xl font-bold mb-2 text-white font-sora">
+                                        Live Portfolio Updating
+                                    </h3>
+                                    <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                                        The portfolio owner is currently curating their showcase. Please check back shortly.
+                                    </p>
+                                </div>
                             )}
                         </div>
                     ) : (
@@ -584,6 +595,8 @@ function CanvasContainer({
                                                 </SortableSection>
                                             );
                                         })
+                                    ) : isLoading ? (
+                                        <PortfolioSkeleton isPreview={false} themeMode={themeMode} />
                                     ) : ( 
                                         <EmptyCanvasState onAddSection={onAddSection} />
                                     )} 

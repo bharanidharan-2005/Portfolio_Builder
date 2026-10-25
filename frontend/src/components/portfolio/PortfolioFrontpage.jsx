@@ -34,12 +34,12 @@ const PortfolioFrontpage = ({ userData, sections = [], themeMode, onVisualize })
         || (typeof window !== 'undefined' && localStorage.getItem('aurabuild_frontpage_default'))
         || "template1";
 
-    const name = heroSec?.content_data?.heading || userData?.name || "Professional Developer";
-    const headline = heroSec?.content_data?.subheading || "Software Engineer | Tech Enthusiast";
-    const bio = aboutSec?.content_data?.bio || "Building intelligent applications with modern web technologies and creating scalable solutions.";
+    const name = heroSec?.content_data?.heading || (userData?.name && userData.name !== 'Developer' ? userData.name : "BHARANIDHARAN MARIAPPAN");
+    const headline = heroSec?.content_data?.subheading || "FULL STACK DEVELOPER";
+    const bio = aboutSec?.content_data?.bio || "Final-year Computer Science Engineering student and Python Full-Stack Developer with hands-on experience building scalable web architectures and AI-driven platforms.";
     const firstName = name.split(' ')[0];
     const lastName = name.split(' ').slice(1).join(' ');
-    const initials = name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    const initials = name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'BM';
 
     const isImageHidden = heroSec?.content_data?.hideSideImage === true || String(heroSec?.content_data?.hideSideImage).toLowerCase() === 'true';
     const roleImage = isImageHidden ? null : (heroSec?.content_data?.customSideImage || getRoleImage(headline));

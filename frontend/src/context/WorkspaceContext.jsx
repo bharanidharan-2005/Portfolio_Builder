@@ -10,7 +10,7 @@ const fastClone = (obj) => {
 };
 import { API } from '../api';
 import { useAppContext } from './AppContext';
-import { DEFAULT_BLOCK_DATA, SECTION_ORDER_WEIGHTS } from '../utils/constants';
+import { DEFAULT_BLOCK_DATA, SECTION_ORDER_WEIGHTS, DEFAULT_SHOWCASE_SECTIONS } from '../utils/constants';
 import { deployAnimatedSite } from '../utils/deploymentUtils';
 import { notify } from '../toast';
 
@@ -33,12 +33,41 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
     const setUserData = isPublicPreview ? setPublicUserData : appContext.setUserData;
     const themeMode = appContext.themeMode;
 
-    // --- Centralized Backend State ---
-    const [pages, setPages] = useState([]);
+    const userKey = (userData?.name || previewUserData?.name || 'default').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    // --- Loading State ---
+    const [isSectionsLoading, setIsSectionsLoading] = useState(true);
+
+    // --- Centralized Backend State (Instant Cached Initialization) ---
+    const [pages, setPages] = useState(() => {
+        try {
+            const cached = localStorage.getItem(`aurabuild_cached_pages_${userKey}`) 
+                || localStorage.getItem('aurabuild_cached_pages_latest');
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            }
+        } catch (e) {}
+        return [{ id: 'default-home', name: 'Home', sections: DEFAULT_SHOWCASE_SECTIONS }];
+    });
+
     const [activePage, setActivePage] = useState("Home");
-    const [sections, setSections] = useState([]);
+
+    const [sections, setSections] = useState(() => {
+        try {
+            const cached = localStorage.getItem(`aurabuild_cached_sections_${userKey}`) 
+                || localStorage.getItem('aurabuild_cached_sections_latest');
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            }
+        } catch (e) {}
+        // Fallback to showcase so public portfolio and workspace load INSTANTLY with zero empty flash
+        return DEFAULT_SHOWCASE_SECTIONS;
+    });
     
-    const sectionsRef = useRef([]);
+    const sectionsRef = useRef(sections);
+
 
     // --- AI Context State ---
     const [activeHighlightSection, setActiveHighlightSection] = useState(null);
@@ -255,18 +284,42 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
                     setPages(pagesData);
                     const firstPage = pagesData[0];
                     setActivePage(firstPage.name);
-                    setSections(sanitizeAndSortSections(firstPage.sections || []));
+                    const sorted = sanitizeAndSortSections(firstPage.sections || []);
+                    setSections(sorted);
                     lastLoadedPage.current = firstPage.name;
+                    
+                    // Instant Local Storage Persistence for 0ms Reloads
+                    const cleanKey = (userData?.name || previewUserData?.name || 'default').toLowerCase().replace(/[^a-z0-9]/g, '');
+                    try {
+                        localStorage.setItem(`aurabuild_cached_sections_${cleanKey}`, JSON.stringify(sorted));
+                        localStorage.setItem('aurabuild_cached_sections_latest', JSON.stringify(sorted));
+                        localStorage.setItem(`aurabuild_cached_pages_${cleanKey}`, JSON.stringify(pagesData));
+                        localStorage.setItem('aurabuild_cached_pages_latest', JSON.stringify(pagesData));
+                    } catch (e) {}
+                    
                     setTerminalLogs(prev => [...prev, { type: "success", text: "[SUCCESS] Workspace synchronized with backend database." }]);
                 } else {
                     handleAddPage("Home");
                 }
             } catch (err) {
                 setTerminalLogs(prev => [...prev, { type: "error", text: "[ERROR] Failed to load workspace from server." }]);
+            } finally {
+                setIsSectionsLoading(false);
             }
         };
         loadWorkspace();
     }, [isPublicPreview, userData?.name]);
+
+    // Keep active workspace sections persisted to localStorage on every change
+    useEffect(() => {
+        if (sections && sections.length > 0 && !isPublicPreview) {
+            const cleanKey = (userData?.name || 'default').toLowerCase().replace(/[^a-z0-9]/g, '');
+            try {
+                localStorage.setItem(`aurabuild_cached_sections_${cleanKey}`, JSON.stringify(sections));
+                localStorage.setItem('aurabuild_cached_sections_latest', JSON.stringify(sections));
+            } catch (e) {}
+        }
+    }, [sections, userData?.name, isPublicPreview]);
 
     // PAGE SWITCHER
     useEffect(() => {
@@ -621,11 +674,12 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         handleResetWorkspace,
         selectedSection,
         localContent,
+        isSectionsLoading,
     }), [
         isPublicPreview, userData, themeMode, currentTheme, pages, activePage,
         sections, activeHighlightSection, aiSuggestionPreview, globalBg,
         globalFont, customFontSize, customAccentColor, terminalLogs, history,
-        resumeReviewData, selectedSection, localContent
+        resumeReviewData, selectedSection, localContent, isSectionsLoading
     ]);
 
     return (

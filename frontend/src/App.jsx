@@ -6,6 +6,7 @@ import { WorkspaceProvider } from "./context/WorkspaceContext";
 const LandingPage = lazy(() => import("./components/LandingPage.jsx"));
 const WorkspaceLayout = lazy(() => import("./components/workspace/WorkspaceLayout.jsx"));
 const GithubCallback = lazy(() => import("./components/GithubCallback.jsx"));
+import PortfolioSkeleton from "./components/portfolio/PortfolioSkeleton.jsx";
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -62,12 +63,7 @@ function PreviewRouteWrapper({ isSubdomainPreview, subdomainUsername }) {
 
     return (
         <div className={`min-h-screen ${themeMode === 'light' ? 'bg-slate-50' : 'bg-slate-950'}`}>
-            <Suspense fallback={
-                <div className="min-h-screen flex flex-col items-center justify-center gap-3 font-semibold text-slate-400">
-                    <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                    <span>Loading Live Portfolio...</span>
-                </div>
-            }>
+            <Suspense fallback={<PortfolioSkeleton themeMode={themeMode} isPreview={true} />}>
                 <WorkspaceProvider isPublicPreview={true} previewUserData={{ name: publicUsername, code: publicToken }}>
                     <WorkspaceLayout />
                 </WorkspaceProvider>
