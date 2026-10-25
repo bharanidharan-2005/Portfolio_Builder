@@ -136,10 +136,12 @@ function LeftSidebar({
             <div className="space-y-4">
                 
                 {/* 1. MOBILE DRAWER TOP HEADER (Visible only on < lg) */}
-                <div className="flex lg:hidden items-center justify-between pb-3 mb-2 border-b border-slate-700/40 px-1">
+                <div className={`flex lg:hidden items-center justify-between pb-3 mb-2 border-b px-1 ${
+                    isSystem ? 'border-[#7c00ff]/30' : (isLight ? 'border-slate-200' : 'border-slate-700/40')
+                }`}>
                     <div className="flex items-center gap-2">
                         <div className={`w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center border ${
-                            isSystem ? 'border-[#7c00ff]/40 shadow-[0_0_10px_rgba(124,0,255,0.4)]' : 'border-slate-700'
+                            isSystem ? 'border-[#7c00ff]/40 shadow-[0_0_10px_rgba(124,0,255,0.4)]' : (isLight ? 'border-slate-200 shadow-xs' : 'border-slate-700')
                         }`}>
                             <img src="/logo.svg" alt="AuraBuild Logo" className="w-full h-full object-cover" />
                         </div>
@@ -192,18 +194,26 @@ function LeftSidebar({
                 </div>
 
                 {/* 3. MOBILE STUDIO QUICK CONTROLS: Undo/Redo, Theme, Checklist (Mobile only) */}
-                <div className="lg:hidden space-y-2.5 pb-2 border-b border-slate-700/40">
+                <div className={`lg:hidden space-y-2.5 pb-2 border-b ${
+                    isSystem ? 'border-[#7c00ff]/30' : (isLight ? 'border-slate-200' : 'border-slate-700/40')
+                }`}>
                     <div className="flex items-center justify-between gap-2">
                         {/* Undo & Redo */}
                         <div className={`flex items-center gap-1 p-1 rounded-xl border ${
-                            isSystem ? 'border-[#7c00ff]/30 bg-[#0e0720]/80' : 'border-slate-800 bg-slate-900/60'
+                            isSystem 
+                                ? 'border-[#7c00ff]/30 bg-[#0e0720]/80' 
+                                : (isLight 
+                                    ? 'border-slate-200 bg-slate-100/90 shadow-2xs' 
+                                    : 'border-slate-800 bg-slate-900/60')
                         }`}>
                             <button
                                 type="button"
                                 onClick={onUndo}
                                 disabled={!canUndo}
                                 className={`p-2 rounded-lg transition-all ${
-                                    !canUndo ? 'opacity-30 cursor-not-allowed text-slate-500' : 'text-slate-200 hover:text-white hover:bg-white/10 cursor-pointer'
+                                    !canUndo 
+                                        ? (isLight ? 'opacity-30 cursor-not-allowed text-slate-400' : 'opacity-30 cursor-not-allowed text-slate-500') 
+                                        : (isLight ? 'text-slate-700 hover:text-slate-950 hover:bg-slate-200/80 cursor-pointer' : 'text-slate-200 hover:text-white hover:bg-white/10 cursor-pointer')
                                 }`}
                                 title="Undo"
                                 aria-label="Undo"
@@ -215,7 +225,9 @@ function LeftSidebar({
                                 onClick={onRedo}
                                 disabled={!canRedo}
                                 className={`p-2 rounded-lg transition-all ${
-                                    !canRedo ? 'opacity-30 cursor-not-allowed text-slate-500' : 'text-slate-200 hover:text-white hover:bg-white/10 cursor-pointer'
+                                    !canRedo 
+                                        ? (isLight ? 'opacity-30 cursor-not-allowed text-slate-400' : 'opacity-30 cursor-not-allowed text-slate-500') 
+                                        : (isLight ? 'text-slate-700 hover:text-slate-950 hover:bg-slate-200/80 cursor-pointer' : 'text-slate-200 hover:text-white hover:bg-white/10 cursor-pointer')
                                 }`}
                                 title="Redo"
                                 aria-label="Redo"
@@ -227,10 +239,10 @@ function LeftSidebar({
                         {/* Checklist Status */}
                         <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold ${
                             allPassed 
-                                ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300' 
-                                : 'bg-amber-950/60 border-amber-500/40 text-amber-300'
+                                ? (isLight ? 'bg-emerald-50 border-emerald-200 text-emerald-700 shadow-2xs' : 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300') 
+                                : (isLight ? 'bg-amber-50 border-amber-200 text-amber-800 shadow-2xs' : 'bg-amber-950/60 border-amber-500/40 text-amber-300')
                         }`}>
-                            {allPassed ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <AlertCircle className="w-3.5 h-3.5 text-amber-400" />}
+                            {allPassed ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <AlertCircle className="w-3.5 h-3.5 text-amber-500" />}
                             <span>Checklist {passedCount}/{totalCount}</span>
                         </div>
                     </div>
@@ -242,18 +254,26 @@ function LeftSidebar({
                                 type="button"
                                 onClick={() => setIsThemePickerOpen(!isThemePickerOpen)}
                                 className={`w-full flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-semibold cursor-pointer ${
-                                    isSystem ? 'bg-[#0e0720]/80 border-[#7c00ff]/30 text-purple-200' : 'bg-slate-900/80 border-slate-700/60 text-slate-200'
+                                    isSystem 
+                                        ? 'bg-[#0e0720]/80 border-[#7c00ff]/30 text-purple-200' 
+                                        : (isLight 
+                                            ? 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100/80 shadow-2xs' 
+                                            : 'bg-slate-900/80 border-slate-700/60 text-slate-200 hover:bg-slate-800')
                                 }`}
                             >
                                 <div className="flex items-center gap-2">
-                                    <Palette className="w-4 h-4 text-blue-400" />
+                                    <Palette className="w-4 h-4 text-blue-500" />
                                     <span>Theme: {currentThemeName.replace(/^\d+\.\s*/, '')}</span>
                                 </div>
                                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isThemePickerOpen ? 'rotate-180' : ''}`} />
                             </button>
 
                             {isThemePickerOpen && (
-                                <div className="mt-1.5 rounded-xl border border-slate-700 bg-slate-900/95 backdrop-blur-2xl shadow-xl max-h-48 overflow-y-auto p-1.5 custom-scrollbar">
+                                <div className={`mt-1.5 rounded-xl border shadow-xl max-h-48 overflow-y-auto p-1.5 custom-scrollbar ${
+                                    isLight 
+                                        ? 'border-slate-200 bg-white/95 backdrop-blur-2xl' 
+                                        : 'border-slate-700 bg-slate-900/95 backdrop-blur-2xl'
+                                }`}>
                                     {Object.entries(PORTFOLIO_THEMES).map(([tKey, tOpt]) => (
                                         <button
                                             key={tKey}
@@ -264,12 +284,12 @@ function LeftSidebar({
                                             }}
                                             className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center justify-between transition-colors ${
                                                 currentThemeId === tKey 
-                                                    ? 'bg-blue-600/30 text-blue-400 font-bold' 
-                                                    : 'text-slate-300 hover:bg-white/10'
+                                                    ? (isLight ? 'bg-blue-50 text-blue-700 font-bold' : 'bg-blue-600/30 text-blue-400 font-bold') 
+                                                    : (isLight ? 'text-slate-700 hover:bg-slate-100' : 'text-slate-300 hover:bg-white/10')
                                             }`}
                                         >
                                             <span>{tOpt.name.replace(/^\d+\.\s*/, '')}</span>
-                                            {currentThemeId === tKey && <Check className="w-3.5 h-3.5 text-blue-400" />}
+                                            {currentThemeId === tKey && <Check className="w-3.5 h-3.5 text-blue-500" />}
                                         </button>
                                     ))}
                                 </div>
@@ -462,7 +482,9 @@ function LeftSidebar({
                 </div>
 
                 {/* 8. ACCOUNT & SUPPORT CONTROLS (Mobile Drawer section) */}
-                <div className="lg:hidden pt-2 border-t border-slate-700/40 space-y-1">
+                <div className={`lg:hidden pt-2 border-t space-y-1 ${
+                    isSystem ? 'border-[#7c00ff]/30' : (isLight ? 'border-slate-200' : 'border-slate-700/40')
+                }`}>
                     <div className={`text-[10px] uppercase font-bold tracking-wider mb-1 px-1 ${textMuted}`}>
                         Account & Help
                     </div>
@@ -473,10 +495,12 @@ function LeftSidebar({
                                 onHelpClick();
                                 if (onClose) onClose();
                             }}
-                            className={`w-full flex items-center px-2 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition-colors text-left cursor-pointer`}
+                            className={`w-full flex items-center px-2 py-2 rounded-xl text-xs font-semibold ${
+                                isLight ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-100' : 'text-slate-300 hover:text-white hover:bg-white/10'
+                            } transition-colors text-left cursor-pointer`}
                         >
                             <span className="shrink-0 w-6 h-6 rounded-lg flex justify-center items-center">
-                                <HelpCircle className="w-4 h-4 text-slate-400" />
+                                <HelpCircle className={`w-4 h-4 ${isLight ? 'text-slate-500' : 'text-slate-400'}`} />
                             </span>
                             <span className="ml-2.5">Help & Documentation</span>
                         </button>
@@ -488,10 +512,12 @@ function LeftSidebar({
                                 onOpenSettings();
                                 if (onClose) onClose();
                             }}
-                            className={`w-full flex items-center px-2 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition-colors text-left cursor-pointer`}
+                            className={`w-full flex items-center px-2 py-2 rounded-xl text-xs font-semibold ${
+                                isLight ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-100' : 'text-slate-300 hover:text-white hover:bg-white/10'
+                            } transition-colors text-left cursor-pointer`}
                         >
                             <span className="shrink-0 w-6 h-6 rounded-lg flex justify-center items-center">
-                                <Settings className="w-4 h-4 text-slate-400" />
+                                <Settings className={`w-4 h-4 ${isLight ? 'text-slate-500' : 'text-slate-400'}`} />
                             </span>
                             <span className="ml-2.5">Studio Settings</span>
                         </button>
@@ -503,10 +529,10 @@ function LeftSidebar({
                                 onLogout();
                                 if (onClose) onClose();
                             }}
-                            className={`w-full flex items-center px-2 py-2 rounded-xl text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors text-left cursor-pointer`}
+                            className={`w-full flex items-center px-2 py-2 rounded-xl text-xs font-semibold text-red-500 hover:text-red-600 hover:bg-red-500/10 transition-colors text-left cursor-pointer`}
                         >
                             <span className="shrink-0 w-6 h-6 rounded-lg flex justify-center items-center">
-                                <LogOut className="w-4 h-4 text-red-400" />
+                                <LogOut className="w-4 h-4 text-red-500" />
                             </span>
                             <span className="ml-2.5">Sign Out</span>
                         </button>
@@ -515,7 +541,11 @@ function LeftSidebar({
             </div>
 
             {/* 9. PINNED MOBILE PREVIEW PORTFOLIO BUTTON (Prominent, separate from top navbar) */}
-            <div className="lg:hidden sticky bottom-0 pt-3 pb-1 mt-3 border-t border-slate-700/60 bg-slate-950/90 backdrop-blur-xl shrink-0 z-20">
+            <div className={`lg:hidden sticky bottom-0 pt-3 pb-1 mt-3 border-t shrink-0 z-20 ${
+                isLight 
+                    ? 'border-slate-200 bg-white/95 backdrop-blur-xl' 
+                    : (isSystem ? 'border-[#7c00ff]/30 bg-[#0c051a]/95 backdrop-blur-xl' : 'border-slate-700/60 bg-slate-950/90 backdrop-blur-xl')
+            }`}>
                 <button
                     type="button"
                     onClick={() => {

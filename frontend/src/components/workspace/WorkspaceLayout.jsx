@@ -220,8 +220,8 @@ export default function WorkspaceLayout() {
 
                 {/* LEFT SIDEBAR (Desktop 3-Panel + Mobile Slide-out Drawer) */}
                 {!isPublicPreview && (
-                    <aside className={`fixed lg:relative group h-full shrink-0 transition-all duration-300 ease-in-out ${
-                        isLeftPinned ? 'w-64 lg:w-64' : 'w-72 sm:w-80 max-w-[85vw] lg:w-16 lg:hover:w-64'
+                    <aside className={`fixed lg:relative group h-full shrink-0 transition-all duration-300 ease-in-out w-[270px] sm:w-[280px] max-w-[75vw] lg:max-w-none ${
+                        isLeftPinned ? 'lg:w-64' : 'lg:w-16 lg:hover:w-64'
                     } overflow-hidden z-40 shadow-2xl ${
                         isLeftOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                     } ${isSystem ? 'bg-[#0c051a]/95 backdrop-blur-2xl border-r border-[#7c00ff]/25 shadow-[4px_0_24px_rgba(124,0,255,0.12)]' : (isLight ? 'bg-white border-r border-slate-200' : 'bg-[#0B0F19]/95 backdrop-blur-2xl border-r border-white/10')}`}>
@@ -343,7 +343,7 @@ export default function WorkspaceLayout() {
                 {!isPublicPreview && (
                     <aside className={`fixed lg:relative right-0 h-full shrink-0 border-l transition-all duration-300 ease-in-out z-40 shadow-2xl overflow-hidden ${
                         isRightOpen 
-                            ? 'w-[320px] sm:w-[350px] xl:w-[360px] max-w-[90vw] translate-x-0 opacity-100' 
+                            ? 'w-[290px] sm:w-[340px] xl:w-[360px] max-w-[80vw] translate-x-0 opacity-100' 
                             : 'w-0 border-l-0 translate-x-full lg:translate-x-0 opacity-0 pointer-events-none'
                     } ${isSystem ? 'bg-[#0c051a]/95 backdrop-blur-2xl border-l border-[#7c00ff]/25 shadow-[-4px_0_24px_rgba(124,0,255,0.12)]' : (isLight ? 'bg-white border-slate-200' : 'bg-[#0B0F19]/95 backdrop-blur-2xl border-white/10')}`}>
                         <RightSidebar 
