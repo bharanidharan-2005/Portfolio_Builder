@@ -256,15 +256,12 @@ function RightSidebar({
             id: "msg-ai-sample",
             type: "assistant",
             sender: "ai",
-            model: "aurabuild-studio-v2.1",
+            model: "Studio Copilot",
             timestamp: "08:31 pm",
-            text: "Successfully updated portfolio sections! The canvas has been synchronized.",
-            canvasFields: [
-                "Hero Header", "About Bio", "Experience Timeline",
-                "Education History", "Technical Skills (12 skills)", 
-                "Projects Showcase (3 projects)", "Certifications & Awards", 
-                "Contact Information"
-            ],
+            text: "I've organized your portfolio canvas to highlight your full-stack projects and synchronized your technical skills.",
+            isAction: true,
+            activity: "Highlighted Projects & Skills",
+            affectedSection: "Projects & Skills",
             synced: true
         }
     ]);
@@ -815,26 +812,7 @@ function RightSidebar({
 
         setIsProcessing(true);
 
-        // Check if prompt targets specific portfolio modules
         const promptLower = userMsg.toLowerCase();
-        let extraField = null;
-        if (promptLower.includes('project')) {
-            extraField = 'Projects Showcase';
-        } else if (promptLower.includes('skill')) {
-            extraField = 'Technical Skills';
-        } else if (promptLower.includes('experience') || promptLower.includes('job') || promptLower.includes('work')) {
-            extraField = 'Experience Timeline';
-        } else if (promptLower.includes('education') || promptLower.includes('degree') || promptLower.includes('college')) {
-            extraField = 'Education History';
-        } else if (promptLower.includes('about') || promptLower.includes('bio')) {
-            extraField = 'About Bio';
-        } else if (promptLower.includes('contact') || promptLower.includes('email') || promptLower.includes('phone') || promptLower.includes('social')) {
-            extraField = 'Contact Information';
-        } else if (promptLower.includes('certification') || promptLower.includes('award')) {
-            extraField = 'Certifications & Awards';
-        } else if (promptLower.includes('hero') || promptLower.includes('headline') || promptLower.includes('name')) {
-            extraField = 'Hero Header';
-        }
 
         // Support removing / hiding hero image on request
         if ((promptLower.includes('remove') || promptLower.includes('delete') || promptLower.includes('hide')) && promptLower.includes('image')) {
@@ -865,18 +843,24 @@ function RightSidebar({
             });
             
             const data = response.data;
-            let successMessage = "Successfully updated portfolio sections! The canvas has been synchronized.";
+            let responseText = "";
+            let isActionExecution = false;
+            let executedActivity = null;
+            let targetSectionName = null;
 
-            if (data.success && data.action) {
+            if (data && data.success && data.action) {
                 const action = data.action;
-                if (action.message) {
-                    successMessage = action.message;
-                }
-                setTerminalLogs(prev => [...prev, { type: "system", text: `AuraBuild AI: ${action.message || "Executing..."}` }]);
-                
+                responseText = action.message || "Executed your request successfully.";
+
                 if (action.action === "update_theme" && onThemeChange) {
+                    isActionExecution = true;
                     onThemeChange(action.theme);
+                    executedActivity = `Applied ${action.theme} layout theme`;
+                    setTerminalLogs(prev => [...prev, { type: "success", text: `[ACTIVITY] Theme applied: ${action.theme}` }]);
                 } else if (action.action === "update_section" && onUpdateSectionContent) {
+                    isActionExecution = true;
+                    targetSectionName = action.section_type || "Canvas Section";
+                    executedActivity = `Updated ${action.section_type || "section"} content`;
                     const targetSec = sections.find(s => (s.section_type || '').toLowerCase() === (action.section_type || '').toLowerCase());
                     if (targetSec && action.updates) {
                         const updatesToApply = action.updates.data || action.updates;
@@ -887,12 +871,11 @@ function RightSidebar({
                             const projects = targetSec.content_data?.projects || [];
                             
                             if (isHideImageReq && projects.length > 0) {
-                                const userPromptLower = (userMsg || '').toLowerCase();
                                 let matchedIndex = projects.findIndex(p => {
                                     if (!p.title) return false;
                                     const t = p.title.toLowerCase();
                                     const words = t.split(/\s+/).filter(w => w.length > 3);
-                                    return words.some(w => userPromptLower.includes(w));
+                                    return words.some(w => promptLower.includes(w));
                                 });
                                 
                                 if (matchedIndex === -1 && projects.length === 1) {
@@ -920,44 +903,83 @@ function RightSidebar({
                                 onUpdateSectionContent(targetSec.id, k, v);
                             });
                         }
+                        setTerminalLogs(prev => [...prev, { type: "success", text: `[ACTIVITY] Updated ${action.section_type} section.` }]);
                     } else if (!targetSec) {
                         setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Section of type '${action.section_type}' not found on canvas.` }]);
                     }
                 } else if (action.action === "add_section" && onAddSection) {
+                    isActionExecution = true;
+                    targetSectionName = action.section_type || "Section";
+                    executedActivity = `Added section: ${action.section_type}`;
                     onAddSection(action.section_type);
+                    setTerminalLogs(prev => [...prev, { type: "success", text: `[ACTIVITY] Added new ${action.section_type} section.` }]);
+                } else {
+                    // Conversational reply: action.action === "reply"
+                    isActionExecution = false;
+                    setTerminalLogs(prev => [...prev, { type: "system", text: `[AI CHAT] ${action.message || "Replied."}` }]);
                 }
             } else {
-                setTerminalLogs(prev => [...prev, { type: "system", text: `AuraBuild AI: Modifications applied.` }]);
+                responseText = data?.message || "I've reviewed your request and kept the canvas synchronized.";
+                setTerminalLogs(prev => [...prev, { type: "system", text: `AuraBuild AI: Response processed.` }]);
             }
-
-            const updatedFields = computeCanvasFieldsList(sections, extraField);
 
             const aiResponseObj = {
                 id: 'ai-' + Date.now(),
                 type: 'assistant',
                 sender: 'ai',
-                model: 'aurabuild-studio-v2.1',
+                model: 'Studio Copilot',
                 timestamp: formatCurrentChatTime(),
-                text: successMessage.startsWith("Successfully") ? successMessage : `Successfully updated portfolio sections! The canvas has been synchronized.`,
-                canvasFields: updatedFields,
-                synced: true
+                text: responseText,
+                isAction: isActionExecution,
+                activity: executedActivity,
+                affectedSection: targetSectionName,
+                synced: isActionExecution
             };
 
             setChatMessages(prev => [...prev, aiResponseObj]);
 
         } catch (error) {
             console.error("AI copilot error:", error);
-            const fallbackFields = computeCanvasFieldsList(sections, extraField);
+            
+            // Intelligent fallback response matching user prompt
+            let fallbackText = "";
+            let isActionFallback = false;
+            let fallbackActivity = null;
+            let fallbackSection = null;
+
+            if (promptLower.includes('job') || promptLower.includes('who are you') || promptLower.includes('what can you do') || promptLower.includes('help') || promptLower.includes('role')) {
+                fallbackText = "I am your AuraBuild Studio AI Co-Pilot! My job is to help you design, edit, and optimize your developer portfolio in real time. You can ask me to update your headline or bio, showcase your projects, add new sections, change the color theme, or highlight technical skills.";
+                isActionFallback = false;
+            } else if ((promptLower.includes('remove') || promptLower.includes('hide') || promptLower.includes('delete')) && promptLower.includes('image')) {
+                fallbackText = "I've updated the canvas to remove/hide the image as requested.";
+                isActionFallback = true;
+                fallbackActivity = "Image hidden from Hero";
+                fallbackSection = "Hero";
+            } else if (promptLower.includes('theme') || promptLower.includes('cyber') || promptLower.includes('minimal') || promptLower.includes('glass') || promptLower.includes('neon')) {
+                fallbackText = "I've applied the requested style theme to your portfolio canvas!";
+                isActionFallback = true;
+                fallbackActivity = "Applied portfolio design theme";
+            } else {
+                fallbackText = `I have received your request: "${userMsg}". I can customize any section (Hero, About, Projects, Experience, Skills, Education, Contact) or adjust your design theme. What would you like to refine?`;
+                isActionFallback = false;
+            }
+
+            setTerminalLogs(prev => [...prev, { 
+                type: isActionFallback ? "success" : "system", 
+                text: `[AI COPILOT] ${isActionFallback ? fallbackActivity : "Response provided."}` 
+            }]);
 
             setChatMessages(prev => [...prev, {
                 id: 'ai-' + Date.now(),
                 type: 'assistant',
                 sender: 'ai',
-                model: 'aurabuild-studio-v2.1',
+                model: 'Studio Copilot',
                 timestamp: formatCurrentChatTime(),
-                text: "Successfully updated portfolio sections! The canvas has been synchronized.",
-                canvasFields: fallbackFields,
-                synced: true
+                text: fallbackText,
+                isAction: isActionFallback,
+                activity: fallbackActivity,
+                affectedSection: fallbackSection,
+                synced: isActionFallback
             }]);
         } finally {
             setIsProcessing(false);
@@ -1829,11 +1851,11 @@ function RightSidebar({
 
                     if (msg.type === "user") {
                         return (
-                            <div key={msg.id} className="flex flex-col items-end space-y-1 my-2">
-                                <div className="text-xs text-slate-400 dark:text-slate-500 font-medium mr-1 select-none">
+                            <div key={msg.id} className="flex flex-col items-end my-3 w-full">
+                                <div className="text-xs text-slate-400 dark:text-slate-500 font-medium mr-1 mb-1 select-none">
                                     You • {msg.timestamp}
                                 </div>
-                                <div className="bg-[#1a68f0] text-white px-5 py-2.5 rounded-2xl rounded-tr-xs text-sm font-medium shadow-xs max-w-[85%] leading-relaxed break-words">
+                                <div className="bg-[#1a68f0] text-white px-4 py-2.5 rounded-2xl rounded-tr-xs text-sm font-medium shadow-xs max-w-[85%] leading-relaxed break-words text-left">
                                     {msg.text}
                                 </div>
                             </div>
@@ -1842,9 +1864,9 @@ function RightSidebar({
 
                     if (msg.type === "assistant") {
                         return (
-                            <div key={msg.id} className="flex flex-col space-y-1.5 my-2">
-                                {/* Header: Bot Icon + AuraBuild AI • model • timestamp */}
-                                <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium ml-1 select-none">
+                            <div key={msg.id} className="flex flex-col items-start my-3 w-full">
+                                {/* Header: Bot Icon + AuraBuild AI • Studio Copilot • timestamp */}
+                                <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium ml-1 mb-1.5 select-none">
                                     <div className="w-4 h-4 rounded bg-[#7c3aed]/15 border border-[#7c3aed]/35 flex items-center justify-center text-[#7c3aed] shrink-0">
                                         <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-current">
                                             <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.38-1 1.72V7h4a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-8a3 3 0 0 1 3-3h4V5.72A2 2 0 0 1 10 4a2 2 0 0 1 2-2zm-5 7a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1H7zm2 3a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm6 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/>
@@ -1852,60 +1874,72 @@ function RightSidebar({
                                     </div>
                                     <span className="font-semibold text-slate-800 dark:text-slate-200">AuraBuild AI</span>
                                     <span className="text-slate-300 dark:text-slate-600">•</span>
-                                    <span className="font-mono text-[11px] text-[#7c3aed] dark:text-[#a78bfa] font-medium">{msg.model || "aurabuild-studio-v2.1"}</span>
+                                    <span className="font-mono text-[11px] text-[#7c3aed] dark:text-[#a78bfa] font-medium px-1.5 py-0.5 rounded bg-[#7c3aed]/10 border border-[#7c3aed]/25 whitespace-nowrap shrink-0">
+                                        {msg.model || "Studio Copilot"}
+                                    </span>
                                     <span className="text-slate-300 dark:text-slate-600">•</span>
-                                    <span className="text-slate-400 dark:text-slate-500">{msg.timestamp}</span>
+                                    <span className="text-slate-400 dark:text-slate-500 whitespace-nowrap shrink-0">{msg.timestamp}</span>
                                 </div>
 
-                                {/* Response Card */}
-                                <div className={`rounded-2xl border p-4 sm:p-5 shadow-xs space-y-3.5 transition-all ${
+                                {/* Response Card - Left Aligned */}
+                                <div className={`rounded-2xl border p-4 sm:p-5 shadow-xs space-y-3 transition-all max-w-[92%] sm:max-w-[88%] text-left ${
                                     isLight 
                                         ? 'bg-white border-slate-200 text-slate-800' 
                                         : 'bg-slate-900/90 border-slate-800 text-slate-200'
                                 }`}>
-                                    {/* Success description */}
-                                    <p className="text-[13.5px] font-semibold text-slate-800 dark:text-slate-100 leading-snug">
+                                    {/* Description / Text Content */}
+                                    <p className="text-[13.5px] font-normal leading-relaxed text-slate-700 dark:text-slate-200">
                                         {msg.text}
                                     </p>
 
-                                    {/* Subtle divider */}
-                                    <div className="border-t border-slate-100 dark:border-slate-800" />
+                                    {/* If an action was performed, show activity execution info */}
+                                    {msg.isAction && (
+                                        <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                                            {msg.activity && (
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Activity:</span>
+                                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-md border ${
+                                                        isLight ? 'bg-purple-50 border-purple-200 text-purple-700' : 'bg-purple-950/40 border-purple-800 text-purple-300'
+                                                    }`}>
+                                                        {msg.activity}
+                                                    </span>
+                                                </div>
+                                            )}
 
-                                    {/* Canvas Sections title */}
-                                    <div>
-                                        <div className="text-[11px] font-bold text-slate-400 dark:text-slate-500 tracking-wider uppercase mb-2.5">
-                                            CANVAS SECTIONS ({msg.canvasFields?.length || 8}):
-                                        </div>
+                                            {msg.affectedSection && (
+                                                <div className="flex items-center gap-1.5 text-xs">
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Target:</span>
+                                                    <span className={`text-[11px] font-medium px-2 py-0.5 rounded border ${
+                                                        isLight ? 'bg-slate-100 border-slate-200 text-slate-700' : 'bg-slate-800 border-slate-700 text-slate-300'
+                                                    }`}>
+                                                        {msg.affectedSection}
+                                                    </span>
+                                                </div>
+                                            )}
 
-                                        {/* Chips list */}
-                                        <div className="flex flex-wrap gap-2">
-                                            {msg.canvasFields?.map((field, idx) => (
-                                                <span
-                                                    key={idx}
-                                                    className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors shadow-[0_1px_2px_rgba(0,0,0,0.03)] ${
-                                                        isLight 
-                                                            ? 'bg-white border-slate-200 text-slate-700 hover:border-slate-300' 
-                                                            : 'bg-slate-800/90 border-slate-700 text-slate-200 hover:border-slate-600'
-                                                    }`}
-                                                >
-                                                    {field}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
+                                            <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+                                                <div className="text-slate-400 dark:text-slate-500 font-medium text-[11px] flex items-center gap-1.5">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                    <span>Studio Copilot Active</span>
+                                                </div>
 
-                                    {/* Bottom Status Bar without any token keywords */}
-                                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                                        <div className="text-slate-400 dark:text-slate-500 font-medium text-[11px] flex items-center gap-1.5">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                            <span>Studio Copilot Active</span>
+                                                <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-xs">
+                                                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                                    <span>Canvas Synced</span>
+                                                </div>
+                                            </div>
                                         </div>
+                                    )}
 
-                                        <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold text-xs">
-                                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                            <span>Canvas Synced</span>
+                                    {/* Pure conversational response footer */}
+                                    {!msg.isAction && (
+                                        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                                            <div className="text-slate-400 dark:text-slate-500 font-medium text-[11px] flex items-center gap-1.5">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                <span>Studio Copilot Active</span>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
                         );

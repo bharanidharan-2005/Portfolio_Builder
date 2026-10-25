@@ -357,24 +357,24 @@ function CanvasContainer({
     return ( 
         <div className="w-full min-w-0 max-w-full flex flex-col items-center relative animate-in fade-in duration-500"> 
 
-            {/* Main Outer Container: when isPreview, overflow-visible enables position: sticky on browser window */}
+            {/* Main Outer Container: when isPreview or !isPreview, overflow-visible enables position: sticky on browser/workspace scroll */}
             <div className={`dark relative w-full min-w-0 max-w-full min-h-[700px] transition-all duration-500 ease-out ${
-                !isPreview ? `shadow-2xl rounded-[2rem] border ${currentTheme.border || 'border-slate-800/80'} overflow-hidden` : 'min-h-screen overflow-visible'
+                !isPreview ? `shadow-2xl rounded-[2rem] border ${currentTheme.border || 'border-slate-800/80'}` : 'min-h-screen overflow-visible'
             } bg-[#080D1C] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`} style={{ ...currentFontObj.style }}>
                 
                 {/* --- PREMIUM GLOBAL BACKGROUND --- */}
-                <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+                <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-[2rem]">
                     <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-900/20 blur-[120px]"></div>
                     <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-violet-900/20 blur-[120px]"></div>
                     <div className="absolute top-[40%] right-[20%] w-[30%] h-[30%] rounded-full bg-indigo-900/10 blur-[100px]"></div>
                 </div>
 
-                {/* --- FULL WIDTH NAVIGATION NAVBAR (Persistent Sticky) --- */}
-                <div className={`sticky top-0 z-50 w-full backdrop-blur-2xl ${currentTheme.cardBg || 'bg-black/30'} border-b ${currentTheme.border || 'border-slate-700/30'} shadow-lg transition-all duration-500`}>
-                    <div className="w-full px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3">
+                {/* --- FULL WIDTH NAVIGATION NAVBAR (Persistent Sticky on Desktop and Mobile) --- */}
+                <div className={`sticky top-0 z-50 w-full backdrop-blur-2xl ${currentTheme.cardBg || 'bg-black/40'} border-b ${currentTheme.border || 'border-slate-700/30'} shadow-lg transition-all duration-300 ${!isPreview ? 'rounded-t-[2rem]' : ''}`}>
+                    <div className="w-full px-3 sm:px-6 py-2.5 sm:py-4 flex items-center justify-between gap-2 sm:gap-3">
                         {/* Logo / Initials */}
-                        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 cursor-pointer" onClick={() => handleNavClick('Home')}>
-                            <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-black text-base sm:text-lg shadow-inner ${currentTheme.accentBg || 'bg-blue-600'} text-white`}>
+                        <div className="flex items-center gap-2 sm:gap-3 shrink-0 cursor-pointer" onClick={() => handleNavClick('Home')}>
+                            <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-black text-sm sm:text-lg shadow-inner ${currentTheme.accentBg || 'bg-blue-600'} text-white`}>
                                 {initials}
                             </div>
                             <span className={`font-black tracking-widest uppercase hidden sm:block text-sm md:text-base leading-none translate-y-[1px] ${currentTheme.accentText || 'text-blue-400'}`}> 
@@ -428,27 +428,27 @@ function CanvasContainer({
                         </div>
 
                         {/* Right Side - Resume & Mobile Toggle */}
-                        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+                        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
                             {isPreview ? (
                                 <PDFDownloadLink
                                     document={pdfDocument}
                                     fileName="Portfolio_Resume.pdf"
-                                    className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-md hover:shadow-lg ${currentTheme.accentBg || 'bg-blue-600'} text-white flex items-center gap-2 whitespace-nowrap`}
+                                    className={`px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition-all shadow-md hover:shadow-lg ${currentTheme.accentBg || 'bg-blue-600'} text-white flex items-center gap-1.5 whitespace-nowrap`}
                                 >
-                                    {({ loading }) => (loading ? 'Preparing...' : 'Download Resume')}
+                                    {({ loading }) => (loading ? 'Preparing...' : <><span className="hidden sm:inline">Download </span>Resume</>)}
                                 </PDFDownloadLink>
                             ) : (
                                 <button 
                                     onClick={() => notify("Please test Resume Download in the Live Preview.", "info")}
-                                    className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-md hover:shadow-lg ${currentTheme.accentBg || 'bg-blue-600'} text-white flex items-center gap-2 whitespace-nowrap cursor-pointer`}
+                                    className={`px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition-all shadow-md hover:shadow-lg ${currentTheme.accentBg || 'bg-blue-600'} text-white flex items-center gap-1.5 whitespace-nowrap cursor-pointer`}
                                 >
-                                    Download Resume
+                                    <span className="hidden sm:inline">Download </span>Resume
                                 </button>
                             )}
 
                             {/* Mobile / Compact Menu Toggle Button */}
                             <button 
-                                className="xl:hidden p-1.5 text-slate-300 hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-white/10"
+                                className="xl:hidden p-2 text-slate-300 hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-white/10 min-w-[38px] min-h-[38px] flex items-center justify-center"
                                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                                 aria-label="Toggle navigation menu"
                                 aria-expanded={isMobileMenuOpen}
@@ -466,7 +466,7 @@ function CanvasContainer({
                                 onClick={() => setIsMobileMenuOpen(false)}
                                 aria-hidden="true"
                             />
-                            <div className={`xl:hidden absolute top-full left-0 w-full border-b ${currentTheme.border || 'border-slate-800/80'} ${currentTheme.cardBg || 'bg-slate-950/95'} backdrop-blur-3xl shadow-2xl overflow-y-auto max-h-[75vh] animate-in slide-in-from-top-2 duration-300 z-50 custom-scrollbar`}>
+                            <div className={`xl:hidden absolute top-full left-0 w-full border-b ${currentTheme.border || 'border-slate-800/80'} ${currentTheme.cardBg || 'bg-slate-950/98'} backdrop-blur-3xl shadow-2xl overflow-y-auto max-h-[75vh] animate-in slide-in-from-top-2 duration-300 z-50 custom-scrollbar`}>
                                 <div className="flex flex-col py-3 px-4 sm:px-6 gap-1.5">
                                     {dynamicNavItems.map((navItem) => {
                                         const isActive = activeNavSection.toLowerCase() === navItem.label.toLowerCase();

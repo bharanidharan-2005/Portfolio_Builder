@@ -183,9 +183,9 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
         }).join('');
         
     const navBarHtml = `
-    <nav class="fixed top-0 w-full z-50 backdrop-blur-xl bg-black/30 border-b ${theme.border} py-4 px-6 md:px-12 flex justify-between items-center transition-all duration-300 shadow-2xl">
-        <div class="text-lg font-black tracking-widest flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm shadow-inner ${theme.accentBg || 'bg-blue-600'} text-white animate-bounce-slow">
+    <nav class="fixed top-0 w-full z-50 backdrop-blur-xl bg-black/60 md:bg-black/30 border-b ${theme.border} py-3.5 px-4 md:px-12 flex justify-between items-center transition-all duration-300 shadow-2xl">
+        <div class="text-base md:text-lg font-black tracking-widest flex items-center gap-2.5 md:gap-3">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm shadow-inner ${theme.accentBg || 'bg-blue-600'} text-white">
                 ${frontInitials}
             </div>
             <span class="${theme.textPrimary}">${frontFirstName}</span>
@@ -193,8 +193,18 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
         <ul class="hidden md:flex gap-8 ${theme.textSecondary}">
             ${navLinks}
         </ul>
-        <a href="#section-${activeSections[0]?.id || ''}" class="px-5 py-2.5 text-xs font-bold ${theme.accentBg || 'bg-blue-600'} text-white rounded-xl shadow-lg hover:shadow-[0_10px_20px_rgba(59,130,246,0.3)] hover:-translate-y-1 transition-all">Back to Top</a>
-    </nav>`;
+        <div class="flex items-center gap-2">
+            <a href="#section-${activeSections[0]?.id || ''}" class="px-4 py-2 text-xs font-bold ${theme.accentBg || 'bg-blue-600'} text-white rounded-xl shadow-lg hover:shadow-[0_10px_20px_rgba(59,130,246,0.3)] hover:-translate-y-0.5 transition-all">Top</a>
+            <button id="mobile-nav-toggle" class="md:hidden p-2 text-slate-300 hover:text-white rounded-lg hover:bg-white/10 cursor-pointer" aria-label="Toggle navigation">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+        </div>
+    </nav>
+    <div id="mobile-nav-menu" class="hidden fixed top-[57px] left-0 w-full z-40 bg-black/95 backdrop-blur-2xl border-b ${theme.border} py-4 px-6 md:hidden shadow-2xl transition-all">
+        <ul class="flex flex-col gap-3 ${theme.textSecondary}">
+            ${navLinks}
+        </ul>
+    </div>`;
 
     // 3. Build Inner Sections
     let sectionsHtml = '';
@@ -612,6 +622,20 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                     overlay.style.display = 'none';
                     document.body.classList.remove('overflow-hidden');
                 }
+            }
+
+            // Mobile Nav Toggle
+            const mobileNavToggle = document.getElementById('mobile-nav-toggle');
+            const mobileNavMenu = document.getElementById('mobile-nav-menu');
+            if (mobileNavToggle && mobileNavMenu) {
+                mobileNavToggle.addEventListener('click', () => {
+                    mobileNavMenu.classList.toggle('hidden');
+                });
+                mobileNavMenu.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', () => {
+                        mobileNavMenu.classList.add('hidden');
+                    });
+                });
             }
         });
 
