@@ -9,7 +9,7 @@ import { uploadAndParseResume } from "../utils/aiUtils";
 import { PORTFOLIO_THEMES } from "../canvas/themes";
 
 const AI_TOOLS_LIST = [
-    { id: "activity_log", icon: MessageSquare, name: "Claude AI Chat" },
+    { id: "activity_log", icon: MessageSquare, name: "AI Chat & Logs" },
     { id: "generator", icon: Sparkles, name: "Content Generator" },
     { id: "matcher", icon: Target, name: "Target Role Matcher" },
     { id: "impact", icon: TrendingUp, name: "Impact Quantifier" },

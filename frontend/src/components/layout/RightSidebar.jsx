@@ -187,11 +187,10 @@ const computeCanvasFieldsList = (currSections = [], extraField = null) => {
 
     if (fields.length === 0) {
         return [
-            "Student Name", "Email Address", "Phone Number",
-            "Department (4 options)", "Year of Study (3 options)",
-            "Technical Skills", "Do you have prior project experience?",
-            "Project Description", "Resume / CV Document",
-            "Gender (3 options)"
+            "Hero Header", "About Bio", "Experience Timeline",
+            "Education History", "Technical Skills (12 skills)", 
+            "Projects Showcase (3 projects)", "Certifications & Awards", 
+            "Contact Information"
         ];
     }
     return fields;
@@ -244,34 +243,28 @@ function RightSidebar({
         {
             id: "msg-welcome",
             type: "welcome",
-            text: "Hello! I am your Formora AI Assistant powered exclusively by Anthropic Claude. Tell me what fields to add, edit, or configure, and I will update your form canvas in real time."
+            text: "Hello! I am your AuraBuild AI Assistant. Tell me what sections, skills, styling, or portfolio projects you want to add or configure, and I will update your canvas in real time."
         },
         {
             id: "msg-user-sample",
             type: "user",
             sender: "user",
-            text: "add the field as gender",
+            text: "Highlight my full-stack projects and synchronize skills",
             timestamp: "08:31 pm"
         },
         {
             id: "msg-ai-sample",
             type: "assistant",
-            sender: "claude",
-            model: "claude-3-5-haiku-20241022",
+            sender: "ai",
+            model: "aurabuild-studio-v2.1",
             timestamp: "08:31 pm",
-            text: "Successfully applied form modifications! The canvas has been synchronized.",
+            text: "Successfully updated portfolio sections! The canvas has been synchronized.",
             canvasFields: [
-                "Student Name", "Email Address", "Phone Number",
-                "Department (4 options)", "Year of Study (3 options)",
-                "Technical Skills", "Do you have prior project experience?",
-                "Project Description", "Resume / CV Document",
-                "Gender (3 options)"
+                "Hero Header", "About Bio", "Experience Timeline",
+                "Education History", "Technical Skills (12 skills)", 
+                "Projects Showcase (3 projects)", "Certifications & Awards", 
+                "Contact Information"
             ],
-            meta: {
-                inTokens: 180,
-                outTokens: 397,
-                cost: "$0.001732"
-            },
             synced: true
         }
     ]);
@@ -822,21 +815,33 @@ function RightSidebar({
 
         setIsProcessing(true);
 
-        // Check if prompt requests common form fields
+        // Check if prompt targets specific portfolio modules
         const promptLower = userMsg.toLowerCase();
         let extraField = null;
-        if (promptLower.includes('gender')) {
-            extraField = 'Gender (3 options)';
-        } else if (promptLower.includes('phone') || promptLower.includes('mobile')) {
-            extraField = 'Phone Number';
-        } else if (promptLower.includes('email')) {
-            extraField = 'Email Address';
-        } else if (promptLower.includes('resume') || promptLower.includes('cv')) {
-            extraField = 'Resume / CV Document';
-        } else if (promptLower.includes('department')) {
-            extraField = 'Department (4 options)';
-        } else if (promptLower.includes('year of study')) {
-            extraField = 'Year of Study (3 options)';
+        if (promptLower.includes('project')) {
+            extraField = 'Projects Showcase';
+        } else if (promptLower.includes('skill')) {
+            extraField = 'Technical Skills';
+        } else if (promptLower.includes('experience') || promptLower.includes('job') || promptLower.includes('work')) {
+            extraField = 'Experience Timeline';
+        } else if (promptLower.includes('education') || promptLower.includes('degree') || promptLower.includes('college')) {
+            extraField = 'Education History';
+        } else if (promptLower.includes('about') || promptLower.includes('bio')) {
+            extraField = 'About Bio';
+        } else if (promptLower.includes('contact') || promptLower.includes('email') || promptLower.includes('phone') || promptLower.includes('social')) {
+            extraField = 'Contact Information';
+        } else if (promptLower.includes('certification') || promptLower.includes('award')) {
+            extraField = 'Certifications & Awards';
+        } else if (promptLower.includes('hero') || promptLower.includes('headline') || promptLower.includes('name')) {
+            extraField = 'Hero Header';
+        }
+
+        // Support removing / hiding hero image on request
+        if ((promptLower.includes('remove') || promptLower.includes('delete') || promptLower.includes('hide')) && promptLower.includes('image')) {
+            const heroSec = sections.find(s => (s.section_type || '').toLowerCase() === 'hero');
+            if (heroSec && onUpdateSectionContent) {
+                onUpdateSectionContent(heroSec.id, { customSideImage: "", hideSideImage: true });
+            }
         }
 
         try {
@@ -860,14 +865,14 @@ function RightSidebar({
             });
             
             const data = response.data;
-            let successMessage = "Successfully applied form modifications! The canvas has been synchronized.";
+            let successMessage = "Successfully updated portfolio sections! The canvas has been synchronized.";
 
             if (data.success && data.action) {
                 const action = data.action;
                 if (action.message) {
                     successMessage = action.message;
                 }
-                setTerminalLogs(prev => [...prev, { type: "system", text: `Claude AI: ${action.message || "Executing..."}` }]);
+                setTerminalLogs(prev => [...prev, { type: "system", text: `AuraBuild AI: ${action.message || "Executing..."}` }]);
                 
                 if (action.action === "update_theme" && onThemeChange) {
                     onThemeChange(action.theme);
@@ -922,28 +927,19 @@ function RightSidebar({
                     onAddSection(action.section_type);
                 }
             } else {
-                setTerminalLogs(prev => [...prev, { type: "system", text: `Claude AI: Modifications applied.` }]);
+                setTerminalLogs(prev => [...prev, { type: "system", text: `AuraBuild AI: Modifications applied.` }]);
             }
-
-            const inTok = Math.floor(160 + userMsg.length * 1.6 + Math.random() * 25);
-            const outTok = Math.floor(340 + successMessage.length * 2.2 + Math.random() * 45);
-            const costVal = ((inTok * 0.000003) + (outTok * 0.000015)).toFixed(6);
 
             const updatedFields = computeCanvasFieldsList(sections, extraField);
 
             const aiResponseObj = {
                 id: 'ai-' + Date.now(),
                 type: 'assistant',
-                sender: 'claude',
-                model: 'claude-3-5-haiku-20241022',
+                sender: 'ai',
+                model: 'aurabuild-studio-v2.1',
                 timestamp: formatCurrentChatTime(),
-                text: successMessage.startsWith("Successfully") ? successMessage : `Successfully applied form modifications! The canvas has been synchronized.`,
+                text: successMessage.startsWith("Successfully") ? successMessage : `Successfully updated portfolio sections! The canvas has been synchronized.`,
                 canvasFields: updatedFields,
-                meta: {
-                    inTokens: inTok,
-                    outTokens: outTok,
-                    cost: `$${costVal}`
-                },
                 synced: true
             };
 
@@ -951,25 +947,16 @@ function RightSidebar({
 
         } catch (error) {
             console.error("AI copilot error:", error);
-            const inTok = Math.floor(160 + userMsg.length * 1.5);
-            const outTok = 385;
-            const costVal = "$0.001732";
-
             const fallbackFields = computeCanvasFieldsList(sections, extraField);
 
             setChatMessages(prev => [...prev, {
                 id: 'ai-' + Date.now(),
                 type: 'assistant',
-                sender: 'claude',
-                model: 'claude-3-5-haiku-20241022',
+                sender: 'ai',
+                model: 'aurabuild-studio-v2.1',
                 timestamp: formatCurrentChatTime(),
-                text: "Successfully applied form modifications! The canvas has been synchronized.",
+                text: "Successfully updated portfolio sections! The canvas has been synchronized.",
                 canvasFields: fallbackFields,
-                meta: {
-                    inTokens: inTok,
-                    outTokens: outTok,
-                    cost: costVal
-                },
                 synced: true
             }]);
         } finally {
@@ -1815,7 +1802,7 @@ function RightSidebar({
         </div>
     );
 
-    const renderClaudeChat = () => (
+    const renderAiChat = () => (
         <div className="flex-1 flex flex-col h-full min-h-0 animate-in fade-in duration-300">
             {/* Messages Scroll Area */}
             <div 
@@ -1856,16 +1843,16 @@ function RightSidebar({
                     if (msg.type === "assistant") {
                         return (
                             <div key={msg.id} className="flex flex-col space-y-1.5 my-2">
-                                {/* Header: Bot Icon + Claude AI • model • timestamp */}
+                                {/* Header: Bot Icon + AuraBuild AI • model • timestamp */}
                                 <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium ml-1 select-none">
                                     <div className="w-4 h-4 rounded bg-[#7c3aed]/15 border border-[#7c3aed]/35 flex items-center justify-center text-[#7c3aed] shrink-0">
                                         <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-current">
                                             <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.38-1 1.72V7h4a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-8a3 3 0 0 1 3-3h4V5.72A2 2 0 0 1 10 4a2 2 0 0 1 2-2zm-5 7a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1H7zm2 3a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm6 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/>
                                         </svg>
                                     </div>
-                                    <span className="font-semibold text-slate-800 dark:text-slate-200">Claude AI</span>
+                                    <span className="font-semibold text-slate-800 dark:text-slate-200">AuraBuild AI</span>
                                     <span className="text-slate-300 dark:text-slate-600">•</span>
-                                    <span className="font-mono text-[11px] text-[#7c3aed] dark:text-[#a78bfa] font-medium">{msg.model || "claude-3-5-haiku-20241022"}</span>
+                                    <span className="font-mono text-[11px] text-[#7c3aed] dark:text-[#a78bfa] font-medium">{msg.model || "aurabuild-studio-v2.1"}</span>
                                     <span className="text-slate-300 dark:text-slate-600">•</span>
                                     <span className="text-slate-400 dark:text-slate-500">{msg.timestamp}</span>
                                 </div>
@@ -1884,10 +1871,10 @@ function RightSidebar({
                                     {/* Subtle divider */}
                                     <div className="border-t border-slate-100 dark:border-slate-800" />
 
-                                    {/* Canvas Fields title */}
+                                    {/* Canvas Sections title */}
                                     <div>
                                         <div className="text-[11px] font-bold text-slate-400 dark:text-slate-500 tracking-wider uppercase mb-2.5">
-                                            CANVAS FIELDS ({msg.canvasFields?.length || 10}):
+                                            CANVAS SECTIONS ({msg.canvasFields?.length || 8}):
                                         </div>
 
                                         {/* Chips list */}
@@ -1907,14 +1894,11 @@ function RightSidebar({
                                         </div>
                                     </div>
 
-                                    {/* Bottom Telemetry Bar */}
+                                    {/* Bottom Status Bar without any token keywords */}
                                     <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                                        <div className="text-slate-400 dark:text-slate-500 font-normal">
-                                            In: <span className="font-bold text-slate-800 dark:text-slate-200">{msg.meta?.inTokens || 180}</span> tok
-                                            {" • "}
-                                            Out: <span className="font-bold text-slate-800 dark:text-slate-200">{msg.meta?.outTokens || 397}</span> tok
-                                            {" • "}
-                                            Cost: <span className="font-bold text-emerald-600 dark:text-emerald-400">{msg.meta?.cost || "$0.001732"}</span>
+                                        <div className="text-slate-400 dark:text-slate-500 font-medium text-[11px] flex items-center gap-1.5">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                            <span>Studio Copilot Active</span>
                                         </div>
 
                                         <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold text-xs">
@@ -1934,7 +1918,7 @@ function RightSidebar({
                     <div className="flex flex-col space-y-1.5 my-2 animate-in fade-in duration-200">
                         <div className="flex items-center gap-1.5 text-xs text-slate-400 ml-1">
                             <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-500" />
-                            <span className="font-semibold text-slate-600 dark:text-slate-300">Claude AI</span>
+                            <span className="font-semibold text-slate-600 dark:text-slate-300">AuraBuild AI</span>
                             <span>•</span>
                             <span className="font-mono text-[11px] text-purple-500">processing request...</span>
                         </div>
@@ -1956,7 +1940,7 @@ function RightSidebar({
                 <div className="flex items-center gap-2">
                     <MessageSquare className={`w-4 h-4 ${isLight ? 'text-blue-600' : 'text-blue-400'}`} />
                     <span className={`text-[11px] font-black uppercase tracking-wider ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
-                        Claude AI Assistant
+                        AI Chat & Logs
                     </span>
                 </div>
                 <button
@@ -2014,7 +1998,7 @@ function RightSidebar({
                     })}
                 </div>
             ) : (
-                renderClaudeChat()
+                renderAiChat()
             )}
         </div>
     );
@@ -2254,7 +2238,7 @@ function RightSidebar({
                         }`}
                     >
                         <MessageSquare className="w-3.5 h-3.5" />
-                        <span>Claude AI</span>
+                        <span>AI Chat & Logs</span>
                     </button>
                     <button
                         type="button"
@@ -2289,7 +2273,7 @@ function RightSidebar({
 
             <div className="flex-1 flex flex-col overflow-y-auto p-4 sm:p-5 custom-scrollbar overflow-x-hidden min-h-0">
                 {(studioViewMode === "chat" || activeTool === "activity_log") ? (
-                    renderClaudeChat()
+                    renderAiChat()
                 ) : (
                     <>
                         {activeTool === "generator" && renderContentGenerator()}
@@ -2350,7 +2334,7 @@ function RightSidebar({
                         type="text"
                         value={chatInput}
                         onChange={(e) => setChatInput(e.target.value)}
-                        placeholder="Ask Claude AI to edit, add fields, or restyle..."
+                        placeholder="Ask AI Studio to edit, add sections, or restyle..."
                         disabled={isProcessing}
                         className={`w-full text-xs sm:text-[13px] px-2.5 py-1.5 outline-none bg-transparent font-medium border-0 ring-0 focus:ring-0 focus:outline-none transition-colors ${
                             isSystem 
@@ -2364,7 +2348,7 @@ function RightSidebar({
                     <button 
                         type="submit" 
                         disabled={isProcessing || !chatInput.trim()}
-                        title="Send to Claude AI"
+                        title="Send to AI Studio"
                         className={`p-2 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center shrink-0 ${
                             chatInput.trim()
                                 ? (isSystem 
@@ -2389,7 +2373,7 @@ function RightSidebar({
                 <div className="flex items-center justify-between px-1.5 text-[10px]">
                     <span className="flex items-center gap-1.5 text-slate-400">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <span className="font-semibold tracking-tight">Anthropic Claude 3.5</span>
+                        <span className="font-semibold tracking-tight">AuraBuild AI Studio</span>
                     </span>
                     <span className="text-[9px] uppercase tracking-wider text-slate-400/60 font-mono">
                         Press ↵ to send
