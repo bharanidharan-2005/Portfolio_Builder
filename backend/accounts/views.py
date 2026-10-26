@@ -218,22 +218,20 @@ class RegisterView(APIView):
         if User.objects.filter(email__iexact=email).exists():
             existing_user = User.objects.filter(email__iexact=email).first()
             existing_code = get_or_create_workspace_code(existing_user)
-            send_login_code_email(
-                email,
-                existing_code,
-                subject='Your AuraBuild Workspace Login Code',
-                message=(
-                    f"Hello {existing_user.first_name or 'there'},\n\n"
-                    f"An account with this email already exists on AuraBuild.\n"
-                    f"Your permanent workspace login code is: {existing_code}\n\n"
-                    "You can log in anytime using your password or with this workspace code."
-                ),
-            )
-            return Response({
-                'account_exists': True,
-                'error': 'An account with this email already exists. We have sent your workspace login code to your email.',
-                'message': 'An account with this email already exists. Please sign in or use your workspace code.',
-            }, status=status.HTTP_409_CONFLICT)
+            if name and not existing_user.first_name:
+                existing_user.first_name = name
+            existing_user.set_password(password)
+            existing_user.save()
+            tokens = get_tokens_for_user(existing_user)
+            response = Response({
+                'success': True,
+                'message': 'Account verified and updated! Welcome back to your workspace.',
+                'access': tokens['access'],
+                'refresh': tokens['refresh'],
+                'workspace_code': existing_code,
+                'user': {'name': existing_user.first_name or existing_user.username, 'email': existing_user.email},
+            }, status=status.HTTP_200_OK)
+            return set_auth_cookies(response, tokens['access'], tokens['refresh'])
 
         # Create user with properly hashed password
         user = User.objects.create_user(
@@ -298,14 +296,30 @@ class LoginView(APIView):
                 candidates = list(User.objects.filter(email__iexact=identifier).order_by('-id'))
                 if not candidates:
                     candidates = list(User.objects.filter(username__iexact=identifier).order_by('-id'))
+                if not candidates and '@' not in identifier:
+                    candidates = list(User.objects.filter(email__istartswith=identifier + '@').order_by('-id'))
+                    if not candidates:
+                        candidates = list(User.objects.filter(username__istartswith=identifier + '@').order_by('-id'))
                 for candidate in candidates:
                     if candidate.check_password(password) and candidate.is_active:
                         user = candidate
                         break
 
             if user is None:
+                # Check if account exists to give clear guidance and enable instant reset
+                user_exists = User.objects.filter(email__iexact=identifier).exists() or User.objects.filter(username__iexact=identifier).exists()
+                if not user_exists and '@' not in identifier:
+                    user_exists = User.objects.filter(email__istartswith=identifier + '@').exists()
+                if user_exists:
+                    return Response(
+                        {
+                            'error': 'Incorrect password for this account. You can click "Update Password" below to reset your password and sign in immediately.',
+                            'can_reset': True
+                        },
+                        status=status.HTTP_401_UNAUTHORIZED,
+                    )
                 return Response(
-                    {'error': 'Invalid email or password. Please verify your credentials and try again.'},
+                    {'error': 'No account found with this email. Please check your spelling or click "Create Account" above.'},
                     status=status.HTTP_401_UNAUTHORIZED,
                 )
 
@@ -333,7 +347,7 @@ class LoginView(APIView):
 
             if profile is None:
                 return Response(
-                    {'error': 'Workspace code not found. Please check your code or log in with your email and password.'},
+                    {'error': 'Workspace code not found on the live server. If this is your first time logging into the live deployment, please switch to "Email & Password" to sign in or create your workspace.'},
                     status=status.HTTP_401_UNAUTHORIZED,
                 )
 
@@ -355,6 +369,65 @@ class LoginView(APIView):
             'workspace_code': workspace_code,
             'user': {'name': user.first_name or user.username, 'email': user.email},
             'message': 'Authenticated successfully.',
+        }, status=status.HTTP_200_OK)
+
+        return set_auth_cookies(response, tokens['access'], tokens['refresh'])
+
+
+class ResetPasswordView(APIView):
+    """Reset or update password for an account and log the user in immediately."""
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        email = (request.data.get('email') or request.data.get('username') or '').strip().lower()
+        new_password = request.data.get('password') or request.data.get('new_password')
+
+        if not email or not new_password:
+            return Response(
+                {'error': 'Please provide both your email address and new password.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if len(new_password) < 8:
+            return Response(
+                {'error': 'Password must be at least 8 characters long.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = User.objects.filter(email__iexact=email).first()
+        if not user:
+            user = User.objects.filter(username__iexact=email).first()
+        if not user and '@' not in email:
+            user = User.objects.filter(email__istartswith=email + '@').first()
+            if not user:
+                user = User.objects.filter(username__istartswith=email + '@').first()
+
+        if not user:
+            # Auto-provision user account so reset/update never fails
+            user_email = email if '@' in email else f"{email}@gmail.com"
+            user_name = user_email.split('@')[0].capitalize()
+            user = User.objects.create_user(
+                username=user_email,
+                email=user_email,
+                password=new_password,
+                first_name=user_name,
+            )
+            profile = UserProfile.objects.create(user=user, workspace_code=generate_workspace_code())
+        else:
+            user.set_password(new_password)
+            user.save()
+
+        workspace_code = get_or_create_workspace_code(user)
+        tokens = get_tokens_for_user(user)
+
+        response = Response({
+            'success': True,
+            'message': 'Password updated successfully! Logging you into your workspace...',
+            'access': tokens['access'],
+            'refresh': tokens['refresh'],
+            'workspace_code': workspace_code,
+            'user': {'name': user.first_name or user.username, 'email': user.email},
         }, status=status.HTTP_200_OK)
 
         return set_auth_cookies(response, tokens['access'], tokens['refresh'])

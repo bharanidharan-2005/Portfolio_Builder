@@ -1,12 +1,17 @@
 import axios from 'axios';
 
 // Ensure the baseURL always ends with /api/ correctly, regardless of Vercel env var typos
-let rawBaseUrl = import.meta.env.VITE_API_URL || 'https://aurabuild-backend.onrender.com/api/';
+let rawBaseUrl = import.meta.env.VITE_API_URL || 'https://portfolio-builder-1-rm9r.onrender.com/api/';
 if (!rawBaseUrl.endsWith('/')) {
     rawBaseUrl += '/';
 }
 if (!rawBaseUrl.endsWith('api/')) {
     rawBaseUrl += 'api/';
+}
+
+// Seamlessly migrate any stale aurabuild-backend references to the live backend
+if (rawBaseUrl.includes('aurabuild-backend.onrender.com')) {
+    rawBaseUrl = rawBaseUrl.replace('aurabuild-backend.onrender.com', 'portfolio-builder-1-rm9r.onrender.com');
 }
 
 // Local dev auto-detection: if running on localhost / 127.0.0.1, prioritize local Django server on 8080
@@ -46,7 +51,7 @@ API.interceptors.request.use(
     (config) => {
         try {
             const url = config.url || '';
-            const isPublicAuth = ['auth/register/', 'auth/login/', 'auth/social/', 'token/', 'token/refresh/', 'send-key/'].some(ep => url.includes(ep));
+            const isPublicAuth = ['auth/register/', 'auth/login/', 'auth/reset-password/', 'auth/social/', 'token/', 'token/refresh/', 'send-key/'].some(ep => url.includes(ep));
             if (!isPublicAuth) {
                 const token = sessionStorage.getItem('aurabuild_access_token');
                 if (token && !config.headers['Authorization']) {
@@ -104,7 +109,7 @@ API.interceptors.response.use(
 
         // Never attempt token refresh on login or register endpoints
         const reqUrl = originalRequest.url || '';
-        const isAuthRoute = ['auth/register/', 'auth/login/', 'auth/social/', 'token/'].some(ep => reqUrl.includes(ep));
+        const isAuthRoute = ['auth/register/', 'auth/login/', 'auth/reset-password/', 'auth/social/', 'token/'].some(ep => reqUrl.includes(ep));
         if (isAuthRoute) {
             return Promise.reject(error);
         }

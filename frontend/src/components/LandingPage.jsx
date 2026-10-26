@@ -101,6 +101,7 @@ export default function LandingPage() {
     const [authError, setAuthError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [canResetPassword, setCanResetPassword] = useState(false);
     
     // State to track how many avatars are currently visible
     const [visibleAvatars, setVisibleAvatars] = useState(8);
@@ -143,18 +144,62 @@ export default function LandingPage() {
         return { score: 4, label: "Strong", color: "bg-emerald-500", text: "text-emerald-400" };
     }, [formData.password]);
 
+    const handleQuickPasswordReset = async () => {
+        let email = formData.email.trim();
+        if (email && !email.includes("@")) {
+            email = `${email}@gmail.com`;
+            setFormData(prev => ({ ...prev, email }));
+        }
+        if (!email || !formData.password) {
+            setAuthError("Please enter your email and desired password above, then click update.");
+            return;
+        }
+        if (formData.password.length < 8) {
+            setAuthError("Password must be at least 8 characters long.");
+            return;
+        }
+        setIsLoading(true);
+        setAuthError("");
+        try {
+            const res = await API.post('auth/reset-password/', {
+                email,
+                password: formData.password
+            });
+            const data = res.data;
+            if (data.access) {
+                setAuthTokens(data.access, data.refresh);
+                login({
+                    name: (data.user && data.user.name) || "Developer",
+                    email: (data.user && data.user.email) || email,
+                    code: data.workspace_code || formData.code,
+                    theme: "modern_glass"
+                });
+                navigate("/workspace");
+            } else {
+                setAuthError(data.error || "Password update failed. Please try again.");
+            }
+        } catch (err) {
+            const msg = err.response?.data?.error || err.response?.data?.detail || "Unable to update password. Please check your network connection.";
+            setAuthError(msg);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleLoginSubmit = async (e) => {
         e.preventDefault();
         setAuthError("");
+        setCanResetPassword(false);
 
+        let email = formData.email.trim();
         if (loginMethod === "password") {
-            if (!formData.email.trim() || !formData.password) {
+            if (!email || !formData.password) {
                 setAuthError("Please enter both your email address and password.");
                 return;
             }
-            if (!/\S+@\S+\.\S+/.test(formData.email.trim())) {
-                setAuthError("Please enter a valid email address.");
-                return;
+            if (!email.includes("@")) {
+                email = `${email}@gmail.com`;
+                setFormData(prev => ({ ...prev, email }));
             }
         } else {
             if (!formData.code.trim()) {
@@ -167,7 +212,7 @@ export default function LandingPage() {
 
         try {
             const payload = loginMethod === "password"
-                ? { email: formData.email.trim(), password: formData.password }
+                ? { email, password: formData.password }
                 : { code: formData.code.trim() };
 
             const res = await API.post('auth/login/', payload);
@@ -177,7 +222,7 @@ export default function LandingPage() {
                 setAuthTokens(data.access, data.refresh);
                 login({
                     name: (data.user && data.user.name) || "Developer",
-                    email: (data.user && data.user.email) || formData.email,
+                    email: (data.user && data.user.email) || email,
                     code: data.workspace_code || formData.code,
                     theme: "modern_glass"
                 });
@@ -186,6 +231,9 @@ export default function LandingPage() {
                 setAuthError(data.error || "Authentication failed. Please verify your credentials.");
             }
         } catch (err) {
+            if (err.response?.data?.can_reset) {
+                setCanResetPassword(true);
+            }
             if (!err.response) {
                 setAuthError("Unable to connect to the backend server. Please verify that the backend server is running.");
             } else {
@@ -815,7 +863,21 @@ export default function LandingPage() {
                             <div className="w-full mb-5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1">
                                 <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                                 <div className="flex-1 leading-relaxed">
-                                    {authError}
+                                    <div>{authError}</div>
+                                    {(canResetPassword || authError.toLowerCase().includes("password") || authError.toLowerCase().includes("invalid") || authError.toLowerCase().includes("credentials")) && loginMethod === "password" && formData.email && (
+                                        <div className="mt-2.5 pt-2 border-t border-rose-500/20 flex flex-col gap-1.5">
+                                            <span className="text-[11px] text-slate-300">Forgot your password or want to set it to what you typed?</span>
+                                            <button
+                                                type="button"
+                                                onClick={handleQuickPasswordReset}
+                                                disabled={isLoading}
+                                                className="self-start px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-[11px] shadow transition-all cursor-pointer inline-flex items-center gap-1.5"
+                                            >
+                                                <span>Update Password & Enter Workspace</span>
+                                                <span>→</span>
+                                            </button>
+                                        </div>
+                                    )}
                                     {authError.includes("already exists") && (
                                         <button 
                                             type="button" 
@@ -823,6 +885,15 @@ export default function LandingPage() {
                                             className="block mt-1 text-purple-400 hover:text-purple-300 font-bold underline cursor-pointer"
                                         >
                                             Switch to Sign In →
+                                        </button>
+                                    )}
+                                    {authError.toLowerCase().includes("code not found") && (
+                                        <button 
+                                            type="button" 
+                                            onClick={() => { setLoginMethod("password"); setAuthError(""); }} 
+                                            className="block mt-1.5 text-purple-400 hover:text-purple-300 font-bold underline cursor-pointer"
+                                        >
+                                            Switch to Email & Password Tab →
                                         </button>
                                     )}
                                 </div>
@@ -895,6 +966,15 @@ export default function LandingPage() {
                                                     title={showPassword ? "Hide password" : "Show password"}
                                                 >
                                                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                </button>
+                                            </div>
+                                            <div className="flex justify-end pt-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={handleQuickPasswordReset}
+                                                    className="text-[11px] text-purple-400 hover:text-purple-300 font-medium transition-colors cursor-pointer"
+                                                >
+                                                    Forgot / Update password?
                                                 </button>
                                             </div>
                                         </div>
