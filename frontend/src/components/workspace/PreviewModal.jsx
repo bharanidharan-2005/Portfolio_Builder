@@ -64,7 +64,10 @@ export default function PreviewModal({
             {/* Toolbar */}
             <div className={`relative z-50 h-14 md:h-16 px-2 sm:px-4 md:px-6 flex items-center justify-between border-b gap-1.5 sm:gap-4 transition-colors ${isLight ? 'bg-white border-slate-200 text-slate-800 shadow-sm' : 'bg-[#05050A] border-slate-800 text-slate-100'}`}>
                 <div className="flex items-center gap-2 md:gap-4">
-                    <span className="hidden lg:block text-sm font-bold uppercase tracking-wider text-blue-500">Live Preview</span>
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold uppercase tracking-wider text-blue-500">Test Portfolio</span>
+                        <span className="hidden sm:inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30">Live Preview</span>
+                    </div>
                     
                     {/* Device Selector */}
                     <div className={`flex items-center gap-1 p-1 rounded-xl border transition-colors ${isLight ? 'bg-slate-100 border-slate-200' : 'bg-black/40 border-slate-800'}`}>

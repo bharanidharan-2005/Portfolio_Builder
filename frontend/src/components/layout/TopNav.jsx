@@ -271,6 +271,24 @@ export const TopNav = memo(function TopNav({
 
             {/* 3. RIGHT SECTION - Actions & User Profile */}
             <div className="flex items-center gap-2 sm:gap-2.5"> 
+                {/* Live Preview Button */}
+                <button 
+                    type="button"
+                    onClick={onTogglePreview}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg border transition-all cursor-pointer active:scale-95 ${
+                        isPreviewMode
+                            ? (isSystem ? 'bg-[#7c00ff]/30 border-[#7c00ff] text-white shadow-[0_0_15px_rgba(124,0,255,0.4)]' : 'bg-blue-600 border-blue-600 text-white shadow-sm')
+                            : (isSystem 
+                                ? 'bg-[#0e0720]/80 border-[#7c00ff]/40 text-purple-200 hover:text-white hover:bg-[#7c00ff]/20 shadow-[0_0_10px_rgba(124,0,255,0.15)]' 
+                                : (isLight ? 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100' : 'bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800'))
+                    }`}
+                    title="Open Live Preview (Test Portfolio)"
+                    aria-label="Toggle Live Preview"
+                >
+                    <Eye className="h-3.5 w-3.5" /> 
+                    <span className="hidden sm:inline">Preview</span> 
+                </button>
+
                 {/* Dominant Primary Action: Deploy */}
                 <button 
                     type="button"

@@ -45,7 +45,7 @@ def get_or_create_user_portfolio(request):
         try:
             portfolio = Portfolio.objects.create(
                 owner=user, 
-                title=f"{name}'s Portfolio", 
+                title='Test Portfolio', 
                 owner_name=name
             )
         except Exception as e:

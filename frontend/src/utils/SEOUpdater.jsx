@@ -13,7 +13,8 @@ export default function SEOUpdater({ pages, userData, isPublicPreview }) {
             }
         }
 
-        const title = heroSection?.content_data?.heading || userData?.name ? `${userData.name}'s Portfolio` : 'Portfolio';
+        const baseName = heroSection?.content_data?.heading || userData?.name;
+        const title = baseName ? `${baseName} — Test Portfolio` : 'Test Portfolio';
         const description = heroSection?.content_data?.subheading || 'A professional portfolio built with AuraBuild Studio.';
 
         document.title = title;
