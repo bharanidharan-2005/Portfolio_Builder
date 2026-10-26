@@ -5,7 +5,7 @@ import {
     LayoutTemplate, PenTool, Activity, Link2, ShieldCheck, 
     GraduationCap, Mail, Crosshair, BarChart, 
     Share2, Send, Copy, Edit3, Download,
-    ChevronDown, Check, ChevronRight,
+    ChevronDown, Check, ChevronRight, X,
     Briefcase, Wrench, MessageSquare, Award, BarChart3, BookOpen,
     Bot, Terminal
 } from "lucide-react";
@@ -2257,12 +2257,16 @@ function RightSidebar({
     return (
         <div className={`h-full w-full flex flex-col transition-colors duration-500 ${isSystem ? 'bg-[#0c051a]/95 backdrop-blur-2xl' : (isLight ? 'bg-slate-50/50 backdrop-blur-xl' : 'bg-[#0B0C10]/80 backdrop-blur-2xl')}`}>
             {/* Top Studio Panel Header */}
-            <div className={`px-3 py-2 border-b flex items-center justify-between shrink-0 gap-2 ${isSystem ? 'border-[#7c00ff]/25 bg-[#0e0720]/80' : (isLight ? 'border-slate-200/80 bg-white/70' : 'border-white/10 bg-white/[0.02]')}`}>
+            <div className={`px-3 py-2.5 border-b flex items-center justify-between shrink-0 gap-2 ${
+                isSystem 
+                    ? 'border-[#7c00ff]/30 bg-[#0e0720]/90 backdrop-blur-xl shadow-[0_4px_16px_rgba(124,0,255,0.1)]' 
+                    : (isLight ? 'border-slate-200/90 bg-white/80 backdrop-blur-xl shadow-xs' : 'border-white/10 bg-[#0b0f19]/90 backdrop-blur-xl shadow-xs')
+            }`}>
                 {/* Mode Selector Tabs */}
-                <div className={`flex items-center p-0.5 rounded-xl border text-xs font-semibold ${
+                <div className={`flex items-center p-1 rounded-xl border text-xs font-semibold ${
                     isSystem 
-                        ? 'border-[#7c00ff]/30 bg-[#120826]' 
-                        : (isLight ? 'border-slate-200 bg-slate-100/90' : 'border-slate-800 bg-slate-900/80')
+                        ? 'border-[#7c00ff]/30 bg-[#120826]/90 shadow-inner' 
+                        : (isLight ? 'border-slate-200 bg-slate-100/90 shadow-inner' : 'border-slate-800/80 bg-slate-900/80 shadow-inner')
                 }`}>
                     <button
                         type="button"
@@ -2270,11 +2274,11 @@ function RightSidebar({
                             setStudioViewMode('chat');
                             if (onSelectTool) onSelectTool('activity_log');
                         }}
-                        className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer text-xs ${
                             studioViewMode === 'chat' || activeTool === 'activity_log'
                                 ? (isSystem 
-                                    ? 'bg-[#7c00ff] text-white shadow-xs font-bold' 
-                                    : (isLight ? 'bg-white text-blue-600 shadow-xs font-bold' : 'bg-slate-800 text-blue-400 shadow-xs font-bold'))
+                                    ? 'bg-gradient-to-r from-[#7c00ff] to-[#9933ff] text-white shadow-[0_0_12px_rgba(124,0,255,0.5)] font-bold' 
+                                    : (isLight ? 'bg-white text-blue-600 shadow-sm font-bold border border-slate-200/60' : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm font-bold'))
                                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                         }`}
                     >
@@ -2287,11 +2291,11 @@ function RightSidebar({
                             setStudioViewMode('tool');
                             if (onSelectTool && activeTool === 'activity_log') onSelectTool('structure');
                         }}
-                        className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer text-xs ${
                             studioViewMode === 'tool' && activeTool !== 'activity_log'
                                 ? (isSystem 
-                                    ? 'bg-[#7c00ff] text-white shadow-xs font-bold' 
-                                    : (isLight ? 'bg-white text-slate-800 shadow-xs font-bold' : 'bg-slate-800 text-slate-100 shadow-xs font-bold'))
+                                    ? 'bg-gradient-to-r from-[#7c00ff] to-[#9933ff] text-white shadow-[0_0_12px_rgba(124,0,255,0.5)] font-bold' 
+                                    : (isLight ? 'bg-white text-slate-900 shadow-sm font-bold border border-slate-200/60' : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm font-bold'))
                                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                         }`}
                     >
@@ -2305,9 +2309,18 @@ function RightSidebar({
                         type="button"
                         onClick={onClose}
                         title="Close Studio Panel"
-                        className={`p-1.5 rounded-lg transition-colors cursor-pointer ${isSystem ? 'text-purple-300 hover:text-white hover:bg-[#7c00ff]/20' : (isLight ? 'text-slate-400 hover:text-slate-700 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-white/10')}`}
+                        className={`p-1.5 sm:p-2 rounded-xl transition-all cursor-pointer flex items-center gap-1 active:scale-95 border ${
+                            isSystem 
+                                ? 'bg-rose-500/15 border-rose-500/30 text-rose-300 hover:bg-rose-500/25 hover:text-white shadow-[0_0_12px_rgba(244,63,94,0.3)]' 
+                                : (isLight 
+                                    ? 'bg-rose-50 hover:bg-rose-100 border-rose-200 text-rose-600 hover:text-rose-700' 
+                                    : 'bg-rose-500/15 border-rose-500/30 text-rose-300 hover:bg-rose-500/25 hover:text-white')
+                        }`}
+                        aria-label="Close Studio Panel"
                     >
-                        <ChevronRight className="w-4 h-4" />
+                        <X className="w-4 h-4 lg:hidden" />
+                        <ChevronRight className="hidden lg:block w-4 h-4" />
+                        <span className="text-[11px] font-bold lg:hidden">Close</span>
                     </button>
                 )}
             </div>

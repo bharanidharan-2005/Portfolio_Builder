@@ -72,10 +72,10 @@ function LeftSidebar({
     const textDefault = isSystem ? "text-slate-100" : (isLight ? "text-slate-700" : "text-slate-200");
     const hoverBg = isSystem ? "hover:bg-[#7c00ff]/15 hover:text-[#c084fc]" : (isLight ? "hover:bg-slate-100/80" : "hover:bg-slate-800/60");
     const activeBg = isSystem 
-        ? "bg-[#7c00ff]/20 border-[#7c00ff]/40 text-[#c084fc] shadow-[0_0_12px_rgba(124,0,255,0.35)]" 
+        ? "bg-gradient-to-r from-[#7c00ff]/30 to-[#9933ff]/15 border-[#7c00ff]/60 text-white shadow-[0_0_16px_rgba(124,0,255,0.4)]" 
         : (isLight 
-            ? "bg-blue-50/90 border-blue-200/90 text-blue-700 shadow-xs" 
-            : "bg-blue-600/15 border-blue-500/30 text-blue-400 shadow-xs");
+            ? "bg-gradient-to-r from-blue-50 to-indigo-50/80 border-blue-300 text-blue-700 shadow-sm" 
+            : "bg-gradient-to-r from-blue-600/25 to-indigo-600/15 border-blue-500/50 text-blue-300 shadow-[0_0_14px_rgba(59,130,246,0.25)]");
 
     // Dynamic visibility classes depending on whether the sidebar is pinned or collapsible on hover
     const labelClasses = isPinned
@@ -153,12 +153,17 @@ function LeftSidebar({
                         <button
                             type="button"
                             onClick={onClose}
-                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                                isSystem ? 'text-purple-300 hover:text-white hover:bg-[#7c00ff]/20' : (isLight ? 'text-slate-500 hover:text-slate-800 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-white/10')
+                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer active:scale-90 border ${
+                                isSystem 
+                                    ? 'bg-rose-500/15 border-rose-500/30 text-rose-300 hover:bg-rose-500/25 hover:text-white shadow-[0_0_12px_rgba(244,63,94,0.3)]' 
+                                    : (isLight 
+                                        ? 'bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100 hover:text-rose-700' 
+                                        : 'bg-rose-500/15 border-rose-500/30 text-rose-300 hover:bg-rose-500/25 hover:text-white')
                             }`}
                             aria-label="Close navigation drawer"
                         >
-                            <X className="w-5 h-5" />
+                            <X className="w-4 h-4" />
+                            <span className="text-[11px]">Close</span>
                         </button>
                     )}
                 </div>
@@ -306,19 +311,26 @@ function LeftSidebar({
                             if (onSelectTool) onSelectTool(null);
                             if (onClose && window.innerWidth < 1024) onClose();
                         }}
-                        className={`w-full flex items-center px-2 py-2 rounded-xl text-xs font-semibold transition-all text-left border cursor-pointer ${
+                        className={`w-full flex items-center px-2 py-2 rounded-xl text-xs font-semibold transition-all text-left border cursor-pointer group/home ${
                             !activeTool 
                                 ? activeBg 
                                 : `border-transparent ${textMuted} ${hoverBg} hover:${textDefault}`
                         }`}
                         title="Main Portfolio Canvas"
                     >
-                        <span className="shrink-0 w-6 h-6 rounded-lg flex justify-center items-center">
-                            <LayoutDashboard className={`w-4 h-4 ${!activeTool ? (isSystem ? 'text-[#c084fc]' : 'text-blue-500') : (isSystem ? 'text-purple-300/60' : 'text-slate-400')}`} />
+                        <span className={`shrink-0 w-6 h-6 rounded-lg flex justify-center items-center transition-all ${
+                            !activeTool 
+                                ? (isSystem ? 'bg-[#7c00ff]/30 text-white shadow-[0_0_10px_rgba(124,0,255,0.5)]' : (isLight ? 'bg-blue-100 text-blue-700' : 'bg-blue-600/30 text-blue-300 shadow-[0_0_10px_rgba(59,130,246,0.3)]')) 
+                                : (isSystem ? 'bg-[#7c00ff]/10 text-purple-300/70 group-hover/home:text-white' : (isLight ? 'bg-slate-100 text-slate-500 group-hover/home:text-blue-600' : 'bg-slate-800/80 text-slate-400 group-hover/home:text-slate-200'))
+                        }`}>
+                            <LayoutDashboard className="w-4 h-4" />
                         </span>
                         <span className={`truncate whitespace-nowrap transition-all duration-300 ${labelClasses}`}>
                             Canvas Editor
                         </span>
+                        {!activeTool && (
+                            <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0 hidden sm:block"></span>
+                        )}
                     </button>
                 </div>
 
@@ -461,16 +473,24 @@ function LeftSidebar({
                                         if (onSelectTool) onSelectTool(tool.id);
                                         if (onClose && window.innerWidth < 1024) onClose();
                                     }}
-                                    className={`w-full flex items-center px-2 py-2 rounded-xl text-xs font-semibold transition-all text-left border cursor-pointer ${
+                                    className={`w-full flex items-center px-2 py-2 rounded-xl text-xs font-semibold transition-all text-left border cursor-pointer group/tool ${
                                         isSelected
                                             ? (isSystem 
-                                                ? "bg-[#7c00ff] text-white font-bold shadow-[0_0_16px_rgba(124,0,255,0.6)] border-[#7c00ff]" 
-                                                : "bg-blue-600 text-white font-bold shadow-md shadow-blue-600/20 border-blue-600")
+                                                ? "bg-gradient-to-r from-[#7c00ff] via-[#9933ff] to-[#7c00ff] text-white font-bold shadow-[0_0_18px_rgba(124,0,255,0.7)] border-[#c084fc]/50" 
+                                                : "bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 text-white font-bold shadow-md shadow-blue-600/30 border-blue-400/40")
                                             : `border-transparent ${textMuted} ${hoverBg} hover:${textDefault}`
                                     }`}
                                 >
-                                    <span className="shrink-0 w-6 h-6 rounded-lg flex justify-center items-center">
-                                        <IconComponent className={`w-4 h-4 ${isSelected ? 'text-white' : (isSystem ? 'text-purple-300/70' : 'text-slate-400')}`} />
+                                    <span className={`shrink-0 w-6 h-6 rounded-lg flex justify-center items-center transition-all ${
+                                        isSelected 
+                                            ? 'bg-white/20 text-white shadow-xs' 
+                                            : (isSystem 
+                                                ? 'bg-[#7c00ff]/10 text-purple-300 group-hover/tool:bg-[#7c00ff]/20 group-hover/tool:text-white' 
+                                                : (isLight 
+                                                    ? 'bg-slate-100 text-slate-600 group-hover/tool:bg-blue-50 group-hover/tool:text-blue-600' 
+                                                    : 'bg-slate-800/80 text-slate-400 group-hover/tool:bg-slate-850 group-hover/tool:text-slate-200'))
+                                    }`}>
+                                        <IconComponent className="w-4 h-4" />
                                     </span>
                                     <span className={`truncate whitespace-nowrap transition-all duration-300 ${labelClasses}`}>
                                         {tool.name}

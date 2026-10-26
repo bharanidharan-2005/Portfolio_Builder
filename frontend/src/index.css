@@ -350,3 +350,78 @@ body {
 .aurabuild-canvas .text-\[\#f000ff\] { color: #f000ff; }
 .aurabuild-canvas .text-\[\#00f0ff\] { color: #00f0ff; }
 .aurabuild-canvas .hover\:bg-slate-900:hover { background-color: #0f172a; }
+
+/* ==================================================================
+   AUTHENTICATING WAVEFORM & EQUALIZER ANIMATIONS
+   ================================================================== */
+@keyframes waveformBar {
+  0%, 100% {
+    transform: scaleY(0.25);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+@keyframes waveDotJump {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+
+@keyframes waveShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-wave-bar-1 { animation: waveformBar 0.75s ease-in-out infinite 0ms; }
+.animate-wave-bar-2 { animation: waveformBar 0.75s ease-in-out infinite 120ms; }
+.animate-wave-bar-3 { animation: waveformBar 0.75s ease-in-out infinite 240ms; }
+.animate-wave-bar-4 { animation: waveformBar 0.75s ease-in-out infinite 360ms; }
+.animate-wave-bar-5 { animation: waveformBar 0.75s ease-in-out infinite 480ms; }
+
+.animate-wave-dot-1 { animation: waveDotJump 0.9s ease-in-out infinite 0ms; }
+.animate-wave-dot-2 { animation: waveDotJump 0.9s ease-in-out infinite 150ms; }
+.animate-wave-dot-3 { animation: waveDotJump 0.9s ease-in-out infinite 300ms; }
+.animate-wave-dot-4 { animation: waveDotJump 0.9s ease-in-out infinite 450ms; }
+.animate-wave-dot-5 { animation: waveDotJump 0.9s ease-in-out infinite 600ms; }
+
+.auth-wave-shimmer {
+  background: linear-gradient(90deg, rgba(168,85,247,0.15) 0%, rgba(255,255,255,0.25) 50%, rgba(168,85,247,0.15) 100%);
+  background-size: 200% 100%;
+  animation: waveShimmer 2s linear infinite;
+}
+
+/* ==================================================================
+   CUSTOM FROSTED GLASS SCROLLBAR
+   ================================================================== */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 85, 247, 0.5);
+}
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.2) transparent;
+}

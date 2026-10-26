@@ -810,11 +810,24 @@ export default function LandingPage() {
 
             {/* --- AUTH MODAL --- */}
             {showModal && (
-                <div className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 backdrop-blur-xl animate-in fade-in duration-200">
-                    <div className="bg-[#0f1118]/95 border border-slate-800/80 rounded-3xl max-w-[460px] w-full p-6 sm:p-8 shadow-2xl relative flex flex-col items-center max-h-[92vh] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full">
+                <div className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-xl animate-in fade-in duration-200">
+                    {/* Floating Mobile Remove / Close Button (Always visible on mobile screens) */}
+                    <button 
+                        type="button"
+                        onClick={() => setShowModal(false)} 
+                        className="fixed top-3 right-3 sm:hidden z-[70] text-slate-300 hover:text-white p-2.5 rounded-full bg-slate-900/95 border border-slate-700/90 shadow-2xl backdrop-blur-md active:scale-90 transition-all cursor-pointer flex items-center justify-center"
+                        aria-label="Close modal"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+
+                    <div className="bg-[#0f1118]/95 border border-slate-800/80 rounded-3xl max-w-[460px] w-full p-5 sm:p-8 shadow-2xl relative flex flex-col items-center max-h-[92vh] overflow-y-auto custom-scrollbar">
+                        {/* Desktop & In-Modal Close (X) Button */}
                         <button 
+                            type="button"
                             onClick={() => setShowModal(false)} 
-                            className="absolute top-5 right-5 text-slate-400 hover:text-white transition-colors p-1.5 cursor-pointer bg-slate-900/60 rounded-full hover:bg-slate-800 border border-slate-800/80"
+                            className="hidden sm:flex absolute top-5 right-5 text-slate-400 hover:text-white transition-colors p-2 cursor-pointer bg-slate-900/70 rounded-full hover:bg-slate-800 border border-slate-700/80 items-center justify-center shadow-md z-20"
+                            aria-label="Close modal"
                         >
                             <X className="w-4 h-4" />
                         </button>
@@ -1001,9 +1014,41 @@ export default function LandingPage() {
                                 <button 
                                     disabled={isLoading} 
                                     type="submit" 
-                                    className="w-full py-3.5 rounded-xl bg-white hover:bg-slate-200 text-slate-950 text-sm font-black transition-all flex justify-center items-center gap-2 cursor-pointer shadow-lg disabled:opacity-50 mt-2"
+                                    className={`w-full py-3.5 rounded-xl text-sm font-black transition-all flex justify-center items-center gap-2 cursor-pointer shadow-lg mt-2 relative overflow-hidden ${
+                                        isLoading 
+                                            ? "bg-[#120b22] text-white border border-purple-500/50 shadow-[0_0_25px_rgba(168,85,247,0.35)]" 
+                                            : "bg-white hover:bg-slate-200 text-slate-950 active:scale-[0.99]"
+                                    }`}
                                 >
-                                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "SIGN IN TO WORKSPACE"}
+                                    {isLoading ? (
+                                        <div className="flex items-center justify-center gap-3 w-full relative z-10 py-0.5">
+                                            {/* Shimmer sweep */}
+                                            <div className="absolute inset-0 auth-wave-shimmer opacity-40 pointer-events-none rounded-xl" />
+
+                                            {/* Audio / Waveform Visualizer */}
+                                            <div className="flex items-center gap-1 h-5 shrink-0">
+                                                <span className="w-1 bg-purple-400 rounded-full h-3 animate-wave-bar-1 origin-bottom"></span>
+                                                <span className="w-1 bg-indigo-400 rounded-full h-5 animate-wave-bar-2 origin-bottom"></span>
+                                                <span className="w-1 bg-cyan-400 rounded-full h-2 animate-wave-bar-3 origin-bottom"></span>
+                                                <span className="w-1 bg-purple-400 rounded-full h-4 animate-wave-bar-4 origin-bottom"></span>
+                                                <span className="w-1 bg-pink-400 rounded-full h-3 animate-wave-bar-5 origin-bottom"></span>
+                                            </div>
+
+                                            {/* Authenticating..... Text with Undulating Wave Dots */}
+                                            <span className="text-sm font-bold tracking-wide text-white flex items-center select-none">
+                                                <span>Authenticating</span>
+                                                <span className="inline-flex tracking-wider text-purple-300 ml-0.5 font-black text-base">
+                                                    <span className="animate-wave-dot-1">.</span>
+                                                    <span className="animate-wave-dot-2">.</span>
+                                                    <span className="animate-wave-dot-3">.</span>
+                                                    <span className="animate-wave-dot-4">.</span>
+                                                    <span className="animate-wave-dot-5">.</span>
+                                                </span>
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        "SIGN IN TO WORKSPACE"
+                                    )}
                                 </button>
 
                                 {/* Social Login Divider */}
@@ -1149,9 +1194,41 @@ export default function LandingPage() {
                                 <button 
                                     disabled={isLoading} 
                                     type="submit" 
-                                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-[#A855F7] hover:from-purple-500 hover:to-purple-400 text-white text-sm font-bold transition-all flex justify-center items-center gap-2 cursor-pointer shadow-lg shadow-purple-900/30 disabled:opacity-50 mt-3"
+                                    className={`w-full py-3.5 rounded-xl text-sm font-bold transition-all flex justify-center items-center gap-2 cursor-pointer shadow-lg mt-3 relative overflow-hidden ${
+                                        isLoading
+                                            ? "bg-[#120b22] text-white border border-purple-500/50 shadow-[0_0_25px_rgba(168,85,247,0.35)]"
+                                            : "bg-gradient-to-r from-purple-600 to-[#A855F7] hover:from-purple-500 hover:to-purple-400 text-white shadow-purple-900/30 active:scale-[0.99]"
+                                    }`}
                                 >
-                                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "CREATE WORKSPACE ACCOUNT"}
+                                    {isLoading ? (
+                                        <div className="flex items-center justify-center gap-3 w-full relative z-10 py-0.5">
+                                            {/* Shimmer sweep */}
+                                            <div className="absolute inset-0 auth-wave-shimmer opacity-40 pointer-events-none rounded-xl" />
+
+                                            {/* Audio / Waveform Visualizer */}
+                                            <div className="flex items-center gap-1 h-5 shrink-0">
+                                                <span className="w-1 bg-purple-400 rounded-full h-3 animate-wave-bar-1 origin-bottom"></span>
+                                                <span className="w-1 bg-indigo-400 rounded-full h-5 animate-wave-bar-2 origin-bottom"></span>
+                                                <span className="w-1 bg-cyan-400 rounded-full h-2 animate-wave-bar-3 origin-bottom"></span>
+                                                <span className="w-1 bg-purple-400 rounded-full h-4 animate-wave-bar-4 origin-bottom"></span>
+                                                <span className="w-1 bg-pink-400 rounded-full h-3 animate-wave-bar-5 origin-bottom"></span>
+                                            </div>
+
+                                            {/* Authenticating..... Text with Undulating Wave Dots */}
+                                            <span className="text-sm font-bold tracking-wide text-white flex items-center select-none">
+                                                <span>Authenticating</span>
+                                                <span className="inline-flex tracking-wider text-purple-300 ml-0.5 font-black text-base">
+                                                    <span className="animate-wave-dot-1">.</span>
+                                                    <span className="animate-wave-dot-2">.</span>
+                                                    <span className="animate-wave-dot-3">.</span>
+                                                    <span className="animate-wave-dot-4">.</span>
+                                                    <span className="animate-wave-dot-5">.</span>
+                                                </span>
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        "CREATE WORKSPACE ACCOUNT"
+                                    )}
                                 </button>
 
                                 {/* Social Login Divider */}
