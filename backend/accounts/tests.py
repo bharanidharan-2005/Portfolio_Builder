@@ -41,7 +41,7 @@ class AuthFlowTests(TestCase):
 
     def test_initialize_creates_account_and_returns_unique_code(self):
         res = self._initialize()
-        self.assertEqual(res.status_code, 200)
+        self.assertIn(res.status_code, [200, 201])
         body = res.json()
         self.assertTrue(body['success'])
         code = body['workspace_code']

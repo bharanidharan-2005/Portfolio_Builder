@@ -9,10 +9,12 @@ if (!rawBaseUrl.endsWith('api/')) {
     rawBaseUrl += 'api/';
 }
 
-// Local dev auto-detection: if baseURL points to localhost:8000 but the server was started on 8080 (or vice versa)
+// Local dev auto-detection: if running on localhost / 127.0.0.1, prioritize local Django server on 8080
 if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
     if (rawBaseUrl.includes(':8000')) {
         rawBaseUrl = rawBaseUrl.replace(':8000', ':8080');
+    } else if (rawBaseUrl.includes('onrender.com')) {
+        rawBaseUrl = 'http://127.0.0.1:8080/api/';
     }
 }
 

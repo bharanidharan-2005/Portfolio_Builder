@@ -15,15 +15,16 @@ class RegisterSerializer(serializers.Serializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=False, allow_blank=True)
+    email = serializers.CharField(required=False, allow_blank=True)
+    username = serializers.CharField(required=False, allow_blank=True)
     password = serializers.CharField(required=False, write_only=True, allow_blank=True)
     code = serializers.CharField(required=False, write_only=True, allow_blank=True)
 
     def validate(self, data):
-        email = data.get('email', '').strip()
+        identifier = (data.get('email') or data.get('username') or '').strip()
         password = data.get('password', '')
         code = data.get('code', '').strip()
 
-        if not (code or (email and password)):
+        if not (code or (identifier and password)):
             raise serializers.ValidationError("Please provide either your Email and Password or a Workspace Access Code.")
         return data

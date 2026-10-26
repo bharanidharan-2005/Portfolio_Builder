@@ -216,9 +216,23 @@ class RegisterView(APIView):
         password = serializer.validated_data['password']
 
         if User.objects.filter(email__iexact=email).exists():
+            existing_user = User.objects.filter(email__iexact=email).first()
+            existing_code = get_or_create_workspace_code(existing_user)
+            send_login_code_email(
+                email,
+                existing_code,
+                subject='Your AuraBuild Workspace Login Code',
+                message=(
+                    f"Hello {existing_user.first_name or 'there'},\n\n"
+                    f"An account with this email already exists on AuraBuild.\n"
+                    f"Your permanent workspace login code is: {existing_code}\n\n"
+                    "You can log in anytime using your password or with this workspace code."
+                ),
+            )
             return Response({
                 'account_exists': True,
-                'error': 'An account with this email already exists. Please log in instead.',
+                'error': 'An account with this email already exists. We have sent your workspace login code to your email.',
+                'message': 'An account with this email already exists. Please sign in or use your workspace code.',
             }, status=status.HTTP_409_CONFLICT)
 
         # Create user with properly hashed password
@@ -266,18 +280,28 @@ class LoginView(APIView):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        email = serializer.validated_data.get('email', '').strip().lower()
+        identifier = (serializer.validated_data.get('email') or serializer.validated_data.get('username') or '').strip().lower()
         password = serializer.validated_data.get('password', '')
         code = serializer.validated_data.get('code', '').strip()
 
         user = None
 
         # 1. Flow A: Authenticate with Email & Password
-        if email and password:
+        if identifier and password:
             from django.contrib.auth import authenticate
-            user = authenticate(request, username=email, password=password)
+            user = authenticate(request, username=identifier, password=password)
             if user is None:
-                user = authenticate(request, email=email, password=password)
+                user = authenticate(request, email=identifier, password=password)
+
+            # Direct fallback in case backend did not resolve identifier
+            if user is None:
+                candidates = list(User.objects.filter(email__iexact=identifier).order_by('-id'))
+                if not candidates:
+                    candidates = list(User.objects.filter(username__iexact=identifier).order_by('-id'))
+                for candidate in candidates:
+                    if candidate.check_password(password) and candidate.is_active:
+                        user = candidate
+                        break
 
             if user is None:
                 return Response(

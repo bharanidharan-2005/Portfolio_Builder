@@ -190,6 +190,21 @@ export default function LandingPage() {
                 setAuthError("Unable to connect to the backend server. Please verify that the backend server is running.");
             } else {
                 let msg = err.response?.data?.error || err.response?.data?.detail;
+                if (!msg && err.response?.data) {
+                    const d = err.response.data;
+                    if (d.code) {
+                        msg = Array.isArray(d.code) ? d.code[0] : d.code;
+                        if (typeof msg === 'string' && msg.toLowerCase().includes('required')) {
+                            msg = "This workspace requires an Access Code. Please switch to the 'Access Code' tab above.";
+                        }
+                    } else if (d.email) {
+                        msg = Array.isArray(d.email) ? d.email[0] : d.email;
+                    } else if (d.password) {
+                        msg = Array.isArray(d.password) ? d.password[0] : d.password;
+                    } else if (d.non_field_errors) {
+                        msg = Array.isArray(d.non_field_errors) ? d.non_field_errors[0] : d.non_field_errors;
+                    }
+                }
                 if (msg && msg.toLowerCase().includes("token")) {
                     clearAuthTokens();
                     msg = "Invalid credentials or previous session expired. Please try again.";
