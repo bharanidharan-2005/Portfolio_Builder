@@ -2415,7 +2415,7 @@ function RightSidebar({
             </div>
 
             {/* AI Copilot Response Bar (Smooth Sleek Design) */}
-            <div className={`shrink-0 border-t p-3 sm:p-3.5 flex flex-col gap-2 z-10 transition-colors duration-300 ${
+            <div className={`shrink-0 border-t p-2.5 sm:p-3.5 pb-3 sm:pb-3.5 mb-[env(safe-area-inset-bottom,0px)] flex flex-col gap-1.5 sm:gap-2 z-10 transition-colors duration-300 ${
                 isSystem 
                     ? 'border-[#7c00ff]/20 bg-[#0e0720]/95 backdrop-blur-2xl' 
                     : isLight 
@@ -2424,7 +2424,7 @@ function RightSidebar({
             }`}>
                 <form 
                     onSubmit={handleSendMessage} 
-                    className={`relative flex items-center w-full rounded-2xl px-2 py-1.5 transition-all duration-200 border ${
+                    className={`relative flex items-center w-full rounded-2xl px-2 py-1 sm:py-1.5 transition-all duration-200 border ${
                         isSystem 
                             ? 'bg-[#150a2e]/90 border-[#7c00ff]/30 focus-within:border-[#7c00ff]/70 shadow-[0_2px_12px_rgba(124,0,255,0.12)]' 
                             : isLight 
@@ -2444,7 +2444,7 @@ function RightSidebar({
                         type="button"
                         onClick={() => chatFileInputRef.current?.click()}
                         title="Attach Document or Image"
-                        className={`p-2 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center shrink-0 ${
+                        className={`p-1.5 sm:p-2 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center shrink-0 ${
                             isSystem 
                                 ? 'text-purple-300/70 hover:text-purple-200 hover:bg-[#7c00ff]/20' 
                                 : isLight 
@@ -2459,9 +2459,9 @@ function RightSidebar({
                         type="text"
                         value={chatInput}
                         onChange={(e) => setChatInput(e.target.value)}
-                        placeholder="Ask AI Studio to edit, add sections, or restyle..."
+                        placeholder="Ask AI Studio to edit or restyle..."
                         disabled={isProcessing}
-                        className={`w-full text-xs sm:text-[13px] px-2.5 py-1.5 outline-none bg-transparent font-medium border-0 ring-0 focus:ring-0 focus:outline-none transition-colors ${
+                        className={`w-full text-xs sm:text-[13px] px-2 py-1 sm:py-1.5 outline-none bg-transparent font-medium border-0 ring-0 focus:ring-0 focus:outline-none transition-colors ${
                             isSystem 
                                 ? 'text-slate-100 placeholder-purple-300/40' 
                                 : isLight 
@@ -2474,7 +2474,7 @@ function RightSidebar({
                         type="submit" 
                         disabled={isProcessing || !chatInput.trim()}
                         title="Send to AI Studio"
-                        className={`p-2 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center shrink-0 ${
+                        className={`p-1.5 sm:p-2 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center shrink-0 ${
                             chatInput.trim()
                                 ? (isSystem 
                                     ? 'bg-gradient-to-r from-[#7c00ff] to-[#a855f7] text-white shadow-md shadow-purple-900/40 hover:scale-105 active:scale-95' 

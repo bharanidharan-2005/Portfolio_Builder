@@ -145,7 +145,7 @@ export default function WorkspaceLayout() {
 
     // 4. Render Main Builder UI
     return (
-        <div className={`h-screen w-full flex flex-col overflow-hidden select-none transition-colors duration-500 font-inter relative ${
+        <div className={`h-[100dvh] w-full flex flex-col overflow-hidden select-none transition-colors duration-500 font-inter relative ${
             isSystem 
                 ? 'bg-[#080314] text-slate-100' 
                 : (isLight ? 'bg-slate-50 text-slate-800' : 'bg-slate-950 text-slate-200')
@@ -220,7 +220,7 @@ export default function WorkspaceLayout() {
 
                 {/* LEFT SIDEBAR (Desktop 3-Panel + Mobile Slide-out Drawer) */}
                 {!isPublicPreview && (
-                    <aside className={`fixed lg:relative group h-full shrink-0 transition-all duration-300 ease-in-out w-[270px] sm:w-[280px] max-w-[75vw] lg:max-w-none ${
+                    <aside className={`fixed lg:relative left-0 top-14 lg:top-0 bottom-0 h-[calc(100dvh-3.5rem)] lg:h-full group shrink-0 transition-all duration-300 ease-in-out w-[270px] sm:w-[280px] max-w-[85vw] lg:max-w-none flex flex-col ${
                         isLeftPinned ? 'lg:w-64' : 'lg:w-16 lg:hover:w-64'
                     } overflow-hidden z-40 shadow-2xl ${
                         isLeftOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
@@ -341,9 +341,9 @@ export default function WorkspaceLayout() {
 
                 {/* RIGHT SIDEBAR (Responsive Inspector) */}
                 {!isPublicPreview && (
-                    <aside className={`fixed lg:relative right-0 h-full shrink-0 border-l transition-all duration-300 ease-in-out z-40 shadow-2xl overflow-hidden ${
+                    <aside className={`fixed lg:relative right-0 top-14 lg:top-0 bottom-0 h-[calc(100dvh-3.5rem)] lg:h-full shrink-0 border-l transition-all duration-300 ease-in-out z-40 shadow-2xl overflow-hidden flex flex-col ${
                         isRightOpen 
-                            ? 'w-[290px] sm:w-[340px] xl:w-[360px] max-w-[80vw] translate-x-0 opacity-100' 
+                            ? 'w-[88vw] sm:w-[350px] xl:w-[360px] max-w-[420px] translate-x-0 opacity-100' 
                             : 'w-0 border-l-0 translate-x-full lg:translate-x-0 opacity-0 pointer-events-none'
                     } ${isSystem ? 'bg-[#0c051a]/95 backdrop-blur-2xl border-l border-[#7c00ff]/25 shadow-[-4px_0_24px_rgba(124,0,255,0.12)]' : (isLight ? 'bg-white border-slate-200' : 'bg-[#0B0F19]/95 backdrop-blur-2xl border-white/10')}`}>
                         <RightSidebar 
