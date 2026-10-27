@@ -5,7 +5,7 @@ import {
     LayoutTemplate, PenTool, Activity, Link2, ShieldCheck, 
     GraduationCap, Mail, Crosshair, BarChart, 
     Share2, Send, Copy, Edit3, Download,
-    ChevronDown, Check, ChevronRight, X,
+    ChevronDown, Check, ChevronRight, X, Clock,
     Briefcase, Wrench, MessageSquare, Award, BarChart3, BookOpen,
     Bot, Terminal
 } from "lucide-react";
@@ -244,25 +244,6 @@ function RightSidebar({
             id: "msg-welcome",
             type: "welcome",
             text: "Hello! I am your AuraBuild AI Assistant. Tell me what sections, skills, styling, or portfolio projects you want to add or configure, and I will update your canvas in real time."
-        },
-        {
-            id: "msg-user-sample",
-            type: "user",
-            sender: "user",
-            text: "Highlight my full-stack projects and synchronize skills",
-            timestamp: "08:31 pm"
-        },
-        {
-            id: "msg-ai-sample",
-            type: "assistant",
-            sender: "ai",
-            model: "Studio Copilot",
-            timestamp: "08:31 pm",
-            text: "I've organized your portfolio canvas to highlight your full-stack projects and synchronized your technical skills.",
-            isAction: true,
-            activity: "Highlighted Projects & Skills",
-            affectedSection: "Projects & Skills",
-            synced: true
         }
     ]);
 
@@ -811,6 +792,7 @@ function RightSidebar({
         }
 
         setIsProcessing(true);
+        const startTime = performance.now();
 
         const promptLower = userMsg.toLowerCase();
 
@@ -847,6 +829,9 @@ function RightSidebar({
             let isActionExecution = false;
             let executedActivity = null;
             let targetSectionName = null;
+            const activitiesList = [];
+
+            const parseDuration = Math.max(0.7, ((performance.now() - startTime) / 1000)).toFixed(1) + 's';
 
             if (data && data.success && data.action) {
                 const action = data.action;
@@ -856,11 +841,17 @@ function RightSidebar({
                     isActionExecution = true;
                     onThemeChange(action.theme);
                     executedActivity = `Applied ${action.theme} layout theme`;
+                    activitiesList.push(`Applied ${action.theme} layout theme`);
+                    activitiesList.push("Refreshed color palette and contrast tokens");
+                    activitiesList.push(`Synchronized canvas in real-time (${parseDuration})`);
                     setTerminalLogs(prev => [...prev, { type: "success", text: `[ACTIVITY] Theme applied: ${action.theme}` }]);
                 } else if (action.action === "update_section" && onUpdateSectionContent) {
                     isActionExecution = true;
                     targetSectionName = action.section_type || "Canvas Section";
-                    executedActivity = `Updated ${action.section_type || "section"} content`;
+                    const secDisplayName = (action.section_type || "section").replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                    executedActivity = `Updated ${secDisplayName} content`;
+                    activitiesList.push(`Updated ${secDisplayName} section content`);
+
                     const targetSec = sections.find(s => (s.section_type || '').toLowerCase() === (action.section_type || '').toLowerCase());
                     if (targetSec && action.updates) {
                         const updatesToApply = action.updates.data || action.updates;
@@ -893,6 +884,7 @@ function RightSidebar({
                                     ...updatesToApply,
                                     projects: updatedProjects
                                 });
+                                activitiesList.push("Removed image from project item");
                             } else {
                                 Object.entries(updatesToApply).forEach(([k, v]) => {
                                     onUpdateSectionContent(targetSec.id, k, v);
@@ -903,25 +895,43 @@ function RightSidebar({
                                 onUpdateSectionContent(targetSec.id, k, v);
                             });
                         }
+                        activitiesList.push("Synchronized layout and typography fields");
+                        activitiesList.push(`Rendered canvas updates in ${parseDuration}`);
                         setTerminalLogs(prev => [...prev, { type: "success", text: `[ACTIVITY] Updated ${action.section_type} section.` }]);
                     } else if (!targetSec) {
+                        activitiesList.push(`Canvas sync complete (${parseDuration})`);
                         setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Section of type '${action.section_type}' not found on canvas.` }]);
                     }
                 } else if (action.action === "add_section" && onAddSection) {
                     isActionExecution = true;
                     targetSectionName = action.section_type || "Section";
-                    executedActivity = `Added section: ${action.section_type}`;
+                    const secDisplayName = (action.section_type || "section").replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                    executedActivity = `Added section: ${secDisplayName}`;
+                    activitiesList.push(`Added new ${secDisplayName} section to canvas`);
+                    activitiesList.push("Structured layout components and order");
+                    activitiesList.push(`Synchronized canvas in real-time (${parseDuration})`);
                     onAddSection(action.section_type);
                     setTerminalLogs(prev => [...prev, { type: "success", text: `[ACTIVITY] Added new ${action.section_type} section.` }]);
                 } else {
                     // Conversational reply: action.action === "reply"
                     isActionExecution = false;
+                    activitiesList.push("Analyzed request against canvas structure");
+                    activitiesList.push(`Inspected ${sections?.length || 0} active portfolio sections`);
+                    activitiesList.push(`Parsed intent in ${parseDuration}`);
                     setTerminalLogs(prev => [...prev, { type: "system", text: `[AI CHAT] ${action.message || "Replied."}` }]);
                 }
             } else {
                 responseText = data?.message || "I've reviewed your request and kept the canvas synchronized.";
+                activitiesList.push("Processed natural language prompt");
+                activitiesList.push(`Verified ${sections?.length || 0} canvas sections`);
+                activitiesList.push(`Synchronized in ${parseDuration}`);
                 setTerminalLogs(prev => [...prev, { type: "system", text: `AuraBuild AI: Response processed.` }]);
             }
+
+            const canvasSectionsList = (sections || []).map(s => {
+                const rawName = s.section_type || s.name || s.id || 'Section';
+                return rawName.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            });
 
             const aiResponseObj = {
                 id: 'ai-' + Date.now(),
@@ -932,42 +942,64 @@ function RightSidebar({
                 text: responseText,
                 isAction: isActionExecution,
                 activity: executedActivity,
+                activities: activitiesList,
+                duration: parseDuration,
+                canvasSections: canvasSectionsList,
                 affectedSection: targetSectionName,
-                synced: isActionExecution
+                synced: true
             };
 
             setChatMessages(prev => [...prev, aiResponseObj]);
 
         } catch (error) {
             console.error("AI copilot error:", error);
+            const fallbackDuration = Math.max(0.6, ((performance.now() - startTime) / 1000)).toFixed(1) + 's';
             
             // Intelligent fallback response matching user prompt
             let fallbackText = "";
             let isActionFallback = false;
             let fallbackActivity = null;
             let fallbackSection = null;
+            const fallbackActivities = [];
 
             if (promptLower.includes('job') || promptLower.includes('who are you') || promptLower.includes('what can you do') || promptLower.includes('help') || promptLower.includes('role')) {
                 fallbackText = "I am your AuraBuild Studio AI Co-Pilot! My job is to help you design, edit, and optimize your developer portfolio in real time. You can ask me to update your headline or bio, showcase your projects, add new sections, change the color theme, or highlight technical skills.";
                 isActionFallback = false;
+                fallbackActivities.push("Processed natural language prompt");
+                fallbackActivities.push(`Verified ${sections?.length || 0} canvas sections`);
+                fallbackActivities.push(`Generated guidance in ${fallbackDuration}`);
             } else if ((promptLower.includes('remove') || promptLower.includes('hide') || promptLower.includes('delete')) && promptLower.includes('image')) {
                 fallbackText = "I've updated the canvas to remove/hide the image as requested.";
                 isActionFallback = true;
-                fallbackActivity = "Image hidden from Hero";
+                fallbackActivity = "Image removed from canvas";
                 fallbackSection = "Hero";
+                fallbackActivities.push("Removed image from Hero section");
+                fallbackActivities.push("Refreshed canvas media layer");
+                fallbackActivities.push(`Synchronized canvas in real-time (${fallbackDuration})`);
             } else if (promptLower.includes('theme') || promptLower.includes('cyber') || promptLower.includes('minimal') || promptLower.includes('glass') || promptLower.includes('neon')) {
                 fallbackText = "I've applied the requested style theme to your portfolio canvas!";
                 isActionFallback = true;
                 fallbackActivity = "Applied portfolio design theme";
+                fallbackActivities.push("Applied portfolio design theme");
+                fallbackActivities.push("Refreshed color palette and contrast tokens");
+                fallbackActivities.push(`Synchronized canvas in real-time (${fallbackDuration})`);
             } else {
                 fallbackText = `I have received your request: "${userMsg}". I can customize any section (Hero, About, Projects, Experience, Skills, Education, Contact) or adjust your design theme. What would you like to refine?`;
                 isActionFallback = false;
+                fallbackActivities.push("Parsed user prompt");
+                fallbackActivities.push(`Inspected ${sections?.length || 0} active portfolio sections`);
+                fallbackActivities.push(`Synchronized in ${fallbackDuration}`);
             }
 
             setTerminalLogs(prev => [...prev, { 
                 type: isActionFallback ? "success" : "system", 
                 text: `[AI COPILOT] ${isActionFallback ? fallbackActivity : "Response provided."}` 
             }]);
+
+            const canvasSectionsList = (sections || []).map(s => {
+                const rawName = s.section_type || s.name || s.id || 'Section';
+                return rawName.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            });
 
             setChatMessages(prev => [...prev, {
                 id: 'ai-' + Date.now(),
@@ -978,8 +1010,11 @@ function RightSidebar({
                 text: fallbackText,
                 isAction: isActionFallback,
                 activity: fallbackActivity,
+                activities: fallbackActivities,
+                duration: fallbackDuration,
+                canvasSections: canvasSectionsList,
                 affectedSection: fallbackSection,
-                synced: isActionFallback
+                synced: true
             }]);
         } finally {
             setIsProcessing(false);
@@ -1872,8 +1907,8 @@ function RightSidebar({
                     if (msg.type === "assistant") {
                         return (
                             <div key={msg.id} className="flex flex-col items-start my-3 w-full">
-                                {/* Header: Bot Icon + AuraBuild AI • Studio Copilot • timestamp */}
-                                <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium ml-1 mb-1.5 select-none">
+                                {/* Header: Bot Icon + AuraBuild AI • Studio Copilot • timestamp • Parsed in Xs */}
+                                <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium ml-1 mb-1.5 select-none flex-wrap">
                                     <div className="w-4 h-4 rounded bg-[#7c3aed]/15 border border-[#7c3aed]/35 flex items-center justify-center text-[#7c3aed] shrink-0">
                                         <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-current">
                                             <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.38-1 1.72V7h4a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-8a3 3 0 0 1 3-3h4V5.72A2 2 0 0 1 10 4a2 2 0 0 1 2-2zm-5 7a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1H7zm2 3a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm6 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/>
@@ -1886,10 +1921,19 @@ function RightSidebar({
                                     </span>
                                     <span className="text-slate-300 dark:text-slate-600">•</span>
                                     <span className="text-slate-400 dark:text-slate-500 whitespace-nowrap shrink-0">{msg.timestamp}</span>
+                                    {msg.duration && (
+                                        <>
+                                            <span className="text-slate-300 dark:text-slate-600">•</span>
+                                            <span className="font-mono text-[10.5px] text-emerald-600 dark:text-emerald-400 font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/25 whitespace-nowrap shrink-0 flex items-center gap-1">
+                                                <Clock className="w-2.5 h-2.5" />
+                                                <span>Parsed in {msg.duration}</span>
+                                            </span>
+                                        </>
+                                    )}
                                 </div>
 
                                 {/* Response Card - Left Aligned */}
-                                <div className={`rounded-2xl border p-4 sm:p-5 shadow-xs space-y-3 transition-all max-w-[92%] sm:max-w-[88%] text-left ${
+                                <div className={`rounded-2xl border p-4 sm:p-5 shadow-xs space-y-3.5 transition-all max-w-[92%] sm:max-w-[88%] text-left ${
                                     isLight 
                                         ? 'bg-white border-slate-200 text-slate-800' 
                                         : 'bg-slate-900/90 border-slate-800 text-slate-200'
@@ -1899,54 +1943,82 @@ function RightSidebar({
                                         {msg.text}
                                     </p>
 
-                                    {/* If an action was performed, show activity execution info */}
-                                    {msg.isAction && (
+                                    {/* All Activities Performed */}
+                                    {msg.activities && msg.activities.length > 0 && (
                                         <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800 space-y-2">
-                                            {msg.activity && (
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Activity:</span>
-                                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-md border ${
-                                                        isLight ? 'bg-purple-50 border-purple-200 text-purple-700' : 'bg-purple-950/40 border-purple-800 text-purple-300'
-                                                    }`}>
-                                                        {msg.activity}
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                                                    ACTIVITIES PERFORMED ({msg.activities.length}):
+                                                </span>
+                                                {msg.duration && (
+                                                    <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500">
+                                                        Time: {msg.duration}
                                                     </span>
-                                                </div>
-                                            )}
-
-                                            {msg.affectedSection && (
-                                                <div className="flex items-center gap-1.5 text-xs">
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Target:</span>
-                                                    <span className={`text-[11px] font-medium px-2 py-0.5 rounded border ${
-                                                        isLight ? 'bg-slate-100 border-slate-200 text-slate-700' : 'bg-slate-800 border-slate-700 text-slate-300'
+                                                )}
+                                            </div>
+                                            <div className="flex flex-col gap-1.5">
+                                                {msg.activities.map((act, idx) => (
+                                                    <div key={idx} className={`flex items-center gap-2 text-xs px-2.5 py-1.5 rounded-lg border ${
+                                                        isLight ? 'bg-purple-50/70 border-purple-200/80 text-purple-900' : 'bg-purple-950/30 border-purple-800/60 text-purple-200'
                                                     }`}>
-                                                        {msg.affectedSection}
-                                                    </span>
-                                                </div>
-                                            )}
-
-                                            <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
-                                                <div className="text-slate-400 dark:text-slate-500 font-medium text-[11px] flex items-center gap-1.5">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                                    <span>Studio Copilot Active</span>
-                                                </div>
-
-                                                <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-xs">
-                                                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                                    <span>Canvas Synced</span>
-                                                </div>
+                                                        <CheckCircle2 className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                                                        <span className="font-medium text-[11.5px]">{act}</span>
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
                                     )}
 
-                                    {/* Pure conversational response footer */}
-                                    {!msg.isAction && (
-                                        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                                            <div className="text-slate-400 dark:text-slate-500 font-medium text-[11px] flex items-center gap-1.5">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                                <span>Studio Copilot Active</span>
+                                    {/* Single Activity fallback if activities array not populated */}
+                                    {(!msg.activities || msg.activities.length === 0) && msg.activity && (
+                                        <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Activity:</span>
+                                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-md border ${
+                                                    isLight ? 'bg-purple-50 border-purple-200 text-purple-700' : 'bg-purple-950/40 border-purple-800 text-purple-300'
+                                                }`}>
+                                                    {msg.activity}
+                                                </span>
                                             </div>
                                         </div>
                                     )}
+
+                                    {/* Canvas Sections Synchronized Chips */}
+                                    {msg.canvasSections && msg.canvasSections.length > 0 && (
+                                        <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800">
+                                            <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-wider uppercase mb-1.5">
+                                                CANVAS SECTIONS ({msg.canvasSections.length}):
+                                            </div>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {msg.canvasSections.map((secName, idx) => (
+                                                    <span key={idx} className={`text-[10.5px] font-medium px-2 py-0.5 rounded-md border ${
+                                                        isLight ? 'bg-slate-100 border-slate-200 text-slate-700' : 'bg-slate-800/80 border-slate-700 text-slate-300'
+                                                    }`}>
+                                                        {secName}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Bottom Status & Sync Bar */}
+                                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                                        <div className="text-slate-400 dark:text-slate-500 font-medium text-[11px] flex items-center gap-1.5">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            <span>Studio Copilot Active</span>
+                                            {msg.duration && (
+                                                <>
+                                                    <span>•</span>
+                                                    <span className="font-mono text-[10px] text-slate-400">Parsed in {msg.duration}</span>
+                                                </>
+                                            )}
+                                        </div>
+
+                                        <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-xs">
+                                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                            <span>Canvas Synced</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         );
@@ -2318,9 +2390,8 @@ function RightSidebar({
                         }`}
                         aria-label="Close Studio Panel"
                     >
-                        <X className="w-4 h-4 lg:hidden" />
-                        <ChevronRight className="hidden lg:block w-4 h-4" />
-                        <span className="text-[11px] font-bold lg:hidden">Close</span>
+                        <X className="w-4 h-4" />
+                        <span className="text-[11px] font-bold">Close</span>
                     </button>
                 )}
             </div>

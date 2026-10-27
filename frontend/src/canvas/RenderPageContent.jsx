@@ -10,6 +10,7 @@ import { HeroParticles } from "./HeroParticles";
 import { GitHubCalendar } from 'react-github-calendar';
 import { WorkspaceContext } from "../context/WorkspaceContext";
 import { getSkillIconUrl, getFallbackLucideIcon } from "../utils/skillIcons";
+import { X } from "lucide-react";
 
 // --- Subdued Premium Animation Configurations ---
 const springTransition = { type: "spring", stiffness: 250, damping: 25 };
@@ -447,9 +448,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                     e.stopPropagation(); 
                                                     onInlineEdit(section.id, { hideSideImage: true, customSideImage: "" });
                                                 }}
-                                                className="absolute top-4 right-4 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 hover:bg-red-600 z-20 shadow-md"
+                                                className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-red-500 hover:bg-red-600 text-white rounded-full w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-xs opacity-100 sm:opacity-0 sm:group-hover:opacity-100 z-30 shadow-lg font-bold cursor-pointer transition-all active:scale-95"
                                                 title="Remove Image"
-                                            >✕</button>
+                                                aria-label="Remove Image"
+                                            >
+                                                <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+                                            </button>
                                     </>
                                 )}
                             </motion.div>
@@ -513,9 +517,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                 e.stopPropagation(); 
                                                 onInlineEdit(section.id, { hideSideImage: true, customSideImage: "" });
                                             }}
-                                            className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-red-500 text-white rounded-full w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-xs opacity-80 sm:opacity-0 sm:group-hover:opacity-100 hover:bg-red-600 z-20 shadow-md font-bold"
+                                            className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-red-500 hover:bg-red-600 text-white rounded-full w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-xs opacity-100 sm:opacity-0 sm:group-hover:opacity-100 z-30 shadow-lg font-bold cursor-pointer transition-all active:scale-95"
                                             title="Remove Image"
-                                        >✕</button>
+                                            aria-label="Remove Image"
+                                        >
+                                            <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+                                        </button>
                                     </>
                                 )}
                             </motion.div>
@@ -596,9 +603,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     {!isPreview && (
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); removeArrayItem('schools', i); }}
-                                            className="absolute -top-2.5 -right-2.5 w-7 h-7 flex items-center justify-center text-white opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-20 text-xs font-bold"
+                                            className="absolute -top-2.5 -right-2.5 w-7 h-7 flex items-center justify-center text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-lg z-30 text-xs font-bold cursor-pointer active:scale-95"
                                             title="Delete Education"
-                                        >✕</button>
+                                            aria-label="Delete Education"
+                                        >
+                                            <X className="w-3.5 h-3.5 text-white" />
+                                        </button>
                                     )}
                                     
                                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-4">
@@ -712,8 +722,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     {!isPreview && (
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); removeArrayItem('items', i); }}
-                                            className={`absolute -top-2.5 ${isEven ? '-right-2.5' : '-left-2.5'} w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-20 text-xs font-bold`}
-                                        >✕</button>
+                                            className={`absolute -top-2.5 ${isEven ? '-right-2.5' : '-left-2.5'} w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-lg z-30 text-xs font-bold cursor-pointer active:scale-95`}
+                                            title="Delete Skill"
+                                            aria-label="Delete Skill"
+                                        >
+                                            <X className="w-3.5 h-3.5 text-white" />
+                                        </button>
                                     )}
 
                                     <div className="flex justify-between items-center text-lg font-bold gap-4">
@@ -768,9 +782,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                                             e.stopPropagation(); 
                                                                             updateArrayItem("items", i, "customIcon", null); 
                                                                         }}
-                                                                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] hover:bg-red-600 z-10 shadow-md"
+                                                                        className="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[10px] z-20 shadow-md cursor-pointer transition-all active:scale-95"
                                                                         title="Remove Custom Icon"
-                                                                    >✕</button>
+                                                                        aria-label="Remove Custom Icon"
+                                                                    >
+                                                                        <X className="w-2.5 h-2.5 text-white" />
+                                                                    </button>
                                                                 )}
                                                             </div>
                                                         )}
@@ -893,9 +910,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 {!isPreview && (
                                     <button 
                                         onClick={(e) => { e.stopPropagation(); removeArrayItem('projects', i); }}
-                                        className="absolute top-3 right-3 sm:top-4 sm:right-4 w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-white opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-30"
+                                        className="absolute top-3 right-3 sm:top-4 sm:right-4 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-lg z-30 text-xs font-bold cursor-pointer active:scale-95"
                                         title="Delete Project"
-                                    >✕</button>
+                                        aria-label="Delete Project"
+                                    >
+                                        <X className="w-3.5 h-3.5 text-white" />
+                                    </button>
                                 )}
 
                                 {/* LEFT: PROJECT IMAGE */}
@@ -941,9 +961,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                         );
                                                         onInlineEdit(section.id, "projects", list);
                                                     }}
-                                                    className="absolute top-3 right-3 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-[10px] opacity-0 group-hover/image:opacity-100 hover:bg-red-600 z-20 shadow-md"
+                                                    className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center text-[10px] opacity-100 sm:opacity-0 sm:group-hover/image:opacity-100 z-30 shadow-lg font-bold cursor-pointer transition-all active:scale-95"
                                                     title="Remove Image"
-                                                >✕</button>
+                                                    aria-label="Remove Image"
+                                                >
+                                                    <X className="w-3.5 h-3.5 text-white" />
+                                                </button>
                                             </>
                                         )}
                                     </div>
@@ -1344,9 +1367,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                         {!isPreview && (
                                             <button 
                                                 onClick={(e) => { e.stopPropagation(); removeArrayItem('items', idx); }}
-                                                className="absolute -top-2.5 -right-2.5 w-7 h-7 flex items-center justify-center text-white opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-20 text-xs font-bold"
+                                                className="absolute -top-2.5 -right-2.5 w-7 h-7 flex items-center justify-center text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-lg z-30 text-xs font-bold cursor-pointer active:scale-95"
                                                 title="Remove Position"
-                                            >✕</button>
+                                                aria-label="Remove Position"
+                                            >
+                                                <X className="w-3.5 h-3.5 text-white" />
+                                            </button>
                                         )}
                                         <h3 className={"text-lg sm:text-xl font-bold mb-1.5 break-words " + textPrimary}>
                                             <TextElement value={item.title} placeholder="Job Title" onCommit={(v) => updateArrayItem('items', idx, 'title', v)} />
@@ -1414,9 +1440,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     {!isPreview && (
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); removeArrayItem('items', idx); }}
-                                            className="absolute top-3 right-3 sm:top-4 sm:right-4 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-30 text-xs"
+                                            className="absolute top-3 right-3 sm:top-4 sm:right-4 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-lg z-30 text-xs font-bold cursor-pointer active:scale-95"
                                             title="Delete Service"
-                                        >✕</button>
+                                            aria-label="Delete Service"
+                                        >
+                                            <X className="w-3.5 h-3.5 text-white" />
+                                        </button>
                                     )}
                                     <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center mb-4 sm:mb-6 text-xl sm:text-2xl">
                                         ⚡
@@ -1477,9 +1506,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     {!isPreview && (
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); removeArrayItem('items', idx); }}
-                                            className="absolute top-3 right-3 sm:top-4 sm:right-4 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-30 text-xs"
+                                            className="absolute top-3 right-3 sm:top-4 sm:right-4 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-lg z-30 text-xs font-bold cursor-pointer active:scale-95"
                                             title="Delete Testimonial"
-                                        >✕</button>
+                                            aria-label="Delete Testimonial"
+                                        >
+                                            <X className="w-3.5 h-3.5 text-white" />
+                                        </button>
                                     )}
                                     <div className="absolute top-4 right-4 sm:top-6 sm:right-6 text-4xl sm:text-6xl text-blue-500/20 font-serif leading-none select-none pointer-events-none">
                                         &quot;
@@ -1550,9 +1582,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     {!isPreview && (
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); removeArrayItem('items', idx); }}
-                                            className="absolute top-3 right-3 sm:top-4 sm:right-4 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-30 text-xs"
+                                            className="absolute top-3 right-3 sm:top-4 sm:right-4 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-lg z-30 text-xs font-bold cursor-pointer active:scale-95"
                                             title="Delete Certification"
-                                        >✕</button>
+                                            aria-label="Delete Certification"
+                                        >
+                                            <X className="w-3.5 h-3.5 text-white" />
+                                        </button>
                                     )}
                                     <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-0 min-w-0 pr-8 sm:pr-0">
                                         <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-amber-500/20 text-amber-500 flex items-center justify-center text-lg sm:text-xl shrink-0">
@@ -1620,9 +1655,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     {!isPreview && (
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); removeArrayItem('items', idx); }}
-                                            className="absolute top-2 right-2 sm:top-3 sm:right-3 w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center text-white opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-30 text-xs"
+                                            className="absolute top-2 right-2 sm:top-3 sm:right-3 w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-lg z-30 text-xs font-bold cursor-pointer active:scale-95"
                                             title="Delete Stat"
-                                        >✕</button>
+                                            aria-label="Delete Stat"
+                                        >
+                                            <X className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
+                                        </button>
                                     )}
                                     <div className={"text-2xl sm:text-4xl md:text-5xl font-black mb-1 sm:mb-2 " + accentText}>
                                         <TextElement value={item.metric} placeholder="50+" onCommit={(v) => updateArrayItem('items', idx, 'metric', v)} />
@@ -1693,9 +1731,12 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     {!isPreview && (
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); removeArrayItem('articles', idx); }}
-                                            className="absolute top-3 right-3 sm:top-4 sm:right-4 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-md z-30 text-xs"
+                                            className="absolute top-3 right-3 sm:top-4 sm:right-4 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-lg z-30 text-xs font-bold cursor-pointer active:scale-95"
                                             title="Delete Article"
-                                        >✕</button>
+                                            aria-label="Delete Article"
+                                        >
+                                            <X className="w-3.5 h-3.5 text-white" />
+                                        </button>
                                     )}
                                     <div className={"text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-2 sm:mb-3 flex items-center justify-between " + accentText}>
                                         <span><TextElement value={item.publisher} placeholder="Publisher" onCommit={(v) => updateArrayItem('articles', idx, 'publisher', v)} /></span>
