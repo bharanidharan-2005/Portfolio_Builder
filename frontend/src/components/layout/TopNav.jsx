@@ -60,40 +60,41 @@ export const TopNav = memo(function TopNav({
     const allPassed = passedCount === totalCount;
 
     return ( 
-        <div className={`flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-5 border-b w-full h-full transition-colors ${
+        <div className={`flex items-center justify-between gap-1.5 sm:gap-4 px-2.5 sm:px-5 border-b w-full h-full transition-colors ${
             isSystem 
                 ? 'bg-[#0c051a]/95 backdrop-blur-2xl border-[#7c00ff]/30 text-white shadow-[0_4px_25px_rgba(124,0,255,0.18)]' 
                 : (isLight ? 'bg-white border-slate-200/90 shadow-xs' : 'bg-[#0B0F19]/90 backdrop-blur-2xl border-slate-800/80')
         }`}>
             
             {/* 1. LEFT SECTION - Logo & Branding */}
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 min-w-0">
                 <button 
                     onClick={onToggleLeft} 
-                    className={`lg:hidden p-1.5 rounded-lg transition-colors cursor-pointer ${
+                    className={`lg:hidden p-1.5 rounded-lg transition-colors cursor-pointer shrink-0 ${
                         isSystem ? 'text-slate-200 hover:bg-[#7c00ff]/20' : (isLight ? 'text-slate-600 hover:bg-slate-100' : 'text-slate-300 hover:bg-slate-800')
                     }`}
                     aria-label="Toggle navigation menu"
                 >
                     <Menu className="w-5 h-5" />
                 </button> 
-                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg overflow-hidden flex items-center justify-center shadow-xs border ${
-                    isSystem ? 'border-[#7c00ff]/40 shadow-[0_0_12px_rgba(124,0,255,0.4)]' : 'border-slate-200 dark:border-slate-800'
-                }`}>
-                    <img src="/logo.svg" alt="AuraBuild Logo" className="w-full h-full object-cover" />
-                </div> 
-                <div className="flex items-center gap-2">
+                <img
+                    src="/logo.png"
+                    alt="AuraBuild Logo"
+                    className="w-7 h-7 sm:w-8 sm:h-8 object-contain shrink-0"
+                /> 
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                     {onBackToDashboard && (
                         <button
                             type="button"
                             onClick={onBackToDashboard}
                             title="Back to Dashboard"
-                            className={`hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
+                            aria-label="Back to Dashboard"
+                            className={`inline-flex items-center gap-1 p-1.5 sm:px-2 sm:py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                                 isLight ? 'border-slate-200 text-slate-600 hover:bg-slate-100' : 'border-slate-800 text-slate-300 hover:bg-slate-800'
                             }`}
                         >
-                            <ArrowLeft className="w-3.5 h-3.5" />
-                            <span>Dashboard</span>
+                            <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+                            <span className="hidden sm:inline">Dashboard</span>
                         </button>
                     )}
                     <h1 className={`text-base font-sora font-extrabold tracking-tight hidden md:block ${
@@ -285,13 +286,15 @@ export const TopNav = memo(function TopNav({
             </div>
 
             {/* 3. RIGHT SECTION - Actions & User Profile */}
-            <div className="flex items-center gap-2 sm:gap-2.5">
-                <SaveStatusBadge status={saveStatus} lastSavedAt={lastSavedAt} onRetry={onRetrySave} />
+            <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+                <div className="hidden sm:block shrink-0">
+                    <SaveStatusBadge status={saveStatus} lastSavedAt={lastSavedAt} onRetry={onRetrySave} />
+                </div>
                 {/* Live Preview Button */}
                 <button 
                     type="button"
                     onClick={onTogglePreview}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg border transition-all cursor-pointer active:scale-95 ${
+                    className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg border transition-all cursor-pointer active:scale-95 whitespace-nowrap shrink-0 ${
                         isPreviewMode
                             ? (isSystem ? 'bg-[#7c00ff]/30 border-[#7c00ff] text-white shadow-[0_0_15px_rgba(124,0,255,0.4)]' : 'bg-blue-600 border-blue-600 text-white shadow-sm')
                             : (isSystem 
@@ -301,7 +304,7 @@ export const TopNav = memo(function TopNav({
                     title="Open Live Preview (Test Portfolio)"
                     aria-label="Toggle Live Preview"
                 >
-                    <Eye className="h-3.5 w-3.5" /> 
+                    <Eye className="h-3.5 w-3.5 shrink-0" /> 
                     <span className="hidden sm:inline">Preview</span> 
                 </button>
 
@@ -309,14 +312,14 @@ export const TopNav = memo(function TopNav({
                 <button 
                     type="button"
                     onClick={onDeploy}
-                    className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-white rounded-lg transition-all cursor-pointer active:scale-95 ${
+                    className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-white rounded-lg transition-all cursor-pointer active:scale-95 whitespace-nowrap shrink-0 ${
                         isSystem 
                             ? 'bg-gradient-to-r from-[#7c00ff] via-[#9400d3] to-[#7c00ff] hover:brightness-110 shadow-[0_0_20px_rgba(124,0,255,0.6)] border border-[#7c00ff]/50' 
                             : 'bg-blue-600 hover:bg-blue-700 shadow-sm hover:shadow-md'
                     }`}
                     title="Publish & deploy portfolio live"
                 >
-                    <Rocket className="h-3.5 w-3.5" /> 
+                    <Rocket className="h-3.5 w-3.5 shrink-0" /> 
                     <span>Deploy</span> 
                 </button>
 
@@ -334,13 +337,13 @@ export const TopNav = memo(function TopNav({
                 </button>
 
                 {/* USER PROFILE AVATAR */}
-                <div className={`flex items-center gap-2 pl-2 border-l ${isSystem ? 'border-[#7c00ff]/30' : (isLight ? 'border-slate-200' : 'border-slate-800')}`}>
+                <div className={`hidden sm:flex items-center gap-2 pl-2 border-l shrink-0 ${isSystem ? 'border-[#7c00ff]/30' : (isLight ? 'border-slate-200' : 'border-slate-800')}`}>
                     <span className={`text-xs font-semibold hidden xl:block truncate max-w-[120px] ${isSystem ? 'text-purple-200' : (isLight ? 'text-slate-800' : 'text-slate-200')}`}>
                         {userData?.name || "Developer"}
                     </span>
                     
                     <div 
-                        className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-base rounded-full shadow-xs border ${
+                        className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-base rounded-full shadow-xs border shrink-0 ${
                             isSystem ? 'bg-[#120826] border-[#7c00ff]/40 shadow-[0_0_10px_rgba(124,0,255,0.3)]' : (isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-800 border-slate-700')
                         }`}
                         title="Profile Settings"
@@ -354,7 +357,7 @@ export const TopNav = memo(function TopNav({
                     type="button"
                     onClick={onToggleRight} 
                     title={isRightOpen ? "Hide Studio Panel" : "Show Studio Panel"}
-                    className={`px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
+                    className={`px-2 sm:px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                         isRightOpen 
                             ? (isSystem 
                                 ? 'text-[#c084fc] bg-[#7c00ff]/20 border-[#7c00ff]/40 shadow-[0_0_12px_rgba(124,0,255,0.35)]' 

@@ -139,11 +139,7 @@ function LeftSidebar({
                     isSystem ? 'border-[#7c00ff]/30' : (isLight ? 'border-slate-200' : 'border-slate-700/40')
                 }`}>
                     <div className="flex items-center gap-2">
-                        <div className={`w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center border ${
-                            isSystem ? 'border-[#7c00ff]/40 shadow-[0_0_10px_rgba(124,0,255,0.4)]' : (isLight ? 'border-slate-200 shadow-xs' : 'border-slate-700')
-                        }`}>
-                            <img src="/logo.svg" alt="AuraBuild Logo" className="w-full h-full object-cover" />
-                        </div>
+                        <img src="/logo.png" alt="AuraBuild Logo" className="w-7 h-7 object-contain shrink-0" />
                         <span className={`text-sm font-black font-sora tracking-tight ${isSystem ? 'text-white' : (isLight ? 'text-slate-900' : 'text-slate-100')}`}>
                             Studio Menu
                         </span>

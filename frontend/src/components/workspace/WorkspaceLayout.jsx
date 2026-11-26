@@ -292,7 +292,7 @@ export default function WorkspaceLayout() {
                         <button
                             onClick={handleOpenRight}
                             title="Open AI Studio Panel"
-                            className={`absolute top-1/2 -translate-y-1/2 right-0 z-50 text-white py-2.5 px-2 rounded-l-2xl shadow-2xl flex items-center gap-1 text-xs font-bold transition-all cursor-pointer hover:pl-3 group ${
+                            className={`absolute top-1/2 -translate-y-1/2 right-0 z-20 text-white py-2.5 px-2 rounded-l-2xl shadow-2xl flex items-center gap-1 text-xs font-bold transition-all cursor-pointer hover:pl-3 group ${
                                 isSystem 
                                     ? 'bg-[#7c00ff] hover:bg-[#6b00dc] shadow-[0_0_22px_rgba(124,0,255,0.7)] border border-r-0 border-[#7c00ff]/60' 
                                     : 'bg-blue-600 hover:bg-blue-500 border border-r-0 border-blue-400/30'
@@ -303,24 +303,24 @@ export default function WorkspaceLayout() {
                         </button>
                     )}
 
-                    <div id="workspace-scroll-container" className={`flex-1 min-w-0 overflow-y-auto overflow-x-hidden w-full h-full ${!isPublicPreview ? 'p-3 sm:p-5 lg:p-6' : 'p-0'} [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`}>
+                    <div id="workspace-scroll-container" className={`flex-1 min-w-0 overflow-y-auto overflow-x-hidden w-full h-full ${!isPublicPreview ? 'p-2.5 sm:p-5 lg:p-6' : 'p-0'} [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`}>
                         <div className={`w-full min-w-0 max-w-full transition-all duration-300 ${!isPublicPreview ? 'max-w-[1440px] mx-auto' : ''}`}>
                             {activeTool === "templates" ? (
                                 <div className="w-full rounded-2xl overflow-hidden shadow-2xl border border-blue-500/30 flex flex-col mb-12">
-                                    <div className={`p-3 sm:p-4 border-b flex items-center justify-between z-20 ${isLight ? 'bg-white border-slate-200' : 'bg-slate-900/90 backdrop-blur-md border-slate-800'}`}>
-                                        <div className="flex items-center gap-2">
-                                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                            <span className="text-xs font-bold uppercase tracking-wider text-blue-500">
+                                    <div className={`p-3 sm:p-4 border-b flex flex-wrap items-center justify-between gap-2 z-20 ${isLight ? 'bg-white border-slate-200' : 'bg-slate-900/90 backdrop-blur-md border-slate-800'}`}>
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                                            <span className="text-xs font-bold uppercase tracking-wider text-blue-500 truncate">
                                                 Live Frontpage Landing Preview
                                             </span>
                                         </div>
-                                        <div className="flex items-center gap-3">
-                                            <span className={`text-[11px] font-medium ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                                        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                                            <span className={`text-[11px] font-medium hidden sm:inline ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                                                 Template: <strong className="text-blue-500 capitalize">{userData?.frontpageTemplate || "template1"}</strong>
                                             </span>
                                             <button 
                                                 onClick={() => handleSelectTool(null)}
-                                                className="text-xs px-2.5 py-1 rounded-md bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-colors cursor-pointer"
+                                                className="text-xs px-2.5 py-1 rounded-md bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-colors cursor-pointer whitespace-nowrap"
                                             >
                                                 Back to Canvas
                                             </button>

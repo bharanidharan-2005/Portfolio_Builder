@@ -505,12 +505,14 @@ export default function LandingPage() {
             <header className={`sticky top-0 z-40 border-b backdrop-blur-md transition-colors ${
                 isLight ? "bg-white/85 border-slate-200/80" : "bg-[#07090F]/85 border-slate-800/80"
             }`}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-                    <a href="#top" className="flex items-center gap-2.5 font-bold tracking-tight">
-                        <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm font-black shadow-sm">
-                            A
-                        </div>
-                        <span className={`text-base font-extrabold ${isLight ? "text-slate-900" : "text-white"}`}>
+                <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
+                    <a href="#top" className="flex items-center gap-2 sm:gap-2.5 font-bold tracking-tight min-w-0 shrink-0">
+                        <img
+                            src="/logo.png"
+                            alt="AuraBuild Logo"
+                            className="w-8 h-8 object-contain shrink-0"
+                        />
+                        <span className={`text-sm sm:text-base font-extrabold ${isLight ? "text-slate-900" : "text-white"}`}>
                             AuraBuild
                         </span>
                         <Badge tone="accent" className="hidden sm:inline-flex">AI Studio</Badge>
@@ -523,12 +525,12 @@ export default function LandingPage() {
                         <a href="#faq" className="hover:text-indigo-500 transition-colors">FAQ</a>
                     </nav>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                         <button
                             type="button"
                             onClick={() => setThemeSetting(isLight ? "dark" : "light")}
                             aria-label="Toggle theme"
-                            className={`p-2 rounded-xl border transition-colors cursor-pointer ${
+                            className={`p-2 rounded-xl border transition-colors cursor-pointer shrink-0 ${
                                 isLight ? "border-slate-200 hover:bg-slate-100 text-slate-700" : "border-slate-800 hover:bg-slate-800 text-slate-300"
                             }`}
                         >
@@ -537,7 +539,7 @@ export default function LandingPage() {
                         <button
                             type="button"
                             onClick={() => openModal("login")}
-                            className={`hidden sm:inline-flex px-3.5 py-2 text-xs font-semibold rounded-xl border transition-colors cursor-pointer ${
+                            className={`hidden sm:inline-flex px-3.5 py-2 text-xs font-semibold rounded-xl border transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                                 isLight ? "border-slate-300 text-slate-700 hover:bg-slate-100" : "border-slate-700 text-slate-200 hover:bg-slate-800"
                             }`}
                         >
@@ -546,14 +548,17 @@ export default function LandingPage() {
                         <button
                             type="button"
                             onClick={() => openModal("signup")}
-                            className="px-4 py-2 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-colors cursor-pointer"
+                            className="px-3 sm:px-4 py-2 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-colors cursor-pointer whitespace-nowrap shrink-0"
                         >
-                            Create Portfolio
+                            <span className="sm:hidden">Get Started</span>
+                            <span className="hidden sm:inline">Create Portfolio</span>
                         </button>
                         <button
                             type="button"
                             onClick={() => setMobileMenuOpen((v) => !v)}
-                            className="md:hidden p-2 rounded-xl border border-slate-700/50 cursor-pointer"
+                            className={`md:hidden p-2 rounded-xl border cursor-pointer shrink-0 ${
+                                isLight ? "border-slate-200 text-slate-700 hover:bg-slate-100" : "border-slate-700/50 text-slate-200 hover:bg-slate-800"
+                            }`}
                             aria-label="Toggle navigation menu"
                         >
                             <Menu className="w-4 h-4" />
@@ -1041,9 +1046,11 @@ export default function LandingPage() {
                         </button>
 
                         <div className="flex flex-col items-center gap-2 mb-5 text-center">
-                            <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-lg">
-                                A
-                            </div>
+                            <img
+                                src="/logo.png"
+                                alt="AuraBuild Logo"
+                                className="w-12 h-12 object-contain"
+                            />
                             <h2 className="font-display font-bold text-white text-xl tracking-tight">
                                 {stepState === "avatar"
                                     ? "Personalize Identity"

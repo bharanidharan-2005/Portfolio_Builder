@@ -21,7 +21,7 @@ const getAbsoluteUrl = (url) => {
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
     
     // Extract backend base URL from VITE_API_URL or use fallback
-    const rawApiUrl = import.meta.env.VITE_API_URL || 'https://aurabuild-backend.onrender.com';
+    const rawApiUrl = import.meta.env.VITE_API_URL || 'https://portfolio-builder-1-rm9r.onrender.com';
     // Remove trailing slashes and '/api' if present
     const baseUrl = rawApiUrl.replace(/\/api\/?$/, '').replace(/\/$/, '');
     
@@ -79,7 +79,9 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
     const activeSections = (targetPage && targetPage.sections) || pages[0].sections || [];
 
     const globalBg = (userData && userData.globalBg) ? getAbsoluteUrl(userData.globalBg) : '';
-    const isDark = theme.bodyBg?.includes('black') || theme.bodyBg?.includes('#0') || /bg-(slate|gray|zinc|neutral|stone)-9/.test(theme.bodyBg) || theme.bodyBg?.includes('dark:');
+    const isDark = theme.isLight !== undefined
+        ? !theme.isLight
+        : (theme.bodyBg?.includes('black') || theme.bodyBg?.includes('#0') || /bg-(slate|gray|zinc|neutral|stone)-9/.test(theme.bodyBg));
 
     const heroSec = activeSections.find(s => (s.section_type || '').toLowerCase().trim() === 'hero');
     const heroData = heroSec?.content_data || {};

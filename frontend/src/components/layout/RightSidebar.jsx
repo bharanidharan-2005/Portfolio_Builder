@@ -2100,13 +2100,13 @@ function RightSidebar({
     return (
         <div className={`h-full w-full flex flex-col transition-colors duration-500 ${isSystem ? 'bg-[#0c051a]/95 backdrop-blur-2xl' : (isLight ? 'bg-slate-50/50 backdrop-blur-xl' : 'bg-[#0B0C10]/80 backdrop-blur-2xl')}`}>
             {/* Top Studio Panel Header */}
-            <div className={`px-3 py-2.5 border-b flex items-center justify-between shrink-0 gap-2 ${
+            <div className={`px-2.5 sm:px-3 py-2.5 border-b flex items-center justify-between shrink-0 gap-1.5 sm:gap-2 min-w-0 ${
                 isSystem 
                     ? 'border-[#7c00ff]/30 bg-[#0e0720]/90 backdrop-blur-xl shadow-[0_4px_16px_rgba(124,0,255,0.1)]' 
                     : (isLight ? 'border-slate-200/90 bg-white/80 backdrop-blur-xl shadow-xs' : 'border-white/10 bg-[#0b0f19]/90 backdrop-blur-xl shadow-xs')
             }`}>
                 {/* Mode Selector Tabs */}
-                <div className={`flex items-center p-1 rounded-xl border text-xs font-semibold ${
+                <div className={`flex items-center p-1 rounded-xl border text-xs font-semibold min-w-0 flex-1 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
                     isSystem 
                         ? 'border-[#7c00ff]/30 bg-[#120826]/90 shadow-inner' 
                         : (isLight ? 'border-slate-200 bg-slate-100/90 shadow-inner' : 'border-slate-800/80 bg-slate-900/80 shadow-inner')
@@ -2117,7 +2117,7 @@ function RightSidebar({
                             setStudioViewMode('chat');
                             if (onSelectTool) onSelectTool('activity_log');
                         }}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer text-xs ${
+                        className={`flex-1 flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg transition-all cursor-pointer text-[11px] sm:text-xs whitespace-nowrap ${
                             effectiveStudioViewMode === 'chat'
                                 ? (isSystem 
                                     ? 'bg-gradient-to-r from-[#7c00ff] to-[#9933ff] text-white shadow-[0_0_12px_rgba(124,0,255,0.5)] font-bold' 
@@ -2125,8 +2125,8 @@ function RightSidebar({
                                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                         }`}
                     >
-                        <MessageSquare className="w-3.5 h-3.5" />
-                        <span>AI Chat & Logs</span>
+                        <MessageSquare className="w-3.5 h-3.5 shrink-0" />
+                        <span>AI Chat</span>
                     </button>
                     <button
                         type="button"
@@ -2134,7 +2134,7 @@ function RightSidebar({
                             setStudioViewMode('tool');
                             if (onSelectTool && activeTool === 'activity_log') onSelectTool('structure');
                         }}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer text-xs ${
+                        className={`flex-1 flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg transition-all cursor-pointer text-[11px] sm:text-xs whitespace-nowrap truncate ${
                             effectiveStudioViewMode === 'tool'
                                 ? (isSystem 
                                     ? 'bg-gradient-to-r from-[#7c00ff] to-[#9933ff] text-white shadow-[0_0_12px_rgba(124,0,255,0.5)] font-bold' 
@@ -2142,8 +2142,8 @@ function RightSidebar({
                                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                         }`}
                     >
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>{activeTool && activeTool !== 'activity_log' ? activeTool.replace('_', ' ') : 'Studio Tools'}</span>
+                        <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">{activeTool && activeTool !== 'activity_log' ? activeTool.replace('_', ' ') : 'Tools'}</span>
                     </button>
                 </div>
 
@@ -2152,7 +2152,7 @@ function RightSidebar({
                         type="button"
                         onClick={onClose}
                         title="Close Studio Panel"
-                        className={`p-1.5 sm:p-2 rounded-xl transition-all cursor-pointer flex items-center gap-1 active:scale-95 border ${
+                        className={`p-1.5 sm:p-2 rounded-xl transition-all cursor-pointer flex items-center gap-1 active:scale-95 border shrink-0 ${
                             isSystem 
                                 ? 'bg-rose-500/15 border-rose-500/30 text-rose-300 hover:bg-rose-500/25 hover:text-white shadow-[0_0_12px_rgba(244,63,94,0.3)]' 
                                 : (isLight 
@@ -2161,8 +2161,8 @@ function RightSidebar({
                         }`}
                         aria-label="Close Studio Panel"
                     >
-                        <X className="w-4 h-4" />
-                        <span className="text-[11px] font-bold">Close</span>
+                        <X className="w-4 h-4 shrink-0" />
+                        <span className="text-[11px] font-bold hidden sm:inline">Close</span>
                     </button>
                 )}
             </div>

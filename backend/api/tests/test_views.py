@@ -486,6 +486,46 @@ class WorkspaceAPITests(TestCase):
         self.assertIn('access', ok_res.json())
         self.assertEqual(ok_res.json()['user']['email'], 'octo@example.com')
 
+    @patch.dict(os.environ, {'VERCEL_TOKEN': ''})
+    def test_deploy_requires_html_and_reports_unconfigured_token(self):
+        headers = auth_client(self.client, self.owner)
+        missing_html = self.client.post(
+            reverse('deploy'),
+            data={},
+            content_type='application/json',
+            **headers,
+        )
+        self.assertEqual(missing_html.status_code, 400)
+
+        missing_token = self.client.post(
+            reverse('deploy'),
+            data={'html_content': '<html><body><h1>Portfolio</h1></body></html>'},
+            content_type='application/json',
+            **headers,
+        )
+        self.assertEqual(missing_token.status_code, 503)
+
+    @patch.dict(os.environ, {'VERCEL_TOKEN': 'test-vercel-token'})
+    @patch('api.views.utils.requests.post')
+    def test_deploy_succeeds_and_marks_portfolio_published(self, mock_post):
+        headers = auth_client(self.client, self.owner)
+        self.client.get(reverse('portfolio-list'), **headers)
+        mock_post.return_value = SimpleNamespace(
+            status_code=200,
+            json=lambda: {'url': 'aurabuild-demo.vercel.app'},
+        )
+        res = self.client.post(
+            reverse('deploy'),
+            data={'html_content': '<html><body><h1>Portfolio</h1></body></html>'},
+            content_type='application/json',
+            **headers,
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()['url'], 'https://aurabuild-demo.vercel.app')
+        portfolio = Portfolio.objects.get(owner=self.owner)
+        self.assertTrue(portfolio.is_published)
+        self.assertEqual(portfolio.published_url, 'https://aurabuild-demo.vercel.app')
+
 
 
 

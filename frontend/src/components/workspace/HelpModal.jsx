@@ -30,9 +30,7 @@ export default function HelpModal({ isOpen, onClose, isLight }) {
                 <div className={`shrink-0 p-4 sm:p-6 flex items-center justify-between border-b relative overflow-hidden ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#15161D] border-slate-800'}`}>
                     <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[80px] rounded-full pointer-events-none"></div>
                     <div className="flex items-center gap-3 sm:gap-4 relative z-10 min-w-0">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl overflow-hidden shadow-lg shadow-blue-500/20 border border-slate-200 dark:border-slate-800 shrink-0">
-                            <img src="/logo.svg" alt="Logo" className="w-full h-full object-cover" />
-                        </div>
+                        <img src="/logo.png" alt="AuraBuild Logo" className="w-10 h-10 sm:w-12 sm:h-12 object-contain shrink-0" />
                         <div className="min-w-0">
                             <h2 className={`text-base sm:text-xl font-black tracking-tight truncate ${isLight ? 'text-slate-800' : 'text-slate-100'}`}>
                                 AuraBuild Studio & AI Tools Guide

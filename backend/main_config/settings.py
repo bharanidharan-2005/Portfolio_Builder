@@ -5,6 +5,7 @@ See https://docs.djangoproject.com/en/stable/ref/settings/ for details.
 """
 
 import os
+import sys
 from datetime import timedelta
 from pathlib import Path
 
@@ -14,8 +15,8 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load .env variables from BASE_DIR if present
-load_dotenv(BASE_DIR / '.env', override=True)
+# Load .env variables from BASE_DIR if present without overriding host environment variables
+load_dotenv(BASE_DIR / '.env', override=False)
 
 # -----------------------------------------------------------------
 # 🔒 SECURITY CONFIGURATION
@@ -253,6 +254,13 @@ SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
+if not DEBUG:
+    SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '31536000'))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_SSL_REDIRECT = (
+        'test' not in sys.argv
+        and os.getenv('SECURE_SSL_REDIRECT', 'True').lower() in ('1', 'true', 'yes', 'on')
+    )
 
 # -----------------------------------------------------------------
 # 🌐 INTERNATIONALIZATION & STATIC ASSETS

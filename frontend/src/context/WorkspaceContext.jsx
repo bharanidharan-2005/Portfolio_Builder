@@ -81,6 +81,12 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         careerTrack: 'software_developer',
     });
     const hasLoadedInitialSettingsRef = useRef(false);
+    const syncedSettingsRef = useRef({
+        globalBg: undefined,
+        globalFont: undefined,
+        theme: undefined,
+        frontpageTemplate: undefined,
+    });
     const pendingPatchTimersRef = useRef({});
     const pendingPatchPayloadsRef = useRef({});
 
@@ -174,8 +180,10 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         } else {
             localStorage.removeItem(`aurabuild_bg_${userData?.name || 'default'}`);
         }
-        if (!isPublicPreview && hasLoadedInitialSettingsRef.current) {
-            updatePortfolioSettings({ globalBg: globalBg || "" }).catch(() => {});
+        const normalizedBg = globalBg || "";
+        if (!isPublicPreview && hasLoadedInitialSettingsRef.current && syncedSettingsRef.current.globalBg !== normalizedBg) {
+            syncedSettingsRef.current.globalBg = normalizedBg;
+            updatePortfolioSettings({ globalBg: normalizedBg }).catch(() => {});
         }
     }, [globalBg, userData?.name, setUserData, isPublicPreview, updatePortfolioSettings]);
 
@@ -185,14 +193,16 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
             localStorage.setItem(`aurabuild_font_${userData?.name || 'default'}`, globalFont);
             if (setUserData) setUserData(prev => ({ ...prev, globalFont }));
         }
-        if (!isPublicPreview && hasLoadedInitialSettingsRef.current) {
+        if (!isPublicPreview && hasLoadedInitialSettingsRef.current && syncedSettingsRef.current.globalFont !== globalFont) {
+            syncedSettingsRef.current.globalFont = globalFont;
             updatePortfolioSettings({ globalFont }).catch(() => {});
         }
     }, [globalFont, userData?.name, setUserData, isPublicPreview, updatePortfolioSettings]);
     
     // --- Sync Theme to Backend ---
     useEffect(() => {
-        if (userData?.theme && !isPublicPreview && hasLoadedInitialSettingsRef.current) {
+        if (userData?.theme && !isPublicPreview && hasLoadedInitialSettingsRef.current && syncedSettingsRef.current.theme !== userData.theme) {
+            syncedSettingsRef.current.theme = userData.theme;
             updatePortfolioSettings({ theme: userData.theme }).catch(() => {});
         }
     }, [userData?.theme, isPublicPreview, updatePortfolioSettings]);
@@ -202,7 +212,8 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         if (userData?.frontpageTemplate) {
             localStorage.setItem(`aurabuild_frontpage_${userData?.name || 'default'}`, userData.frontpageTemplate);
             localStorage.setItem(`aurabuild_frontpage_default`, userData.frontpageTemplate);
-            if (!isPublicPreview && hasLoadedInitialSettingsRef.current) {
+            if (!isPublicPreview && hasLoadedInitialSettingsRef.current && syncedSettingsRef.current.frontpageTemplate !== userData.frontpageTemplate) {
+                syncedSettingsRef.current.frontpageTemplate = userData.frontpageTemplate;
                 updatePortfolioSettings({ frontpageTemplate: userData.frontpageTemplate }).catch(() => {});
             }
         }
@@ -380,9 +391,18 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
                     try {
                         const settingsRes = await API.get('portfolio-settings/', { params: pidParam });
                         if (settingsRes.data) {
-                            setGlobalBg(settingsRes.data.globalBg || null);
-                            setGlobalFont(settingsRes.data.globalFont || 'font-inter');
+                            const loadedBg = settingsRes.data.globalBg || null;
+                            const loadedFont = settingsRes.data.globalFont || 'font-inter';
                             const fpTpl = settingsRes.data.frontpageTemplate || 'template1';
+                            const loadedTheme = settingsRes.data.theme || userData?.theme;
+                            syncedSettingsRef.current = {
+                                globalBg: loadedBg || "",
+                                globalFont: loadedFont,
+                                theme: loadedTheme,
+                                frontpageTemplate: fpTpl,
+                            };
+                            setGlobalBg(loadedBg);
+                            setGlobalFont(loadedFont);
                             if (setUserData) {
                                 setUserData(prev => ({
                                     ...prev,
@@ -891,10 +911,19 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
             let liveUrl = `${window.location.origin}/preview/${encodeURIComponent(ownerHandle)}${slugQuery}`;
 
             try {
+                const { buildPortfolioHtml } = await import('../utils/exportWebsiteHtml.js');
+                const htmlContent = buildPortfolioHtml({
+                    pages,
+                    activePage,
+                    selectedSection: null,
+                    localContent: {},
+                    userData: { ...userData, globalBg: globalBg || "", globalFont, theme: currentTheme },
+                });
                 const deployRes = await API.post(`deploy/${qs}`, {
                     portfolio_id: pid,
                     title: portfolioMeta?.title || `${userData?.name || 'Developer'} Portfolio`,
                     site_url: liveUrl,
+                    ...(htmlContent ? { html_content: htmlContent } : {}),
                 });
                 if (deployRes.data?.url) {
                     liveUrl = deployRes.data.url;

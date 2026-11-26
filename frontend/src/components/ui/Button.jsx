@@ -38,7 +38,7 @@ export function Button({
     <button
       type={type}
       disabled={isDisabled}
-      className={`inline-flex items-center justify-center font-semibold tracking-tight transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-1 focus-visible:ring-offset-transparent disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer select-none ${
+      className={`inline-flex items-center justify-center whitespace-nowrap font-semibold tracking-tight transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-1 focus-visible:ring-offset-transparent disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer select-none ${
         VARIANT_CLASSES[variant] || VARIANT_CLASSES.primary
       } ${SIZE_CLASSES[size] || SIZE_CLASSES.md} ${className}`}
       {...rest}

@@ -30,7 +30,7 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-black/65 backdrop-blur-xs"
       role="dialog"
       aria-modal="true"
       aria-label={title || "Dialog"}
@@ -41,10 +41,10 @@ export function Modal({
       <div
         className={`w-full ${
           WIDTH_CLASSES[size] || WIDTH_CLASSES.md
-        } rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-elevated)] text-[var(--text-primary)] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]`}
+        } rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-elevated)] text-[var(--text-primary)] shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[90vh]`}
       >
         {(title || onClose) && (
-          <div className="flex items-start justify-between gap-4 px-6 py-4 border-b border-[var(--border-subtle)]">
+          <div className="flex items-start justify-between gap-3 px-4 sm:px-6 py-3.5 sm:py-4 border-b border-[var(--border-subtle)]">
             <div className="min-w-0">
               {title && (
                 <h2 className="text-base font-bold tracking-tight truncate">
@@ -62,16 +62,16 @@ export function Modal({
                 type="button"
                 onClick={onClose}
                 aria-label="Close dialog"
-                className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
+                className="shrink-0 p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             )}
           </div>
         )}
-        <div className="p-6 overflow-y-auto flex-1">{children}</div>
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1">{children}</div>
         {footer && (
-          <div className="px-6 py-4 border-t border-[var(--border-subtle)] bg-[var(--surface-panel)] flex items-center justify-end gap-2.5">
+          <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-[var(--border-subtle)] bg-[var(--surface-panel)] flex flex-wrap items-center justify-end gap-2.5">
             {footer}
           </div>
         )}

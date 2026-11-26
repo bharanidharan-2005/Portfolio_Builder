@@ -239,17 +239,19 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-[var(--color-canvas-bg)] text-[var(--text-primary)]">
       {/* Top Workspace Bar */}
       <header className="sticky top-0 z-30 border-b border-[var(--border-subtle)] bg-[var(--surface-panel)]/95 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-extrabold text-sm shadow-sm">
-              A
-            </div>
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <img
+              src="/logo.png"
+              alt="AuraBuild Logo"
+              className="w-8 h-8 sm:w-9 sm:h-9 object-contain shrink-0"
+            />
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-sm sm:text-base tracking-tight">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="font-bold text-sm sm:text-base tracking-tight truncate">
                   AuraBuild
                 </span>
-                <Badge tone="accent">Dashboard</Badge>
+                <Badge tone="accent" className="hidden sm:inline-flex">Dashboard</Badge>
               </div>
               <p className="text-[11px] text-[var(--text-muted)] truncate hidden sm:block">
                 {userData?.email || "Authenticated Workspace"}
@@ -257,10 +259,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <Button
               variant="ghost"
               size="sm"
+              className="px-2 sm:px-3"
               onClick={toggleTheme}
               aria-label="Toggle color theme"
               icon={
@@ -279,11 +282,13 @@ export default function DashboardPage() {
             <Button
               variant="secondary"
               size="sm"
+              className="px-2 sm:px-3"
               onClick={() => {
                 setProfileName(userData?.name || "");
                 setProfileAvatar(userData?.avatar || "👨‍💻");
                 setAccountOpen(true);
               }}
+              aria-label="Account Settings"
               icon={<User className="w-3.5 h-3.5" />}
             >
               <span className="hidden sm:inline">Account</span>
@@ -292,18 +297,21 @@ export default function DashboardPage() {
             <Button
               variant="primary"
               size="sm"
+              className="px-2.5 sm:px-3"
               onClick={() => {
                 setOpenResumeAfterCreate(false);
                 setCreateOpen(true);
               }}
               icon={<Plus className="w-4 h-4" />}
             >
-              New Portfolio
+              <span className="sm:hidden">New</span>
+              <span className="hidden sm:inline">New Portfolio</span>
             </Button>
 
             <Button
               variant="ghost"
               size="sm"
+              className="px-2 sm:px-3"
               onClick={logout}
               aria-label="Log out"
               icon={<LogOut className="w-4 h-4" />}
@@ -312,24 +320,25 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
         {/* Welcome & Quick Actions */}
-        <section className="flex flex-col md:flex-row md:items-end justify-between gap-5">
-          <div>
+        <section className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-5">
+          <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-wider text-indigo-400">
               Workspace Overview
             </p>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mt-1 break-words">
               Welcome back, {userData?.name || "Developer"}
             </h1>
             <p className="text-sm text-[var(--text-muted)] mt-1">
               Manage your portfolios, switch career templates, import resumes, and control public publishing.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2.5 w-full md:w-auto">
             <Button
               variant="secondary"
               size="md"
+              className="w-full sm:w-auto px-3 sm:px-4 text-xs sm:text-sm"
               onClick={() => {
                 setOpenResumeAfterCreate(true);
                 setCreateOpen(true);
@@ -342,6 +351,7 @@ export default function DashboardPage() {
               <Button
                 variant="primary"
                 size="md"
+                className="w-full sm:w-auto px-3 sm:px-4 text-xs sm:text-sm"
                 onClick={() => handleOpenWorkspace(portfolios[0])}
                 icon={<FolderOpen className="w-4 h-4" />}
               >
