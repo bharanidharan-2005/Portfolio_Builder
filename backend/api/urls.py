@@ -1,34 +1,46 @@
 from django.urls import path
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenObtainPairView
+
+from accounts.views import CookieTokenRefreshView, ProfileView
+
 from .views import (
-    AISessionLogListAPIView,
+    AIAssistantActionAPIView,
+    AICopilotAPIView,
+    AIGithubIngestAPIView,
     AISectionRefinementView,
+    AISEOAnalyticsAPIView,
+    AISessionLogListAPIView,
     AITemplateGeneratorView,
     ContactMessageView,
     DeploymentView,
     PageDetailAPIView,
     PageListAPIView,
-    PortfolioSettingsAPIView,
+    PortfolioDetailAPIView,
+    PortfolioListCreateView,
     PortfolioReviewAPIView,
+    PortfolioSettingsAPIView,
+    PublicPortfolioAPIView,
     ResumeUploadAPIView,
+    SectionCreateAPIView,
     SectionDetailAPIView,
     SectionDuplicateAPIView,
     SectionReorderAPIView,
     generate_custom_image,
-    serve_media,
     send_workspace_key_view,
-    AICopilotAPIView,
-    AIGithubIngestAPIView,
-    AISEOAnalyticsAPIView,
-    PublicPortfolioAPIView,
+    serve_media,
 )
 from .views.social_auth import SocialLoginView
 
 urlpatterns = [
     # Authentication & JWT Tokens
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('token/refresh/', CookieTokenRefreshView.as_view(), name='token_refresh'),
     path('auth/social/', SocialLoginView.as_view(), name='social_login'),
+    path('user/profile/', ProfileView.as_view(), name='user-profile'),
+
+    # Multi-Portfolio Dashboard CRUD
+    path('portfolios/', PortfolioListCreateView.as_view(), name='portfolio-list'),
+    path('portfolios/<int:pk>/', PortfolioDetailAPIView.as_view(), name='portfolio-detail'),
 
     # Pages & Sections CRUD
     path('pages/', PageListAPIView.as_view(), name='page-list'),
@@ -36,19 +48,21 @@ urlpatterns = [
     path('pages/<int:pk>/', PageDetailAPIView.as_view(), name='page-detail'),
     path('public-portfolio/<str:username>/', PublicPortfolioAPIView.as_view(), name='public-portfolio'),
     path('portfolio-settings/', PortfolioSettingsAPIView.as_view(), name='portfolio-settings'),
+    path('sections/', SectionCreateAPIView.as_view(), name='section-create'),
     path('sections/<int:pk>/', SectionDetailAPIView.as_view(), name='section-detail'),
     path('sections/<int:pk>/duplicate/', SectionDuplicateAPIView.as_view(), name='section-duplicate'),
     path('sections/reorder/', SectionReorderAPIView.as_view(), name='section-reorder'),
-    
-    # Workspace Keys
+
+    # Workspace Keys (Authenticated)
     path('send-key/', send_workspace_key_view, name='send_workspace_key'),
-    
-    # Resume Upload & Parsing (Fixed to match frontend aiUtils.js)
+
+    # Resume Upload & Parsing
     path('upload-resume/', ResumeUploadAPIView.as_view(), name='upload-resume'),
     path('parse-resume/', ResumeUploadAPIView.as_view(), name='parse-resume'),
-    
+
     # AI Studio Tools
     path('ai-refine/', AISectionRefinementView.as_view(), name='ai-refine'),
+    path('ai-assistant-action/', AIAssistantActionAPIView.as_view(), name='ai-assistant-action'),
     path('ai-logs/', AISessionLogListAPIView.as_view(), name='ai-logs'),
     path('ai-copilot/', AICopilotAPIView.as_view(), name='ai-copilot'),
     path('ai-github-ingest/', AIGithubIngestAPIView.as_view(), name='ai-github-ingest'),
@@ -56,7 +70,7 @@ urlpatterns = [
     path('ai-generate-template/', AITemplateGeneratorView.as_view(), name='ai-generate-template'),
     path('portfolio-review/', PortfolioReviewAPIView.as_view(), name='portfolio-review'),
     path('generate-image/', generate_custom_image, name='generate_custom_image'),
-    
+
     # Utilities, Contact & Media
     path('contact-message/', ContactMessageView.as_view(), name='contact-message'),
     path('deploy/', DeploymentView.as_view(), name='deploy'),

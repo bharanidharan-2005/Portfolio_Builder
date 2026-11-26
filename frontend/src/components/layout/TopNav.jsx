@@ -1,16 +1,18 @@
 import { useState, useRef, useEffect, memo } from "react";
 import { 
     Palette, ChevronDown, Check, Menu, 
-    Settings2, HelpCircle, Eye, Undo2, Redo2, Rocket, CheckCircle2, AlertCircle,
-    SlidersHorizontal
+    HelpCircle, Eye, Undo2, Redo2, Rocket, CheckCircle2, AlertCircle,
+    SlidersHorizontal, ArrowLeft
 } from "lucide-react";
 import { PORTFOLIO_THEMES } from "../../canvas/themes.js";
+import { SaveStatusBadge } from "../ui";
 
 export const TopNav = memo(function TopNav({ 
-    onDeploy, theme, setTheme, activeTheme, onThemeChange, 
-    onToggleLeft, onToggleRight, isRightOpen, userData, onLogout, onHelpClick,
+    onDeploy, theme, activeTheme, onThemeChange, 
+    onToggleLeft, onToggleRight, isRightOpen, userData, onHelpClick,
     isPreviewMode, onTogglePreview, onUndo, canUndo, onRedo, canRedo,
-    sections = []
+    sections = [], saveStatus = "saved", lastSavedAt = null, onRetrySave,
+    onBackToDashboard
 }) {
     const isLight = theme === 'light';
     const isSystem = theme === 'system';
@@ -81,6 +83,19 @@ export const TopNav = memo(function TopNav({
                     <img src="/logo.svg" alt="AuraBuild Logo" className="w-full h-full object-cover" />
                 </div> 
                 <div className="flex items-center gap-2">
+                    {onBackToDashboard && (
+                        <button
+                            type="button"
+                            onClick={onBackToDashboard}
+                            title="Back to Dashboard"
+                            className={`hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
+                                isLight ? 'border-slate-200 text-slate-600 hover:bg-slate-100' : 'border-slate-800 text-slate-300 hover:bg-slate-800'
+                            }`}
+                        >
+                            <ArrowLeft className="w-3.5 h-3.5" />
+                            <span>Dashboard</span>
+                        </button>
+                    )}
                     <h1 className={`text-base font-sora font-extrabold tracking-tight hidden md:block ${
                         isSystem ? 'text-white drop-shadow-[0_0_10px_rgba(124,0,255,0.5)]' : (isLight ? 'text-slate-900' : 'text-slate-100')
                     }`}>
@@ -270,7 +285,8 @@ export const TopNav = memo(function TopNav({
             </div>
 
             {/* 3. RIGHT SECTION - Actions & User Profile */}
-            <div className="flex items-center gap-2 sm:gap-2.5"> 
+            <div className="flex items-center gap-2 sm:gap-2.5">
+                <SaveStatusBadge status={saveStatus} lastSavedAt={lastSavedAt} onRetry={onRetrySave} />
                 {/* Live Preview Button */}
                 <button 
                     type="button"

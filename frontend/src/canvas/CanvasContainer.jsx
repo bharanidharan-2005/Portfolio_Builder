@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { memo, useState, useEffect, useMemo } from 'react';
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Undo2, Redo2, Layers, Sparkles, Menu, X, FileUp, Plus, GripVertical, Copy, Trash2 } from 'lucide-react';
-import { PDFDownloadLink } from '@react-pdf/renderer';
-import { ResumePDF } from '../components/ResumePDF';
+import { Sparkles, Menu, X, FileUp, Plus, GripVertical, Copy, Trash2 } from 'lucide-react';
 import RenderPageContent from './RenderPageContent';
 import { PORTFOLIO_THEMES, PORTFOLIO_FONTS } from './themes';
+import { downloadPortfolioPdf } from '../utils/downloadResumePdf';
 import { notify } from '../toast';
 import PortfolioSkeleton from '../components/portfolio/PortfolioSkeleton';
 
@@ -28,7 +27,7 @@ function SortableSection({ section, children }) {
     );
 }
 
-function SortableNavItem({ item, onClick, currentTheme, isActive }) {
+function SortableNavItem({ item, onClick, currentTheme, isActive, isLightCanvas }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
     return (
         <button
@@ -41,16 +40,15 @@ function SortableNavItem({ item, onClick, currentTheme, isActive }) {
                 isDragging ? 'cursor-grabbing opacity-50 scale-105 z-50' : 'cursor-grab'
             } ${
                 isActive 
-                    ? `${currentTheme.accentText || 'text-blue-400'} bg-white/10 shadow-xs` 
-                    : `${currentTheme.textSecondary || 'text-slate-400'} hover:bg-white/5 hover:text-white`
+                    ? `${currentTheme.accentText || 'text-blue-400'} ${isLightCanvas ? 'bg-slate-900/10' : 'bg-white/10'} shadow-xs` 
+                    : `${currentTheme.textSecondary || 'text-slate-400'} ${isLightCanvas ? 'hover:bg-slate-900/5 hover:text-slate-900' : 'hover:bg-white/5 hover:text-white'}`
             }`}
             style={{
-                color: 'inherit',
                 transform: CSS.Transform.toString(transform),
                 transition
             }}
         >
-            <span className={`transition-opacity ${isActive ? (currentTheme.accentText || 'text-blue-400') : (currentTheme.textPrimary || 'text-white')}`}>
+            <span className={`transition-opacity ${isActive ? (currentTheme.accentText || 'text-blue-400') : (currentTheme.textPrimary || (isLightCanvas ? 'text-slate-900' : 'text-white'))}`}>
                 {item.label}
             </span>
             {isActive && (
@@ -60,7 +58,7 @@ function SortableNavItem({ item, onClick, currentTheme, isActive }) {
     );
 }
 
-function EmptyCanvasState({ onAddSection }) {
+function EmptyCanvasState({ onAddSection, isLightCanvas }) {
     const handleTriggerResume = () => {
         const fileInput = document.querySelector('input[type="file"][accept*=".pdf"]');
         if (fileInput) {
@@ -79,7 +77,11 @@ function EmptyCanvasState({ onAddSection }) {
     };
 
     return (
-        <div className="w-full max-w-xl mx-auto my-12 border border-slate-800/80 rounded-2xl p-8 sm:p-10 flex flex-col items-center justify-center text-center transition-all duration-300 bg-slate-900/60 backdrop-blur-xl relative z-10 shadow-2xl">
+        <div className={`w-full max-w-xl mx-auto my-12 border rounded-2xl p-8 sm:p-10 flex flex-col items-center justify-center text-center transition-all duration-300 backdrop-blur-xl relative z-10 shadow-2xl ${
+            isLightCanvas
+                ? 'border-slate-200 bg-white/95 text-slate-900'
+                : 'border-slate-800/80 bg-slate-900/60 text-white'
+        }`}>
             {/* Subtle glow badge */}
             <div className="relative mb-5">
                 <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shadow-[0_0_24px_rgba(37,99,235,0.25)]">
@@ -87,10 +89,10 @@ function EmptyCanvasState({ onAddSection }) {
                 </div>
             </div>
             
-            <h3 className="text-lg sm:text-xl font-bold mb-2 tracking-tight text-white font-sora">
+            <h3 className={`text-lg sm:text-xl font-bold mb-2 tracking-tight font-sora ${isLightCanvas ? 'text-slate-900' : 'text-white'}`}>
                 Start Building Your Portfolio
             </h3>
-            <p className="text-xs sm:text-sm max-w-md mb-8 leading-relaxed text-slate-400">
+            <p className={`text-xs sm:text-sm max-w-md mb-8 leading-relaxed ${isLightCanvas ? 'text-slate-600' : 'text-slate-400'}`}>
                 Let AI auto-generate your complete portfolio layout from your resume, or build it block by block using structural modules.
             </p>
             
@@ -106,9 +108,13 @@ function EmptyCanvasState({ onAddSection }) {
                 <button
                     type="button"
                     onClick={handleTriggerStructure}
-                    className="w-full sm:flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold bg-slate-800/90 hover:bg-slate-700/90 text-slate-200 border border-slate-700/80 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+                    className={`w-full sm:flex-1 px-4 py-2.5 rounded-lg text-xs font-semibold border transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] ${
+                        isLightCanvas
+                            ? 'bg-slate-100 hover:bg-slate-200 text-slate-900 border-slate-300'
+                            : 'bg-slate-800/90 hover:bg-slate-700/90 text-slate-200 border-slate-700/80'
+                    }`}
                 >
-                    <Plus className="w-4 h-4 text-blue-400" />
+                    <Plus className="w-4 h-4 text-blue-500" />
                     <span>Add Hero Block</span>
                 </button>
             </div>
@@ -130,10 +136,6 @@ function CanvasContainer({
     themeMode,
     isPreview = false,
     globalFont = 'font-inter',
-    onUndo,
-    canUndo,
-    onRedo,
-    canRedo,
     activeHighlightSection,
     aiSuggestionPreview,
     onAddSection,
@@ -141,8 +143,20 @@ function CanvasContainer({
 }) {
     const currentTheme = PORTFOLIO_THEMES[portfolioTheme] || {};
     const currentFontObj = PORTFOLIO_FONTS.find(f => f.id === globalFont) || PORTFOLIO_FONTS[0];
-    const displaySections = sections || [];
-    const pdfDocument = useMemo(() => isPreview ? <ResumePDF sections={sections} /> : null, [sections, isPreview]);
+    const displaySections = useMemo(() => sections || [], [sections]);
+    const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+
+    const handleDownloadResume = async () => {
+        setIsDownloadingPdf(true);
+        try {
+            await downloadPortfolioPdf(sections, 'Portfolio_Resume.pdf');
+        } catch (err) {
+            console.error(err);
+            notify('Failed to generate PDF resume.', 'error');
+        } finally {
+            setIsDownloadingPdf(false);
+        }
+    };
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
@@ -333,10 +347,14 @@ function CanvasContainer({
 
     // Auto-scroll when activeHighlightSection changes
     useEffect(() => {
-        if (activeHighlightSection) {
-            handleNavClick(activeHighlightSection);
-        }
-    }, [activeHighlightSection]);
+        if (!activeHighlightSection) return undefined;
+        const t = setTimeout(() => {
+            const targetId = isPreview ? `preview-node-block-${activeHighlightSection}` : `live-node-block-${activeHighlightSection}`;
+            const el = document.getElementById(targetId);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 50);
+        return () => clearTimeout(t);
+    }, [activeHighlightSection, isPreview]);
 
     const handleDragEnd = ({ active, over }) => {
         if (over && active.id !== over.id && onDropSection) {
@@ -355,31 +373,47 @@ function CanvasContainer({
     const heroSectionData = displaySections.find(s => (s.section_type || '').toLowerCase().trim() === 'hero');
     const heroName = heroSectionData?.content_data?.heading || 'BHARANIDHARAN MARIAPPAN';
     const initials = heroName.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'BM';
+    const isLightCanvas = Boolean(currentTheme.isLight) && !globalBgImage;
+    const canvasSurfaceClass = globalBgImage
+        ? 'bg-slate-950 text-slate-50'
+        : `${currentTheme.bodyBg || 'bg-[#080D1C]'} ${currentTheme.textPrimary || 'text-slate-50'}`;
 
     return ( 
         <div className="w-full min-w-0 max-w-full flex flex-col items-center relative animate-in fade-in duration-500"> 
 
-            {/* Main Outer Container: when isPreview or !isPreview, overflow-visible enables position: sticky on browser/workspace scroll */}
-            <div className={`dark relative w-full min-w-0 max-w-full min-h-[700px] transition-all duration-500 ease-out ${
+            {/* Main Outer Container: isolated via .aurabuild-canvas so app chrome theme never breaks canvas contrast */}
+            <div className={`aurabuild-canvas ${isLightCanvas ? 'aurabuild-canvas-light' : 'aurabuild-canvas-dark dark'} relative w-full min-w-0 max-w-full min-h-[700px] transition-all duration-500 ease-out ${
                 !isPreview ? `shadow-2xl rounded-[2rem] border ${currentTheme.border || 'border-slate-800/80'}` : 'min-h-screen overflow-visible'
-            } bg-[#080D1C] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`} style={{ ...currentFontObj.style }}>
+            } ${canvasSurfaceClass} [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`} style={{
+                ...currentFontObj.style,
+                ...(globalBgImage ? {
+                    backgroundImage: `url(${globalBgImage})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundAttachment: 'fixed',
+                } : {})
+            }}>
                 
-                {/* --- PREMIUM GLOBAL BACKGROUND --- */}
-                <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-[2rem]">
-                    <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-900/20 blur-[120px]"></div>
-                    <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-violet-900/20 blur-[120px]"></div>
-                    <div className="absolute top-[40%] right-[20%] w-[30%] h-[30%] rounded-full bg-indigo-900/10 blur-[100px]"></div>
-                </div>
+                {/* --- PREMIUM GLOBAL BACKGROUND / CONTRAST SCRIM --- */}
+                {globalBgImage ? (
+                    <div className={`absolute inset-0 pointer-events-none z-0 bg-black/60 backdrop-blur-[4px] ${!isPreview ? 'rounded-[2rem]' : ''}`} />
+                ) : !isLightCanvas ? (
+                    <div className={`absolute inset-0 pointer-events-none z-0 overflow-hidden ${!isPreview ? 'rounded-[2rem]' : ''}`}>
+                        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-900/20 blur-[120px]"></div>
+                        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-violet-900/20 blur-[120px]"></div>
+                        <div className="absolute top-[40%] right-[20%] w-[30%] h-[30%] rounded-full bg-indigo-900/10 blur-[100px]"></div>
+                    </div>
+                ) : null}
 
                 {/* --- FULL WIDTH NAVIGATION NAVBAR (Persistent Sticky on Desktop and Mobile) --- */}
-                <div className={`sticky top-0 z-50 w-full backdrop-blur-2xl ${currentTheme.cardBg || 'bg-black/40'} border-b ${currentTheme.border || 'border-slate-700/30'} shadow-lg transition-all duration-300 ${!isPreview ? 'rounded-t-[2rem]' : ''}`}>
+                <div className={`sticky top-0 z-50 w-full backdrop-blur-2xl ${globalBgImage ? 'bg-slate-950/75 border-white/10' : (currentTheme.cardBg || 'bg-black/40')} border-b ${currentTheme.border || 'border-slate-700/30'} shadow-lg transition-all duration-300 ${!isPreview ? 'rounded-t-[2rem]' : ''}`}>
                     <div className="w-full px-3 sm:px-6 py-2.5 sm:py-4 flex items-center justify-between gap-2 sm:gap-3">
                         {/* Logo / Initials */}
                         <div className="flex items-center gap-2 sm:gap-3 shrink-0 cursor-pointer" onClick={() => handleNavClick('Home')}>
                             <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-black text-sm sm:text-lg shadow-inner ${currentTheme.accentBg || 'bg-blue-600'} text-white`}>
                                 {initials}
                             </div>
-                            <span className={`font-black tracking-widest uppercase hidden sm:block text-sm md:text-base leading-none translate-y-[1px] ${currentTheme.accentText || 'text-blue-400'}`}> 
+                            <span className={`font-black tracking-widest uppercase hidden sm:block text-sm md:text-base leading-none translate-y-[1px] ${globalBgImage ? 'text-white' : (currentTheme.accentText || 'text-blue-400')}`}> 
                                 {heroName.split(' ')[0]} 
                             </span> 
                         </div>
@@ -398,6 +432,7 @@ function CanvasContainer({
                                                     onClick={handleNavClick} 
                                                     currentTheme={currentTheme}
                                                     isActive={isActive}
+                                                    isLightCanvas={isLightCanvas}
                                                 />
                                             );
                                         })}
@@ -413,11 +448,11 @@ function CanvasContainer({
                                             onClick={() => handleNavClick(navItem.label)} 
                                             className={`relative px-3 py-1.5 rounded-lg text-xs xl:text-sm font-bold transition-all duration-300 whitespace-nowrap cursor-pointer ${
                                                 isActive 
-                                                    ? `${currentTheme.accentText || 'text-blue-400'} bg-white/10 shadow-xs` 
-                                                    : `${currentTheme.textSecondary || 'text-slate-400'} hover:bg-white/5 hover:text-white`
+                                                    ? `${currentTheme.accentText || 'text-blue-400'} ${isLightCanvas ? 'bg-slate-900/10' : 'bg-white/10'} shadow-xs` 
+                                                    : `${currentTheme.textSecondary || 'text-slate-400'} ${isLightCanvas ? 'hover:bg-slate-900/5 hover:text-slate-900' : 'hover:bg-white/5 hover:text-white'}`
                                             }`}
                                         > 
-                                            <span className={`transition-opacity ${isActive ? (currentTheme.accentText || 'text-blue-400') : (currentTheme.textPrimary || 'text-white')}`}>
+                                            <span className={`transition-opacity ${isActive ? (currentTheme.accentText || 'text-blue-400') : (currentTheme.textPrimary || (isLightCanvas ? 'text-slate-900' : 'text-white'))}`}>
                                                 {navItem.label}
                                             </span>
                                             {isActive && (
@@ -432,15 +467,17 @@ function CanvasContainer({
                         {/* Right Side - Resume & Mobile Toggle */}
                         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
                             {isPreview ? (
-                                <PDFDownloadLink
-                                    document={pdfDocument}
-                                    fileName="Portfolio_Resume.pdf"
-                                    className={`px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition-all shadow-md hover:shadow-lg ${currentTheme.accentBg || 'bg-blue-600'} text-white flex items-center gap-1.5 whitespace-nowrap`}
+                                <button
+                                    type="button"
+                                    disabled={isDownloadingPdf}
+                                    onClick={handleDownloadResume}
+                                    className={`px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition-all shadow-md hover:shadow-lg ${currentTheme.accentBg || 'bg-blue-600'} text-white flex items-center gap-1.5 whitespace-nowrap cursor-pointer disabled:opacity-60`}
                                 >
-                                    {({ loading }) => (loading ? 'Preparing...' : <><span className="hidden sm:inline">Download </span>Resume</>)}
-                                </PDFDownloadLink>
+                                    {isDownloadingPdf ? 'Preparing...' : <><span className="hidden sm:inline">Download </span>Resume</>}
+                                </button>
                             ) : (
                                 <button 
+                                    type="button"
                                     onClick={() => notify("Please test Resume Download in the Live Preview.", "info")}
                                     className={`px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition-all shadow-md hover:shadow-lg ${currentTheme.accentBg || 'bg-blue-600'} text-white flex items-center gap-1.5 whitespace-nowrap cursor-pointer`}
                                 >
@@ -450,7 +487,11 @@ function CanvasContainer({
 
                             {/* Mobile / Compact Menu Toggle Button */}
                             <button 
-                                className="xl:hidden p-2 text-slate-300 hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-white/10 min-w-[38px] min-h-[38px] flex items-center justify-center"
+                                className={`xl:hidden p-2 transition-colors cursor-pointer rounded-lg min-w-[38px] min-h-[38px] flex items-center justify-center ${
+                                    isLightCanvas
+                                        ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-900/10'
+                                        : 'text-slate-300 hover:text-white hover:bg-white/10'
+                                }`}
                                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                                 aria-label="Toggle navigation menu"
                                 aria-expanded={isMobileMenuOpen}
@@ -468,7 +509,7 @@ function CanvasContainer({
                                 onClick={() => setIsMobileMenuOpen(false)}
                                 aria-hidden="true"
                             />
-                            <div className={`xl:hidden absolute top-full left-0 w-full border-b ${currentTheme.border || 'border-slate-800/80'} ${currentTheme.cardBg || 'bg-slate-950/98'} backdrop-blur-3xl shadow-2xl overflow-y-auto max-h-[75vh] animate-in slide-in-from-top-2 duration-300 z-50 custom-scrollbar`}>
+                            <div className={`xl:hidden absolute top-full left-0 w-full border-b ${currentTheme.border || 'border-slate-800/80'} ${isLightCanvas ? 'bg-white/95' : (currentTheme.cardBg || 'bg-slate-950/98')} backdrop-blur-3xl shadow-2xl overflow-y-auto max-h-[75vh] animate-in slide-in-from-top-2 duration-300 z-50 custom-scrollbar`}>
                                 <div className="flex flex-col py-3 px-4 sm:px-6 gap-1.5">
                                     {dynamicNavItems.map((navItem) => {
                                         const isActive = activeNavSection.toLowerCase() === navItem.label.toLowerCase();
@@ -482,8 +523,8 @@ function CanvasContainer({
                                                 }}
                                                 className={`w-full text-left px-4 py-3 rounded-xl font-bold transition-all flex items-center justify-between cursor-pointer ${
                                                     isActive 
-                                                        ? `${currentTheme.accentText || 'text-blue-400'} bg-white/15 shadow-xs` 
-                                                        : `${currentTheme.textPrimary || 'text-white'} hover:bg-white/10 active:bg-white/20`
+                                                        ? `${currentTheme.accentText || 'text-blue-400'} ${isLightCanvas ? 'bg-slate-900/10' : 'bg-white/15'} shadow-xs` 
+                                                        : `${currentTheme.textPrimary || (isLightCanvas ? 'text-slate-900' : 'text-white')} ${isLightCanvas ? 'hover:bg-slate-900/5 active:bg-slate-900/10' : 'hover:bg-white/10 active:bg-white/20'}`
                                                 }`}
                                             >
                                                 <span>{navItem.label}</span>
@@ -521,11 +562,15 @@ function CanvasContainer({
                             ) : isLoading ? (
                                 <PortfolioSkeleton isPreview={true} themeMode={themeMode} />
                             ) : (
-                                <div className="w-full max-w-xl mx-auto my-12 border border-slate-800/80 rounded-2xl p-8 sm:p-10 text-center bg-slate-900/60 backdrop-blur-xl shadow-2xl">
-                                    <h3 className="text-lg sm:text-xl font-bold mb-2 text-white font-sora">
+                                <div className={`w-full max-w-xl mx-auto my-12 border rounded-2xl p-8 sm:p-10 text-center backdrop-blur-xl shadow-2xl ${
+                                    isLightCanvas
+                                        ? 'border-slate-200 bg-white/95 text-slate-900'
+                                        : 'border-slate-800/80 bg-slate-900/60 text-white'
+                                }`}>
+                                    <h3 className={`text-lg sm:text-xl font-bold mb-2 font-sora ${isLightCanvas ? 'text-slate-900' : 'text-white'}`}>
                                         Live Portfolio Updating
                                     </h3>
-                                    <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                                    <p className={`text-xs sm:text-sm leading-relaxed ${isLightCanvas ? 'text-slate-600' : 'text-slate-400'}`}>
                                         The portfolio owner is currently curating their showcase. Please check back shortly.
                                     </p>
                                 </div>
@@ -556,8 +601,10 @@ function CanvasContainer({
                                                                 isActive
                                                                     ? 'border-blue-500/50 bg-blue-500/5 shadow-[0_0_30px_rgba(59,130,246,0.15)] ring-1 ring-blue-500/20'
                                                                     : globalBgImage
-                                                                        ? 'border-white/10 bg-black/20 hover:bg-black/30 backdrop-blur-sm'
-                                                                        : 'border-transparent hover:border-slate-700/50 bg-slate-900/30 hover:bg-slate-900/60'
+                                                                        ? 'border-white/10 bg-black/25 hover:bg-black/35 backdrop-blur-sm'
+                                                                        : isLightCanvas
+                                                                            ? 'border-transparent hover:border-slate-300 bg-slate-900/[0.02] hover:bg-slate-900/[0.04]'
+                                                                            : 'border-transparent hover:border-slate-700/50 bg-slate-900/30 hover:bg-slate-900/60'
                                                             } ${isDragging ? 'border-dashed border-blue-400 bg-blue-900/20' : ''} ${isDimmed ? 'opacity-30 scale-[0.98] grayscale-[30%]' : 'opacity-100'} ${isHighlighted ? 'ring-2 ring-blue-500/50 shadow-[0_0_40px_rgba(59,130,246,0.2)]' : ''}`}
                                                         >
                                                             {/* Floating Action Menu */}
@@ -598,8 +645,8 @@ function CanvasContainer({
                                     ) : isLoading ? (
                                         <PortfolioSkeleton isPreview={false} themeMode={themeMode} />
                                     ) : ( 
-                                        <EmptyCanvasState onAddSection={onAddSection} />
-                                    )} 
+                                        <EmptyCanvasState onAddSection={onAddSection} isLightCanvas={isLightCanvas} />
+                                    )}  
                                 </div> 
                             </SortableContext> 
                         </DndContext>
@@ -610,4 +657,4 @@ function CanvasContainer({
     );
 }
 
-export default React.memo(CanvasContainer);
+export default memo(CanvasContainer);

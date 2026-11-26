@@ -1,6 +1,4 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { ArrowRight, Download, GitBranch, Link, Mail } from 'lucide-react';
+import { Download, GitBranch, Link, Mail } from 'lucide-react';
 
 const CardFlip3D = ({ d }) => {
     const roleImage = d.roleImage;

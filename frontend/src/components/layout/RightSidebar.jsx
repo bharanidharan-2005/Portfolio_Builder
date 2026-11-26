@@ -5,29 +5,15 @@ import {
     LayoutTemplate, PenTool, Activity, Link2, ShieldCheck, 
     GraduationCap, Mail, Crosshair, BarChart, 
     Share2, Send, Copy, Edit3, Download,
-    ChevronDown, Check, ChevronRight, X, Clock,
-    Briefcase, Wrench, MessageSquare, Award, BarChart3, BookOpen,
-    Bot, Terminal
+    ChevronDown, Check, X, Clock,
+    Briefcase, Wrench, MessageSquare, Award, BarChart3, BookOpen
 } from "lucide-react";
 import { PORTFOLIO_THEMES, PORTFOLIO_FONTS } from "../../canvas/themes.js";
 import { API } from "../../api";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { downloadPortfolioHtml } from "../../utils/exportWebsiteHtml";
+import { refineSectionWithAI, generateAITemplate, runAIAssistantAction } from "../../utils/aiUtils";
 import { notify } from "../../toast";
-
-
-
-const BROAD_JOB_CONCEPTS = [
-    "React", "Node.js", "Python", "Java", "Django", "Flask", "AWS", "Docker", 
-    "Kubernetes", "SQL", "PostgreSQL", "MongoDB", "GraphQL", "TypeScript", 
-    "Tailwind", "REST API", "Microservices", "Agile", "CI/CD", "Git", "Next.js", "Express", "C++", "Redux",
-    "Frontend", "Backend", "Full Stack", "Full-Stack", "Web Development", "Software Engineering",
-    "Data Analyst", "Machine Learning", "Data Visualization", "Data Modeling", "ETL",
-    "UI/UX", "Product Management", "Quality Assurance", "Testing", "DevOps",
-    "System Design", "Cloud Architecture", "Database Management", "Data Structures", "Algorithms",
-    "Security", "Analytics", "SEO", "Optimization", "Scalability", "Infrastructure",
-    "Problem Solving", "Troubleshooting", "Debugging", "Deployment", "Automation"
-];
 
 const UNSPLASH_GALLERY = [
     { id: 'particles_3d', url: 'PARTICLES_3D', label: 'Interactive Particles' },
@@ -153,49 +139,6 @@ const formatCurrentChatTime = () => {
     return `${strHours}:${strMinutes} ${ampm}`;
 };
 
-const computeCanvasFieldsList = (currSections = [], extraField = null) => {
-    const fields = [];
-    (currSections || []).forEach(sec => {
-        const type = (sec.section_type || '').toLowerCase();
-        if (type === 'hero') fields.push('Hero Header');
-        else if (type === 'about') fields.push('About Bio');
-        else if (type === 'projects_grid' || type === 'projects') {
-            const count = sec.content_data?.projects?.length || 3;
-            fields.push(`Projects (${count} items)`);
-        } else if (type === 'skills') {
-            const count = sec.content_data?.skills?.length || 8;
-            fields.push(`Technical Skills (${count} options)`);
-        } else if (type === 'experience') {
-            fields.push('Experience Timeline');
-        } else if (type === 'education') {
-            fields.push('Education History');
-        } else if (type === 'contact') {
-            fields.push('Contact Information');
-        } else if (type === 'testimonials') {
-            fields.push('Client Testimonials');
-        } else if (type === 'certifications') {
-            fields.push('Certifications & Awards');
-        } else {
-            const name = sec.title || (type.charAt(0).toUpperCase() + type.slice(1));
-            fields.push(name);
-        }
-    });
-
-    if (extraField) {
-        fields.push(extraField);
-    }
-
-    if (fields.length === 0) {
-        return [
-            "Hero Header", "About Bio", "Experience Timeline",
-            "Education History", "Technical Skills (12 skills)", 
-            "Projects Showcase (3 projects)", "Certifications & Awards", 
-            "Contact Information"
-        ];
-    }
-    return fields;
-};
-
 function RightSidebar({ 
     activeSectionId,
     themeMode, 
@@ -221,9 +164,8 @@ function RightSidebar({
         pages,
         activePage,
         userData: contextUserData,
-        activeHighlightSection, setActiveHighlightSection, 
+        setActiveHighlightSection, 
         aiSuggestionPreview, setAiSuggestionPreview,
-        heroCustomImage, setHeroCustomImage,
         customFontSize, setCustomFontSize,
         customAccentColor, setCustomAccentColor
     } = useWorkspace();
@@ -235,7 +177,7 @@ function RightSidebar({
     const [isProcessing, setIsProcessing] = useState(false);
 
     // AI Chat & Tool Mode
-    const [studioViewMode, setStudioViewMode] = useState(activeTool === "activity_log" ? "chat" : "tool");
+    const [studioViewMode, setStudioViewMode] = useState("tool");
     const [showRawTerminal, setShowRawTerminal] = useState(false);
     const chatContainerRef = useRef(null);
 
@@ -283,17 +225,13 @@ function RightSidebar({
         notify(`Attached: ${file.name}`, "success");
     };
 
-    useEffect(() => {
-        if (activeTool === "activity_log") {
-            setStudioViewMode("chat");
-        }
-    }, [activeTool]);
+    const effectiveStudioViewMode = activeTool === "activity_log" ? "chat" : studioViewMode;
 
     useEffect(() => {
         if (chatContainerRef.current) {
             chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
         }
-    }, [chatMessages, isProcessing, studioViewMode]);
+    }, [chatMessages, isProcessing, effectiveStudioViewMode]);
 
     useEffect(() => {
         if (logContainerRef.current) {
@@ -318,10 +256,6 @@ function RightSidebar({
         Math.round(((new Set((sections || []).map((s) => s.section_type?.toLowerCase()))).size / 6) * 100)
     );
 
-    const getAllCanvasText = () => {
-        return JSON.stringify(sections).toLowerCase();
-    };
-
     const handleGenerateSection = (title, type) => {
         setIsProcessing(true);
         setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Generating ${type.toUpperCase()} block...` }]);
@@ -329,7 +263,7 @@ function RightSidebar({
         try {
             if (onAddSection) onAddSection(type);
             setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Added ${title} to canvas.` }]);
-        } catch (error) {
+        } catch {
             setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Could not generate ${title}.` }]);
         } finally {
             setIsProcessing(false);
@@ -343,69 +277,51 @@ function RightSidebar({
         }
         setIsProcessing(true);
         setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Refinement Agent processing prompt: "${refinePrompt}"...` }]);
-        
-        try {
-            const targetSecs = selectedAiSection === "all" 
-                ? sections 
-                : sections.filter(s => String(s.id) === String(selectedAiSection));
 
-            if (!targetSecs || targetSecs.length === 0) {
+        try {
+            const targetSec = selectedAiSection === "all"
+                ? (sections.find(s => s.section_type === 'about') || sections[0])
+                : sections.find(s => String(s.id) === String(selectedAiSection));
+
+            if (!targetSec) {
                 setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Selected section not found.` }]);
                 return;
             }
 
-            let modifiedCount = 0;
-            const promptLower = refinePrompt.toLowerCase();
-
-            targetSecs.forEach(sec => {
-                const data = sec.content_data || {};
-                
-                if (sec.section_type === 'hero' && data.subheading) {
-                    let sub = data.subheading;
-                    if (promptLower.includes("senior") || promptLower.includes("executive")) {
-                        sub = sub.replace(/junior|entry-level|student/gi, "Senior").replace(/^/, "Senior ");
-                    }
-                    if (promptLower.includes("short") || promptLower.includes("concise")) {
-                        sub = sub.split('|')[0].trim();
-                    }
-                    setAiSuggestionPreview({
-                        targetSectionId: sec.id,
-                        actionTitle: "Refine Hero Subheading",
-                        key: "subheading",
-                        originalContent: data.subheading,
-                        suggestedContent: sub
-                    });
-                    setActiveHighlightSection(sec.id);
-                    modifiedCount++;
-                } 
-                else if (sec.section_type === 'about' && data.bio) {
-                    let bio = data.bio;
-                    if (promptLower.includes("leadership") || promptLower.includes("lead")) {
-                        if (!bio.includes("team")) bio += " Proven track record of leading cross-functional engineering teams.";
-                    }
-                    if (promptLower.includes("formal")) {
-                        bio = bio.replace(/I am a/gi, "Results-oriented professional operating as a");
-                    }
-                    setAiSuggestionPreview({
-                        targetSectionId: sec.id,
-                        actionTitle: "Refine About Bio",
-                        key: "bio",
-                        originalContent: data.bio,
-                        suggestedContent: bio
-                    });
-                    setActiveHighlightSection(sec.id);
-                    modifiedCount++;
-                }
+            const res = await refineSectionWithAI({
+                sectionId: /^\d+$/.test(String(targetSec.id)) ? targetSec.id : undefined,
+                sectionType: targetSec.section_type,
+                currentContent: targetSec.content_data || {},
+                prompt: refinePrompt.trim(),
             });
 
-            if (modifiedCount > 0) {
-                setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Applied refinement across ${modifiedCount} section block(s).` }]);
+            const refined = res.refined_content || res.data || {};
+            const previewKey = targetSec.section_type === 'hero'
+                ? 'subheading'
+                : targetSec.section_type === 'about'
+                    ? 'bio'
+                    : targetSec.section_type === 'projects_grid'
+                        ? 'projects'
+                        : Object.keys(refined)[0];
+
+            if (previewKey && refined[previewKey] !== undefined) {
+                setAiSuggestionPreview({
+                    targetSectionId: targetSec.id,
+                    actionTitle: `AI Refine: ${targetSec.section_type.replace('_', ' ')}`,
+                    key: previewKey,
+                    originalContent: targetSec.content_data?.[previewKey] ?? "",
+                    suggestedContent: refined[previewKey],
+                });
+                setActiveHighlightSection(targetSec.id);
+                setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] AI suggestion ready to review on canvas.` }]);
             } else {
-                setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] No matching content found to refine.` }]);
+                setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] AI returned no changes for this section.` }]);
             }
             setRefinePrompt("");
         } catch (error) {
-            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] AI refinement failed.` }]);
+            const msg = error?.error || "AI refinement service unavailable.";
+            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] ${msg}` }]);
+            notify(msg, "error");
         } finally {
             setIsProcessing(false);
         }
@@ -416,62 +332,24 @@ function RightSidebar({
         setIsProcessing(true);
         setMatchScore(null);
         setMissingKeywords([]);
-        setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Initiating NLP semantic extraction on Job Description...` }]);
-        
+        setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Running AI Job Description analysis...` }]);
+
         try {
-            const canvasText = getAllCanvasText();
-
-            const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const createWordRegex = (word) => new RegExp(`(?:^|[^a-zA-Z0-9_+#-])${escapeRegExp(word)}(?:[^a-zA-Z0-9_+#-]|$)`, 'i');
-
-            const extractJobRequirements = (text) => {
-                const terms = new Set();
-                BROAD_JOB_CONCEPTS.forEach(kw => {
-                    if (createWordRegex(kw).test(text)) terms.add(kw);
-                });
-                if (terms.size > 0) return Array.from(terms);
-
-                const words = text.toLowerCase().replace(/[^a-z0-9-]/g, ' ').split(/\s+/);
-                const stopWords = new Set(["the", "and", "for", "with", "from", "your", "will", "our", "are", "you", "can", "more", "than", "this", "that", "have", "must", "plus", "bonus", "experience", "years", "knowledge", "skills", "team", "work", "required", "preferred", "strong", "ability", "understanding", "looking", "seeking", "join", "help", "good", "excellent", "communication", "degree", "equivalent", "related", "field", "company", "role", "project", "about", "what", "we", "do", "how"]);
-                
-                const wordCounts = {};
-                words.forEach(word => {
-                    if (word.length > 4 && !stopWords.has(word)) { 
-                        wordCounts[word] = (wordCounts[word] || 0) + 1;
-                    }
-                });
-
-                const sortedWords = Object.keys(wordCounts).sort((a, b) => wordCounts[b] - wordCounts[a]);
-                sortedWords.slice(0, 5).forEach(w => terms.add(w.charAt(0).toUpperCase() + w.slice(1)));
-
-                return Array.from(terms);
-            };
-
-            const detectedInJD = extractJobRequirements(jdInput);
-
-            if (detectedInJD.length === 0) {
-                setMatchScore(0);
-                setMissingKeywords([]);
-                setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Please paste a more detailed job description.` }]);
-                setIsProcessing(false);
-                return;
-            }
-
-            const missing = detectedInJD.filter(kw => !createWordRegex(kw).test(canvasText));
-            const matched = detectedInJD.filter(kw => createWordRegex(kw).test(canvasText));
-
-            const score = Math.round((matched.length / detectedInJD.length) * 100);
+            const res = await runAIAssistantAction('match_jd', { job_description: jdInput }, sections);
+            const data = res.data || {};
+            const score = Number.isFinite(Number(data.match_score)) ? Math.max(0, Math.min(100, Number(data.match_score))) : 0;
+            const missing = Array.isArray(data.missing_keywords) ? data.missing_keywords.slice(0, 8) : [];
 
             setMatchScore(score);
-            setMissingKeywords(missing.slice(0, 8));
-            
-            if (score === 100) {
-                setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Perfect match! No missing keywords.` }]);
-            } else {
-                setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Extraction complete. Found ${missing.length} missing requirements.` }]);
-            }
+            setMissingKeywords(missing);
+            setTerminalLogs(prev => [...prev, {
+                type: "success",
+                text: `[SUCCESS] JD Match: ${score}%. Found ${missing.length} missing keyword(s).`
+            }]);
         } catch (error) {
-            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] AI parsing failed.` }]);
+            const msg = error?.error || "AI job-match analysis failed.";
+            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] ${msg}` }]);
+            notify(msg, "error");
         } finally {
             setIsProcessing(false);
         }
@@ -519,7 +397,7 @@ function RightSidebar({
             }
 
             setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Add an About or Skills section to allow concept injection.` }]);
-        } catch (e) {
+        } catch {
             setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Injection failed.` }]);
         } finally {
             setIsProcessing(false);
@@ -528,152 +406,46 @@ function RightSidebar({
 
     const handleImpactAction = async (title) => {
         setIsProcessing(true);
-        setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Executing ${title} across active blocks...` }]);
-        
+        setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Running AI pass: ${title}...` }]);
+
+        const instructionMap = {
+            "Apply STAR Method": "Rewrite project descriptions clearly into Situation/Task, Action, and factual outcome using ONLY verified facts from the content. Do not invent fake metrics.",
+            "Quantify Metrics": "Highlight concrete measurable scope (architecture scale, stack, deliverables) cleanly without inventing unverified percentages or user numbers.",
+            "Action Verb Optimizer": "Strengthen weak passive phrasing with crisp engineering leadership and execution verbs while preserving truthfulness.",
+            "Grammar & Tone Corrector": "Fix grammar, typos, punctuation, and tone cleanly while keeping all factual details intact.",
+        };
+
         try {
-            let modifiedCount = 0;
-
-            sections.forEach(sec => {
-                const data = sec.content_data || {};
-
-                if (title === "Apply STAR Method") {
-                    if (sec.section_type === 'projects_grid' && data.projects) {
-                        const updatedProjects = data.projects.map(p => {
-                            let desc = p.description || "Developed application logic.";
-                            if (!desc.includes("[Task]")) {
-                                desc = `[Task] Engineered feature implementation. [Action] ${desc} [Result] Scaled system throughput by 40%.`;
-                            }
-                            return { ...p, description: desc };
-                        });
-                        
-                        setAiSuggestionPreview({
-                            targetSectionId: sec.id,
-                            actionTitle: title,
-                            key: "projects",
-                            originalContent: "Projects Data",
-                            suggestedContent: updatedProjects
-                        });
-                        setActiveHighlightSection(sec.id);
-                        modifiedCount++;
-                        return; // Only preview one at a time
-                    }
-                } 
-                else if (title === "Quantify Metrics") {
-                    if (sec.section_type === 'about' && data.bio && modifiedCount === 0) {
-                        let bio = data.bio;
-                        if (!bio.includes("%") && !bio.includes("10k")) {
-                            bio = bio.replace(/applications/i, "applications (serving 10k+ DAU)").replace(/efficiency/i, "efficiency by 40%");
-                            
-                            setAiSuggestionPreview({
-                                targetSectionId: sec.id,
-                                actionTitle: title,
-                                key: "bio",
-                                originalContent: data.bio,
-                                suggestedContent: bio
-                            });
-                            setActiveHighlightSection(sec.id);
-                            modifiedCount++;
-                            return;
-                        }
-                    }
-                    if (sec.section_type === 'hero' && data.subheading) {
-                        let sub = data.subheading;
-                        if (!sub.includes("%")) {
-                            onUpdateSectionContent(sec.id, 'subheading', sub + " | 40% Performance Gains");
-                            modifiedCount++;
-                        }
-                    }
-                } 
-                else if (title === "Action Verb Optimizer") {
-                    const optimizeText = (text) => {
-                        if (!text) return text;
-                        const verbs = { 
-                            "building": "architecting", "built": "architected", 
-                            "making": "engineering", "made": "engineered", 
-                            "doing": "executing", "did": "executed", 
-                            "working on": "spearheading", "worked on": "spearheaded",
-                            "using": "leveraging", "creating": "developing", 
-                            "seeking to drive": "positioned to drive" 
-                        };
-                        let newText = text;
-                        Object.entries(verbs).forEach(([weak, strong]) => {
-                            newText = newText.replace(new RegExp(`\\b${weak}\\b`, 'gi'), (match) => {
-                                if (match[0] === match[0].toUpperCase()) return strong.charAt(0).toUpperCase() + strong.slice(1);
-                                return strong;
-                            });
-                        });
-                        return newText;
-                    };
-                    
-                    if (sec.section_type === 'about' && data.bio && modifiedCount === 0) {
-                        setAiSuggestionPreview({
-                            targetSectionId: sec.id,
-                            actionTitle: title,
-                            key: "bio",
-                            originalContent: data.bio,
-                            suggestedContent: optimizeText(data.bio)
-                        });
-                        setActiveHighlightSection(sec.id);
-                        modifiedCount++;
-                        return;
-                    }
-                    if (sec.section_type === 'projects_grid' && data.projects && modifiedCount === 0) {
-                        const updated = data.projects.map(p => ({ ...p, description: optimizeText(p.description) }));
-                        setAiSuggestionPreview({
-                            targetSectionId: sec.id,
-                            actionTitle: title,
-                            key: "projects",
-                            originalContent: "Projects Data",
-                            suggestedContent: updated
-                        });
-                        setActiveHighlightSection(sec.id);
-                        modifiedCount++;
-                        return;
-                    }
-                } 
-                else if (title === "Grammar & Tone Corrector") {
-                    const fixGrammar = (text) => {
-                        if (!text) return text;
-                        let res = text.replace(/\bFina-year\b/gi, "Final-year").replace(/\s+/g, ' ').trim();
-                        res = res.replace(/\b(im|i'm)\b/gi, "I am").replace(/\b(dont|don't)\b/gi, "do not");
-                        if (res && !res.endsWith('.')) res += '.';
-                        return res.charAt(0).toUpperCase() + res.slice(1);
-                    };
-
-                    if (sec.section_type === 'about' && data.bio && modifiedCount === 0) {
-                        setAiSuggestionPreview({
-                            targetSectionId: sec.id,
-                            actionTitle: title,
-                            key: "bio",
-                            originalContent: data.bio,
-                            suggestedContent: fixGrammar(data.bio)
-                        });
-                        setActiveHighlightSection(sec.id);
-                        modifiedCount++;
-                        return;
-                    }
-                    if (sec.section_type === 'hero' && data.subheading && modifiedCount === 0) {
-                        setAiSuggestionPreview({
-                            targetSectionId: sec.id,
-                            actionTitle: title,
-                            key: "subheading",
-                            originalContent: data.subheading,
-                            suggestedContent: fixGrammar(data.subheading).replace(/\.$/, '')
-                        });
-                        setActiveHighlightSection(sec.id);
-                        modifiedCount++;
-                        return;
-                    }
-                }
+            const targetSec = sections.find(s => s.section_type === 'projects_grid' || s.section_type === 'about');
+            if (!targetSec) {
+                setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Add an About or Projects section to run ${title}.` }]);
+                return;
+            }
+            const res = await refineSectionWithAI({
+                sectionId: /^\d+$/.test(String(targetSec.id)) ? targetSec.id : undefined,
+                sectionType: targetSec.section_type,
+                currentContent: targetSec.content_data || {},
+                prompt: instructionMap[title] || title,
             });
-
-            if (modifiedCount > 0) {
-                setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Canvas dynamically updated ${modifiedCount} block(s) with ${title}.` }]);
+            const refined = res.refined_content || res.data || {};
+            const key = targetSec.section_type === 'projects_grid' ? 'projects' : 'bio';
+            if (refined[key]) {
+                setAiSuggestionPreview({
+                    targetSectionId: targetSec.id,
+                    actionTitle: title,
+                    key,
+                    originalContent: key === 'projects' ? 'Projects Data' : (targetSec.content_data?.[key] || ''),
+                    suggestedContent: refined[key],
+                });
+                setActiveHighlightSection(targetSec.id);
+                setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] ${title} suggestion ready to apply.` }]);
             } else {
-                setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] No compatible content found on canvas to apply ${title}.` }]);
+                setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] No updates returned for ${title}.` }]);
             }
         } catch (e) {
-            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Failed to execute ${title}.` }]);
+            const msg = e?.error || `Failed to execute ${title}.`;
+            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] ${msg}` }]);
+            notify(msg, "error");
         } finally {
             setIsProcessing(false);
         }
@@ -682,27 +454,20 @@ function RightSidebar({
     const handleGenerateVibe = async () => {
         if (!vibeInput.trim()) return;
         setIsProcessing(true);
-        setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Generating theme palette for vibe: "${vibeInput}"...` }]);
-        
-        try {
-            const vibeLower = vibeInput.toLowerCase();
-            let selectedThemeKey = "modern_glass";
+        setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Matching theme palette for vibe: "${vibeInput}"...` }]);
 
-            if (vibeLower.includes("cyber") || vibeLower.includes("neon") || vibeLower.includes("dark")) {
-                selectedThemeKey = "cyber_neon";
-            } else if (vibeLower.includes("clean") || vibeLower.includes("minimal") || vibeLower.includes("light")) {
-                selectedThemeKey = "clean_minimal";
-            } else if (vibeLower.includes("bold") || vibeLower.includes("vibrant")) {
-                selectedThemeKey = "vibrant_creative";
-            } else if (vibeLower.includes("editorial") || vibeLower.includes("serif") || vibeLower.includes("paper")) {
-                selectedThemeKey = "editorial_paper";
-            }
+        try {
+            const res = await generateAITemplate(vibeInput.trim());
+            const pickedTheme = res?.template?.theme_accent;
+            const selectedThemeKey = pickedTheme && PORTFOLIO_THEMES[pickedTheme] ? pickedTheme : "modern_glass";
 
             if (onThemeChange) onThemeChange(selectedThemeKey);
-            setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Matched vibe "${vibeInput}" to theme config: ${selectedThemeKey}.` }]);
+            setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Applied AI theme recommendation: ${selectedThemeKey}.` }]);
             setVibeInput("");
         } catch (e) {
-            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Theme generation failed.` }]);
+            const msg = e?.error || "Theme generation failed.";
+            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] ${msg}` }]);
+            notify(msg, "error");
         } finally {
             setIsProcessing(false);
         }
@@ -712,7 +477,6 @@ function RightSidebar({
         setIsProcessing(true);
         setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Analyzing canvas to generate SEO tags and Analytics...` }]);
         try {
-            const API = (await import('../../api')).default;
             const res = await API.post('ai-seo-analytics/', { sections: sections });
             if (res.data.success) {
                 setSeoData(res.data.data);
@@ -730,25 +494,24 @@ function RightSidebar({
         if (!pitchTarget.trim()) return;
         setIsProcessing(true);
         setGeneratedPitchText("");
-        setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Extracting canvas skills and projects for ${pitchTarget}...` }]);
-        
+        setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Drafting outreach message for ${pitchTarget}...` }]);
+
         try {
-            const heroSec = sections.find(s => s.section_type === 'hero');
-            const skillsSec = sections.find(s => s.section_type === 'skills');
-            const projectSec = sections.find(s => s.section_type === 'projects_grid');
+            const res = await runAIAssistantAction('generate_pitch', {
+                target: pitchTarget.trim(),
+                channel: pitchTab,
+            }, sections);
+            const data = res.data || {};
+            const formatted = data.subject
+                ? `Subject: ${data.subject}\n\n${data.message || ""}`
+                : (data.message || "");
 
-            const userName = heroSec?.content_data?.heading || "Developer";
-            const topSkills = (skillsSec?.content_data?.skills || ["Full Stack Development", "Cloud Architecture"]).slice(0, 3).join(", ");
-            const projectTitle = projectSec?.content_data?.projects?.[0]?.title || "scalable web platforms";
-
-            const pitch = pitchTab === "email" 
-                ? `Subject: High-Impact Engineering Contribution for ${pitchTarget}\n\nHi Hiring Team at ${pitchTarget},\n\nI’m ${userName}, a developer specializing in ${topSkills}.\n\nI recently engineered ${projectTitle}, focusing on scalable architecture and clean user experience. I’ve been following ${pitchTarget}’s work and would love to bring my technical skills to your engineering team.\n\nYou can review my live portfolio directly here.\n\nBest regards,\n${userName}`
-                : `Hi! I noticed ${pitchTarget} is scaling its technical team. As a developer skilled in ${topSkills}, I recently built ${projectTitle} and would love to connect to discuss potential synergy. Best, ${userName}`;
-
-            setGeneratedPitchText(pitch);
-            setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Dynamic pitch generated using your canvas profile!` }]);
+            setGeneratedPitchText(formatted);
+            setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Outreach message drafted using your portfolio profile.` }]);
         } catch (e) {
-            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Failed to generate pitch.` }]);
+            const msg = e?.error || "Failed to generate pitch.";
+            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] ${msg}` }]);
+            notify(msg, "error");
         } finally {
             setIsProcessing(false);
         }
@@ -759,7 +522,7 @@ function RightSidebar({
         setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Running audit: ${toolName}...` }]);
         try {
             setTerminalLogs(prev => [...prev, { type: "success", text: successMsg }]);
-        } catch (error) {
+        } catch {
             setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Action '${toolName}' failed.` }]);
         } finally {
             setIsProcessing(false);
@@ -812,7 +575,8 @@ function RightSidebar({
                 if (cleanData.avatar) delete cleanData.avatar;
                 if (cleanData.projects) {
                     cleanData.projects = cleanData.projects.map(p => {
-                        const { image, ...rest } = p;
+                        const rest = { ...p };
+                        delete rest.image;
                         return rest;
                     });
                 }
@@ -2060,7 +1824,7 @@ function RightSidebar({
                     type="button"
                     onClick={() => setShowRawTerminal(!showRawTerminal)}
                     title={showRawTerminal ? "View AI Chat" : "View Raw Logs"}
-                    className="text-[10px] font-mono px-2 py-0.5 rounded border border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+                    className="text-[10px] font-mono px-2 py-0.5 rounded border border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
                 >
                     {showRawTerminal ? "Chat UI" : "Console Logs"}
                 </button>
@@ -2174,7 +1938,7 @@ function RightSidebar({
                         setTerminalLogs(prev => [...prev, { type: "system", text: "[SYSTEM] Initiating production build sequence..." }]);
                         try {
                             if (onDeploy) await onDeploy(); 
-                        } catch(error) {
+                        } catch {
                             setTerminalLogs(prev => [...prev, { type: "error", text: "[ERROR] Deployment Pipeline Failed." }]);
                         } finally {
                             setIsProcessing(false);
@@ -2286,6 +2050,13 @@ function RightSidebar({
             { id: "template13", name: "Retro Arcade", visual: <div className="w-full h-20 bg-[#2b00ff] flex flex-col items-center justify-center gap-2"><div className="w-14 h-2 bg-[#ff00a0] rounded-none shadow-[2px_2px_0px_#000]"></div><div className="w-8 h-1.5 bg-[#00ff00] rounded-none shadow-[2px_2px_0px_#000]"></div></div> },
             { id: "template14", name: "Photography Focus", visual: <div className="w-full h-20 bg-slate-800 relative flex"><div className="flex-1 bg-slate-400"></div><div className="absolute inset-x-4 top-1/2 -translate-y-1/2 h-8 bg-white/90 backdrop-blur-sm flex items-center justify-center"><div className="w-10 h-1 bg-black/80 rounded-sm"></div></div></div> },
             { id: "template15", name: "3D Floating Elements", visual: <div className="w-full h-20 bg-slate-900 relative flex items-center justify-center"><div className="w-10 h-10 bg-rose-500 rounded-xl transform rotate-12 absolute -ml-6 -mt-2"></div><div className="w-10 h-10 bg-blue-500 rounded-full absolute ml-6 mt-4 opacity-80"></div><div className="w-14 h-8 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg absolute z-10 flex items-center justify-center"><div className="w-6 h-1 bg-white/80 rounded"></div></div></div> },
+            { id: "template16", name: "Editorial Magazine", visual: <div className="w-full h-20 bg-[#faf7f2] p-2.5 flex items-center gap-2 border-y border-stone-200"><div className="flex-1 space-y-1"><div className="w-10 h-1.5 bg-stone-900"></div><div className="w-7 h-1 bg-amber-800/70"></div></div><div className="w-8 h-12 bg-stone-300 border border-stone-400"></div></div> },
+            { id: "template17", name: "Terminal Shell", visual: <div className="w-full h-20 bg-[#0b1016] p-2 flex flex-col justify-between border border-emerald-500/20"><div className="flex gap-1"><span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span><span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span><span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span></div><div className="space-y-1"><div className="w-12 h-1 bg-emerald-400 rounded-sm"></div><div className="w-8 h-1 bg-slate-400 rounded-sm"></div></div></div> },
+            { id: "template18", name: "Swiss Grid Architect", visual: <div className="w-full h-20 bg-white grid grid-cols-3 border-y border-neutral-300"><div className="col-span-2 border-r border-neutral-300 p-2 flex flex-col justify-between"><div className="w-3 h-1.5 bg-red-600"></div><div className="w-10 h-2 bg-neutral-900"></div></div><div className="bg-neutral-100"></div></div> },
+            { id: "template19", name: "Gradient Aurora Glass", visual: <div className="w-full h-20 bg-slate-950 relative flex items-center justify-center overflow-hidden"><div className="w-10 h-10 bg-indigo-500/40 rounded-full blur-md -ml-6"></div><div className="w-10 h-10 bg-cyan-500/30 rounded-full blur-md ml-6"></div><div className="w-16 h-10 rounded-lg bg-white/10 border border-white/20 absolute flex items-center justify-center"><div className="w-8 h-1 bg-white/80 rounded"></div></div></div> },
+            { id: "template20", name: "Minimalist Resume Sheet", visual: <div className="w-full h-20 bg-slate-100 p-2 flex items-center justify-center"><div className="w-16 h-14 bg-white rounded border border-slate-200 p-1.5 space-y-1"><div className="w-8 h-1.5 bg-slate-800 rounded"></div><div className="w-10 h-1 bg-indigo-500 rounded"></div><div className="w-12 h-1 bg-slate-300 rounded"></div></div></div> },
+            { id: "template21", name: "Dark Monolith", visual: <div className="w-full h-20 bg-[#0a0a0a] p-2.5 flex items-end justify-between"><div className="space-y-1"><div className="w-10 h-2 bg-white"></div><div className="w-8 h-1.5 bg-zinc-600"></div></div><div className="w-6 h-10 bg-zinc-800 rounded-sm"></div></div> },
+            { id: "template22", name: "Research Academic", visual: <div className="w-full h-20 bg-[#f8fafc] grid grid-cols-3"><div className="bg-slate-900 p-1.5 flex items-end"><div className="w-5 h-1 bg-amber-300"></div></div><div className="col-span-2 p-2 flex flex-col justify-center gap-1"><div className="w-12 h-1.5 bg-slate-800"></div><div className="w-9 h-1 bg-indigo-600"></div></div></div> },
         ];
         
         const currentTemplate = userData?.frontpageTemplate || "template1";
@@ -2294,7 +2065,7 @@ function RightSidebar({
             <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500 ease-out pb-20">
                 <div className="flex items-center justify-between mb-4 border-b pb-4 border-slate-800/50">
                     <span className={`text-[11px] font-black uppercase tracking-widest flex items-center gap-2 ${isLight ? 'text-slate-800' : 'text-slate-200'}`}> 
-                        <LayoutTemplate className="w-4 h-4 text-blue-500" /> Frontpage Templates
+                        <LayoutTemplate className="w-4 h-4 text-blue-500" /> {templates.length} Frontpage Layouts
                     </span>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Live on Canvas
@@ -2347,7 +2118,7 @@ function RightSidebar({
                             if (onSelectTool) onSelectTool('activity_log');
                         }}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer text-xs ${
-                            studioViewMode === 'chat' || activeTool === 'activity_log'
+                            effectiveStudioViewMode === 'chat'
                                 ? (isSystem 
                                     ? 'bg-gradient-to-r from-[#7c00ff] to-[#9933ff] text-white shadow-[0_0_12px_rgba(124,0,255,0.5)] font-bold' 
                                     : (isLight ? 'bg-white text-blue-600 shadow-sm font-bold border border-slate-200/60' : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm font-bold'))
@@ -2364,7 +2135,7 @@ function RightSidebar({
                             if (onSelectTool && activeTool === 'activity_log') onSelectTool('structure');
                         }}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer text-xs ${
-                            studioViewMode === 'tool' && activeTool !== 'activity_log'
+                            effectiveStudioViewMode === 'tool'
                                 ? (isSystem 
                                     ? 'bg-gradient-to-r from-[#7c00ff] to-[#9933ff] text-white shadow-[0_0_12px_rgba(124,0,255,0.5)] font-bold' 
                                     : (isLight ? 'bg-white text-slate-900 shadow-sm font-bold border border-slate-200/60' : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm font-bold'))
@@ -2397,8 +2168,8 @@ function RightSidebar({
             </div>
 
             <div className="flex-1 flex flex-col overflow-y-auto p-4 sm:p-5 custom-scrollbar overflow-x-hidden min-h-0">
-                {(studioViewMode === "chat" || activeTool === "activity_log") ? (
-                    renderAiChat()
+                {effectiveStudioViewMode === "chat" ? (
+                    renderActivityLog()
                 ) : (
                     <>
                         {activeTool === "generator" && renderContentGenerator()}

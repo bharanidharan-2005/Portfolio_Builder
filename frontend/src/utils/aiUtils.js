@@ -53,22 +53,47 @@ export async function generateAIImage(prompt) {
 }
 
 /**
- * Uploads a resume file (.pdf, .docx, .txt) and parses extracted data into canvas sections.
+ * Uploads a resume file (.pdf, .docx, .txt) and parses extracted data into structured sections.
+ * Pass previewOnly=true so user can inspect and edit extracted fields before saving.
  */
-export async function uploadAndParseResume(file, pageName = 'Home') {
+export async function uploadAndParseResume(file, pageName = 'Home', { previewOnly = true, portfolioId = null } = {}) {
     const formData = new FormData();
     formData.append('resume', file);
     formData.append('page', pageName);
+    if (previewOnly) {
+        formData.append('preview_only', 'true');
+    }
+    if (portfolioId) {
+        formData.append('portfolio_id', String(portfolioId));
+    }
 
     try {
         const response = await API.post('upload-resume/', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
+            timeout: 70000,
         });
         return response.data;
     } catch (error) {
         console.error('Resume upload error:', error);
         throw error.response?.data || { error: 'Resume parsing failed.' };
+    }
+}
+
+/**
+ * Invokes structured AI Assistant actions (summary, project desc, skills, JD match, quality check, outreach pitch).
+ */
+export async function runAIAssistantAction(action, payload = {}, sections = []) {
+    try {
+        const response = await API.post('ai-assistant-action/', {
+            action,
+            sections,
+            payload,
+        });
+        return response.data;
+    } catch (error) {
+        console.error(`AI assistant action '${action}' failed:`, error);
+        throw error.response?.data || { error: 'AI service request failed.' };
     }
 }

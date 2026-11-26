@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-export default function SEOUpdater({ pages, userData, isPublicPreview }) {
+export default function SEOUpdater({ pages, userData, isPublicPreview, portfolioMeta = null }) {
     useEffect(() => {
         if (!pages || pages.length === 0 || !isPublicPreview) return;
 
@@ -14,8 +14,11 @@ export default function SEOUpdater({ pages, userData, isPublicPreview }) {
         }
 
         const baseName = heroSection?.content_data?.heading || userData?.name;
-        const title = baseName ? `${baseName} — Test Portfolio` : 'Test Portfolio';
-        const description = heroSection?.content_data?.subheading || 'A professional portfolio built with AuraBuild Studio.';
+        const title = portfolioMeta?.seoTitle?.trim()
+            || (baseName ? `${baseName} — Portfolio` : 'AuraBuild Portfolio');
+        const description = portfolioMeta?.seoDescription?.trim()
+            || heroSection?.content_data?.subheading
+            || 'A professional portfolio built with AuraBuild Studio.';
 
         document.title = title;
 
@@ -48,7 +51,7 @@ export default function SEOUpdater({ pages, userData, isPublicPreview }) {
         // Note: For full SEO visibility by crawlers, Server-Side Rendering (SSR) is optimal,
         // but this client-side injection helps with link preview unfurling on platforms that run JS.
 
-    }, [pages, userData, isPublicPreview]);
+    }, [pages, userData, isPublicPreview, portfolioMeta]);
 
     return null; // Component does not render anything
 }

@@ -1,10 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
-import { X, User, Shield, HardDrive, Download, AlertTriangle, Trash2, Loader2, CheckCircle2, ExternalLink, LogOut, Globe, Copy, Check } from "lucide-react";
-import { API } from "../../api"; 
+import { useState, useEffect } from "react";
+import { X, User, Shield, HardDrive, Palette, AlertTriangle, Trash2, Loader2, CheckCircle2, ExternalLink, LogOut, Globe, Copy, Check, Download, Sun, Moon, Sparkles } from "lucide-react";
+import { API, clearAuthTokens } from "../../api";
 import { useAppContext } from "../../context/AppContext";
-import { Palette, Sun, Moon, Sparkles } from "lucide-react";
 
-export default function SettingsModal({ isOpen, onClose, userData, setUserData, themeMode, onLogout, onDeploy, onExportZip, onResetWorkspace }) {
+export default function SettingsModal({ isOpen, onClose, userData, setUserData, themeMode, onLogout, onDeploy, onExportZip, onResetWorkspace, portfolioMeta, updatePortfolioSettings }) {
     const { themeSetting, setThemeSetting } = useAppContext();
     const isLight = themeMode === 'light';
     const isSystem = themeMode === 'system';
@@ -12,6 +11,10 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
     
     const [localName, setLocalName] = useState(userData?.name || "Developer");
     const [localAvatar, setLocalAvatar] = useState(userData?.avatar || "🐱");
+    const [seoTitle, setSeoTitle] = useState(portfolioMeta?.seoTitle || "");
+    const [seoDesc, setSeoDesc] = useState(portfolioMeta?.seoDescription || "");
+    const [savingSeo, setSavingSeo] = useState(false);
+    const [togglingPublish, setTogglingPublish] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [copied, setCopied] = useState(false);
@@ -24,13 +27,7 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
         }
     };
 
-    // Keep it synced if user data loads slightly after the modal mounts
-    useEffect(() => {
-        if (userData?.name) setLocalName(userData.name);
-        if (userData?.avatar) setLocalAvatar(userData.avatar);
-    }, [userData?.name, userData?.avatar]);
-
-    // Auto-save changes with debounce
+    // Auto-save profile changes with debounce
     useEffect(() => {
         if (!isOpen) return;
         if (localName === userData?.name && localAvatar === userData?.avatar) return;
@@ -43,28 +40,24 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                     setUserData(prev => ({ ...prev, name: localName, avatar: localAvatar }));
                 }
             } catch (error) {
-                console.warn("Backend endpoint not found or failed, updating local state only.", error);
+                console.warn("Profile sync failed, updating local state only.", error);
                 if (setUserData) {
                     setUserData(prev => ({ ...prev, name: localName, avatar: localAvatar }));
                 }
             } finally {
                 setIsSaving(false);
             }
-        }, 1000);
+        }, 800);
 
         return () => clearTimeout(timeoutId);
     }, [localName, localAvatar, userData?.name, userData?.avatar, isOpen, setUserData]);
 
     if (!isOpen) return null;
 
-    // Clean username (e.g. "Bharani Dharan" -> "bharanidharan")
-    const cleanUsername = (localName || userData?.name || "developer").toLowerCase().replace(/[^a-z0-9]/g, '');
-    
-    // Direct Public Portfolio URL: https://portfolio-builder-one-brown.vercel.app/[username]/
-    const protocol = window.location.protocol;
-    const host = window.location.host;
-    
-    const liveUrl = `${protocol}//${host}/${cleanUsername}/`;
+    const ownerHandle = (userData?.email?.split('@')?.[0] || localName || userData?.name || "developer").toLowerCase().replace(/[^a-z0-9._-]/g, '');
+    const slugQuery = portfolioMeta?.slug ? `?portfolio=${encodeURIComponent(portfolioMeta.slug)}` : '';
+    const liveUrl = portfolioMeta?.publishedUrl || `${window.location.origin}/preview/${encodeURIComponent(ownerHandle)}${slugQuery}`;
+    const isPublished = Boolean(portfolioMeta?.isPublished);
 
     const getTabBtnClass = (tabId) => {
         const isActive = activeTab === tabId;
@@ -142,9 +135,13 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                                 } catch (e) {
                                     console.warn("Backend logout failed or was blocked, forcing local logout", e);
                                 } finally {
-                                    localStorage.removeItem("aurabuild_is_logged_in");
+                                    clearAuthTokens();
                                     localStorage.removeItem("aurabuild_user");
-                                    window.location.href = "/";
+                                    if (onLogout) {
+                                        onLogout();
+                                    } else {
+                                        window.location.href = "/";
+                                    }
                                 }
                             }}
                             disabled={isLoggingOut}
@@ -230,15 +227,7 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                                         <button 
                                             onClick={async () => {
                                                 setIsLoggingOut(true);
-                                                try {
-                                                    await API.post('auth/logout/');
-                                                } catch (e) {
-                                                    console.warn("Backend logout failed", e);
-                                                } finally {
-                                                    localStorage.removeItem("aurabuild_is_logged_in");
-                                                    localStorage.removeItem("aurabuild_user");
-                                                    window.location.href = "/";
-                                                }
+                                                if (onLogout) await onLogout();
                                             }}
                                             disabled={isLoggingOut}
                                             className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all cursor-pointer text-red-500 bg-red-500/10 hover:bg-red-500/20 active:scale-98 ${isLoggingOut ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -270,10 +259,31 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                                                 <span className={`text-sm font-bold ${isSystem ? 'text-purple-100' : (isLight ? 'text-slate-800' : 'text-slate-100')}`}>
                                                     Public Portfolio URL
                                                 </span>
-                                                <span className="inline-flex items-center gap-1.5 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                                    Live
+                                                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                                                    isPublished
+                                                        ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                                                        : "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                                                }`}>
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${isPublished ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
+                                                    {isPublished ? "Published" : "Private Draft"}
                                                 </span>
+                                                {updatePortfolioSettings && (
+                                                    <button
+                                                        type="button"
+                                                        disabled={togglingPublish}
+                                                        onClick={async () => {
+                                                            setTogglingPublish(true);
+                                                            try {
+                                                                await updatePortfolioSettings({ isPublished: !isPublished });
+                                                            } finally {
+                                                                setTogglingPublish(false);
+                                                            }
+                                                        }}
+                                                        className="text-[11px] font-semibold text-indigo-400 hover:underline cursor-pointer"
+                                                    >
+                                                        {togglingPublish ? "Updating..." : (isPublished ? "Set Private" : "Make Public")}
+                                                    </button>
+                                                )}
                                             </div>
 
                                             {/* Action Buttons: Desktop Top-Right */}
@@ -369,6 +379,44 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                                             </button>
                                         </div>
                                     </div>
+
+                                    {/* SEO Metadata Editor */}
+                                    {updatePortfolioSettings && (
+                                        <div className={`p-3.5 sm:p-5 rounded-2xl border space-y-3 ${isLight ? 'border-slate-200 bg-white' : 'border-slate-800 bg-[#111218]'}`}>
+                                            <div className="flex items-center justify-between">
+                                                <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>SEO & Social Share Metadata</span>
+                                                <button
+                                                    type="button"
+                                                    disabled={savingSeo}
+                                                    onClick={async () => {
+                                                        setSavingSeo(true);
+                                                        try {
+                                                            await updatePortfolioSettings({ seoTitle, seoDescription: seoDesc });
+                                                        } finally {
+                                                            setSavingSeo(false);
+                                                        }
+                                                    }}
+                                                    className="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold cursor-pointer"
+                                                >
+                                                    {savingSeo ? "Saving..." : "Save SEO"}
+                                                </button>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                value={seoTitle}
+                                                onChange={(e) => setSeoTitle(e.target.value)}
+                                                placeholder="Custom SEO title (optional)"
+                                                className={`w-full px-3 py-2 rounded-xl border text-xs ${isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#0B0C10] border-slate-700 text-white'}`}
+                                            />
+                                            <textarea
+                                                rows={2}
+                                                value={seoDesc}
+                                                onChange={(e) => setSeoDesc(e.target.value)}
+                                                placeholder="Short OpenGraph / search description (optional)"
+                                                className={`w-full px-3 py-2 rounded-xl border text-xs resize-none ${isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#0B0C10] border-slate-700 text-white'}`}
+                                            />
+                                        </div>
+                                    )}
 
                                     {/* Recruiter & Public Sharing Instructions */}
                                     <div className={`p-3.5 sm:p-5 rounded-2xl border text-xs leading-relaxed transition-all ${

@@ -14,9 +14,11 @@ if (rawBaseUrl.includes('aurabuild-backend.onrender.com')) {
     rawBaseUrl = rawBaseUrl.replace('aurabuild-backend.onrender.com', 'portfolio-builder-1-rm9r.onrender.com');
 }
 
-// Local dev auto-detection: if running on localhost / 127.0.0.1, prioritize local Django server on 8080
+// Local dev auto-detection: prefer Vite same-origin /api proxy when in dev, falling back to 8080/8000
 if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-    if (rawBaseUrl.includes(':8000')) {
+    if (import.meta.env.DEV && (rawBaseUrl.includes('127.0.0.1') || rawBaseUrl.includes('localhost') || rawBaseUrl.includes('onrender.com'))) {
+        rawBaseUrl = '/api/';
+    } else if (rawBaseUrl.includes(':8000')) {
         rawBaseUrl = rawBaseUrl.replace(':8000', ':8080');
     } else if (rawBaseUrl.includes('onrender.com')) {
         rawBaseUrl = 'http://127.0.0.1:8080/api/';
@@ -37,13 +39,19 @@ const IS_LOGGED_IN_KEY = 'aurabuild_is_logged_in';
 export function setAuthTokens(access, refresh) {
     localStorage.setItem(IS_LOGGED_IN_KEY, 'true');
     if (access) {
-        try { sessionStorage.setItem('aurabuild_access_token', access); } catch (e) {}
+        try { sessionStorage.setItem('aurabuild_access_token', access); } catch { /* ignore */ }
+    }
+    if (refresh) {
+        try { sessionStorage.setItem('aurabuild_refresh_token', refresh); } catch { /* ignore */ }
     }
 }
 
 export function clearAuthTokens() {
     localStorage.removeItem(IS_LOGGED_IN_KEY);
-    try { sessionStorage.removeItem('aurabuild_access_token'); } catch (e) {}
+    try {
+        sessionStorage.removeItem('aurabuild_access_token');
+        sessionStorage.removeItem('aurabuild_refresh_token');
+    } catch { /* ignore */ }
 }
 
 // Request Interceptor: Send Bearer token fallback if present (for cross-domain Vercel <-> Render)
@@ -51,14 +59,14 @@ API.interceptors.request.use(
     (config) => {
         try {
             const url = config.url || '';
-            const isPublicAuth = ['auth/register/', 'auth/login/', 'auth/reset-password/', 'auth/social/', 'token/', 'token/refresh/', 'send-key/'].some(ep => url.includes(ep));
+            const isPublicAuth = ['auth/register/', 'auth/login/', 'auth/request-password-reset/', 'auth/reset-password/', 'auth/social/', 'token/', 'token/refresh/', 'send-key/'].some(ep => url.includes(ep));
             if (!isPublicAuth) {
                 const token = sessionStorage.getItem('aurabuild_access_token');
                 if (token && !config.headers['Authorization']) {
                     config.headers['Authorization'] = `Bearer ${token}`;
                 }
             }
-        } catch (e) {}
+        } catch { /* ignore */ }
         return config;
     },
     (error) => Promise.reject(error)
@@ -68,13 +76,13 @@ API.interceptors.request.use(
 let isRefreshing = false;
 let pendingSubscribers = [];
 
-function flushSubscribers(success) {
+function flushSubscribers(success, accessToken = null) {
     isRefreshing = false;
     const subs = pendingSubscribers;
     pendingSubscribers = [];
     subs.forEach(({ resolve, reject }) => {
         if (success) {
-            resolve();
+            resolve(accessToken);
         } else {
             reject(new Error('Token refresh failed'));
         }
@@ -88,12 +96,20 @@ API.interceptors.response.use(
         const originalRequest = error.config;
         if (!originalRequest) return Promise.reject(error);
 
-        // Local development port fallback (8080 <-> 8000)
+        // Local development port / proxy fallback (/api/ -> :8000, :8080 <-> :8000)
+        const currentBase = API.defaults.baseURL || '';
+        const isProxyFailure = currentBase === '/api/' && (
+            !error.response ||
+            error.response.status === 502 ||
+            error.response.status === 504 ||
+            (error.response.status === 500 && !error.response.data)
+        );
         const isNetworkError = !error.response || error.code === 'ERR_NETWORK' || (error.message && error.message.includes('Network Error'));
-        if (isNetworkError && !originalRequest._portRetried && typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-            const currentBase = API.defaults.baseURL || '';
+        if ((isNetworkError || isProxyFailure) && !originalRequest._portRetried && typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
             let altBase = null;
-            if (currentBase.includes(':8080')) {
+            if (currentBase === '/api/') {
+                altBase = 'http://127.0.0.1:8000/api/';
+            } else if (currentBase.includes(':8080')) {
                 altBase = currentBase.replace(':8080', ':8000');
             } else if (currentBase.includes(':8000')) {
                 altBase = currentBase.replace(':8000', ':8080');
@@ -109,7 +125,7 @@ API.interceptors.response.use(
 
         // Never attempt token refresh on login or register endpoints
         const reqUrl = originalRequest.url || '';
-        const isAuthRoute = ['auth/register/', 'auth/login/', 'auth/reset-password/', 'auth/social/', 'token/'].some(ep => reqUrl.includes(ep));
+        const isAuthRoute = ['auth/register/', 'auth/login/', 'auth/request-password-reset/', 'auth/reset-password/', 'auth/social/', 'token/'].some(ep => reqUrl.includes(ep));
         if (isAuthRoute) {
             return Promise.reject(error);
         }
@@ -129,18 +145,37 @@ API.interceptors.response.use(
         if (isRefreshing) {
             return new Promise((resolve, reject) => {
                 pendingSubscribers.push({ resolve, reject });
-            }).then(() => {
+            }).then((newAccess) => {
+                if (newAccess) {
+                    originalRequest.headers = originalRequest.headers || {};
+                    originalRequest.headers['Authorization'] = `Bearer ${newAccess}`;
+                }
                 return API(originalRequest);
             });
         }
 
         isRefreshing = true;
 
-        // The refresh token is now sent automatically via the HttpOnly cookie
+        let refreshPayload = {};
+        try {
+            const storedRefresh = sessionStorage.getItem('aurabuild_refresh_token');
+            if (storedRefresh) {
+                refreshPayload = { refresh: storedRefresh };
+            }
+        } catch { /* ignore */ }
+
+        // Refresh via HttpOnly cookie and/or fallback refresh token
         return axios
-            .post(`${API.defaults.baseURL}token/refresh/`, {}, { withCredentials: true })
-            .then(() => {
-                flushSubscribers(true);
+            .post(`${API.defaults.baseURL}token/refresh/`, refreshPayload, { withCredentials: true })
+            .then((refreshRes) => {
+                const newAccess = refreshRes.data?.access || null;
+                const newRefresh = refreshRes.data?.refresh || null;
+                setAuthTokens(newAccess, newRefresh);
+                if (newAccess) {
+                    originalRequest.headers = originalRequest.headers || {};
+                    originalRequest.headers['Authorization'] = `Bearer ${newAccess}`;
+                }
+                flushSubscribers(true, newAccess);
                 return API(originalRequest);
             })
             .catch((refreshError) => {

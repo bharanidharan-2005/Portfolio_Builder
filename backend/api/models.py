@@ -6,21 +6,29 @@ from django.db import models
 # -----------------------------------------------------------------
 class Portfolio(models.Model):
     title = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=120, blank=True, db_index=True)
     owner = models.ForeignKey('auth.User', on_delete=models.CASCADE, null=True, blank=True)
     owner_name = models.CharField(max_length=100)
+    career_track = models.CharField(max_length=60, default="software_developer", blank=True)
     global_theme = models.CharField(max_length=50, default="modern_glass", blank=True)
     global_bg_image = models.TextField(blank=True, null=True)
     global_font = models.CharField(max_length=50, default="font-inter", blank=True)
     frontpage_template = models.CharField(max_length=50, default="template1", blank=True)
+    is_published = models.BooleanField(default=False, db_index=True)
+    is_active = models.BooleanField(default=True)
+    seo_title = models.CharField(max_length=120, blank=True, default="")
+    seo_description = models.CharField(max_length=300, blank=True, default="")
+    published_url = models.URLField(max_length=500, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['owner'], name='unique_portfolio_per_owner'),
+            models.UniqueConstraint(fields=['owner', 'slug'], name='unique_portfolio_slug_per_owner'),
         ]
 
     def __str__(self):
-        return f"{self.owner_name}'s Master Studio Shell"
+        return f"{self.owner_name} — {self.title}"
 
 
 # -----------------------------------------------------------------
@@ -57,6 +65,7 @@ class PortfolioSection(models.Model):
         ('services', 'Services & Offerings'),
         ('testimonials', 'Client Testimonials'),
         ('certifications', 'Certifications & Awards'),
+        ('achievements', 'Achievements & Honors'),
         ('stats', 'Key Statistics'),
         ('blog', 'Blog & Publications'),
     ]

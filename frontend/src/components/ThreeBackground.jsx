@@ -101,10 +101,10 @@ export default function ThreeBackground({ density = 950, className = '' }) {
 
         // --- Render loop ------------------------------------------------------
         let rafId = null;
-        const clock = new THREE.Clock();
+        const startTime = performance.now();
         const animate = () => {
             rafId = requestAnimationFrame(animate);
-            const t = clock.getElapsedTime();
+            const t = (performance.now() - startTime) * 0.001;
 
             particles.rotation.y += 0.0004;
             particles.rotation.x = THREE.MathUtils.lerp(particles.rotation.x, targetY * 0.08, 0.025);

@@ -82,21 +82,20 @@ class ImageGenerationTests(TestCase):
     @patch('api.views.ai.get_gemini_clients')
     def test_generate_image_no_payload_returns_500(self, mock_client):
         mock_client.return_value = [self._fake_client(image_data=None)]
-        # We now have a fallback to pollinations.ai, so it should succeed
         res = self.client.post(
             self.url, {'prompt': 'A dark workspace'}, content_type='application/json', **self.headers
         )
-        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.status_code, 500)
 
     @patch('api.views.ai.get_gemini_clients')
     def test_generate_image_rate_limit_returns_friendly_error(self, mock_client):
         err = Exception('HTTP 429: rate limit exceeded')
         mock_client.return_value = [self._fake_client(error=err)]
-        # We now have a fallback to pollinations.ai, so it should succeed
         res = self.client.post(
             self.url, {'prompt': 'A dark workspace'}, content_type='application/json', **self.headers
         )
-        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.status_code, 500)
+        self.assertIn('rate limit', res.json()['error'].lower())
 
     @patch('api.views.ai.get_gemini_clients')
     def test_generate_image_imagen_fallback(self, mock_client):
@@ -111,21 +110,20 @@ class ImageGenerationTests(TestCase):
     def test_generate_image_free_tier_zero_quota(self, mock_client):
         err = Exception('429 RESOURCE_EXHAUSTED quota free_tier_requests limit: 0')
         mock_client.return_value = [self._fake_client(error=err)]
-        # We now have a fallback to pollinations.ai, so it should succeed
         res = self.client.post(
             self.url, {'prompt': 'A dark workspace'}, content_type='application/json', **self.headers
         )
-        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.status_code, 500)
+        self.assertIn('image', res.json()['error'].lower())
 
     @patch('api.views.ai.get_gemini_clients')
     def test_generate_image_rejects_non_http_imagen_uri(self, mock_client):
         # A non-HTTP scheme from the image service must never be downloaded.
         mock_client.return_value = [self._fake_client(image_data=None, imagen_uri='file:///etc/passwd')]
-        # We now have a fallback to pollinations.ai, so it should succeed
         res = self.client.post(
             self.url, {'prompt': 'A dark workspace'}, content_type='application/json', **self.headers
         )
-        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.status_code, 500)
 
     @patch('api.views.ai.get_gemini_clients')
     def test_generate_image_downloads_http_imagen_uri(self, mock_client):
@@ -157,5 +155,4 @@ class ImageGenerationTests(TestCase):
 
     def test_generate_image_requires_auth(self):
         res = self.client.post(self.url, {'prompt': 'x'}, content_type='application/json')
-        # Allowed for any user now due to @permission_classes([permissions.AllowAny])
-        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.status_code, 401)

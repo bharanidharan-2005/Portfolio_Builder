@@ -39,6 +39,7 @@ export const DEFAULT_BLOCK_DATA = {
     services: { items: [] },
     testimonials: { items: [] },
     certifications: { items: [] },
+    achievements: { items: [] },
     stats: { items: [] },
     blog: { articles: [] }
 };
@@ -146,4 +147,13 @@ export const DEFAULT_SHOWCASE_SECTIONS = [
         }
     }
 ];
+
+export const getRoleImage = (subheading) => {
+    const role = (subheading || "").toLowerCase();
+    if (role.includes('civil') || role.includes('construct') || role.includes('architect')) return 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1000&q=80';
+    if (role.includes('design') || role.includes('art') || role.includes('ui/ux') || role.includes('ux')) return 'https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=1000&q=80';
+    if (role.includes('data') || role.includes('ai') || role.includes('machine learning') || role.includes('ml')) return 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1000&q=80';
+    if (role.includes('develop') || role.includes('software') || role.includes('engineer') || role.includes('program')) return 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=1000&q=80';
+    return 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1000&q=80';
+};
 

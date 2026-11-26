@@ -1,19 +1,18 @@
 import { motion } from "framer-motion";
 
-export const HeroParticles = ({ isDark }) => {
-    // Generate an array of 20 random particles
-    const particles = Array.from({ length: 20 }).map((_, i) => ({
-        id: i,
-        x: Math.random() * 100, // percentage
-        y: Math.random() * 100, // percentage
-        size: Math.random() * 4 + 2, // 2px to 6px
-        duration: Math.random() * 20 + 10, // 10s to 30s
-        delay: Math.random() * 5,
-    }));
+const STATIC_PARTICLES = Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    x: ((i * 37 + 13) % 94) + 3,
+    y: ((i * 53 + 7) % 92) + 4,
+    size: 2 + (i % 4),
+    duration: 12 + ((i * 7) % 16),
+    delay: (i * 0.6) % 5,
+}));
 
+export const HeroParticles = ({ isDark }) => {
     return (
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-            {particles.map((p) => (
+            {STATIC_PARTICLES.map((p) => (
                 <motion.div
                     key={p.id}
                     className={`absolute rounded-full ${isDark ? 'bg-white/10' : 'bg-black/5'} blur-[1px]`}

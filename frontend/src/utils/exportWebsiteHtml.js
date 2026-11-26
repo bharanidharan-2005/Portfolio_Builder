@@ -2,7 +2,8 @@ import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { PORTFOLIO_THEMES, PORTFOLIO_FONTS } from '../canvas/themes';
 import { notify } from '../toast';
-import PortfolioFrontpage, { getRoleImage } from '../components/portfolio/PortfolioFrontpage';
+import PortfolioFrontpage from '../components/portfolio/PortfolioFrontpage';
+import { getRoleImage } from './constants';
 import { getSkillIconUrl } from './skillIcons';
 
 const escapeHtml = (value) => {
@@ -65,24 +66,6 @@ const getFallbackIconSvg = (skillName) => {
     return wrapper('<path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/>');
 };
 
-const FRONT_PAGE_TEMPLATES = {
-    template1: { bgClass: 'bg-[#05050A]', textClass: 'text-white', accentClass: 'text-blue-400', buttonClass: 'bg-blue-600', layoutDir: 'lg:flex-row', visual: 'Image' },
-    template2: { bgClass: 'bg-slate-950', textClass: 'text-white', accentClass: 'text-emerald-400', buttonClass: 'bg-emerald-600', layoutDir: 'lg:flex-row-reverse', visual: 'Code' },
-    template3: { bgClass: 'bg-[#0f172a]', textClass: 'text-slate-100', accentClass: 'text-purple-400', buttonClass: 'bg-purple-600', layoutDir: 'lg:flex-row', visual: 'Sphere' },
-    template4: { bgClass: 'bg-zinc-950', textClass: 'text-zinc-100', accentClass: 'text-rose-400', buttonClass: 'bg-rose-600', layoutDir: 'lg:flex-row', visual: 'Icons' },
-    template5: { bgClass: 'bg-[#1e1e2e]', textClass: 'text-[#cdd6f4]', accentClass: 'text-[#89b4fa]', buttonClass: 'bg-[#89b4fa]', layoutDir: 'lg:flex-row-reverse', visual: 'Image' },
-    template6: { bgClass: 'bg-[#0B0C10]', textClass: 'text-[#C5C6C7]', accentClass: 'text-[#66FCF1]', buttonClass: 'bg-[#45A29E]', layoutDir: 'lg:flex-row', visual: 'Code' },
-    template7: { bgClass: 'bg-black', textClass: 'text-gray-200', accentClass: 'text-yellow-400', buttonClass: 'bg-yellow-600', layoutDir: 'lg:flex-row-reverse', visual: 'Sphere' },
-    template8: { bgClass: 'bg-indigo-950', textClass: 'text-indigo-100', accentClass: 'text-indigo-400', buttonClass: 'bg-indigo-600', layoutDir: 'lg:flex-row', visual: 'Icons' },
-    template9: { bgClass: 'bg-[#121212]', textClass: 'text-[#E0E0E0]', accentClass: 'text-[#BB86FC]', buttonClass: 'bg-[#BB86FC]', layoutDir: 'lg:flex-row', visual: 'Image' },
-    template10: { bgClass: 'bg-slate-900', textClass: 'text-slate-200', accentClass: 'text-cyan-400', buttonClass: 'bg-cyan-600', layoutDir: 'lg:flex-row-reverse', visual: 'Code' },
-    template11: { bgClass: 'bg-[#282c34]', textClass: 'text-[#abb2bf]', accentClass: 'text-[#61afef]', buttonClass: 'bg-[#61afef]', layoutDir: 'lg:flex-row', visual: 'Icons' },
-    template12: { bgClass: 'bg-gray-950', textClass: 'text-gray-100', accentClass: 'text-orange-400', buttonClass: 'bg-orange-600', layoutDir: 'lg:flex-row-reverse', visual: 'Sphere' },
-    template13: { bgClass: 'bg-[#1a1a1a]', textClass: 'text-[#f2f2f2]', accentClass: 'text-[#ff6b6b]', buttonClass: 'bg-[#ff6b6b]', layoutDir: 'lg:flex-row', visual: 'Image' },
-    template14: { bgClass: 'bg-[#0d1117]', textClass: 'text-[#c9d1d9]', accentClass: 'text-[#58a6ff]', buttonClass: 'bg-[#1f6feb]', layoutDir: 'lg:flex-row-reverse', visual: 'Code' },
-    template15: { bgClass: 'bg-[#11111b]', textClass: 'text-[#cdd6f4]', accentClass: 'text-[#f38ba8]', buttonClass: 'bg-[#f38ba8]', layoutDir: 'lg:flex-row', visual: 'Icons' }
-};
-
 export function buildPortfolioHtml({ pages, activePage, selectedSection, localContent, userData }) {
     if (!pages || pages.length === 0) {
         notify("No data structure sections found to build.", 'error');
@@ -115,7 +98,6 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
         || (typeof window !== 'undefined' && localStorage.getItem(`aurabuild_frontpage_${userData?.name || 'default'}`))
         || (typeof window !== 'undefined' && localStorage.getItem('aurabuild_frontpage_default'))
         || 'template1';
-    const tplConfig = FRONT_PAGE_TEMPLATES[templateKey] || FRONT_PAGE_TEMPLATES.template1;
 
     const heroCustomImage = heroData.customSideImage ? getAbsoluteUrl(heroData.customSideImage) : '';
     const heroVisualImageUrl = heroCustomImage || roleImageUrl;

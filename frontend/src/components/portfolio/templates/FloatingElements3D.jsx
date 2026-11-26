@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Download, Box, Globe, Hexagon, Triangle } from 'lucide-react';
 

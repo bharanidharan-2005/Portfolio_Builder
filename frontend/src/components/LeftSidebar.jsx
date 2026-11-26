@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, memo } from "react";
 import { 
     FileText, CheckCircle2, AlertCircle, Loader2, Settings, Pin, PinOff, Plus, Trash2, 
-    FileUp, Activity, Sparkles, Target, TrendingUp, Palette, Image, 
+    FileUp, Sparkles, Target, TrendingUp, Palette, Image, 
     Search, LayoutTemplate, FileCode, X, Eye, Undo2, Redo2, ChevronDown, 
     Check, HelpCircle, LogOut, LayoutDashboard, MessageSquare 
 } from "lucide-react";
@@ -45,8 +45,7 @@ function LeftSidebar({
     onThemeChange,
     sections = [],
     onHelpClick,
-    onLogout,
-    userData
+    onLogout
 }) {
     const isLight = themeMode === 'light';
     const isSystem = themeMode === 'system';
@@ -102,7 +101,7 @@ function LeftSidebar({
         }
 
         try {
-            const data = await uploadAndParseResume(file, activePage);
+            const data = await uploadAndParseResume(file, activePage, { previewOnly: true });
             if (setTerminalLogs) {
                 setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] AI parsed ${data.wordCount || 'data'} successfully.` }]);
             }

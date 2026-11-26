@@ -1,18 +1,48 @@
-import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 
 const fastClone = (obj) => {
     if (!obj) return obj;
     try {
         return typeof structuredClone === 'function' ? structuredClone(obj) : JSON.parse(JSON.stringify(obj));
-    } catch (e) {
+    } catch {
         return JSON.parse(JSON.stringify(obj));
     }
 };
 import { API } from '../api';
 import { useAppContext } from './AppContext';
 import { DEFAULT_BLOCK_DATA, SECTION_ORDER_WEIGHTS, DEFAULT_SHOWCASE_SECTIONS } from '../utils/constants';
-import { deployAnimatedSite } from '../utils/deploymentUtils';
+import { ensureGoogleFontLoaded } from '../utils/fontLoader';
 import { notify } from '../toast';
+
+const FONT_CLASS_TO_FAMILY = {
+    'font-craletto': 'Cormorant Garamond',
+    'font-bodoni': 'Bodoni Moda',
+    'font-cormorant': 'Cormorant Garamond',
+    'font-inter': 'Inter',
+    'font-sora': 'Sora',
+    'font-space-grotesk': 'Space Grotesk',
+    'font-manrope': 'Manrope',
+    'font-plus-jakarta': 'Plus Jakarta Sans',
+    'font-dm-sans': 'DM Sans',
+    'font-outfit': 'Outfit',
+    'font-poppins': 'Poppins',
+    'font-geist': 'Geist',
+    'font-urbanist': 'Urbanist',
+    'font-syne': 'Syne',
+    'font-archivo': 'Archivo',
+    'font-ibm-plex': 'IBM Plex Sans',
+    'font-space-mono': 'Space Mono',
+    'font-jetbrains': 'JetBrains Mono',
+    'font-fira': 'Fira Code',
+    'font-roboto': 'Roboto',
+    'font-montserrat': 'Montserrat',
+    'font-raleway': 'Raleway',
+    'font-bebas': 'Bebas Neue',
+    'font-oswald': 'Oswald',
+    'font-playfair': 'Playfair Display',
+    'font-lora': 'Lora',
+};
 
 export const WorkspaceContext = createContext(null);
 
@@ -24,7 +54,7 @@ export const useWorkspace = () => {
     return context;
 };
 
-export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUserData = null }) => {
+export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUserData = null, portfolioId = null }) => {
     const appContext = useAppContext();
     
     // For public previews, we override the user data with reactive local state
@@ -35,8 +65,24 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
 
     const userKey = (userData?.name || previewUserData?.name || 'default').toLowerCase().replace(/[^a-z0-9]/g, '');
 
-    // --- Loading State ---
+    // --- Loading & Sync States ---
     const [isSectionsLoading, setIsSectionsLoading] = useState(true);
+    const [publicNotFound, setPublicNotFound] = useState(false);
+    const [saveStatus, setSaveStatus] = useState('saved'); // 'saved' | 'saving' | 'dirty' | 'error'
+    const [lastSavedAt, setLastSavedAt] = useState(null);
+    const [portfolioMeta, setPortfolioMeta] = useState({
+        id: portfolioId || null,
+        title: 'My Portfolio',
+        slug: '',
+        isPublished: false,
+        seoTitle: '',
+        seoDescription: '',
+        publishedUrl: '',
+        careerTrack: 'software_developer',
+    });
+    const hasLoadedInitialSettingsRef = useRef(false);
+    const pendingPatchTimersRef = useRef({});
+    const pendingPatchPayloadsRef = useRef({});
 
     // --- Centralized Backend State (Instant Cached Initialization) ---
     const [pages, setPages] = useState(() => {
@@ -47,11 +93,12 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
                 const parsed = JSON.parse(cached);
                 if (Array.isArray(parsed) && parsed.length > 0) return parsed;
             }
-        } catch (e) {}
+        } catch { /* ignore */ }
         return [{ id: 'default-home', name: 'Home', sections: DEFAULT_SHOWCASE_SECTIONS }];
     });
 
-    const [activePage, setActivePage] = useState("Home");
+    const [activePageState, setActivePageState] = useState("Home");
+    const activePage = activePageState;
 
     const [sections, setSections] = useState(() => {
         try {
@@ -61,7 +108,7 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
                 const parsed = JSON.parse(cached);
                 if (Array.isArray(parsed) && parsed.length > 0) return parsed;
             }
-        } catch (e) {}
+        } catch { /* ignore */ }
         // Fallback to showcase so public portfolio and workspace load INSTANTLY with zero empty flash
         return DEFAULT_SHOWCASE_SECTIONS;
     });
@@ -73,8 +120,8 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
     const [activeHighlightSection, setActiveHighlightSection] = useState(null);
     const [aiSuggestionPreview, setAiSuggestionPreview] = useState(null);
     const [resumeReviewData, setResumeReviewData] = useState(null);
-    const [selectedSection, setSelectedSection] = useState(null);
-    const [localContent, setLocalContent] = useState({});
+    const [selectedSection] = useState(null);
+    const [localContent] = useState({});
 
     // --- GLOBAL BACKGROUND & FONT STATE ---
     const [globalBg, setGlobalBg] = useState(() => {
@@ -88,6 +135,38 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
     const [customFontSize, setCustomFontSize] = useState("base"); // base, sm, lg, xl
     const [customAccentColor, setCustomAccentColor] = useState(null);
 
+    const updatePortfolioSettings = useCallback(async (patch) => {
+        if (isPublicPreview) return;
+        const pid = portfolioMeta?.id || portfolioId;
+        const qs = pid ? `?portfolio_id=${pid}` : '';
+        setSaveStatus('saving');
+        try {
+            const res = await API.patch(`portfolio-settings/${qs}`, {
+                ...patch,
+                ...(pid ? { portfolio_id: pid } : {}),
+            });
+            setSaveStatus('saved');
+            setLastSavedAt(Date.now());
+            if (res.data) {
+                setPortfolioMeta(prev => ({
+                    ...prev,
+                    id: res.data.id || prev.id,
+                    title: res.data.title ?? prev.title,
+                    slug: res.data.slug ?? prev.slug,
+                    isPublished: res.data.isPublished ?? prev.isPublished,
+                    seoTitle: res.data.seoTitle ?? prev.seoTitle,
+                    seoDescription: res.data.seoDescription ?? prev.seoDescription,
+                    publishedUrl: res.data.publishedUrl ?? prev.publishedUrl,
+                    careerTrack: res.data.careerTrack ?? prev.careerTrack,
+                }));
+            }
+            return res.data;
+        } catch (err) {
+            setSaveStatus('error');
+            throw err;
+        }
+    }, [isPublicPreview, portfolioMeta?.id, portfolioId]);
+
     useEffect(() => {
         if (globalBg) {
             localStorage.setItem(`aurabuild_bg_${userData?.name || 'default'}`, globalBg);
@@ -95,43 +174,42 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         } else {
             localStorage.removeItem(`aurabuild_bg_${userData?.name || 'default'}`);
         }
-        if (!isPublicPreview) API.patch('portfolio-settings/', { globalBg: globalBg || "" }).catch(() => {});
-    }, [globalBg, userData?.name, setUserData, isPublicPreview]);
+        if (!isPublicPreview && hasLoadedInitialSettingsRef.current) {
+            updatePortfolioSettings({ globalBg: globalBg || "" }).catch(() => {});
+        }
+    }, [globalBg, userData?.name, setUserData, isPublicPreview, updatePortfolioSettings]);
 
     useEffect(() => {
         if (globalFont) {
+            ensureGoogleFontLoaded(FONT_CLASS_TO_FAMILY[globalFont] || globalFont);
             localStorage.setItem(`aurabuild_font_${userData?.name || 'default'}`, globalFont);
             if (setUserData) setUserData(prev => ({ ...prev, globalFont }));
         }
-        if (!isPublicPreview) API.patch('portfolio-settings/', { globalFont }).catch(() => {});
-    }, [globalFont, userData?.name, setUserData, isPublicPreview]);
+        if (!isPublicPreview && hasLoadedInitialSettingsRef.current) {
+            updatePortfolioSettings({ globalFont }).catch(() => {});
+        }
+    }, [globalFont, userData?.name, setUserData, isPublicPreview, updatePortfolioSettings]);
     
     // --- Sync Theme to Backend ---
     useEffect(() => {
-        if (userData?.theme && !isPublicPreview) {
-            API.patch('portfolio-settings/', { theme: userData.theme }).catch(() => {});
+        if (userData?.theme && !isPublicPreview && hasLoadedInitialSettingsRef.current) {
+            updatePortfolioSettings({ theme: userData.theme }).catch(() => {});
         }
-    }, [userData?.theme, isPublicPreview]);
+    }, [userData?.theme, isPublicPreview, updatePortfolioSettings]);
 
     // --- Sync Frontpage Template to Backend & LocalStorage ---
     useEffect(() => {
         if (userData?.frontpageTemplate) {
             localStorage.setItem(`aurabuild_frontpage_${userData?.name || 'default'}`, userData.frontpageTemplate);
             localStorage.setItem(`aurabuild_frontpage_default`, userData.frontpageTemplate);
-            if (!isPublicPreview) {
-                API.patch('portfolio-settings/', { frontpageTemplate: userData.frontpageTemplate }).catch(() => {});
+            if (!isPublicPreview && hasLoadedInitialSettingsRef.current) {
+                updatePortfolioSettings({ frontpageTemplate: userData.frontpageTemplate }).catch(() => {});
             }
         }
-    }, [userData?.frontpageTemplate, userData?.name, isPublicPreview]);
+    }, [userData?.frontpageTemplate, userData?.name, isPublicPreview, updatePortfolioSettings]);
 
-    // Local fallback for theme in public preview mode
-    const [localTheme, setLocalTheme] = useState(userData?.theme || 'modern_glass');
-    
-    useEffect(() => {
-        if (userData?.theme) setLocalTheme(userData.theme);
-    }, [userData?.theme]);
-
-    const currentTheme = (userData && userData.theme) || localTheme;
+    // Derive active theme cleanly
+    const currentTheme = (userData && userData.theme) || 'modern_glass';
 
     // --- Terminal & History State ---
     const [terminalLogsState, setTerminalLogsState] = useState([
@@ -260,43 +338,51 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
     // BOOT SEQUENCE
     useEffect(() => {
         const loadWorkspace = async () => {
+            setIsSectionsLoading(true);
+            setPublicNotFound(false);
             try {
                 let pagesData = [];
                 if (isPublicPreview && userData?.name) {
                     const cleanUsername = userData.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-                    const res = await API.get(`public-portfolio/${cleanUsername}/`);
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const slugParam = urlParams.get('portfolio');
+                    const query = slugParam ? `?portfolio=${encodeURIComponent(slugParam)}` : '';
+                    const res = await API.get(`public-portfolio/${cleanUsername}/${query}`);
                     pagesData = res.data.pages || res.data;
                     if (res.data.settings) {
                         setGlobalBg(res.data.settings.globalBg || null);
                         setGlobalFont(res.data.settings.globalFont || 'font-inter');
-                        const fpTpl = res.data.settings.frontpageTemplate 
-                            || localStorage.getItem(`aurabuild_frontpage_${cleanUsername}`) 
-                            || localStorage.getItem('aurabuild_frontpage_default') 
-                            || 'template1';
-                        if (setUserData) {
-                            setUserData(prev => ({
-                                ...prev,
-                                frontpageTemplate: fpTpl,
-                                ...(res.data.settings.theme ? { theme: res.data.settings.theme } : {}),
-                                ...(res.data.owner_name ? { name: res.data.owner_name } : {})
-                            }));
-                        }
-                        if (res.data.settings.theme) {
-                            setLocalTheme(res.data.settings.theme);
-                        }
+                        const fpTpl = res.data.settings.frontpageTemplate || 'template1';
+                            if (setUserData) {
+                                setUserData(prev => ({
+                                    ...prev,
+                                    frontpageTemplate: fpTpl,
+                                    ...(res.data.settings.theme ? { theme: res.data.settings.theme } : {}),
+                                    ...(res.data.owner_name ? { name: res.data.owner_name } : {})
+                                }));
+                            }
+                            setPortfolioMeta(prev => ({
+                            ...prev,
+                            title: res.data.title || prev.title,
+                            slug: res.data.slug || prev.slug,
+                            isPublished: true,
+                            seoTitle: res.data.settings.seoTitle || '',
+                            seoDescription: res.data.settings.seoDescription || '',
+                        }));
                     }
                 } else {
-                    const res = await API.get('pages/');
+                    const pidParam = portfolioId ? { portfolio_id: portfolioId } : {};
+                    if (portfolioId) {
+                        await API.patch(`portfolios/${portfolioId}/`, { is_active: true }).catch(() => {});
+                    }
+                    const res = await API.get('pages/', { params: pidParam });
                     pagesData = res.data;
                     try {
-                        const settingsRes = await API.get('portfolio-settings/');
+                        const settingsRes = await API.get('portfolio-settings/', { params: pidParam });
                         if (settingsRes.data) {
                             setGlobalBg(settingsRes.data.globalBg || null);
                             setGlobalFont(settingsRes.data.globalFont || 'font-inter');
-                            const fpTpl = settingsRes.data.frontpageTemplate 
-                                || localStorage.getItem(`aurabuild_frontpage_${userData?.name || 'default'}`) 
-                                || localStorage.getItem('aurabuild_frontpage_default') 
-                                || 'template1';
+                            const fpTpl = settingsRes.data.frontpageTemplate || 'template1';
                             if (setUserData) {
                                 setUserData(prev => ({
                                     ...prev,
@@ -304,42 +390,69 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
                                     ...(settingsRes.data.theme ? { theme: settingsRes.data.theme } : {})
                                 }));
                             }
-                            if (settingsRes.data.theme) {
-                                setLocalTheme(settingsRes.data.theme);
-                            }
+                            setPortfolioMeta(prev => ({
+                                ...prev,
+                                id: settingsRes.data.id || portfolioId || prev.id,
+                                title: settingsRes.data.title || prev.title,
+                                slug: settingsRes.data.slug || prev.slug,
+                                isPublished: Boolean(settingsRes.data.isPublished),
+                                seoTitle: settingsRes.data.seoTitle || '',
+                                seoDescription: settingsRes.data.seoDescription || '',
+                                publishedUrl: settingsRes.data.publishedUrl || '',
+                                careerTrack: settingsRes.data.careerTrack || 'software_developer',
+                            }));
                         }
-                    } catch (e) {}
+                    } catch { /* ignore */ }
+                    hasLoadedInitialSettingsRef.current = true;
                 }
                 
                 if (pagesData && pagesData.length > 0) {
                     setPages(pagesData);
                     const firstPage = pagesData[0];
-                    setActivePage(firstPage.name);
+                    setActivePageState(firstPage.name);
                     const sorted = sanitizeAndSortSections(firstPage.sections || []);
                     setSections(sorted);
                     lastLoadedPage.current = firstPage.name;
+                    setSaveStatus('saved');
+                    setLastSavedAt(Date.now());
                     
-                    // Instant Local Storage Persistence for 0ms Reloads
-                    const cleanKey = (userData?.name || previewUserData?.name || 'default').toLowerCase().replace(/[^a-z0-9]/g, '');
-                    try {
-                        localStorage.setItem(`aurabuild_cached_sections_${cleanKey}`, JSON.stringify(sorted));
-                        localStorage.setItem('aurabuild_cached_sections_latest', JSON.stringify(sorted));
-                        localStorage.setItem(`aurabuild_cached_pages_${cleanKey}`, JSON.stringify(pagesData));
-                        localStorage.setItem('aurabuild_cached_pages_latest', JSON.stringify(pagesData));
-                    } catch (e) {}
+                    if (!isPublicPreview) {
+                        const cleanKey = (userData?.name || 'default').toLowerCase().replace(/[^a-z0-9]/g, '');
+                        try {
+                            localStorage.setItem(`aurabuild_cached_sections_${cleanKey}`, JSON.stringify(sorted));
+                            localStorage.setItem('aurabuild_cached_sections_latest', JSON.stringify(sorted));
+                            localStorage.setItem(`aurabuild_cached_pages_${cleanKey}`, JSON.stringify(pagesData));
+                            localStorage.setItem('aurabuild_cached_pages_latest', JSON.stringify(pagesData));
+                        } catch { /* ignore */ }
+                    }
                     
                     setTerminalLogs(prev => [...prev, { type: "success", text: "[SUCCESS] Workspace synchronized with backend database." }]);
-                } else {
-                    handleAddPage("Home");
+                } else if (!isPublicPreview) {
+                    try {
+                        const pid = portfolioMeta?.id || portfolioId;
+                        const createRes = await API.post('pages/create/', {
+                            name: 'Home',
+                            ...(pid ? { portfolio_id: pid } : {}),
+                        });
+                        setPages([createRes.data]);
+                        setActivePageState(createRes.data.name || 'Home');
+                        setSections(sanitizeAndSortSections(createRes.data.sections || []));
+                        lastLoadedPage.current = createRes.data.name || 'Home';
+                    } catch { /* ignore */ }
                 }
-            } catch (err) {
+            } catch {
+                if (isPublicPreview) {
+                    setPublicNotFound(true);
+                    setSections([]);
+                }
                 setTerminalLogs(prev => [...prev, { type: "error", text: "[ERROR] Failed to load workspace from server." }]);
             } finally {
                 setIsSectionsLoading(false);
             }
         };
         loadWorkspace();
-    }, [isPublicPreview, userData?.name]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isPublicPreview, userData?.name, portfolioId]);
 
     // Keep active workspace sections persisted to localStorage on every change
     useEffect(() => {
@@ -348,31 +461,23 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
             try {
                 localStorage.setItem(`aurabuild_cached_sections_${cleanKey}`, JSON.stringify(sections));
                 localStorage.setItem('aurabuild_cached_sections_latest', JSON.stringify(sections));
-            } catch (e) {}
+            } catch { /* ignore */ }
         }
     }, [sections, userData?.name, isPublicPreview]);
 
-    // PAGE SWITCHER
-    useEffect(() => {
-        if (pages.length > 0 && lastLoadedPage.current !== activePage) {
-            const pageObj = pages.find(p => p.name === activePage);
+    const setActivePage = useCallback((nextPageName) => {
+        setActivePageState(nextPageName);
+        if (lastLoadedPage.current !== nextPageName) {
+            const pageObj = pages.find(p => p.name === nextPageName);
             if (pageObj) {
                 setSections(sanitizeAndSortSections(pageObj.sections || []));
-                setHistory({ past: [], future: [] }); 
-                lastLoadedPage.current = activePage;
+                setHistory({ past: [], future: [] });
+                lastLoadedPage.current = nextPageName;
             }
         }
-    }, [activePage, pages]);
+    }, [pages]);
 
-    // --- URL Routing visually (Only apply if NOT in public preview) ---
-    useEffect(() => {
-        if (!isPublicPreview && userData && userData.name && userData.code) {
-            const cleanUsername = userData.name.toLowerCase().replace(/\s+/g, '-');
-            const cleanToken = userData.code;
-            const newPath = `/workspace/${cleanUsername}/${cleanToken}`;
-            window.history.replaceState({}, '', newPath);
-        }
-    }, [userData, isPublicPreview]);
+    // Note: Keep workspace routes clean without leaking secret access codes into browser history.
 
     // --- BULLETPROOF HISTORY RECORDER ---
     const commitHistory = (newSections, oldSections) => {
@@ -410,13 +515,40 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
 
     // --- Backend-Synced Data Handlers ---
     const handleAddPage = async (pageName = "New Page") => {
+        setSaveStatus('saving');
         try {
-            const res = await API.post('pages/create/', { name: pageName });
+            const pid = portfolioMeta?.id || portfolioId;
+            const res = await API.post('pages/create/', {
+                name: pageName,
+                ...(pid ? { portfolio_id: pid } : {}),
+            });
             setPages(prev => [...prev, res.data]);
             setActivePage(res.data.name);
+            setSaveStatus('saved');
+            setLastSavedAt(Date.now());
             setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Created new backend page: ${res.data.name}` }]);
-        } catch (err) {
+        } catch {
+            setSaveStatus('error');
             setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Failed to create page.` }]);
+        }
+    };
+
+    const handleRenamePage = async (pageId, newName) => {
+        const cleanName = String(newName || '').trim();
+        if (!pageId || !cleanName) return;
+        setSaveStatus('saving');
+        try {
+            const res = await API.patch(`pages/${pageId}/`, { name: cleanName });
+            setPages(prev => prev.map(p => (p.id === pageId ? { ...p, name: res.data.name || cleanName, slug: res.data.slug || p.slug } : p)));
+            setActivePage(prev => {
+                const target = pages.find(p => p.id === pageId);
+                return target && target.name === prev ? (res.data.name || cleanName) : prev;
+            });
+            setSaveStatus('saved');
+            setLastSavedAt(Date.now());
+        } catch (err) {
+            setSaveStatus('error');
+            notify(err.response?.data?.error || 'Failed to rename page.', 'error');
         }
     };
 
@@ -425,15 +557,43 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
             setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Cannot delete the last remaining page.` }]);
             return;
         }
+        setSaveStatus('saving');
         try {
             if (pageId) await API.delete(`pages/${pageId}/`);
             const newPages = pages.filter(p => p.id !== pageId);
             setPages(newPages);
             if (activePage === pageNameToDelete) setActivePage(newPages[0].name);
+            setSaveStatus('saved');
+            setLastSavedAt(Date.now());
             setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Deleted page: ${pageNameToDelete}` }]);
-        } catch (err) {
+        } catch {
+            setSaveStatus('error');
             setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Failed to delete page on server.` }]);
         }
+    };
+
+    const flushPendingSaves = async () => {
+        const timers = pendingPatchTimersRef.current;
+        const payloads = pendingPatchPayloadsRef.current;
+        const keys = Object.keys(payloads);
+        if (keys.length === 0) return;
+        setSaveStatus('saving');
+        for (const secId of keys) {
+            if (timers[secId]) {
+                clearTimeout(timers[secId]);
+                delete timers[secId];
+            }
+            const contentData = payloads[secId];
+            delete payloads[secId];
+            try {
+                await API.patch(`sections/${secId}/`, { content_data: contentData });
+            } catch {
+                setSaveStatus('error');
+                return;
+            }
+        }
+        setSaveStatus('saved');
+        setLastSavedAt(Date.now());
     };
 
     const handleUpdateSectionContent = (sectionId, key, value) => {
@@ -450,14 +610,29 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         commitHistory(newSections, currentSections);
 
         const isNumericId = /^\d+$/.test(String(sectionId));
-        if (isNumericId) { 
+        if (isNumericId && !isPublicPreview) {
             const targetSec = newSections.find(s => String(s.id) === String(sectionId));
             if (targetSec) {
-                // Non-blocking background save to keep UI transactions instant
-                API.patch(`sections/${sectionId}/`, { content_data: targetSec.content_data })
-                    .catch(() => {
+                setSaveStatus('dirty');
+                pendingPatchPayloadsRef.current[sectionId] = targetSec.content_data;
+                if (pendingPatchTimersRef.current[sectionId]) {
+                    clearTimeout(pendingPatchTimersRef.current[sectionId]);
+                }
+                pendingPatchTimersRef.current[sectionId] = setTimeout(async () => {
+                    const latestData = pendingPatchPayloadsRef.current[sectionId];
+                    delete pendingPatchTimersRef.current[sectionId];
+                    delete pendingPatchPayloadsRef.current[sectionId];
+                    if (!latestData) return;
+                    setSaveStatus('saving');
+                    try {
+                        await API.patch(`sections/${sectionId}/`, { content_data: latestData });
+                        setSaveStatus('saved');
+                        setLastSavedAt(Date.now());
+                    } catch {
+                        setSaveStatus('error');
                         setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Autosave failed for section #${sectionId}` }]);
-                    });
+                    }
+                }, 450);
             }
         }
     };
@@ -483,22 +658,19 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
                     ordered_ids: newSections.map(s => s.id)
                 });
             }
-        } catch (e) {
+        } catch {
             setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Layout reorder failed to save to database.` }]);
         }
     };
 
-    const handleAddManualSection = (type) => {
-        const newId = `sec-${Date.now()}`;
+    const handleAddManualSection = async (type) => {
+        const tempId = `sec-${Date.now()}`;
         const defaultContent = DEFAULT_BLOCK_DATA[type] || {};
-
-        const newSection = { id: newId, section_type: type, content_data: defaultContent };
-        
+        const newSection = { id: tempId, section_type: type, content_data: defaultContent };
         const currentSections = sectionsRef.current;
-        
+
         const targetWeight = SECTION_ORDER_WEIGHTS[type] || 999;
         let insertIndex = currentSections.length;
-        
         for (let i = 0; i < currentSections.length; i++) {
             const currentWeight = SECTION_ORDER_WEIGHTS[currentSections[i].section_type] || 999;
             if (targetWeight < currentWeight) {
@@ -506,7 +678,7 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
                 break;
             }
         }
-        
+
         const newSections = [
             ...currentSections.slice(0, insertIndex),
             newSection,
@@ -514,9 +686,34 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         ];
 
         sectionsRef.current = newSections;
-        commitHistory(newSections, currentSections); 
-        
-        setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Added local ${type} block to canvas.` }]);
+        commitHistory(newSections, currentSections);
+
+        const activePageObj = pages.find(p => p.name === activePage);
+        if (!isPublicPreview && activePageObj && /^\d+$/.test(String(activePageObj.id))) {
+            setSaveStatus('saving');
+            try {
+                const res = await API.post('sections/', {
+                    page: activePageObj.id,
+                    section_type: type,
+                    order: insertIndex,
+                    content_data: defaultContent,
+                });
+                const savedSec = res.data;
+                setSections(prev => prev.map(s => (s.id === tempId ? savedSec : s)));
+                setPages(prevPages => prevPages.map(p => (
+                    p.name === activePage
+                        ? { ...p, sections: (p.sections || []).map(s => (s.id === tempId ? savedSec : s)) }
+                        : p
+                )));
+                setSaveStatus('saved');
+                setLastSavedAt(Date.now());
+                setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Added ${type} section and saved to database.` }]);
+                return;
+            } catch {
+                setSaveStatus('error');
+            }
+        }
+        setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Added ${type} block to canvas.` }]);
     };
 
     const handleDeleteSection = async (sectionId) => {
@@ -527,11 +724,15 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         commitHistory(newSections, currentSections);
         
         const isNumericId = /^\d+$/.test(String(sectionId));
-        if (isNumericId) {
+        if (isNumericId && !isPublicPreview) {
+            setSaveStatus('saving');
             try {
                 await API.delete(`sections/${sectionId}/`);
+                setSaveStatus('saved');
+                setLastSavedAt(Date.now());
                 setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Deleted section from database.` }]);
-            } catch (e) {
+            } catch {
+                setSaveStatus('error');
                 setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Failed to delete section from database.` }]);
             }
         } else {
@@ -543,56 +744,122 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         const currentSections = sectionsRef.current;
         const sectionIndex = currentSections.findIndex(s => String(s.id) === String(sectionId));
         if (sectionIndex === -1) return;
-        
+
         const originalSection = currentSections[sectionIndex];
-        const newId = `sec-dup-${Date.now()}`;
-        
+        const tempId = `sec-dup-${Date.now()}`;
+        const clonedData = JSON.parse(JSON.stringify(originalSection.content_data || {}));
+
         const clonedSection = {
-            id: newId,
+            id: tempId,
             section_type: originalSection.section_type,
-            content_data: JSON.parse(JSON.stringify(originalSection.content_data || {}))
+            content_data: clonedData
         };
-        
+
         const newSections = [
             ...currentSections.slice(0, sectionIndex + 1),
             clonedSection,
             ...currentSections.slice(sectionIndex + 1)
         ];
-        
+
         sectionsRef.current = newSections;
         commitHistory(newSections, currentSections);
+
+        const isNumericId = /^\d+$/.test(String(sectionId));
+        if (!isPublicPreview) {
+            setSaveStatus('saving');
+            try {
+                let res;
+                if (isNumericId) {
+                    res = await API.post(`sections/${sectionId}/duplicate/`);
+                } else {
+                    const activePageObj = pages.find(p => p.name === activePage);
+                    if (activePageObj && /^\d+$/.test(String(activePageObj.id))) {
+                        res = await API.post('sections/', {
+                            page: activePageObj.id,
+                            section_type: originalSection.section_type,
+                            order: sectionIndex + 1,
+                            content_data: clonedData,
+                        });
+                    }
+                }
+                if (res?.data?.id) {
+                    setSections(prev => prev.map(s => (s.id === tempId ? res.data : s)));
+                    setSaveStatus('saved');
+                    setLastSavedAt(Date.now());
+                }
+            } catch {
+                setSaveStatus('error');
+            }
+        }
         setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Duplicated section block.` }]);
     };
-
-
 
     const handleResumeParsed = (resData) => {
         if (!resData || !resData.sections || resData.sections.length === 0) {
             setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] No recognizable sections found in resume.` }]);
             return;
         }
-        
-        // INTERCEPT for review instead of immediately applying
         setResumeReviewData(resData);
     };
 
-    const handleApplyResumeData = (mode) => {
-        if (!resumeReviewData || !resumeReviewData.sections) return;
-        
-        const newSections = sanitizeAndSortSections(resumeReviewData.sections);
-        
-        if (mode === 'replace') {
-            setHistory({ past: [], future: [] }); 
-            setSections(newSections);
-            setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Canvas replaced with extracted sections!` }]);
-        } else if (mode === 'append') {
-            const currentSections = sectionsRef.current;
-            const updatedSections = sanitizeAndSortSections([...currentSections, ...newSections]);
-            setSections(updatedSections);
-            commitHistory(updatedSections, currentSections);
-            setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Extracted sections appended to canvas!` }]);
+    const handleApplyResumeData = async (mode, editedSections = null) => {
+        const candidateSections = Array.isArray(editedSections) && editedSections.length > 0
+            ? editedSections
+            : resumeReviewData?.sections;
+        if (!candidateSections || candidateSections.length === 0) return;
+
+        const cleanNew = sanitizeAndSortSections(candidateSections);
+        const activePageObj = pages.find(p => p.name === activePage);
+        const currentSections = sectionsRef.current;
+
+        let targetSections = cleanNew;
+        if (mode === 'append') {
+            targetSections = sanitizeAndSortSections([...currentSections, ...cleanNew]);
         }
-        
+
+        // Persist reviewed sections to backend database
+        if (!isPublicPreview && activePageObj && /^\d+$/.test(String(activePageObj.id))) {
+            setSaveStatus('saving');
+            try {
+                if (mode === 'replace') {
+                    for (const oldSec of currentSections) {
+                        if (/^\d+$/.test(String(oldSec.id))) {
+                            await API.delete(`sections/${oldSec.id}/`).catch(() => {});
+                        }
+                    }
+                }
+                const savedSections = [];
+                for (let idx = 0; idx < cleanNew.length; idx++) {
+                    const sec = cleanNew[idx];
+                    const res = await API.post('sections/', {
+                        page: activePageObj.id,
+                        section_type: sec.section_type,
+                        order: mode === 'append' ? currentSections.length + idx : idx,
+                        content_data: sec.content_data || {},
+                    });
+                    savedSections.push(res.data);
+                }
+                targetSections = mode === 'append'
+                    ? sanitizeAndSortSections([...currentSections, ...savedSections])
+                    : sanitizeAndSortSections(savedSections);
+                setSaveStatus('saved');
+                setLastSavedAt(Date.now());
+            } catch {
+                setSaveStatus('error');
+                notify("Applied to canvas, though some sections failed to sync.", "error");
+            }
+        }
+
+        sectionsRef.current = targetSections;
+        if (mode === 'replace') {
+            setHistory({ past: [], future: [] });
+            setSections(targetSections);
+            setPages(prev => prev.map(p => (p.name === activePage ? { ...p, sections: targetSections } : p)));
+            setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Canvas replaced & saved with reviewed resume data.` }]);
+        } else {
+            commitHistory(targetSections, currentSections);
+            setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Reviewed resume sections merged & saved.` }]);
+        }
         setResumeReviewData(null);
     };
 
@@ -602,34 +869,53 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
     };
 
     const triggerDeployment = async () => {
-        // Ensure theme, globalBg, and globalFont are synced to userData and backend before deployment
-        if (userData?.theme) {
-            await API.patch('portfolio-settings/', { theme: userData.theme }).catch(() => {});
-        }
-        if (globalBg) {
-            localStorage.setItem(`aurabuild_bg_${userData?.name || 'default'}`, globalBg);
-            if (setUserData) setUserData(prev => ({ ...prev, globalBg }));
-            await API.patch('portfolio-settings/', { globalBg: globalBg || "" }).catch(() => {});
-        }
-        if (globalFont) {
-            localStorage.setItem(`aurabuild_font_${userData?.name || 'default'}`, globalFont);
-            if (setUserData) setUserData(prev => ({ ...prev, globalFont }));
-            await API.patch('portfolio-settings/', { globalFont }).catch(() => {});
-        }
-        
-        const cleanUsername = (userData?.name || "developer").toLowerCase().replace(/[^a-z0-9]/g, '');
-        const liveUrl = `${window.location.protocol}//${window.location.host}/${cleanUsername}/`;
+        await flushPendingSaves();
+        const pid = portfolioMeta?.id || portfolioId;
+        const qs = pid ? `?portfolio_id=${pid}` : '';
 
-        setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Publishing live portfolio to ${liveUrl}...` }]);
-        notify("Publishing your portfolio live to Edge...", "info");
-        
+        setSaveStatus('saving');
+        setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Syncing settings and publishing portfolio...` }]);
+        notify("Publishing your portfolio...", "info");
+
         try {
+            await updatePortfolioSettings({
+                isPublished: true,
+                ...(userData?.theme ? { theme: userData.theme } : {}),
+                globalBg: globalBg || "",
+                ...(globalFont ? { globalFont } : {}),
+                ...(userData?.frontpageTemplate ? { frontpageTemplate: userData.frontpageTemplate } : {}),
+            });
+
+            const ownerHandle = (userData?.email?.split('@')?.[0] || userData?.name || "developer").toLowerCase().replace(/[^a-z0-9._-]/g, '');
+            const slugQuery = portfolioMeta?.slug ? `?portfolio=${encodeURIComponent(portfolioMeta.slug)}` : '';
+            let liveUrl = `${window.location.origin}/preview/${encodeURIComponent(ownerHandle)}${slugQuery}`;
+
+            try {
+                const deployRes = await API.post(`deploy/${qs}`, {
+                    portfolio_id: pid,
+                    title: portfolioMeta?.title || `${userData?.name || 'Developer'} Portfolio`,
+                    site_url: liveUrl,
+                });
+                if (deployRes.data?.url) {
+                    liveUrl = deployRes.data.url;
+                }
+            } catch (deployErr) {
+                // If deploy hook is not configured (e.g., no Vercel env hook), internal public preview URL is still live!
+                if (deployErr.response?.status && deployErr.response.status >= 500 && !deployErr.response?.data?.fallback_preview) {
+                    notify(deployErr.response?.data?.error || "External deploy hook unavailable; internal preview link published.", "info");
+                }
+            }
+
+            setPortfolioMeta(prev => ({ ...prev, isPublished: true, publishedUrl: liveUrl }));
             await navigator.clipboard.writeText(liveUrl).catch(() => {});
-            setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Published live! URL: ${liveUrl}` }]);
-            notify(`Portfolio live! View at: ${liveUrl} (Copied to clipboard)`, "success");
-            window.open(liveUrl, '_blank');
+            setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Portfolio is now live at: ${liveUrl}` }]);
+            notify(`Published live! URL copied to clipboard.`, "success");
+            window.open(liveUrl, '_blank', 'noopener,noreferrer');
         } catch (err) {
-            window.open(liveUrl, '_blank');
+            setSaveStatus('error');
+            const msg = err.response?.data?.error || "Failed to publish portfolio. Please check your connection.";
+            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] ${msg}` }]);
+            notify(msg, "error");
         }
     };
 
@@ -656,13 +942,13 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
             if (/^\d+$/.test(String(sec.id))) {
                 try {
                     await API.delete(`sections/${sec.id}/`);
-                } catch (e) {}
+                } catch { /* ignore */ }
             }
         }
         setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Workspace canvas reset.` }]);
     };
 
-    const value = useMemo(() => ({
+    const value = {
         isPublicPreview,
         userData,
         setUserData,
@@ -690,8 +976,10 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         handleUndo,
         handleRedo,
         handleAddPage,
+        handleRenamePage,
         handleDeletePage,
         handleUpdateSectionContent,
+        flushPendingSaves,
         handleDropSection,
         handleAddManualSection,
         handleDeleteSection,
@@ -706,12 +994,13 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         selectedSection,
         localContent,
         isSectionsLoading,
-    }), [
-        isPublicPreview, userData, themeMode, currentTheme, pages, activePage,
-        sections, activeHighlightSection, aiSuggestionPreview, globalBg,
-        globalFont, customFontSize, customAccentColor, terminalLogs, history,
-        resumeReviewData, selectedSection, localContent, isSectionsLoading
-    ]);
+        publicNotFound,
+        saveStatus,
+        lastSavedAt,
+        portfolioMeta,
+        setPortfolioMeta,
+        updatePortfolioSettings,
+    };
 
     return (
         <WorkspaceContext.Provider value={value}>

@@ -1,16 +1,36 @@
-import { useState, useMemo, useContext, useEffect, useRef } from "react";
+import { useState, createContext, useContext, useEffect, useRef } from "react";
 import { notify } from "../toast";
 import { sendContactForm } from "../utils/contactUtils";
+import { getRoleImage } from "../utils/constants";
+import { downloadPortfolioPdf } from "../utils/downloadResumePdf";
 import EditableText from "./EditableText";
 import { PORTFOLIO_THEMES } from "./themes";
-import { motion, AnimatePresence } from "framer-motion";
-import { PDFDownloadLink } from '@react-pdf/renderer';
-import { ResumePDF } from "../components/ResumePDF";
+import { motion } from "framer-motion";
 import { HeroParticles } from "./HeroParticles";
 import { GitHubCalendar } from 'react-github-calendar';
 import { WorkspaceContext } from "../context/WorkspaceContext";
 import { getSkillIconUrl, getFallbackLucideIcon } from "../utils/skillIcons";
-import { X } from "lucide-react";
+import { X, Sparkles } from "lucide-react";
+
+const PortfolioRenderContext = createContext(false);
+
+function TextElement({ value, placeholder, onCommit, multiline = false, as = 'span', className = '' }) {
+    const isPreview = useContext(PortfolioRenderContext);
+    if (isPreview) {
+        if (!value) return null;
+        const Tag = as;
+        return (
+            <Tag className={`inline-block w-full max-w-full min-w-0 break-words ${multiline ? "whitespace-pre-wrap" : ""} ${className}`}>
+                {value}
+            </Tag>
+        );
+    }
+    return (
+        <div className={`inline-block w-full max-w-full min-w-0 break-words ${multiline ? "whitespace-normal" : ""} ${className}`}>
+            <EditableText as={as} value={value} placeholder={placeholder} onCommit={onCommit} multiline={multiline} />
+        </div>
+    );
+}
 
 // --- Subdued Premium Animation Configurations ---
 const springTransition = { type: "spring", stiffness: 250, damping: 25 };
@@ -35,19 +55,9 @@ const staggerItem = {
     show: { opacity: 1, y: 0, transition: springTransition }
 };
 
-export const getRoleImage = (subheading) => {
-    const role = (subheading || "").toLowerCase();
-    if (role.includes('civil') || role.includes('construct') || role.includes('architect')) return 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1000&q=80';
-    if (role.includes('design') || role.includes('art') || role.includes('ui/ux') || role.includes('ux')) return 'https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=1000&q=80';
-    if (role.includes('data') || role.includes('ai') || role.includes('machine learning') || role.includes('ml')) return 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1000&q=80';
-    if (role.includes('develop') || role.includes('software') || role.includes('engineer') || role.includes('program')) return 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=1000&q=80';
-    return 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1000&q=80';
-};
-
 export default function RenderPageContent({ section, portfolioTheme, sections, onInlineEdit, isPreview = false, aiSuggestionPreview = null }) {
-    // Memoize the PDF document to prevent massive memory leaks and re-renders on scroll
-    const pdfDocument = useMemo(() => isPreview ? <ResumePDF sections={sections} /> : null, [sections, isPreview]);
-    const [openMenu, setOpenMenu] = useState(null);
+    const [openMenu] = useState(null);
+    const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
     const [cName, setCName] = useState("");
     const [cEmail, setCEmail] = useState("");
     const [cMessage, setCMessage] = useState("");
@@ -56,17 +66,34 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
     const workspace = useContext(WorkspaceContext);
     const customFontSz = workspace?.customFontSize || "base";
     const customAccent = workspace?.customAccentColor || null;
-    
+
+    const sectionId = section?.id;
+    const rawSideImage = section?.content_data?.customSideImage;
+    const rawHideSideImage = section?.content_data?.hideSideImage;
+    const prevCustomImageRef = useRef(rawSideImage);
+
+    useEffect(() => {
+        if (!isPreview && onInlineEdit && sectionId) {
+            if (rawSideImage && rawSideImage !== prevCustomImageRef.current) {
+                if (rawHideSideImage === true || String(rawHideSideImage).toLowerCase() === 'true') {
+                    onInlineEdit(sectionId, 'hideSideImage', false);
+                }
+            }
+        }
+        prevCustomImageRef.current = rawSideImage;
+    }, [rawSideImage, rawHideSideImage, onInlineEdit, isPreview, sectionId]);
+
     if (!section) return null;
 
     const currentType = (section.section_type || "").toLowerCase().trim();
     const data = section.content_data || {};
-    const bgImage = data.backgroundImage || null;
     const customSideImage = data.customSideImage || null;
 
     // --- Dynamic Theme Integration ---
     const themeDef = PORTFOLIO_THEMES[portfolioTheme] || PORTFOLIO_THEMES.modern_glass || {};
-    
+    const hasGlobalBg = Boolean(workspace?.globalBg);
+    const isLightCanvas = Boolean(themeDef.isLight) && !hasGlobalBg;
+
     // Apply Font Size Modifier
     const fontSizeMap = {
         "sm": "text-sm",
@@ -76,52 +103,26 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
     };
     const fontSzClass = fontSizeMap[customFontSz] || "text-base";
 
-    const borderClass = themeDef.border || "border-white/5";
-    const innerBorderClass = (themeDef.border || "").split(' ').find(c => c.startsWith('border-')) || "border-white/5";
-    
+    const useScrimDarkFallback = Boolean(themeDef.isLight) && hasGlobalBg;
+    const borderClass = useScrimDarkFallback ? "border-white/15" : (themeDef.border || "border-white/5");
+    const innerBorderClass = borderClass.split(' ').find(c => c.startsWith('border-')) || "border-white/5";
+
     // Subdued premium aesthetic defaults
-    const accentText = customAccent ? `text-[${customAccent}]` : (themeDef.accentText || "text-blue-400"); // Focus on solid colors
-    const accentBg = customAccent ? `bg-[${customAccent}]` : (themeDef.accentBg || "bg-blue-600");
-    const textPrimary = themeDef.textPrimary || "text-slate-50"; 
-    const textSecondary = themeDef.textSecondary || "text-slate-400";
-    const placeholderClass = themeDef.placeholderClass || "placeholder-slate-600";
-    const cardBg = themeDef.cardBg || "bg-white/[0.02] backdrop-blur-2xl"; 
-    const trackBg = themeDef.trackBg || "bg-white/[0.03]";
-    const trackBgLight = themeDef.trackBgLight || "bg-white/[0.01]";
-    const badgeClass = `${themeDef.badgeBg || trackBg} ${themeDef.badgeText || 'text-slate-300'} border ${innerBorderClass} shadow-sm backdrop-blur-md font-mono text-xs`;
+    const accentText = customAccent
+        ? `text-[${customAccent}]`
+        : (useScrimDarkFallback ? "text-blue-400" : (themeDef.accentText || "text-blue-400"));
+    const accentBg = customAccent
+        ? `bg-[${customAccent}]`
+        : (useScrimDarkFallback ? "bg-blue-600" : (themeDef.accentBg || "bg-blue-600"));
+    const textPrimary = useScrimDarkFallback ? "text-slate-50" : (themeDef.textPrimary || "text-slate-50");
+    const textSecondary = useScrimDarkFallback ? "text-slate-300" : (themeDef.textSecondary || "text-slate-400");
+    const placeholderClass = useScrimDarkFallback ? "placeholder-slate-400" : (themeDef.placeholderClass || (isLightCanvas ? "placeholder-slate-400" : "placeholder-slate-500"));
+    const cardBg = useScrimDarkFallback ? "bg-slate-900/70 border border-white/15 backdrop-blur-xl" : (themeDef.cardBg || "bg-white/[0.02] backdrop-blur-2xl");
+    const trackBg = useScrimDarkFallback ? "bg-slate-900/80 border border-white/15" : (themeDef.trackBg || "bg-white/[0.03]");
+    const trackBgLight = useScrimDarkFallback ? "bg-slate-900/60" : (themeDef.trackBgLight || "bg-white/[0.01]");
+    const badgeClass = `${useScrimDarkFallback ? 'bg-slate-900/80 border-white/20 text-slate-200' : `${themeDef.badgeBg || trackBg} ${themeDef.badgeText || (isLightCanvas ? 'text-slate-800' : 'text-slate-300')}`} border ${innerBorderClass} shadow-sm backdrop-blur-md font-mono text-xs`;
 
-    // --- SMART TEXT ROUTER ---
-    const TextElement = ({ value, placeholder, onCommit, multiline = false, as = 'span', className = '' }) => {
-        if (isPreview) {
-            if (!value) return null; // Do not show placeholders on the live polished site
-            const Tag = as;
-            return (
-                <Tag className={`inline-block w-full max-w-full min-w-0 break-words ${multiline ? "whitespace-pre-wrap" : ""} ${className}`}>
-                    {value}
-                </Tag>
-            );
-        }
-        return (
-            <div className={`inline-block w-full max-w-full min-w-0 break-words ${multiline ? "whitespace-normal" : ""} ${className}`}>
-                <EditableText as={as} value={value} placeholder={placeholder} onCommit={onCommit} multiline={multiline} />
-            </div>
-        );
-    };
-
-    // Auto-reveal the image if a custom side image was just added
-    const prevCustomImageRef = useRef(data.customSideImage);
-    useEffect(() => {
-        if (!isPreview && onInlineEdit) {
-            // If the customSideImage changes and is truthy, we assume the user/AI added a new image
-            if (data.customSideImage && data.customSideImage !== prevCustomImageRef.current) {
-                // If it was previously hidden, unset the hide flag so the new image is visible
-                if (data.hideSideImage === true || String(data.hideSideImage).toLowerCase() === 'true') {
-                    onInlineEdit(section.id, 'hideSideImage', false);
-                }
-            }
-        }
-        prevCustomImageRef.current = data.customSideImage;
-    }, [data.customSideImage, data.hideSideImage, onInlineEdit, isPreview, section.id]);
+    // Inline text elements now use the top-level TextElement component via PortfolioRenderContext.
 
     // Determine globally if the side image is explicitly hidden by the AI
     const isImageHidden = data.hideSideImage === true || String(data.hideSideImage).toLowerCase() === 'true';
@@ -182,8 +183,6 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
         setCSending(false);
     };
 
-    const sectionImageBanner = null; // Premium UI removes section image banners
-
     const openExternal = (url) => {
         const targetUrl = url.startsWith("http") ? url : `https://${url}`;
         window.open(targetUrl, "_blank", "noopener,noreferrer");
@@ -212,6 +211,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
     const hasAiSuggestion = aiSuggestionPreview && String(aiSuggestionPreview.targetSectionId) === String(section.id);
 
     return (
+        <PortfolioRenderContext.Provider value={isPreview}>
         <div className={`w-full relative ${isPreview ? '' : 'group/section'} ${openMenu ? 'z-50' : 'z-10'}`}>
             {/* AI Suggestion Overlay */}
             {hasAiSuggestion && !isPreview && (
@@ -242,7 +242,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                     className={`py-8 sm:py-12 md:py-16 px-4 sm:px-8 md:px-12 relative rounded-3xl bg-transparent overflow-hidden`}
                 >
                     <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
-                        <HeroParticles isDark={true} />
+                        <HeroParticles isDark={!isLightCanvas} />
                     </div>
                     
                     <div className={`relative z-10 w-full max-w-6xl mx-auto flex flex-col-reverse lg:flex-row items-center justify-between gap-8 sm:gap-10 lg:gap-8 xl:gap-12 min-w-0 ${shouldCenterHero ? 'justify-center' : ''}`}>
@@ -265,7 +265,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: false, amount: 0.1 }}
                                     transition={springTransition}
-                                    className={`font-display font-black tracking-tight leading-[1.08] w-full max-w-full text-2xl sm:text-4xl md:text-5xl lg:text-4xl xl:text-5xl 2xl:text-6xl break-words hyphens-auto text-white overflow-hidden ${shouldCenterHero ? 'mx-auto text-center' : 'mx-auto lg:mx-0 text-center lg:text-left'}`}
+                                    className={`font-display font-black tracking-tight leading-[1.08] w-full max-w-full text-2xl sm:text-4xl md:text-5xl lg:text-4xl xl:text-5xl 2xl:text-6xl break-words hyphens-auto ${textPrimary} overflow-hidden ${shouldCenterHero ? 'mx-auto text-center' : 'mx-auto lg:mx-0 text-center lg:text-left'}`}
                                 >
                                     <TextElement
                                         value={data.heading || "YOUR NAME"}
@@ -293,7 +293,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     whileInView={{ opacity: 1, y: 0 }} 
                                     viewport={{ once: false, amount: 0.1 }}
                                     transition={{ ...springTransition, delay: 0.15 }}
-                                    className={`text-xs sm:text-sm md:text-base lg:text-lg leading-relaxed w-full max-w-2xl min-w-0 font-medium text-slate-300 break-words ${shouldCenterHero ? 'mx-auto text-center' : 'mx-auto lg:mx-0 text-center lg:text-left'}`}
+                                    className={`text-xs sm:text-sm md:text-base lg:text-lg leading-relaxed w-full max-w-2xl min-w-0 font-medium ${textSecondary} break-words ${shouldCenterHero ? 'mx-auto text-center' : 'mx-auto lg:mx-0 text-center lg:text-left'}`}
                                 >
                                     <TextElement 
                                         multiline
@@ -326,13 +326,27 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     </motion.button>
                                     
                                     {isPreview && (
-                                        <PDFDownloadLink
-                                            document={pdfDocument}
-                                            fileName={`${data.heading?.replace(/\s+/g, '_') || 'Portfolio'}_Resume.pdf`}
-                                            className={`w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl text-sm md:text-base font-bold transition-all hover:bg-white/5 border border-white/10 shadow-sm hover:shadow-md hover:-translate-y-1 text-center justify-center ${textPrimary} ${cardBg}`}
+                                        <button
+                                            type="button"
+                                            disabled={isDownloadingPdf}
+                                            onClick={async (e) => {
+                                                e.stopPropagation();
+                                                setIsDownloadingPdf(true);
+                                                try {
+                                                    await downloadPortfolioPdf(
+                                                        sections,
+                                                        `${data.heading?.replace(/\s+/g, '_') || 'Portfolio'}_Resume.pdf`
+                                                    );
+                                                } catch {
+                                                    notify('Failed to generate PDF resume.', 'error');
+                                                } finally {
+                                                    setIsDownloadingPdf(false);
+                                                }
+                                            }}
+                                            className={`w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl text-sm md:text-base font-bold transition-all hover:bg-white/5 border border-white/10 shadow-sm hover:shadow-md hover:-translate-y-1 text-center justify-center cursor-pointer disabled:opacity-60 ${textPrimary} ${cardBg}`}
                                         >
-                                            {({ blob, url, loading, error }) => (loading ? 'Preparing...' : 'Download Resume')}
-                                        </PDFDownloadLink>
+                                            {isDownloadingPdf ? 'Preparing...' : 'Download Resume'}
+                                        </button>
                                     )}
                                 </div>
                                 
@@ -350,17 +364,29 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                             openExternal(heroLiveOptions[0].url);
                                                         }
                                                     }}
-                                                    className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white backdrop-blur-md"
+                                                    className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all border shadow-lg flex items-center gap-2 backdrop-blur-md ${
+                                                        isLightCanvas
+                                                            ? 'border-slate-200 bg-slate-900/5 hover:bg-slate-900/10 text-slate-900'
+                                                            : 'border-white/5 bg-white/5 hover:bg-white/10 text-white'
+                                                    }`}
                                                 >
                                                     See Live {heroLiveOptions.length > 1 ? '▾' : '↗'}
                                                 </button>
                                                 {heroLiveOptions.length > 1 && (
-                                                    <div className="absolute top-full left-0 mt-2 w-48 rounded-xl border border-white/10 bg-[#0a0a0f]/95 backdrop-blur-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col p-2 max-h-60 overflow-y-auto custom-scrollbar">
+                                                    <div className={`absolute top-full left-0 mt-2 w-48 rounded-xl border backdrop-blur-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col p-2 max-h-60 overflow-y-auto custom-scrollbar ${
+                                                        isLightCanvas
+                                                            ? 'border-slate-200 bg-white/95'
+                                                            : 'border-white/10 bg-[#0a0a0f]/95'
+                                                    }`}>
                                                         {heroLiveOptions.map((link, i) => (
                                                             <button
                                                                 key={`social-${i}`}
                                                                 onClick={(e) => { e.stopPropagation(); openExternal(link.url); }}
-                                                                className="text-left px-4 py-2.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition-all truncate flex items-center justify-between"
+                                                                className={`text-left px-4 py-2.5 rounded-lg text-xs font-semibold transition-all truncate flex items-center justify-between ${
+                                                                    isLightCanvas
+                                                                        ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                                                                        : 'text-slate-300 hover:text-white hover:bg-white/10'
+                                                                }`}
                                                             >
                                                                 <span>{link.label}</span>
                                                                 <span className="opacity-50 text-[10px]">↗</span>
@@ -374,15 +400,27 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                         {/* Projects Dropdown */}
                                         {heroDesignOptions.length > 0 && (
                                             <div className="group relative z-50">
-                                                <button className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5 shadow-lg flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white backdrop-blur-md">
+                                                <button className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all border shadow-lg flex items-center gap-2 backdrop-blur-md ${
+                                                    isLightCanvas
+                                                        ? 'border-slate-200 bg-slate-900/5 hover:bg-slate-900/10 text-slate-900'
+                                                        : 'border-white/5 bg-white/5 hover:bg-white/10 text-white'
+                                                }`}>
                                                     Projects ▾
                                                 </button>
-                                                <div className="absolute top-full left-0 mt-2 w-56 rounded-xl border border-white/10 bg-[#0a0a0f]/95 backdrop-blur-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col p-2 max-h-60 overflow-y-auto custom-scrollbar">
+                                                <div className={`absolute top-full left-0 mt-2 w-56 rounded-xl border backdrop-blur-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col p-2 max-h-60 overflow-y-auto custom-scrollbar ${
+                                                    isLightCanvas
+                                                        ? 'border-slate-200 bg-white/95'
+                                                        : 'border-white/10 bg-[#0a0a0f]/95'
+                                                }`}>
                                                     {heroDesignOptions.map((link, i) => (
                                                         <button
                                                             key={`proj-${i}`}
                                                             onClick={(e) => { e.stopPropagation(); openExternal(link.url); }}
-                                                            className="text-left px-4 py-2.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition-all truncate flex items-center justify-between"
+                                                            className={`text-left px-4 py-2.5 rounded-lg text-xs font-semibold transition-all truncate flex items-center justify-between ${
+                                                                isLightCanvas
+                                                                    ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                                                                    : 'text-slate-300 hover:text-white hover:bg-white/10'
+                                                            }`}
                                                         >
                                                             <span>{link.label}</span>
                                                             <span className="opacity-50 text-[10px]">↗</span>
@@ -533,7 +571,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 className="flex items-center gap-3 sm:gap-4 w-full" style={{ justifyContent: (!customSideImage || isImageHidden) ? 'center' : 'flex-start' }}
                             >
                                 <span className={`h-px w-8 sm:w-12 bg-blue-500/50 hidden lg:block ${(!customSideImage || isImageHidden) ? 'lg:hidden' : ''}`}></span>
-                                <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-white`}>
+                                <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest ${textPrimary}`}>
                                     <TextElement 
                                         value={data.title || "About Me"} 
                                         placeholder="About Me" 
@@ -543,7 +581,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 <span className={`h-px w-8 sm:w-12 bg-blue-500/50 hidden lg:block ${(!customSideImage || isImageHidden) ? 'lg:hidden' : ''}`}></span>
                             </motion.div>
                             
-                            <div className={`text-base sm:text-lg md:text-xl leading-relaxed break-words w-full max-w-3xl font-medium text-slate-300`}>
+                            <div className={`text-base sm:text-lg md:text-xl leading-relaxed break-words w-full max-w-3xl font-medium ${textSecondary}`}>
                                 <TextElement 
                                     multiline 
                                     value={data.bio || ""}
@@ -564,7 +602,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         className="flex items-center justify-center gap-3 sm:gap-4 w-full mb-8 sm:mb-12"
                     >
                         <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
-                        <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                        <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center ${textPrimary}`}>
                             <TextElement 
                                 value={data.title || "Educational Background"}
                                 placeholder="Educational Background"
@@ -685,7 +723,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         className="flex items-center justify-center gap-3 sm:gap-4 w-full mb-8 sm:mb-12"
                     >
                         <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
-                        <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                        <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center ${textPrimary}`}>
                             <TextElement 
                                 value={data.title || "Core Expertise"}
                                 placeholder="Core Expertise"
@@ -862,7 +900,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         className="flex items-center justify-center gap-3 sm:gap-4 w-full mb-8 sm:mb-12"
                     >
                         <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
-                        <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                        <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center ${textPrimary}`}>
                             <TextElement 
                                 value={data.title || "Showcase of Innovations"}
                                 placeholder="Showcase of Innovations"
@@ -1014,7 +1052,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                         whileInView={{ opacity: 1, x: 0 }}
                                         viewport={{ once: false, amount: 0.1 }}
                                         transition={{ duration: 0.5, ease: "easeOut" }}
-                                        className={`text-xl md:text-2xl font-black uppercase tracking-wide break-words w-full transition-colors group-hover:text-white ${textPrimary}`}
+                                        className={`text-xl md:text-2xl font-black uppercase tracking-wide break-words w-full transition-colors ${isLightCanvas ? 'group-hover:text-slate-950' : 'group-hover:text-white'} ${textPrimary}`}
                                     >
                                         <TextElement 
                                             value={project.title || ""}
@@ -1167,7 +1205,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 <div className="w-max mx-auto px-2" style={{ color: 'inherit' }}>
                                     <GitHubCalendar 
                                         username={data.githubUsername.trim()} 
-                                        colorScheme={themeDef.bodyBg?.includes('black') || themeDef.bodyBg?.includes('#0') || themeDef.bodyBg?.includes('950') || themeDef.id !== 'minimal_executive' ? 'dark' : 'light'}
+                                        colorScheme={isLightCanvas ? 'light' : 'dark'}
                                         blockSize={12}
                                         blockMargin={4}
                                         fontSize={12}
@@ -1218,7 +1256,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             className="flex items-center justify-center gap-3 sm:gap-4 w-full mb-6"
                         >
                             <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
-                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center ${textPrimary}`}>
                                 <TextElement 
                                     value={data.title || "Get In Touch"}
                                     placeholder="Get In Touch"
@@ -1341,7 +1379,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             className="flex items-center justify-center gap-3 sm:gap-4 w-full mb-8 sm:mb-12"
                         >
                             <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
-                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center ${textPrimary}`}>
                                 <TextElement 
                                     value={data.title || "Work Experience"}
                                     placeholder="Work Experience"
@@ -1416,7 +1454,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             className="flex items-center justify-center gap-3 sm:gap-4 w-full mb-8 sm:mb-12"
                         >
                             <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
-                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center ${textPrimary}`}>
                                 <TextElement 
                                     value={data.title || "Services & Offerings"}
                                     placeholder="Services & Offerings"
@@ -1482,7 +1520,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             className="flex items-center justify-center gap-3 sm:gap-4 w-full mb-8 sm:mb-12"
                         >
                             <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
-                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center ${textPrimary}`}>
                                 <TextElement 
                                     value={data.title || "Client Testimonials"}
                                     placeholder="Client Testimonials"
@@ -1549,8 +1587,8 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                 </div>
             )}
 
-            {/* 9. CERTIFICATIONS SECTION */}
-            {currentType === 'certifications' && (
+            {/* 9. CERTIFICATIONS & ACHIEVEMENTS SECTION */}
+            {(currentType === 'certifications' || currentType === 'achievements') && (
                 <div className="py-8 sm:py-16 md:py-24 px-3 sm:px-6">
                     <motion.div {...fadeUpConfig} className="max-w-4xl mx-auto space-y-8 sm:space-y-12">
                         <motion.div 
@@ -1558,10 +1596,10 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             className="flex items-center justify-center gap-3 sm:gap-4 w-full mb-8 sm:mb-12"
                         >
                             <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
-                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center ${textPrimary}`}>
                                 <TextElement 
-                                    value={data.title || "Certifications & Awards"}
-                                    placeholder="Certifications & Awards"
+                                    value={data.title || (currentType === 'achievements' ? "Achievements & Honors" : "Certifications & Awards")}
+                                    placeholder={currentType === 'achievements' ? "Achievements & Honors" : "Certifications & Awards"}
                                     onCommit={(v) => updateScalar("title", v)}
                                 />
                             </h2>
@@ -1573,7 +1611,9 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     <div className="w-14 h-14 sm:w-16 sm:h-16 mb-4 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500/50">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
                                     </div>
-                                    <h3 className={`text-base sm:text-lg font-bold mb-2 ${textPrimary}`}>No Certifications</h3>
+                                    <h3 className={`text-base sm:text-lg font-bold mb-2 ${textPrimary}`}>
+                                        {currentType === 'achievements' ? 'No Achievements Listed' : 'No Certifications'}
+                                    </h3>
                                     <p className={`text-xs sm:text-sm max-w-sm mx-auto ${textSecondary}`}>This section is currently empty. Check back later for updates.</p>
                                 </div>
                             )}
@@ -1583,8 +1623,8 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); removeArrayItem('items', idx); }}
                                             className="absolute top-3 right-3 sm:top-4 sm:right-4 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-full bg-red-500 hover:bg-red-600 shadow-lg z-30 text-xs font-bold cursor-pointer active:scale-95"
-                                            title="Delete Certification"
-                                            aria-label="Delete Certification"
+                                            title="Delete Item"
+                                            aria-label="Delete Item"
                                         >
                                             <X className="w-3.5 h-3.5 text-white" />
                                         </button>
@@ -1595,7 +1635,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                         </div>
                                         <div className="min-w-0 flex-1">
                                             <h3 className={"text-base sm:text-lg font-bold " + textPrimary}>
-                                                <TextElement value={item.name} placeholder="Certification Name" onCommit={(v) => updateArrayItem('items', idx, 'name', v)} />
+                                                <TextElement value={item.name || item.title} placeholder={currentType === 'achievements' ? "Achievement / Honor" : "Certification Name"} onCommit={(v) => updateArrayItem('items', idx, item.title !== undefined && item.name === undefined ? 'title' : 'name', v)} />
                                             </h3>
                                             <p className={"text-xs sm:text-sm " + textSecondary}>
                                                 <TextElement value={item.issuer} placeholder="Issuing Organization" onCommit={(v) => updateArrayItem('items', idx, 'issuer', v)} />
@@ -1631,7 +1671,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             className="flex items-center justify-center gap-3 sm:gap-4 w-full mb-8 sm:mb-12"
                         >
                             <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
-                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center ${textPrimary}`}>
                                 <TextElement 
                                     value={data.title || "By the Numbers"}
                                     placeholder="By the Numbers"
@@ -1694,7 +1734,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             className="flex items-center justify-center gap-3 sm:gap-4 w-full mb-8 sm:mb-12"
                         >
                             <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
-                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center ${textPrimary}`}>
                                 <TextElement 
                                     value={data.title || "Publications & Articles"}
                                     placeholder="Publications & Articles"
@@ -1787,7 +1827,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             className="flex items-center justify-center gap-3 sm:gap-4 w-full mb-8 sm:mb-12"
                         >
                             <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
-                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center text-white`}>
+                            <h2 className={`text-2xl sm:text-3xl md:text-4xl uppercase font-display font-black tracking-widest text-center ${textPrimary}`}>
                                 <TextElement 
                                     value={data.title || "Open Source Activity"}
                                     placeholder="Open Source Activity"
@@ -1801,7 +1841,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 <div className="w-max mx-auto px-2" style={{ color: 'inherit' }}>
                                     <GitHubCalendar 
                                         username={(data.githubUsername || "torvalds").trim()} 
-                                        colorScheme={themeDef.bodyBg?.includes('black') || themeDef.bodyBg?.includes('#0') || themeDef.bodyBg?.includes('950') || themeDef.id !== 'minimal_executive' ? 'dark' : 'light'}
+                                        colorScheme={isLightCanvas ? 'light' : 'dark'}
                                         blockSize={12}
                                         blockMargin={4}
                                         fontSize={12}
@@ -1826,12 +1866,13 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
             )}
 
             {/* DEFAULT FALLBACK FOR UNKNOWN BLOCKS */}
-            {!["hero", "about", "education", "skills", "projects_grid", "github_activity", "contact", "services", "testimonials", "certifications", "stats", "articles"].includes(currentType) && (
+            {!["hero", "about", "education", "skills", "projects_grid", "github_activity", "contact", "experience", "services", "testimonials", "certifications", "achievements", "stats", "blog", "articles"].includes(currentType) && (
                 <motion.div variants={staggerItem} className={`p-12 border ${borderClass} rounded-3xl ${cardBg} text-center`}>
                     <p className={`text-sm ${textSecondary} mb-4 uppercase tracking-widest font-bold`}>[Empty {currentType} Block]</p>
                     <p className={`text-xs ${textSecondary}`}>Select this block and use the Right Sidebar tools to populate data.</p>
                 </motion.div>
             )}
         </div>
+        </PortfolioRenderContext.Provider>
     );
 }

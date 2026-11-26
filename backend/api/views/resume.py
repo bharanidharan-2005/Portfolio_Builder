@@ -1,41 +1,46 @@
 import io
-import json
 import logging
-import os
-import re
-import uuid
-import string
-import random
-import time
+
 import pdfplumber
-import requests
-from django.conf import settings
-from django.core.mail import send_mail
-from django.db import IntegrityError, models, transaction
-from django.http import FileResponse, JsonResponse
-from google import genai
-from google.genai import types
 from rest_framework import permissions, status
-from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.views import APIView
-from django.views.decorators.csrf import csrf_exempt
-from ..models import AISessionLog, Portfolio, PortfolioPage, PortfolioSection
-from ..serializers import AISessionLogSerializer, PortfolioPageSerializer, PortfolioSectionSerializer
-from rest_framework.permissions import AllowAny
-from django.contrib.auth.models import User
-from rest_framework_simplejwt.tokens import RefreshToken
+
+from ..models import AISessionLog, PortfolioPage, PortfolioSection
+from ..serializers import PortfolioSectionSerializer
+from .ai import (
+    AICreditThrottle,
+    AIKeyMissingError,
+    extract_clean_json_payload,
+    generate_text_with_fallback,
+)
+from .utils import (
+    MAX_RESUME_BYTES,
+    ensure_user_workspace,
+    get_or_create_user_portfolio,
+)
 
 logger = logging.getLogger(__name__)
 
-from .utils import *
-from .ai import *
-# 6. RESUME UPLOAD + PARSE
-# -----------------------------------------------------------------
+ALLOWED_RESUME_EXTENSIONS = ('.pdf', '.docx', '.doc', '.txt', '.md')
+
+
 class ResumeUploadAPIView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
     throttle_classes = [AICreditThrottle]
+
+    @staticmethod
+    def _validate_file_signature(file_name, content):
+        name = (file_name or '').lower()
+        if not name.endswith(ALLOWED_RESUME_EXTENSIONS):
+            return 'Unsupported file type. Please upload a PDF, DOCX, TXT, or MD resume.'
+        if not content:
+            return 'Uploaded file is empty.'
+        if name.endswith('.pdf') and not content.startswith(b'%PDF'):
+            return 'Invalid PDF file signature.'
+        if name.endswith('.docx') and not content.startswith(b'PK'):
+            return 'Invalid DOCX archive signature.'
+        return None
 
     @staticmethod
     def _extract_resume_text(file_name, content):
@@ -46,7 +51,13 @@ class ResumeUploadAPIView(APIView):
         if name.endswith(('.docx', '.doc')):
             import docx
             document = docx.Document(io.BytesIO(content))
-            return "\n".join(p.text for p in document.paragraphs).strip()
+            parts = [p.text for p in document.paragraphs if p.text.strip()]
+            for table in document.tables:
+                for row in table.rows:
+                    row_text = " | ".join(cell.text.strip() for cell in row.cells if cell.text.strip())
+                    if row_text:
+                        parts.append(row_text)
+            return "\n".join(parts).strip()
         if name.endswith(('.txt', '.md')):
             return content.decode('utf-8', errors='ignore').strip()
         return None
@@ -58,8 +69,13 @@ class ResumeUploadAPIView(APIView):
         if uploaded.size > MAX_RESUME_BYTES:
             return Response({'error': 'Resume file is too large (max 5 MB).'}, status=status.HTTP_400_BAD_REQUEST)
 
+        content = uploaded.read()
+        sig_error = self._validate_file_signature(uploaded.name, content)
+        if sig_error:
+            return Response({'error': sig_error}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
-            text = self._extract_resume_text(uploaded.name, uploaded.read())
+            text = self._extract_resume_text(uploaded.name, content)
         except Exception as e:
             logger.error("Resume file parse error: %s", e)
             return Response(
@@ -72,6 +88,9 @@ class ResumeUploadAPIView(APIView):
                 {'error': 'No readable text found in the resume. Please upload a text-based PDF or DOCX.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        # Truncate overly long resumes safely before LLM call
+        resume_excerpt = text[:16000]
 
         try:
             prompt = (
@@ -89,29 +108,23 @@ class ResumeUploadAPIView(APIView):
                 "- website: string (Full URL starting with https://)\n"
                 "- projects: array of {title, desc, tags, projectUrl, githubUrl}\n"
                 "  CRITICAL RULE FOR PROJECT URLS: If a link points to GitHub or Git (e.g. github.com/user/repo), assign it to 'githubUrl'. Only assign deployed live URLs to 'projectUrl'.\n"
-                "  CRITICAL RULE FOR PROJECTS: Extract ALL personal projects, academic projects, software applications, web apps, portals, platforms, RAG systems, AI assistants, and developer tools (e.g., AuraBuild, RAG Assistant, Grievance Portal, Resume Shortlister, etc.) into 'projects'. DO NOT put projects into 'experience'.\n"
+                "  CRITICAL RULE FOR PROJECTS: Extract ALL personal/academic/software projects into 'projects'. DO NOT put projects into 'experience'.\n"
                 "- experience: array of {title, company, dates, description}\n"
-                "  CRITICAL RULE FOR EXPERIENCE: Only extract ACTUAL employment, corporate jobs, or company internships where the candidate was employed by a recognized company or organization. If there are no formal employer jobs, return an empty array []. NEVER place software projects into 'experience'.\n"
+                "  CRITICAL RULE FOR EXPERIENCE: Only extract ACTUAL employment, corporate jobs, or company internships. NEVER place software projects into 'experience'.\n"
                 "- education: array of {institution, degree, years, score}\n"
                 "- skills: array of {name, level} where level is an integer 0-100\n"
                 "- certifications: array of {name, issuer, date}\n"
+                "- achievements: array of {title, issuer, date, description}\n"
                 "- publications: array of {title, publisher, date, link}\n\n"
-                "CRITICAL JSON RULES:\n"
-                "1. Output MUST be valid JSON.\n"
-                "2. All quotes inside string values must be escaped with a backslash (\\\").\n"
-                "3. NO trailing commas before } or ].\n\n"
-                "Resume Content:\n" + text
+                "Resume Content:\n" + resume_excerpt
             )
-            
-            # Using the new robust fallback handler
+
             res = generate_text_with_fallback(None, prompt)
             parsed = extract_clean_json_payload(res.text)
-            
+
             if not isinstance(parsed, dict):
                 raise ValueError("AI response was not a JSON object.")
 
-            # --- INTELLIGENT PROJECT VS WORK EXPERIENCE NORMALIZATION ---
-            # Guard against AI incorrectly placing candidate software projects into 'experience'
             extracted_projects = parsed.get('projects') or []
             extracted_experience = parsed.get('experience') or []
 
@@ -134,7 +147,6 @@ class ResumeUploadAPIView(APIView):
                 desc = str(exp.get('description', '') or exp.get('desc', '')).strip()
                 title_lower = title.lower()
 
-                # Determine if this item is actually a software project
                 is_project = False
                 if not company or company_lower in ['', 'company', 'n/a', 'none', 'self', 'personal', 'academic', 'project', 'freelance']:
                     is_project = True
@@ -144,9 +156,13 @@ class ResumeUploadAPIView(APIView):
                 if is_project:
                     tags = exp.get('tags') or []
                     if not tags:
-                        common_tech = ['Python', 'React', 'React.js', 'Node.js', 'Django', 'Flask', 'SQL', 'PostgreSQL', 'SQLite', 'Docker', 'Vercel', 'Render', 'Pandas', 'FAISS', 'LLM', 'AI', 'JavaScript', 'HTML5', 'CSS3', 'REST API', 'ETL', 'RAG', 'openpyxl']
+                        common_tech = [
+                            'Python', 'React', 'React.js', 'Node.js', 'Django', 'Flask', 'SQL',
+                            'PostgreSQL', 'SQLite', 'Docker', 'Vercel', 'Render', 'Pandas', 'FAISS',
+                            'LLM', 'AI', 'JavaScript', 'HTML5', 'CSS3', 'REST API', 'ETL', 'RAG',
+                        ]
                         tags = [tech for tech in common_tech if tech.lower() in (desc.lower() + " " + title_lower)]
-                    
+
                     cand_url = exp.get('projectUrl') or exp.get('url') or ''
                     gh_url = exp.get('githubUrl') or ''
                     if ('github.com' in cand_url.lower() or 'gitlab.com' in cand_url.lower() or cand_url.lower().endswith('.git')) and not gh_url:
@@ -163,24 +179,21 @@ class ResumeUploadAPIView(APIView):
                 else:
                     cleaned_experience.append(exp)
 
-            # Combine projects without duplicates
-            combined_projects = list(extracted_projects)
-            existing_titles = {str(p.get('title', '')).lower() for p in combined_projects if isinstance(p, dict)}
+            combined_projects = [p for p in extracted_projects if isinstance(p, dict)]
+            existing_titles = {str(p.get('title', '')).lower() for p in combined_projects}
             for mp in migrated_projects:
                 if mp['title'].lower() not in existing_titles:
                     combined_projects.append(mp)
                     existing_titles.add(mp['title'].lower())
 
-            # Normalize projectUrl vs githubUrl across all combined projects
             for p in combined_projects:
-                if isinstance(p, dict):
-                    p_url = p.get('projectUrl') or p.get('url') or p.get('demo_link') or ''
-                    gh_url = p.get('githubUrl') or p.get('github_url') or p.get('repo_url') or ''
-                    if ('github.com' in p_url.lower() or 'gitlab.com' in p_url.lower() or p_url.lower().endswith('.git')) and not gh_url:
-                        gh_url = p_url
-                        p_url = ''
-                    p['projectUrl'] = p_url
-                    p['githubUrl'] = gh_url
+                p_url = p.get('projectUrl') or p.get('url') or p.get('demo_link') or ''
+                gh_url = p.get('githubUrl') or p.get('github_url') or p.get('repo_url') or ''
+                if ('github.com' in p_url.lower() or 'gitlab.com' in p_url.lower() or p_url.lower().endswith('.git')) and not gh_url:
+                    gh_url = p_url
+                    p_url = ''
+                p['projectUrl'] = p_url
+                p['githubUrl'] = gh_url
 
             parsed['projects'] = combined_projects
             parsed['experience'] = cleaned_experience
@@ -190,14 +203,98 @@ class ResumeUploadAPIView(APIView):
         except Exception as e:
             error_message = str(e)
             logger.error("Resume AI parse failed: %s", error_message)
-            
+
             if "503" in error_message or "UNAVAILABLE" in error_message:
                 return Response({
-                    "success": False, 
+                    "success": False,
                     "error": "The AI model is currently experiencing high traffic. Please wait 30 seconds and try again."
                 }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-                
-            return Response({'error': f'AI API Error: {error_message}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            return Response({'error': 'AI resume parsing failed. Please try again.'}, status=status.HTTP_502_BAD_GATEWAY)
+
+        skill_items = []
+        for s in (parsed.get('skills') or []):
+            if isinstance(s, dict):
+                try:
+                    level = max(0, min(100, int(s.get('level', 50))))
+                except (TypeError, ValueError):
+                    level = 50
+                skill_items.append({'name': str(s.get('name', '')).strip(), 'level': level})
+            elif str(s).strip():
+                skill_items.append({'name': str(s).strip(), 'level': 65})
+
+        SECTION_ORDER_WEIGHTS = {
+            'hero': 10,
+            'about': 20,
+            'experience': 30,
+            'education': 40,
+            'skills': 50,
+            'projects_grid': 60,
+            'services': 70,
+            'certifications': 80,
+            'achievements': 85,
+            'testimonials': 90,
+            'stats': 100,
+            'blog': 110,
+            'contact': 120,
+        }
+
+        mapping = {
+            'hero': {
+                'heading': parsed.get('name') or '',
+                'subheading': parsed.get('headline') or '',
+                'liveUrl': parsed.get('website') or '',
+                'linkedin': parsed.get('linkedin') or '',
+                'github': parsed.get('github') or '',
+            },
+            'about': {'bio': parsed.get('about') or ''},
+            'experience': {'items': parsed.get('experience') or []},
+            'education': {'schools': parsed.get('education') or []},
+            'skills': {'items': skill_items},
+            'projects_grid': {
+                'title': parsed.get('projects_title', 'Showcase of Innovations'),
+                'projects': parsed.get('projects') or [],
+            },
+            'certifications': {'items': parsed.get('certifications') or []},
+            'achievements': {'items': parsed.get('achievements') or []},
+            'blog': {'articles': parsed.get('publications') or []},
+            'contact': {
+                'text': "Let's connect — reach me via email or any of my channels below.",
+                'email': parsed.get('email') or '',
+                'phone': parsed.get('phone') or '',
+                'linkedin': parsed.get('linkedin') or '',
+                'github': parsed.get('github') or '',
+            },
+        }
+
+        word_count = len(text.split())
+        preview_only = str(request.data.get('preview_only', 'false')).lower() in ('1', 'true', 'yes')
+
+        if preview_only:
+            proposed_sections = []
+            for stype, cdata in mapping.items():
+                if stype in ('experience', 'certifications', 'achievements', 'blog') and not (cdata.get('items') or cdata.get('articles')):
+                    continue
+                proposed_sections.append({
+                    'id': f"resume-{stype}",
+                    'section_type': stype,
+                    'order': SECTION_ORDER_WEIGHTS.get(stype, 100),
+                    'content_data': cdata,
+                })
+            log = AISessionLog.objects.create(
+                user=request.user,
+                change_type='Parse',
+                description=f"Parsed resume '{uploaded.name}' ({word_count} words) for review.",
+                status='preview',
+            )
+            return Response({
+                'success': True,
+                'message': 'Parsed successfully (ready for review)',
+                'wordCount': f"{word_count} words",
+                'data': parsed,
+                'sections': proposed_sections,
+                'log': log.to_frontend_dict(),
+            })
 
         try:
             portfolio = get_or_create_user_portfolio(request)
@@ -207,86 +304,31 @@ class ResumeUploadAPIView(APIView):
                 page = PortfolioPage.objects.filter(portfolio=portfolio, name=page_name).first()
             page = page or ensure_user_workspace(request)
             sections = {s.section_type: s for s in page.sections.all()}
-            
-            skill_items = []
-            for s in (parsed.get('skills') or []):
-                if isinstance(s, dict):
-                    try:
-                        level = int(s.get('level', 50))
-                    except (TypeError, ValueError):
-                        level = 50
-                    skill_items.append({'name': s.get('name', ''), 'level': level})
-                else:
-                    skill_items.append({'name': str(s), 'level': 50})
 
-            # Canonical section ordering weights (Contact is always concluding section)
-            SECTION_ORDER_WEIGHTS = {
-                'hero': 10,
-                'about': 20,
-                'experience': 30,
-                'education': 40,
-                'skills': 50,
-                'projects_grid': 60,
-                'services': 70,
-                'certifications': 80,
-                'testimonials': 90,
-                'stats': 100,
-                'blog': 110,
-                'contact': 120,
-            }
-
-            mapping = {
-                'hero': {
-                    'heading': parsed.get('name'),
-                    'subheading': parsed.get('headline'),
-                    'liveUrl': parsed.get('website'),
-                    'linkedin': parsed.get('linkedin'),
-                    'github': parsed.get('github'),
-                },
-                'about': {'bio': parsed.get('about')},
-                'experience': {'items': parsed.get('experience') or []},
-                'education': {'schools': parsed.get('education') or []},
-                'skills': {'items': skill_items},
-                'projects_grid': {
-                    'title': parsed.get('projects_title', 'Showcase of Innovations'),
-                    'projects': parsed.get('projects') or [],
-                },
-                'services': {'items': parsed.get('services') or []},
-                'certifications': {'items': parsed.get('certifications') or []},
-                'blog': {'articles': parsed.get('publications') or []},
-                'contact': {
-                    'text': "Let's connect — reach me via email or any of my channels below.",
-                    'email': parsed.get('email'),
-                    'phone': parsed.get('phone'),
-                    'linkedin': parsed.get('linkedin'),
-                    'github': parsed.get('github'),
-                },
-            }
             for stype, cdata in mapping.items():
                 order_val = SECTION_ORDER_WEIGHTS.get(stype, 100)
                 if stype in sections:
-                    existing = sections[stype].content_data or {}
+                    existing = dict(sections[stype].content_data or {})
                     existing.update({k: v for k, v in cdata.items() if v is not None})
                     sections[stype].content_data = existing
                     sections[stype].order = order_val
                     sections[stype].save()
-                elif cdata and (stype not in ['experience', 'services', 'certifications', 'blog'] or cdata.get('items') or cdata.get('articles')):
+                elif cdata and (stype not in ['experience', 'certifications', 'achievements', 'blog'] or cdata.get('items') or cdata.get('articles')):
                     sections[stype] = PortfolioSection.objects.create(
                         page=page, section_type=stype, order=order_val, content_data=cdata
                     )
 
-            word_count = len(text.split())
             log = AISessionLog.objects.create(
-                user=get_user_filter(request),
+                user=request.user,
                 change_type='Parse',
-                description=f"Parsed resume '{uploaded.name}': Vectorized {word_count} words into canvas sections.",
+                description=f"Parsed resume '{uploaded.name}': Structured {word_count} words into canvas sections.",
                 status='applied',
             )
 
         except Exception as e:
             logger.error("Resume persist failed: %s", e)
             return Response(
-                {'error': f'Resume parsed, but failed to save to workspace: {str(e)}'},
+                {'error': 'Resume parsed, but failed to save to workspace.'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
@@ -298,4 +340,3 @@ class ResumeUploadAPIView(APIView):
             'sections': PortfolioSectionSerializer(page.sections.all(), many=True).data if page else [],
             'log': log.to_frontend_dict()
         })
-

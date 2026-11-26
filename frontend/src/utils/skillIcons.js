@@ -1,5 +1,4 @@
-import React from 'react';
-import { Database, Code, Server, MonitorPlay, BrainCircuit, Box, FileCode2, Code2, Network, Cpu, Layout, Boxes } from 'lucide-react';
+import { Database, Server, BrainCircuit, FileCode2, Code2, Network, Layout, Boxes } from 'lucide-react';
 
 const DEVICON_BASE = 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons';
 

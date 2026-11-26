@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # Third-party apps
     'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     # Local apps
     'api',
@@ -220,10 +221,15 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_CLASSES': (
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.ScopedRateThrottle',
     ),
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '30/minute',
+        'anon': '60/minute',
         'user': '1000/minute',
+        'auth': '15/minute',
+        'ai': '30/minute',
+        'image-gen': '5/minute',
+        'contact': '10/minute',
     },
 }
 
@@ -231,8 +237,8 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=120),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=14),
     'ROTATE_REFRESH_TOKENS': True,
-    'BLACK_LIST_AFTER_ROTATION': True,
-    
+    'BLACKLIST_AFTER_ROTATION': True,
+
     # Custom Cookie Auth Settings (Used by our CookieJWTAuthentication)
     'AUTH_COOKIE': 'aurabuild_access',
     'AUTH_COOKIE_REFRESH': 'aurabuild_refresh',
@@ -241,6 +247,12 @@ SIMPLE_JWT = {
     'AUTH_COOKIE_PATH': '/',
     'AUTH_COOKIE_SAMESITE': 'Lax' if DEBUG else 'None',
 }
+
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
 
 # -----------------------------------------------------------------
 # 🌐 INTERNATIONALIZATION & STATIC ASSETS

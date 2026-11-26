@@ -1,5 +1,4 @@
-import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Link, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Link } from '@react-pdf/renderer';
 
 // Use standard Helvetica which is built into react-pdf and ATS-friendly
 const styles = StyleSheet.create({

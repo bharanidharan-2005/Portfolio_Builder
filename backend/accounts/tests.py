@@ -11,10 +11,11 @@ User = get_user_model()
 
 # DRF throttle classes cache their rate dict at import time, so override the
 # class attributes directly instead of relying on override_settings.
-from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+from rest_framework.throttling import AnonRateThrottle, ScopedRateThrottle, UserRateThrottle
 
 AnonRateThrottle.THROTTLE_RATES = {'anon': '10000/minute'}
 UserRateThrottle.THROTTLE_RATES = {'user': '10000/minute'}
+ScopedRateThrottle.THROTTLE_RATES = {'auth': '10000/minute', 'ai': '10000/minute', 'image-gen': '10000/minute', 'contact': '10000/minute'}
 
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
@@ -113,3 +114,76 @@ class AuthFlowTests(TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.json()['workspace_code'], code)
         self.assertEqual(res.json()['email'], 'ada@example.com')
+
+    def test_password_reset_requires_verified_otp_and_protects_accounts(self):
+        self._initialize(email='ada@example.com', password='initial-password-1')
+        # Unauthenticated reset without OTP must fail
+        bad = self.client.post(
+            reverse('auth-reset-password'),
+            data={'email': 'ada@example.com', 'new_password': 'hacked-password-1'},
+            content_type='application/json',
+        )
+        self.assertEqual(bad.status_code, 400)
+
+        req = self.client.post(
+            reverse('auth-request-password-reset'),
+            data={'email': 'ada@example.com'},
+            content_type='application/json',
+        )
+        self.assertEqual(req.status_code, 200)
+        otp_code = self.send_mock.call_args.args[1]
+
+        wrong = self.client.post(
+            reverse('auth-reset-password'),
+            data={'email': 'ada@example.com', 'reset_code': '000000', 'new_password': 'new-password-22'},
+            content_type='application/json',
+        )
+        self.assertEqual(wrong.status_code, 400)
+
+        ok = self.client.post(
+            reverse('auth-reset-password'),
+            data={'email': 'ada@example.com', 'reset_code': otp_code, 'new_password': 'new-password-22'},
+            content_type='application/json',
+        )
+        self.assertEqual(ok.status_code, 200, ok.content.decode())
+        self.assertIn('workspace_code', ok.json())
+        self.assertIn('access', ok.json())
+
+    def test_profile_refresh_and_logout_blacklist(self):
+        code = self._initialize().json()['workspace_code']
+        login_res = self._login(code).json()
+        access = login_res['access']
+        refresh = login_res['refresh']
+
+        patch_res = self.client.patch(
+            reverse('auth-profile'),
+            data={'name': 'Ada Updated', 'avatar': '🚀'},
+            content_type='application/json',
+            HTTP_AUTHORIZATION=f'Bearer {access}',
+        )
+        self.assertEqual(patch_res.status_code, 200)
+        self.assertEqual(patch_res.json()['name'], 'Ada Updated')
+        self.assertEqual(patch_res.json()['avatar'], '🚀')
+
+        refresh_res = self.client.post(
+            reverse('auth-token-refresh'),
+            data={'refresh': refresh},
+            content_type='application/json',
+        )
+        self.assertEqual(refresh_res.status_code, 200)
+        self.assertIn('access', refresh_res.json())
+        rotated_refresh = refresh_res.json()['refresh']
+
+        logout_res = self.client.post(
+            reverse('auth-logout'),
+            data={'refresh': rotated_refresh},
+            content_type='application/json',
+        )
+        self.assertEqual(logout_res.status_code, 200)
+
+        replay_res = self.client.post(
+            reverse('auth-token-refresh'),
+            data={'refresh': rotated_refresh},
+            content_type='application/json',
+        )
+        self.assertEqual(replay_res.status_code, 401)

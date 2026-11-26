@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { 
     X, Monitor, Smartphone, Tablet as TabletIcon, ExternalLink, Copy, LayoutTemplate, ChevronDown, Check
 } from "lucide-react";
@@ -12,8 +12,6 @@ export default function PreviewModal({
     isLight,
     previewViewport,
     setPreviewViewport,
-    isLandscape, // Left in signature to prevent WorkspaceLayout prop errors, but unused
-    setIsLandscape,
     currentTheme,
     userData,
     setUserData,

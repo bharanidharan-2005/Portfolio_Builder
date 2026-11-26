@@ -4,6 +4,7 @@ import { AppProvider, useAppContext } from "./context/AppContext";
 import { WorkspaceProvider } from "./context/WorkspaceContext";
 
 const LandingPage = lazy(() => import("./components/LandingPage.jsx"));
+const DashboardPage = lazy(() => import("./components/dashboard/DashboardPage.jsx"));
 const WorkspaceLayout = lazy(() => import("./components/workspace/WorkspaceLayout.jsx"));
 const GithubCallback = lazy(() => import("./components/GithubCallback.jsx"));
 import PortfolioSkeleton from "./components/portfolio/PortfolioSkeleton.jsx";
@@ -41,11 +42,26 @@ class ErrorBoundary extends React.Component {
 }
 
 function ProtectedRoute({ children }) {
-    const { isAuthenticated } = useAppContext();
+    const { isAuthenticated, isAuthLoading, themeMode } = useAppContext();
+    if (isAuthLoading) {
+        return <PortfolioSkeleton themeMode={themeMode} isPreview={false} />;
+    }
     if (!isAuthenticated) {
         return <Navigate to="/" replace />;
     }
     return children;
+}
+
+function WorkspaceRouteWrapper() {
+    const { portfolioId } = useParams();
+    const { themeMode } = useAppContext();
+    return (
+        <Suspense fallback={<PortfolioSkeleton themeMode={themeMode} isPreview={false} />}>
+            <WorkspaceProvider isPublicPreview={false} portfolioId={portfolioId ? Number(portfolioId) || portfolioId : null}>
+                <WorkspaceLayout />
+            </WorkspaceProvider>
+        </Suspense>
+    );
 }
 
 function PreviewRouteWrapper({ isSubdomainPreview, subdomainUsername }) {
@@ -56,7 +72,7 @@ function PreviewRouteWrapper({ isSubdomainPreview, subdomainUsername }) {
     const publicToken = isSubdomainPreview ? "public" : (token || "public");
 
     // Reserved paths that should never be treated as usernames
-    const reservedRoutes = ['workspace', 'github', 'login', 'signup', 'api', 'auth', 'settings'];
+    const reservedRoutes = ['dashboard', 'workspace', 'github', 'login', 'signup', 'api', 'auth', 'settings'];
     if (reservedRoutes.includes((publicUsername || '').toLowerCase())) {
         return <Navigate to="/" replace />;
     }
@@ -104,20 +120,28 @@ function MainApp() {
                 <Routes>
                     <Route path="/" element={
                         isAuthenticated ? (
-                            <Navigate to="/workspace" replace />
+                            <Navigate to="/dashboard" replace />
                         ) : (
                             <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-bold text-slate-500">Loading AuraBuild...</div>}>
                                 <LandingPage />
                             </Suspense>
                         )
                     } />
+                    <Route path="/dashboard" element={
+                        <ProtectedRoute>
+                            <Suspense fallback={<PortfolioSkeleton themeMode={themeMode} isPreview={false} />}>
+                                <DashboardPage />
+                            </Suspense>
+                        </ProtectedRoute>
+                    } />
                     <Route path="/workspace" element={
                         <ProtectedRoute>
-                            <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-bold text-slate-500">Loading Workspace...</div>}>
-                                <WorkspaceProvider isPublicPreview={false}>
-                                    <WorkspaceLayout />
-                                </WorkspaceProvider>
-                            </Suspense>
+                            <WorkspaceRouteWrapper />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/workspace/:portfolioId" element={
+                        <ProtectedRoute>
+                            <WorkspaceRouteWrapper />
                         </ProtectedRoute>
                     } />
                     <Route path="/preview/:username/:token" element={

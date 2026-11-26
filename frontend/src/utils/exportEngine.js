@@ -315,7 +315,7 @@ export default function RenderPageContent({ section, portfolioTheme }) {
                             {(() => {
                                 let live = project.projectUrl || '';
                                 let gh = project.githubUrl || '';
-                                if (/github\.com|gitlab\.com|\.git$/i.test(live) && !gh) {
+                                if (/github\\.com|gitlab\\.com|\\.git$/i.test(live) && !gh) {
                                     gh = live;
                                     live = '';
                                 }

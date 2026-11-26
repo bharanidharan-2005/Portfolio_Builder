@@ -1,7 +1,5 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Download, Mail, GitBranch, Link, MapPin, Briefcase } from 'lucide-react';
-import { getRoleImage } from '../PortfolioFrontpage';
+import { ArrowRight, Download, GitBranch, Link, Mail, MapPin } from 'lucide-react';
 
 const BentoBoxGrid = ({ d }) => {
     const roleImage = d.roleImage;

@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { useAppContext } from "../../context/AppContext";
-import { API } from "../../api";
 import { TopNav } from "../layout/TopNav.jsx";
 import LeftSidebar from "../LeftSidebar.jsx";
+import { EmptyState, Button } from "../ui";
 
 import RightSidebar from "../layout/RightSidebar.jsx"; 
 import CanvasContainer from "../../canvas/CanvasContainer.jsx";
@@ -13,32 +14,36 @@ import PreviewModal from "./PreviewModal.jsx";
 import ResumeReviewModal from "./ResumeReviewModal.jsx";
 import PortfolioFrontpage from "../portfolio/PortfolioFrontpage.jsx";
 import PortfolioSkeleton from "../portfolio/PortfolioSkeleton.jsx";
-import { Undo2, Redo2, ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import SEOUpdater from "../../utils/SEOUpdater";
 
 const ThreeBackground = lazy(() => import('../ThreeBackground.jsx'));
 
 export default function WorkspaceLayout() {
-    // 1. Consume ALL state and logic from our new WorkspaceContext
+    const navigate = useNavigate();
+    const location = useLocation();
+    // 1. Consume ALL state and logic from our WorkspaceContext
     const workspace = useWorkspace();
     const { logout } = useAppContext();
     const {
-        isPublicPreview, userData, setUserData, themeMode, currentTheme,
+        isPublicPreview, publicNotFound, userData, setUserData, themeMode, currentTheme,
         pages, activePage, setActivePage, sections, isSectionsLoading,
         globalBg, setGlobalBg, globalFont, setGlobalFont,
         terminalLogs, setTerminalLogs, history,
-        handleUndo, handleRedo, handleAddPage, handleDeletePage,
-        handleUpdateSectionContent, handleDropSection, handleAddManualSection,
+        handleUndo, handleRedo, handleAddPage, handleRenamePage, handleDeletePage,
+        handleUpdateSectionContent, flushPendingSaves, handleDropSection, handleAddManualSection,
         handleDeleteSection, handleDuplicateSection, handleResumeParsed,
         resumeReviewData, handleApplyResumeData, handleCancelResumeData,
-        triggerDeployment, handleExportZip, handleResetWorkspace, activeHighlightSection, aiSuggestionPreview
+        triggerDeployment, handleExportZip, handleResetWorkspace, activeHighlightSection, aiSuggestionPreview,
+        saveStatus, lastSavedAt, portfolioMeta, updatePortfolioSettings
     } = workspace;
 
     // 2. Local UI State (Only presentation logic remains here!)
+    const wantsResumeImport = !isPublicPreview && Boolean(location?.search?.includes("importResume=1"));
     const [activeSectionId, setActiveSectionId] = useState(null);
-    const [activeTool, setActiveTool] = useState("structure"); 
-    const [isLeftOpen, setIsLeftOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 1024 : true));        
-    const [isRightOpen, setIsRightOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 1280 : true));      
+    const [activeTool, setActiveTool] = useState(wantsResumeImport ? "generator" : "structure"); 
+    const [isLeftOpen, setIsLeftOpen] = useState(() => wantsResumeImport || (typeof window !== 'undefined' ? window.innerWidth >= 1024 : true));        
+    const [isRightOpen, setIsRightOpen] = useState(() => wantsResumeImport || (typeof window !== 'undefined' ? window.innerWidth >= 1280 : true));      
     const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     
@@ -65,7 +70,7 @@ export default function WorkspaceLayout() {
     const [isLeftPinned, setIsLeftPinned] = useState(() => {
         try {
             return localStorage.getItem("aurabuild_left_pinned") === "true";
-        } catch (e) {
+        } catch {
             return false;
         }
     });
@@ -73,7 +78,7 @@ export default function WorkspaceLayout() {
     const handleTogglePin = useCallback(() => {
         setIsLeftPinned(prev => {
             const next = !prev;
-            try { localStorage.setItem("aurabuild_left_pinned", String(next)); } catch (e) {}
+            try { localStorage.setItem("aurabuild_left_pinned", String(next)); } catch { /* ignore */ }
             return next;
         });
     }, []);
@@ -91,20 +96,21 @@ export default function WorkspaceLayout() {
     const handleToggleRight = useCallback(() => setIsRightOpen(prev => !prev), []);
     const handleCloseRight = useCallback(() => setIsRightOpen(false), []);
     const handleOpenRight = useCallback(() => setIsRightOpen(true), []);
+
     const handleThemeChange = useCallback((newTheme) => {
         setUserData(prev => ({ ...prev, theme: newTheme }));
-        if (!isPublicPreview) {
-            API.patch('portfolio-settings/', { theme: newTheme }).catch(() => {});
+        if (!isPublicPreview && updatePortfolioSettings) {
+            updatePortfolioSettings({ theme: newTheme }).catch(() => {});
         }
-    }, [setUserData, isPublicPreview]);
+    }, [setUserData, isPublicPreview, updatePortfolioSettings]);
     const handleTemplateChange = useCallback((newTpl) => {
         setUserData(prev => ({ ...prev, frontpageTemplate: newTpl }));
         if (typeof window !== 'undefined') {
             localStorage.setItem(`aurabuild_frontpage_${userData?.name || 'default'}`, newTpl);
             localStorage.setItem('aurabuild_frontpage_default', newTpl);
         }
-        if (!isPublicPreview) {
-            API.patch('portfolio-settings/', { frontpageTemplate: newTpl }).catch(() => {});
+        if (!isPublicPreview && updatePortfolioSettings) {
+            updatePortfolioSettings({ frontpageTemplate: newTpl }).catch(() => {});
         }
         const heroSec = sections.find(s => s.section_type === 'hero');
         if (heroSec && handleUpdateSectionContent) {
@@ -114,7 +120,7 @@ export default function WorkspaceLayout() {
             });
         }
         setTerminalLogs(prev => [...prev, { type: "info", text: `[FRONTPAGE] Switched landing template to: ${newTpl}` }]);
-    }, [setUserData, userData?.name, isPublicPreview, sections, handleUpdateSectionContent, setTerminalLogs]);
+    }, [setUserData, userData?.name, isPublicPreview, updatePortfolioSettings, sections, handleUpdateSectionContent, setTerminalLogs]);
     const handleOpenHelp = useCallback(() => setIsHelpModalOpen(true), []);
     const handleCloseHelp = useCallback(() => setIsHelpModalOpen(false), []);
     const handleOpenSettings = useCallback(() => setIsSettingsModalOpen(true), []);
@@ -126,9 +132,29 @@ export default function WorkspaceLayout() {
     const isLight = themeMode === 'light';
     const isSystem = themeMode === 'system';
 
-    // 3. Render Public Preview Frontpage Override
-    if (isPublicPreview && !isFrontpageViewed) {
-        if (sections && sections.length > 0) {
+    // 3. Render Public Preview 404 or Frontpage Override
+    if (isPublicPreview) {
+        if (isSectionsLoading) {
+            return <PortfolioSkeleton themeMode={themeMode} isPreview={true} />;
+        }
+        if (publicNotFound) {
+            return (
+                <div className="min-h-screen flex items-center justify-center p-6 bg-[var(--color-canvas-bg)] text-[var(--text-primary)]">
+                    <div className="max-w-md w-full">
+                        <EmptyState
+                            title="Portfolio Unavailable"
+                            description="This portfolio is either set to private draft mode or does not exist at this address."
+                            action={
+                                <Button variant="primary" size="md" onClick={() => navigate('/')}>
+                                    Go to AuraBuild
+                                </Button>
+                            }
+                        />
+                    </div>
+                </div>
+            );
+        }
+        if (!isFrontpageViewed && sections && sections.length > 0) {
             return (
                 <PortfolioFrontpage 
                     userData={userData}
@@ -137,9 +163,6 @@ export default function WorkspaceLayout() {
                     onVisualize={() => setIsFrontpageViewed(true)}
                 />
             );
-        }
-        if (isSectionsLoading) {
-            return <PortfolioSkeleton themeMode={themeMode} isPreview={true} />;
         }
     }
 
@@ -175,14 +198,14 @@ export default function WorkspaceLayout() {
                 </div>
             )}
             
-            <SEOUpdater pages={pages} userData={userData} isPublicPreview={isPublicPreview} />
+            <SEOUpdater pages={pages} userData={userData} isPublicPreview={isPublicPreview} portfolioMeta={portfolioMeta} />
 
             {/* Top Navigation */}
             {!isPublicPreview && (
                 <header className="h-14 lg:h-16 shrink-0 w-full z-50 relative">
                     <TopNav 
                         theme={themeMode}
-                        setTheme={() => {}} // Controlled by AppContext toggleTheme now, but passed for compatibility
+                        setTheme={() => {}}
                         activeTheme={currentTheme}
                         onThemeChange={handleThemeChange}
                         onDeploy={triggerDeployment}
@@ -199,6 +222,10 @@ export default function WorkspaceLayout() {
                         canUndo={history.past.length > 0}
                         onRedo={handleRedo}
                         canRedo={history.future.length > 0}
+                        saveStatus={saveStatus}
+                        lastSavedAt={lastSavedAt}
+                        onRetrySave={flushPendingSaves}
+                        onBackToDashboard={() => navigate('/dashboard')}
                     />
                 </header>
             )}
@@ -366,6 +393,8 @@ export default function WorkspaceLayout() {
                             onDeploy={triggerDeployment}
                             onExportZip={handleExportZip}
                             onClose={handleCloseRight}
+                            onRenamePage={handleRenamePage}
+                            portfolioId={portfolioMeta?.id}
                         />
                     </aside>
                 )}
@@ -412,6 +441,8 @@ export default function WorkspaceLayout() {
                     onDeploy={triggerDeployment}
                     onExportZip={handleExportZip}
                     onResetWorkspace={handleResetWorkspace}
+                    portfolioMeta={portfolioMeta}
+                    updatePortfolioSettings={updatePortfolioSettings}
                 />
             )}
 

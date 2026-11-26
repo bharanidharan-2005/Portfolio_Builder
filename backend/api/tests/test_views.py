@@ -1,7 +1,9 @@
 import os
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError
 from django.test import TestCase
 from django.urls import reverse
@@ -149,10 +151,12 @@ class WorkspaceAPITests(TestCase):
         )
         self.assertEqual(good.status_code, 200)
 
-    def test_portfolio_is_unique_per_user(self):
-        Portfolio.objects.create(owner=self.owner, title='first', owner_name='Owner')
+    def test_portfolio_slug_is_unique_per_user(self):
+        Portfolio.objects.create(owner=self.owner, title='first', slug='main', owner_name='Owner')
+        second = Portfolio.objects.create(owner=self.owner, title='second', slug='secondary', owner_name='Owner')
+        self.assertEqual(second.slug, 'secondary')
         with self.assertRaises(IntegrityError):
-            Portfolio.objects.create(owner=self.owner, title='second', owner_name='Owner')
+            Portfolio.objects.create(owner=self.owner, title='dup', slug='main', owner_name='Owner')
 
     def test_reorder_sections_persists_new_order(self):
         headers = auth_client(self.client, self.owner)
@@ -375,10 +379,113 @@ class WorkspaceAPITests(TestCase):
         self.assertEqual(check_res.status_code, 200)
         self.assertEqual(check_res.json()['frontpageTemplate'], 'template4')
 
-        # Check Public Portfolio returns the template in settings
+        # Private draft must NOT be publicly accessible
+        draft_res = self.client.get(reverse('public-portfolio', args=[self.owner.username]))
+        self.assertEqual(draft_res.status_code, 404)
+
+        # Publish portfolio and check public access returns the template in settings
+        pub_toggle = self.client.patch(
+            reverse('portfolio-settings'),
+            data={'isPublished': True},
+            content_type='application/json',
+            **headers,
+        )
+        self.assertEqual(pub_toggle.status_code, 200)
+
         public_res = self.client.get(reverse('public-portfolio', args=[self.owner.username]))
         self.assertEqual(public_res.status_code, 200)
         self.assertEqual(public_res.json().get('settings', {}).get('frontpageTemplate'), 'template4')
+
+        # Multi-portfolio creation & section add & AI assistant & resume review preview
+        created_p = self.client.post(
+            reverse('portfolio-list'),
+            data={'title': 'AI Research Portfolio', 'career_track': 'ai_ml_engineer'},
+            content_type='application/json',
+            **headers,
+        )
+        self.assertEqual(created_p.status_code, 201)
+        new_pid = created_p.json()['id']
+
+        portfolios_res = self.client.get(reverse('portfolio-list'), **headers)
+        self.assertEqual(portfolios_res.status_code, 200)
+        self.assertEqual(len(portfolios_res.json()['portfolios']), 2)
+
+        bad_file = self.client.post(
+            reverse('parse-resume'),
+            data={'file': SimpleUploadedFile('fake.pdf', b'not-a-pdf', content_type='application/pdf')},
+            **headers,
+        )
+        self.assertEqual(bad_file.status_code, 400)
+
+        detail_del = self.client.delete(reverse('portfolio-detail', args=[new_pid]), **headers)
+        self.assertEqual(detail_del.status_code, 204)
+
+    @patch(
+        'api.views.ai.generate_text_with_fallback',
+        return_value=SimpleNamespace(
+            text='{"suggestions": [{"label": "Impact", "bio": "Built resilient REST APIs and cut p95 latency by 35%."}]}'
+        ),
+    )
+    def test_section_create_and_ai_assistant_action(self, mock_ai):
+        headers = auth_client(self.client, self.owner)
+        pages_res = self.client.get(reverse('page-list'), **headers)
+        home_id = pages_res.json()[0]['id']
+
+        sec_res = self.client.post(
+            reverse('section-create'),
+            data={'page': home_id, 'section_type': 'achievements', 'content_data': {'title': 'Honors', 'items': []}},
+            content_type='application/json',
+            **headers,
+        )
+        self.assertEqual(sec_res.status_code, 201)
+        self.assertEqual(sec_res.json()['section_type'], 'achievements')
+
+        ai_res = self.client.post(
+            reverse('ai-assistant-action'),
+            data={'action': 'generate_summary', 'context': 'Backend engineer specializing in Django'},
+            content_type='application/json',
+            **headers,
+        )
+        self.assertEqual(ai_res.status_code, 200)
+        self.assertTrue(ai_res.json()['success'])
+        self.assertIn('p95', ai_res.json()['data']['suggestions'][0]['bio'])
+        self.assertTrue(mock_ai.called)
+
+    @patch.dict(os.environ, {'GITHUB_CLIENT_ID': 'gh-id', 'GITHUB_CLIENT_SECRET': 'gh-secret'})
+    @patch('api.views.social_auth.requests.get')
+    @patch('api.views.social_auth.requests.post')
+    def test_github_social_login_forwards_redirect_uri_and_returns_error_details(self, mock_post, mock_get):
+        # 1) GitHub error_description should be surfaced cleanly
+        err_resp = SimpleNamespace(
+            status_code=200,
+            json=lambda: {'error': 'redirect_uri_mismatch', 'error_description': 'The redirect_uri MUST match the registered URL.'},
+        )
+        mock_post.return_value = err_resp
+        bad_res = self.client.post(
+            reverse('social_login'),
+            data={'provider': 'github', 'code': 'abc', 'redirect_uri': 'http://localhost:5173/github/callback'},
+            content_type='application/json',
+        )
+        self.assertEqual(bad_res.status_code, 400)
+        self.assertIn('redirect_uri', bad_res.json()['error'])
+        self.assertEqual(mock_post.call_args.kwargs['data']['redirect_uri'], 'http://localhost:5173/github/callback')
+
+        # 2) Valid exchange creates/logs in user and returns tokens
+        mock_post.return_value = SimpleNamespace(status_code=200, json=lambda: {'access_token': 'gho_123'})
+        mock_get.side_effect = [
+            SimpleNamespace(status_code=200, json=lambda: {'name': 'Octo Cat', 'login': 'octocat'}),
+            SimpleNamespace(status_code=200, json=lambda: [{'email': 'octo@example.com', 'primary': True, 'verified': True}]),
+        ]
+        ok_res = self.client.post(
+            reverse('social_login'),
+            data={'provider': 'github', 'code': 'good-code', 'redirect_uri': 'http://localhost:5173/github/callback'},
+            content_type='application/json',
+        )
+        self.assertEqual(ok_res.status_code, 200)
+        self.assertTrue(ok_res.json()['success'])
+        self.assertIn('access', ok_res.json())
+        self.assertEqual(ok_res.json()['user']['email'], 'octo@example.com')
+
 
 
 

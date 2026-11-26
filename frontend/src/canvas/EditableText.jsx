@@ -12,21 +12,12 @@ export default function EditableText({
     const [draft, setDraft] = useState(value ?? '');
     const inputRef = useRef(null);
     const draftRef = useRef(draft);
-    draftRef.current = draft;
-    const valueRef = useRef(value);
-    valueRef.current = value;
     const lastCommittedRef = useRef(value ?? '');
     const debounceTimerRef = useRef(null);
-    const lastTapTime = useRef(0);
 
-    // Keep draft synchronized when prop value changes from outside (only if not currently editing)
     useEffect(() => {
-        valueRef.current = value;
-        if (!editing) {
-            setDraft(value ?? '');
-            lastCommittedRef.current = value ?? '';
-        }
-    }, [value, editing]);
+        draftRef.current = draft;
+    }, [draft]);
 
     const beginEdit = () => {
         setDraft(value ?? '');
@@ -94,7 +85,7 @@ export default function EditableText({
             inputRef.current.focus();
             try {
                 inputRef.current.select();
-            } catch (e) {}
+            } catch { /* ignore selection error */ }
             if (multiline) {
                 inputRef.current.style.height = 'auto';
                 inputRef.current.style.height = `${Math.max(inputRef.current.scrollHeight, 40)}px`;
@@ -129,7 +120,7 @@ export default function EditableText({
                         value={draft}
                         onChange={handleTextareaInput}
                         onFocus={(e) => {
-                            try { e.target.select(); } catch (_) {}
+                            try { e.target.select(); } catch { /* ignore */ }
                         }}
                         onBlur={handleBlur}
                         onKeyDown={onKeyDown}
@@ -148,7 +139,7 @@ export default function EditableText({
                             triggerDebouncedAutosave(val);
                         }}
                         onFocus={(e) => {
-                            try { e.target.select(); } catch (_) {}
+                            try { e.target.select(); } catch { /* ignore */ }
                         }}
                         onBlur={handleBlur}
                         onKeyDown={onKeyDown}

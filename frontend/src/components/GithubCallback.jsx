@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { API } from '../api';
@@ -9,70 +9,99 @@ export default function GithubCallback() {
     const location = useLocation();
     const { socialLogin, themeMode } = useAppContext();
     const [error, setError] = useState(null);
+    const exchangedCodeRef = useRef(null);
 
     useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
+        const oauthError = queryParams.get('error');
+        const oauthErrorDesc = queryParams.get('error_description');
         const code = queryParams.get('code');
-        
+
+        if (oauthError) {
+            const tErr = setTimeout(() => {
+                setError(oauthErrorDesc || `GitHub authorization was denied (${oauthError}).`);
+            }, 0);
+            const tNav = setTimeout(() => navigate('/'), 4000);
+            return () => {
+                clearTimeout(tErr);
+                clearTimeout(tNav);
+            };
+        }
+
         if (!code) {
-            setError("No authorization code found.");
-            setTimeout(() => navigate('/'), 3000);
+            const tErr = setTimeout(() => {
+                setError("No authorization code found.");
+            }, 0);
+            const tNav = setTimeout(() => navigate('/'), 3000);
+            return () => {
+                clearTimeout(tErr);
+                clearTimeout(tNav);
+            };
+        }
+
+        // Prevent React StrictMode double-effect from consuming a single-use GitHub code twice
+        if (exchangedCodeRef.current === code) {
             return;
         }
+        exchangedCodeRef.current = code;
+
+        let redirectTimer = null;
 
         const authenticateGithub = async () => {
             try {
-                // Post the code to our backend
-                const response = await fetch(`${API.defaults.baseURL}auth/social/`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "include",
-                    body: JSON.stringify({
-                        provider: 'github',
-                        code: code
-                    })
+                const { data } = await API.post('auth/social/', {
+                    provider: 'github',
+                    code,
+                    redirect_uri: `${window.location.origin}/github/callback`,
                 });
-                
-                let data;
-                const contentType = response.headers.get("content-type");
-                if (contentType && contentType.indexOf("application/json") !== -1) {
-                    data = await response.json();
+
+                if (data?.success) {
+                    socialLogin(
+                        {
+                            name: data.user?.name || data.user?.username || "Developer",
+                            email: data.user?.email || "",
+                            avatar: data.user?.avatar || "👨‍💻",
+                            code: data.workspace_code || "",
+                            theme: "modern_glass"
+                        },
+                        data.access,
+                        data.refresh
+                    );
+                    navigate("/dashboard");
                 } else {
-                    const text = await response.text();
-                    throw new Error(`Server returned non-JSON response (${response.status}): ` + text.substring(0, 100));
-                }
-                
-                if (response.ok && data.success) {
-                    socialLogin({
-                        name: data.user.username,
-                        email: data.user.email,
-                        theme: "modern_glass"
-                    });
-                    navigate("/workspace");
-                } else {
-                    setError("GitHub login failed: " + (data.error || "Unknown error"));
-                    setTimeout(() => navigate('/'), 3000);
+                    setError("GitHub login failed: " + (data?.error || "Unknown error"));
+                    redirectTimer = setTimeout(() => navigate('/'), 3500);
                 }
             } catch (err) {
-                console.error("Login fetch error:", err);
-                setError(`Failed to connect to server: ${err.message}.`);
-                setTimeout(() => navigate('/'), 4000);
+                console.error("GitHub OAuth error:", err);
+                const serverError = err.response?.data?.error;
+                if (serverError) {
+                    setError(`GitHub login failed: ${serverError}`);
+                } else if (!err.response || err.response?.status === 502 || err.response?.status === 500) {
+                    setError("Cannot reach the Django authentication server on port 8080 or 8000. Verify the backend server is running.");
+                } else {
+                    setError(`Failed to connect to server: ${err.message}.`);
+                }
+                redirectTimer = setTimeout(() => navigate('/'), 4000);
             }
         };
 
         authenticateGithub();
-    }, [location, navigate, socialLogin]);
+        return () => {
+            if (redirectTimer) clearTimeout(redirectTimer);
+        };
+    }, [location.search, navigate, socialLogin]);
 
     return (
         <div className={`min-h-screen flex flex-col items-center justify-center ${themeMode === 'light' ? 'bg-slate-50 text-slate-800' : 'bg-slate-950 text-slate-200'}`}>
-            <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in-95 duration-500">
+            <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in-95 duration-500 px-6">
                 {error ? (
                     <>
                         <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-2">
                             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                         </div>
                         <h2 className="text-xl font-bold">Authentication Error</h2>
-                        <p className="text-sm opacity-70 text-center max-w-xs">{error}</p>
+                        <p className="text-sm opacity-70 text-center max-w-md">{error}</p>
                         <p className="text-xs opacity-50 mt-4">Redirecting back...</p>
                     </>
                 ) : (

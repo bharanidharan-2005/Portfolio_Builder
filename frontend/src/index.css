@@ -193,6 +193,15 @@ body {
   --color-border-default: #1E293B;
   --color-border-subtle: rgba(255, 255, 255, 0.08);
 
+  /* Component Semantic Tokens */
+  --surface-panel: #0F121A;
+  --surface-elevated: #141824;
+  --surface-hover: rgba(255, 255, 255, 0.06);
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --border-subtle: rgba(255, 255, 255, 0.09);
+
   --system-accent: #7c00ff;
   --system-accent-glow: rgba(124, 0, 255, 0.4);
   --color-accent-purple: #7c00ff;
@@ -236,6 +245,14 @@ body {
 
   --color-border-default: #E2E8F0;
   --color-border-subtle: #EDF2F7;
+
+  --surface-panel: #FFFFFF;
+  --surface-elevated: #FFFFFF;
+  --surface-hover: #F1F5F9;
+  --text-primary: #0F172A;
+  --text-secondary: #334155;
+  --text-muted: #64748B;
+  --border-subtle: #E2E8F0;
 }
 
 *:focus-visible {
@@ -312,44 +329,97 @@ body {
 .theme-light .text-rose-400 { color: #e11d48; }
 .theme-light .text-red-400 { color: #dc2626; }
 
-/* Keep white text on solid purple action buttons in light mode */
+/* Keep white text on solid & gradient action buttons in light mode */
 .theme-light .bg-purple-600 .text-white,
 .theme-light .bg-purple-600.text-white,
 .theme-light .bg-\[\#a855f7\] .text-white,
-.theme-light .bg-\[\#a855f7\].text-white {
+.theme-light .bg-\[\#a855f7\].text-white,
+.theme-light .bg-blue-600.text-white,
+.theme-light .bg-blue-600 .text-white,
+.theme-light .bg-indigo-600.text-white,
+.theme-light .bg-indigo-600 .text-white,
+.theme-light .bg-emerald-600.text-white,
+.theme-light .bg-emerald-600 .text-white,
+.theme-light .bg-red-500.text-white,
+.theme-light .bg-red-600.text-white,
+.theme-light .bg-slate-900.text-white,
+.theme-light .bg-gradient-to-r.text-white,
+.theme-light .bg-gradient-to-tr.text-white {
   color: #ffffff;
 }
 
 /* ==================================================================
    CANVAS ARTBOUND: lock the portfolio preview to the selected theme.
-   These resets come AFTER the light remaps so they win inside the frame.
+   These resets come AFTER the light remaps so they win inside the frame,
+   whether the app chrome is dark or light (.theme-light).
    ================================================================== */
-.aurabuild-canvas .bg-\[\#0d0e12\] { background-color: #0d0e12; }
-.aurabuild-canvas .bg-\[\#13151c\] { background-color: #13151c; }
-.aurabuild-canvas .bg-\[\#181a24\] { background-color: #181a24; }
-.aurabuild-canvas .bg-slate-900 { background-color: #0f172a; }
-.aurabuild-canvas .bg-slate-800 { background-color: #1e293b; }
-.aurabuild-canvas .bg-slate-700 { background-color: #334155; }
-.aurabuild-canvas .border-\[\#1f222c\] { border-color: #1f222c; }
-.aurabuild-canvas .border-\[\#232635\] { border-color: #232635; }
-.aurabuild-canvas .border-slate-700\/60 { border-color: rgba(51, 65, 85, 0.6); }
-.aurabuild-canvas .border-slate-800\/20 { border-color: rgba(30, 41, 59, 0.2); }
-.aurabuild-canvas .border-slate-800\/10 { border-color: rgba(30, 41, 59, 0.1); }
-.aurabuild-canvas .text-white { color: #ffffff; }
-.aurabuild-canvas .text-slate-200 { color: #e2e8f0; }
-.aurabuild-canvas .text-slate-300 { color: #cbd5e1; }
-.aurabuild-canvas .text-slate-400 { color: #94a3b8; }
-.aurabuild-canvas .text-slate-500 { color: #64748b; }
-.aurabuild-canvas .text-slate-600 { color: #475569; }
-.aurabuild-canvas .text-slate-900 { color: #0f172a; }
-.aurabuild-canvas .text-slate-950 { color: #020617; }
+.aurabuild-canvas.aurabuild-canvas-dark .bg-\[\#0d0e12\],
+.theme-light .aurabuild-canvas.aurabuild-canvas-dark .bg-\[\#0d0e12\] { background-color: #0d0e12; }
+.aurabuild-canvas.aurabuild-canvas-dark .bg-\[\#13151c\],
+.theme-light .aurabuild-canvas.aurabuild-canvas-dark .bg-\[\#13151c\] { background-color: #13151c; }
+.aurabuild-canvas.aurabuild-canvas-dark .bg-\[\#181a24\],
+.theme-light .aurabuild-canvas.aurabuild-canvas-dark .bg-\[\#181a24\] { background-color: #181a24; }
+.aurabuild-canvas.aurabuild-canvas-dark .bg-slate-900,
+.theme-light .aurabuild-canvas.aurabuild-canvas-dark .bg-slate-900 { background-color: #0f172a; }
+.aurabuild-canvas.aurabuild-canvas-dark .bg-slate-900\/80,
+.theme-light .aurabuild-canvas.aurabuild-canvas-dark .bg-slate-900\/80 { background-color: rgba(15, 23, 42, 0.8); }
+.aurabuild-canvas.aurabuild-canvas-dark .bg-slate-800,
+.theme-light .aurabuild-canvas.aurabuild-canvas-dark .bg-slate-800 { background-color: #1e293b; }
+.aurabuild-canvas.aurabuild-canvas-dark .bg-slate-700,
+.theme-light .aurabuild-canvas.aurabuild-canvas-dark .bg-slate-700 { background-color: #334155; }
+.aurabuild-canvas .border-\[\#1f222c\],
+.theme-light .aurabuild-canvas .border-\[\#1f222c\] { border-color: #1f222c; }
+.aurabuild-canvas .border-\[\#232635\],
+.theme-light .aurabuild-canvas .border-\[\#232635\] { border-color: #232635; }
+.aurabuild-canvas .border-slate-700\/60,
+.theme-light .aurabuild-canvas .border-slate-700\/60 { border-color: rgba(51, 65, 85, 0.6); }
+.aurabuild-canvas .border-slate-800\/20,
+.theme-light .aurabuild-canvas .border-slate-800\/20 { border-color: rgba(30, 41, 59, 0.2); }
+.aurabuild-canvas .border-slate-800\/10,
+.theme-light .aurabuild-canvas .border-slate-800\/10 { border-color: rgba(30, 41, 59, 0.1); }
+.aurabuild-canvas.aurabuild-canvas-dark .text-white,
+.theme-light .aurabuild-canvas.aurabuild-canvas-dark .text-white { color: #ffffff; }
+.aurabuild-canvas.aurabuild-canvas-dark .text-slate-50,
+.theme-light .aurabuild-canvas.aurabuild-canvas-dark .text-slate-50 { color: #f8fafc; }
+.aurabuild-canvas.aurabuild-canvas-dark .text-slate-100,
+.theme-light .aurabuild-canvas.aurabuild-canvas-dark .text-slate-100 { color: #f1f5f9; }
+.aurabuild-canvas.aurabuild-canvas-dark .text-slate-200,
+.theme-light .aurabuild-canvas.aurabuild-canvas-dark .text-slate-200 { color: #e2e8f0; }
+.aurabuild-canvas.aurabuild-canvas-dark .text-slate-300,
+.theme-light .aurabuild-canvas.aurabuild-canvas-dark .text-slate-300 { color: #cbd5e1; }
+.aurabuild-canvas.aurabuild-canvas-dark .text-slate-400,
+.theme-light .aurabuild-canvas.aurabuild-canvas-dark .text-slate-400 { color: #94a3b8; }
+.aurabuild-canvas.aurabuild-canvas-dark .text-slate-500,
+.theme-light .aurabuild-canvas.aurabuild-canvas-dark .text-slate-500 { color: #64748b; }
+
+/* Light/white canvas themes guarantee crisp dark text & preserved button contrast */
+.aurabuild-canvas.aurabuild-canvas-light,
+.theme-light .aurabuild-canvas.aurabuild-canvas-light {
+  color: #0f172a;
+}
+.aurabuild-canvas.aurabuild-canvas-light .text-slate-900,
+.theme-light .aurabuild-canvas.aurabuild-canvas-light .text-slate-900 { color: #0f172a; }
+.aurabuild-canvas.aurabuild-canvas-light .text-slate-800,
+.theme-light .aurabuild-canvas.aurabuild-canvas-light .text-slate-800 { color: #1e293b; }
+.aurabuild-canvas.aurabuild-canvas-light .text-slate-700,
+.theme-light .aurabuild-canvas.aurabuild-canvas-light .text-slate-700 { color: #334155; }
+.aurabuild-canvas.aurabuild-canvas-light .text-slate-600,
+.theme-light .aurabuild-canvas.aurabuild-canvas-light .text-slate-600 { color: #475569; }
+.aurabuild-canvas.aurabuild-canvas-light .bg-slate-900.text-white,
+.aurabuild-canvas.aurabuild-canvas-light .bg-blue-600.text-white,
+.aurabuild-canvas.aurabuild-canvas-light .bg-indigo-600.text-white,
+.aurabuild-canvas.aurabuild-canvas-light .bg-red-500.text-white,
+.aurabuild-canvas.aurabuild-canvas-light .bg-gradient-to-r.text-white,
+.aurabuild-canvas.aurabuild-canvas-light .bg-gradient-to-tr.text-white {
+  color: #ffffff;
+}
 .aurabuild-canvas .text-purple-400 { color: #c084fc; }
 .aurabuild-canvas .text-emerald-400 { color: #34d399; }
 .aurabuild-canvas .text-pink-400 { color: #f472b6; }
 .aurabuild-canvas .text-indigo-300 { color: #a5b4fc; }
 .aurabuild-canvas .text-\[\#f000ff\] { color: #f000ff; }
 .aurabuild-canvas .text-\[\#00f0ff\] { color: #00f0ff; }
-.aurabuild-canvas .hover\:bg-slate-900:hover { background-color: #0f172a; }
+.aurabuild-canvas.aurabuild-canvas-dark .hover\:bg-slate-900:hover { background-color: #0f172a; }
 
 /* ==================================================================
    AUTHENTICATING WAVEFORM & EQUALIZER ANIMATIONS

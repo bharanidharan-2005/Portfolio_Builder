@@ -1,6 +1,4 @@
-import React from 'react';
-
-export default function PortfolioSkeleton({ isPreview = true, themeMode = 'dark' }) {
+export default function PortfolioSkeleton({ themeMode = 'dark' }) {
     const isLight = themeMode === 'light';
 
     return (

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { 
-    X, Sparkles, Target, TrendingUp, 
-    Palette, Image as ImageIcon, Share2, Code2, Layers, CheckCircle2, Zap,
+    X, Sparkles, Target, TrendingUp, Palette,
+    Image as ImageIcon, Share2, Code2, Layers, CheckCircle2,
     Copy, Check
 } from "lucide-react";
 
