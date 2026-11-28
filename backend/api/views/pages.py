@@ -13,6 +13,7 @@ from ..serializers import (
     PortfolioSectionSerializer,
     PortfolioSerializer,
 )
+from ..services.tracking import record_activity
 from .utils import (
     DEFAULT_WORKSPACE_SECTIONS_MAP,
     _unique_portfolio_slug,
@@ -138,6 +139,17 @@ class PortfolioListCreateView(APIView):
                     skills.content_data = {**skills.content_data, 'items': track_seed['skills']}
                     skills.save()
 
+        record_activity(
+            request.user,
+            'portfolio_created',
+            metadata={'portfolio_id': portfolio.id, 'career_track': career_track, 'template': frontpage_template},
+        )
+        record_activity(
+            request.user,
+            'template_selected',
+            metadata={'portfolio_id': portfolio.id, 'template': frontpage_template, 'career_track': career_track},
+            touch_active=False,
+        )
         return Response(PortfolioSerializer(portfolio).data, status=status.HTTP_201_CREATED)
 
 
@@ -154,6 +166,9 @@ class PortfolioDetailAPIView(APIView):
         portfolio = Portfolio.objects.filter(pk=pk, owner=request.user).first()
         if not portfolio:
             return Response({'error': 'Portfolio not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        was_published = portfolio.is_published
+        prev_template = portfolio.frontpage_template
 
         data = request.data
         if 'title' in data and str(data['title']).strip():
@@ -183,6 +198,23 @@ class PortfolioDetailAPIView(APIView):
             portfolio.is_active = True
 
         portfolio.save()
+
+        record_activity(request.user, 'portfolio_updated', metadata={'portfolio_id': portfolio.id})
+        if portfolio.frontpage_template != prev_template:
+            record_activity(
+                request.user,
+                'template_selected',
+                metadata={'portfolio_id': portfolio.id, 'template': portfolio.frontpage_template},
+                touch_active=False,
+            )
+        if 'is_published' in data and portfolio.is_published != was_published:
+            record_activity(
+                request.user,
+                'portfolio_published' if portfolio.is_published else 'portfolio_unpublished',
+                metadata={'portfolio_id': portfolio.id},
+                touch_active=False,
+            )
+
         return Response(PortfolioSerializer(portfolio).data)
 
     def delete(self, request, pk):
@@ -199,7 +231,8 @@ class PortfolioDetailAPIView(APIView):
             if next_p:
                 next_p.is_active = True
                 next_p.save(update_fields=['is_active'])
-        return Response({'success': True}, status=status.HTTP_204_NO_CONTENT)
+        record_activity(request.user, 'portfolio_deleted', metadata={'portfolio_id': pk})
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class PageListAPIView(APIView):
@@ -306,7 +339,7 @@ class SectionDetailAPIView(APIView):
         except PortfolioSection.DoesNotExist:
             return Response({'error': 'Section not found.'}, status=status.HTTP_404_NOT_FOUND)
         section.delete()
-        return Response({'success': True}, status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class SectionReorderAPIView(APIView):
@@ -395,7 +428,7 @@ class PageDetailAPIView(APIView):
         if remaining == 0:
             return Response({'error': 'You must keep at least one page.'}, status=status.HTTP_400_BAD_REQUEST)
         page.delete()
-        return Response({'success': True}, status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class PortfolioSettingsAPIView(APIView):
@@ -424,6 +457,8 @@ class PortfolioSettingsAPIView(APIView):
 
     def patch(self, request):
         portfolio = get_or_create_user_portfolio(request)
+        was_published = portfolio.is_published
+        prev_template = getattr(portfolio, 'frontpage_template', 'template1')
         data = request.data
         if 'globalBg' in data:
             portfolio.global_bg_image = data['globalBg']
@@ -444,4 +479,20 @@ class PortfolioSettingsAPIView(APIView):
         if 'title' in data and str(data['title']).strip():
             portfolio.title = str(data['title']).strip()[:200]
         portfolio.save()
+
+        record_activity(request.user, 'portfolio_updated', metadata={'portfolio_id': portfolio.id})
+        if portfolio.frontpage_template != prev_template:
+            record_activity(
+                request.user,
+                'template_selected',
+                metadata={'portfolio_id': portfolio.id, 'template': portfolio.frontpage_template},
+                touch_active=False,
+            )
+        if 'isPublished' in data and portfolio.is_published != was_published:
+            record_activity(
+                request.user,
+                'portfolio_published' if portfolio.is_published else 'portfolio_unpublished',
+                metadata={'portfolio_id': portfolio.id},
+                touch_active=False,
+            )
         return Response({'success': True, **self._serialize_settings(portfolio)}, status=status.HTTP_200_OK)

@@ -266,7 +266,7 @@ export default function LandingPage() {
                     isStaff: Boolean(data.user?.is_staff),
                     theme: "modern_glass"
                 });
-                navigate("/dashboard");
+                navigate(data.user?.is_staff ? "/admin" : "/dashboard");
             } else {
                 setAuthError(data.error || "Password reset failed.");
             }
@@ -323,7 +323,7 @@ export default function LandingPage() {
                     isStaff: Boolean(data.user?.is_staff),
                     theme: "modern_glass"
                 });
-                navigate("/dashboard");
+                navigate(data.user?.is_staff ? "/admin" : "/dashboard");
             } else {
                 setAuthError(data.error || "Authentication failed. Please verify your credentials.");
             }
@@ -460,7 +460,7 @@ export default function LandingPage() {
                     data.access,
                     data.refresh
                 );
-                navigate("/dashboard");
+                navigate(data.user?.is_staff ? "/admin" : "/dashboard");
             } else {
                 setAuthError("Google login failed: " + (data?.error || "Unknown error"));
             }
@@ -498,9 +498,8 @@ export default function LandingPage() {
     const isLight = themeMode === "light";
 
     return (
-        <div className={`min-h-screen w-full overflow-x-hidden font-sora relative selection:bg-indigo-500/30 ${
-            isLight ? "bg-slate-50 text-slate-900" : "bg-[#07090F] text-slate-200"
-        }`}>
+        <div className={`min-h-screen w-full overflow-x-hidden font-sora relative selection:bg-indigo-500/30 ${isLight ? "bg-slate-50 text-slate-900" : "bg-[#07090F] text-slate-200"
+            }`}>
             {/* Subtle Ambient Three.js Backdrop */}
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
                 <Suspense fallback={null}>
@@ -509,9 +508,8 @@ export default function LandingPage() {
             </div>
 
             {/* STICKY NAVBAR */}
-            <header className={`sticky top-0 z-40 border-b backdrop-blur-md transition-colors ${
-                isLight ? "bg-white/85 border-slate-200/80" : "bg-[#07090F]/85 border-slate-800/80"
-            }`}>
+            <header className={`sticky top-0 z-40 border-b backdrop-blur-md transition-colors ${isLight ? "bg-white/85 border-slate-200/80" : "bg-[#07090F]/85 border-slate-800/80"
+                }`}>
                 <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
                     <a href="#top" className="flex items-center gap-2 sm:gap-2.5 font-bold tracking-tight min-w-0 shrink-0">
                         <img
@@ -529,6 +527,7 @@ export default function LandingPage() {
                         <a href="#templates" className="hover:text-indigo-500 transition-colors">Templates</a>
                         <a href="#features" className="hover:text-indigo-500 transition-colors">Capabilities</a>
                         <a href="#pipeline" className="hover:text-indigo-500 transition-colors">How It Works</a>
+                        <a href="#plans" className="hover:text-indigo-500 transition-colors">Plans</a>
                         <a href="#faq" className="hover:text-indigo-500 transition-colors">FAQ</a>
                     </nav>
 
@@ -537,18 +536,16 @@ export default function LandingPage() {
                             type="button"
                             onClick={() => setThemeSetting(isLight ? "dark" : "light")}
                             aria-label="Toggle theme"
-                            className={`p-2 rounded-xl border transition-colors cursor-pointer shrink-0 ${
-                                isLight ? "border-slate-200 hover:bg-slate-100 text-slate-700" : "border-slate-800 hover:bg-slate-800 text-slate-300"
-                            }`}
+                            className={`p-2 rounded-xl border transition-colors cursor-pointer shrink-0 ${isLight ? "border-slate-200 hover:bg-slate-100 text-slate-700" : "border-slate-800 hover:bg-slate-800 text-slate-300"
+                                }`}
                         >
                             {isLight ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
                         </button>
                         <button
                             type="button"
                             onClick={() => openModal("login")}
-                            className={`hidden sm:inline-flex px-3.5 py-2 text-xs font-semibold rounded-xl border transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                                isLight ? "border-slate-300 text-slate-700 hover:bg-slate-100" : "border-slate-700 text-slate-200 hover:bg-slate-800"
-                            }`}
+                            className={`hidden sm:inline-flex px-3.5 py-2 text-xs font-semibold rounded-xl border transition-colors cursor-pointer whitespace-nowrap shrink-0 ${isLight ? "border-slate-300 text-slate-700 hover:bg-slate-100" : "border-slate-700 text-slate-200 hover:bg-slate-800"
+                                }`}
                         >
                             Log in
                         </button>
@@ -563,9 +560,8 @@ export default function LandingPage() {
                         <button
                             type="button"
                             onClick={() => setMobileMenuOpen((v) => !v)}
-                            className={`md:hidden p-2 rounded-xl border cursor-pointer shrink-0 ${
-                                isLight ? "border-slate-200 text-slate-700 hover:bg-slate-100" : "border-slate-700/50 text-slate-200 hover:bg-slate-800"
-                            }`}
+                            className={`md:hidden p-2 rounded-xl border cursor-pointer shrink-0 ${isLight ? "border-slate-200 text-slate-700 hover:bg-slate-100" : "border-slate-700/50 text-slate-200 hover:bg-slate-800"
+                                }`}
                             aria-label="Toggle navigation menu"
                         >
                             <Menu className="w-4 h-4" />
@@ -574,12 +570,12 @@ export default function LandingPage() {
                 </div>
 
                 {mobileMenuOpen && (
-                    <div className={`md:hidden border-t px-4 py-3 flex flex-col gap-2 text-sm font-medium ${
-                        isLight ? "bg-white border-slate-200 text-slate-700" : "bg-[#0B0D14] border-slate-800 text-slate-200"
-                    }`}>
+                    <div className={`md:hidden border-t px-4 py-3 flex flex-col gap-2 text-sm font-medium ${isLight ? "bg-white border-slate-200 text-slate-700" : "bg-[#0B0D14] border-slate-800 text-slate-200"
+                        }`}>
                         <a href="#templates" onClick={() => setMobileMenuOpen(false)} className="py-1.5">Templates</a>
                         <a href="#features" onClick={() => setMobileMenuOpen(false)} className="py-1.5">Capabilities</a>
                         <a href="#pipeline" onClick={() => setMobileMenuOpen(false)} className="py-1.5">How It Works</a>
+                        <a href="#plans" onClick={() => setMobileMenuOpen(false)} className="py-1.5">Plans</a>
                         <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="py-1.5">FAQ</a>
                         <button
                             type="button"
@@ -602,16 +598,14 @@ export default function LandingPage() {
                                 <span>AI Resume Parsing + 3-Panel Visual Canvas</span>
                             </div>
 
-                            <h1 className={`font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.08] ${
-                                isLight ? "text-slate-900" : "text-white"
-                            }`}>
+                            <h1 className={`font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.08] ${isLight ? "text-slate-900" : "text-white"
+                                }`}>
                                 Turn your resume into a{" "}
                                 <span className="text-indigo-500">live engineering portfolio.</span>
                             </h1>
 
-                            <p className={`text-base sm:text-lg leading-relaxed max-w-xl mx-auto lg:mx-0 ${
-                                isLight ? "text-slate-600" : "text-slate-300"
-                            }`}>
+                            <p className={`text-base sm:text-lg leading-relaxed max-w-xl mx-auto lg:mx-0 ${isLight ? "text-slate-600" : "text-slate-300"
+                                }`}>
                                 Import PDF or DOCX resumes, customize career-path templates in a real-time editor, refine bullets with AI, and publish cleanly or export production React code.
                             </p>
 
@@ -626,19 +620,17 @@ export default function LandingPage() {
                                 </button>
                                 <a
                                     href="#templates"
-                                    className={`w-full sm:w-auto px-7 py-3.5 rounded-xl border text-sm font-semibold inline-flex items-center justify-center transition-colors ${
-                                        isLight
-                                            ? "border-slate-300 bg-white text-slate-800 hover:bg-slate-100"
-                                            : "border-slate-700 bg-slate-900/70 text-slate-200 hover:bg-slate-800"
-                                    }`}
+                                    className={`w-full sm:w-auto px-7 py-3.5 rounded-xl border text-sm font-semibold inline-flex items-center justify-center transition-colors ${isLight
+                                        ? "border-slate-300 bg-white text-slate-800 hover:bg-slate-100"
+                                        : "border-slate-700 bg-slate-900/70 text-slate-200 hover:bg-slate-800"
+                                        }`}
                                 >
                                     Explore Templates
                                 </a>
                             </div>
 
-                            <div className={`pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-2 text-xs ${
-                                isLight ? "text-slate-600" : "text-slate-400"
-                            }`}>
+                            <div className={`pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-2 text-xs ${isLight ? "text-slate-600" : "text-slate-400"
+                                }`}>
                                 <span className="inline-flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> PDF & DOCX Resume Parser</span>
                                 <span className="inline-flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> {FRONTPAGE_LAYOUTS.length} Frontpage Layouts &amp; 7 Tracks</span>
                                 <span className="inline-flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Clean ZIP & PDF Export</span>
@@ -647,12 +639,10 @@ export default function LandingPage() {
 
                         {/* Interactive Layout Preview Card */}
                         <div className="lg:col-span-6">
-                            <div className={`rounded-2xl border shadow-2xl overflow-hidden ${
-                                isLight ? "bg-white border-slate-200" : "bg-[#0D1018] border-slate-800"
-                            }`}>
-                                <div className={`px-4 py-3 border-b flex flex-wrap items-center justify-between gap-2 ${
-                                    isLight ? "bg-slate-50 border-slate-200" : "bg-[#121622] border-slate-800"
+                            <div className={`rounded-2xl border shadow-2xl overflow-hidden ${isLight ? "bg-white border-slate-200" : "bg-[#0D1018] border-slate-800"
                                 }`}>
+                                <div className={`px-4 py-3 border-b flex flex-wrap items-center justify-between gap-2 ${isLight ? "bg-slate-50 border-slate-200" : "bg-[#121622] border-slate-800"
+                                    }`}>
                                     <div className="flex items-center gap-1.5">
                                         <span className="w-2.5 h-2.5 rounded-full bg-rose-400" />
                                         <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
@@ -661,19 +651,18 @@ export default function LandingPage() {
                                             aurabuild-canvas.preview
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-1 overflow-x-auto">
+                                    <div className="flex items-center gap-1 overflow-x-auto custom-scrollbar">
                                         {FRONTPAGE_LAYOUTS.slice(0, 4).map((layout) => (
                                             <button
                                                 key={layout.id}
                                                 type="button"
                                                 onClick={() => setDemoLayout(layout.id)}
-                                                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer whitespace-nowrap ${
-                                                    demoLayout === layout.id
-                                                        ? "bg-indigo-600 text-white"
-                                                        : isLight
-                                                            ? "text-slate-600 hover:bg-slate-200"
-                                                            : "text-slate-400 hover:bg-slate-800"
-                                                }`}
+                                                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer whitespace-nowrap ${demoLayout === layout.id
+                                                    ? "bg-indigo-600 text-white"
+                                                    : isLight
+                                                        ? "text-slate-600 hover:bg-slate-200"
+                                                        : "text-slate-400 hover:bg-slate-800"
+                                                    }`}
                                             >
                                                 {layout.tag}
                                             </button>
@@ -704,9 +693,8 @@ export default function LandingPage() {
 
                                     {demoLayout === "template2" ? (
                                         <div className="grid grid-cols-5 gap-3">
-                                            <div className={`col-span-2 rounded-xl border p-3.5 space-y-2 ${
-                                                isLight ? "bg-slate-50 border-slate-200" : "bg-slate-900/70 border-slate-800"
-                                            }`}>
+                                            <div className={`col-span-2 rounded-xl border p-3.5 space-y-2 ${isLight ? "bg-slate-50 border-slate-200" : "bg-slate-900/70 border-slate-800"
+                                                }`}>
                                                 <p className={`text-[11px] font-bold ${isLight ? "text-cyan-700" : "text-cyan-400"}`}>Navigation & Bio</p>
                                                 <p className={`text-xs ${isLight ? "text-slate-600" : "text-slate-400"}`}>Fixed sidebar navigation, contact triggers, and core stack badges.</p>
                                             </div>
@@ -785,13 +773,12 @@ export default function LandingPage() {
                                         key={cat}
                                         type="button"
                                         onClick={() => setTemplateCategory(cat)}
-                                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${
-                                            templateCategory === cat
-                                                ? "bg-indigo-600 border-indigo-500 text-white"
-                                                : isLight
-                                                    ? "border-slate-200 text-slate-600 hover:bg-slate-100"
-                                                    : "border-slate-800 text-slate-300 hover:bg-slate-800"
-                                        }`}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${templateCategory === cat
+                                            ? "bg-indigo-600 border-indigo-500 text-white"
+                                            : isLight
+                                                ? "border-slate-200 text-slate-600 hover:bg-slate-100"
+                                                : "border-slate-800 text-slate-300 hover:bg-slate-800"
+                                            }`}
                                     >
                                         {cat}
                                     </button>
@@ -803,11 +790,10 @@ export default function LandingPage() {
                             {filteredTracks.map((track) => (
                                 <div
                                     key={track.id}
-                                    className={`rounded-2xl border p-6 flex flex-col justify-between gap-4 transition-all ${
-                                        isLight
-                                            ? "bg-white border-slate-200 hover:border-indigo-400"
-                                            : "bg-[#101420] border-slate-800 hover:border-indigo-500/50"
-                                    }`}
+                                    className={`rounded-2xl border p-6 flex flex-col justify-between gap-4 transition-all ${isLight
+                                        ? "bg-white border-slate-200 hover:border-indigo-400"
+                                        : "bg-[#101420] border-slate-800 hover:border-indigo-500/50"
+                                        }`}
                                 >
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between gap-2">
@@ -828,9 +814,8 @@ export default function LandingPage() {
                                             {track.recommendedSections.slice(0, 5).map((sec) => (
                                                 <span
                                                     key={sec}
-                                                    className={`px-2 py-0.5 rounded text-[10px] font-mono ${
-                                                        isLight ? "bg-slate-100 text-slate-700" : "bg-slate-900 text-slate-300"
-                                                    }`}
+                                                    className={`px-2 py-0.5 rounded text-[10px] font-mono ${isLight ? "bg-slate-100 text-slate-700" : "bg-slate-900 text-slate-300"
+                                                        }`}
                                                 >
                                                     {sec}
                                                 </span>
@@ -871,9 +856,8 @@ export default function LandingPage() {
                                 {FRONTPAGE_LAYOUTS.map((layout) => (
                                     <div
                                         key={layout.id}
-                                        className={`rounded-xl border px-3 py-2.5 flex items-center gap-2 ${
-                                            isLight ? "bg-white border-slate-200" : "bg-[#141926] border-slate-800"
-                                        }`}
+                                        className={`rounded-xl border px-3 py-2.5 flex items-center gap-2 ${isLight ? "bg-white border-slate-200" : "bg-[#141926] border-slate-800"
+                                            }`}
                                     >
                                         <span
                                             className="w-2.5 h-2.5 rounded-full shrink-0"
@@ -912,11 +896,10 @@ export default function LandingPage() {
                             return (
                                 <div
                                     key={idx}
-                                    className={`border rounded-2xl p-6 transition-all ${
-                                        isLight
-                                            ? "bg-white border-slate-200 hover:border-indigo-300"
-                                            : "bg-[#0F131E] border-slate-800 hover:border-indigo-500/40"
-                                    }`}
+                                    className={`border rounded-2xl p-6 transition-all ${isLight
+                                        ? "bg-white border-slate-200 hover:border-indigo-300"
+                                        : "bg-[#0F131E] border-slate-800 hover:border-indigo-500/40"
+                                        }`}
                                 >
                                     <div className="w-10 h-10 rounded-xl bg-indigo-500/12 text-indigo-400 border border-indigo-500/20 flex items-center justify-center mb-4">
                                         <Icon className="w-5 h-5" />
@@ -966,7 +949,73 @@ export default function LandingPage() {
                     </div>
                 </section>
 
-                {/* 5. FAQ */}
+                {/* 5. PLANS & MONETIZATION READINESS */}
+                <section id="plans" className="py-20 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+                    <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
+                        <p className={`text-xs font-bold uppercase tracking-wider ${isLight ? "text-indigo-600" : "text-indigo-400"}`}>
+                            Plans & Workspace Access
+                        </p>
+                        <h2 className={`text-3xl font-extrabold tracking-tight ${isLight ? "text-slate-900" : "text-white"}`}>
+                            Start building free, ready to scale
+                        </h2>
+                        <p className={`text-sm ${isLight ? "text-slate-600" : "text-slate-400"}`}>
+                            All core portfolio creation, resume parsing, and export features are available now. Paid Pro & Premium tiers are architected and will open once billing launches.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className={`rounded-2xl border p-6 sm:p-8 flex flex-col justify-between gap-6 ${isLight ? "bg-white border-slate-200" : "bg-[#0F131E] border-slate-800"}`}>
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between gap-2">
+                                    <h3 className={`text-lg font-bold ${isLight ? "text-slate-900" : "text-white"}`}>Free Starter</h3>
+                                    <Badge tone="success">Active Today</Badge>
+                                </div>
+                                <p className={`text-xs leading-relaxed ${isLight ? "text-slate-600" : "text-slate-400"}`}>
+                                    Everything students, engineers, and designers need to create, customize, and publish portfolios cleanly.
+                                </p>
+                                <ul className={`space-y-2.5 text-xs ${isLight ? "text-slate-700" : "text-slate-300"}`}>
+                                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500 shrink-0" /> Multi-portfolio dashboard &amp; public URLs</li>
+                                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500 shrink-0" /> PDF / DOCX AI Resume Parser &amp; review modal</li>
+                                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500 shrink-0" /> All {FRONTPAGE_LAYOUTS.length} Studio Frontpage Layouts &amp; 7 Tracks</li>
+                                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500 shrink-0" /> Resume PDF, Standalone HTML &amp; React ZIP exports</li>
+                                </ul>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => openModal("signup")}
+                                className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-colors cursor-pointer"
+                            >
+                                Get Started Free →
+                            </button>
+                        </div>
+
+                        <div className={`rounded-2xl border p-6 sm:p-8 flex flex-col justify-between gap-6 ${isLight ? "bg-slate-50 border-indigo-200" : "bg-[#111728] border-indigo-500/35"}`}>
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between gap-2">
+                                    <h3 className={`text-lg font-bold ${isLight ? "text-slate-900" : "text-white"}`}>Pro &amp; Premium Tiers</h3>
+                                    <Badge tone="accent">Coming Soon</Badge>
+                                </div>
+                                <p className={`text-xs leading-relaxed ${isLight ? "text-slate-600" : "text-slate-400"}`}>
+                                    Plan entitlements and AI credit telemetry are built into the backend. Online checkout and custom pricing will be announced after public beta.
+                                </p>
+                                <ul className={`space-y-2.5 text-xs ${isLight ? "text-slate-700" : "text-slate-300"}`}>
+                                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-indigo-400 shrink-0" /> Expanded AI credit quotas &amp; custom domain mapping</li>
+                                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-indigo-400 shrink-0" /> Portfolio version history &amp; multi-resume library</li>
+                                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-indigo-400 shrink-0" /> Priority AI image generation &amp; team analytics</li>
+                                </ul>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => openModal("signup")}
+                                className={`w-full py-3 rounded-xl border text-xs font-semibold transition-colors cursor-pointer ${isLight ? "border-indigo-300 text-indigo-700 hover:bg-indigo-50" : "border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/10"}`}
+                            >
+                                Join Free Beta First
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                {/* 6. FAQ */}
                 <section id="faq" className="py-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
                     <div className="text-center mb-10">
                         <h2 className={`text-3xl font-extrabold tracking-tight ${isLight ? "text-slate-900" : "text-white"}`}>
@@ -980,9 +1029,8 @@ export default function LandingPage() {
                             return (
                                 <div
                                     key={idx}
-                                    className={`rounded-2xl border overflow-hidden ${
-                                        isLight ? "bg-white border-slate-200" : "bg-[#0F131E] border-slate-800"
-                                    }`}
+                                    className={`rounded-2xl border overflow-hidden ${isLight ? "bg-white border-slate-200" : "bg-[#0F131E] border-slate-800"
+                                        }`}
                                 >
                                     <button
                                         type="button"

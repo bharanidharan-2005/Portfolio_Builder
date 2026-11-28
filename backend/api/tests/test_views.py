@@ -327,6 +327,7 @@ class WorkspaceAPITests(TestCase):
         ).first()
         res = self.client.delete(reverse('section-detail', args=[section.id]), **headers)
         self.assertEqual(res.status_code, 204)
+        self.assertEqual(res.content, b'')
         self.assertFalse(PortfolioSection.objects.filter(pk=section.id).exists())
 
         # A different user cannot delete it (404, no leak).
@@ -349,6 +350,7 @@ class WorkspaceAPITests(TestCase):
         target = PortfolioPage.objects.get(portfolio__owner=self.owner, name='Projects')
         res = self.client.delete(reverse('page-detail', args=[target.id]), **headers)
         self.assertEqual(res.status_code, 204)
+        self.assertEqual(res.content, b'')
         self.assertFalse(PortfolioPage.objects.filter(pk=target.id).exists())
         self.assertFalse(PortfolioSection.objects.filter(page=target).exists())
 
@@ -419,6 +421,7 @@ class WorkspaceAPITests(TestCase):
 
         detail_del = self.client.delete(reverse('portfolio-detail', args=[new_pid]), **headers)
         self.assertEqual(detail_del.status_code, 204)
+        self.assertEqual(detail_del.content, b'')
 
     @patch(
         'api.views.ai.generate_text_with_fallback',
@@ -606,6 +609,237 @@ class WorkspaceAPITests(TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.json()['plan'], 'free')
         self.assertIn('is_staff', res.json())
+
+
+class AdminDashboardAndTrackingTests(TestCase):
+    def setUp(self):
+        self.owner = User.objects.create_user(
+            username='regular@example.com',
+            email='regular@example.com',
+            password='RegularPassword123!',
+            first_name='Regular User',
+        )
+        self.admin = User.objects.create_user(
+            username='admin@example.com',
+            email='admin@example.com',
+            password='AdminPassword123!',
+            first_name='Site Admin',
+            is_staff=True,
+        )
+
+    def test_admin_endpoints_reject_unauthenticated_and_non_staff(self):
+        url_names = [
+            'admin-overview',
+            'admin-users-list',
+            'admin-users-export',
+            'admin-analytics',
+            'admin-ai-usage',
+            'admin-system-health',
+            'admin-audit-logs',
+        ]
+        for name in url_names:
+            anon_res = self.client.get(reverse(name))
+            self.assertEqual(anon_res.status_code, 401, f"{name} must require auth")
+
+        non_admin_headers = auth_client(self.client, self.owner)
+        for name in url_names:
+            user_res = self.client.get(reverse(name), **non_admin_headers)
+            self.assertEqual(user_res.status_code, 403, f"{name} must block non-staff user")
+
+        patch_res = self.client.patch(
+            reverse('admin-user-detail', args=[self.owner.id]),
+            {'plan': 'pro'},
+            content_type='application/json',
+            **non_admin_headers,
+        )
+        self.assertEqual(patch_res.status_code, 403)
+
+    def test_admin_overview_user_management_tracking_and_audit(self):
+        from api.models import ActivityEvent, AdminAuditLog, AIUsageLog
+
+        owner_headers = auth_client(self.client, self.owner)
+        admin_headers = auth_client(self.client, self.admin)
+
+        # Trigger real user portfolio & tracking events
+        created = self.client.post(
+            reverse('portfolio-list'),
+            {'title': 'Cloud Portfolio', 'career_track': 'software_developer', 'frontpage_template': 'template2'},
+            content_type='application/json',
+            **owner_headers,
+        )
+        self.assertEqual(created.status_code, 201)
+
+        # Client activity endpoint accepts allowlisted export event, rejects spoofed login event
+        ok_ev = self.client.post(
+            reverse('activity-track'),
+            {'event_name': 'resume_exported', 'metadata': {'format': 'pdf'}},
+            content_type='application/json',
+            **owner_headers,
+        )
+        self.assertEqual(ok_ev.status_code, 200)
+        bad_ev = self.client.post(
+            reverse('activity-track'),
+            {'event_name': 'user_login'},
+            content_type='application/json',
+            **owner_headers,
+        )
+        self.assertEqual(bad_ev.status_code, 400)
+
+        AIUsageLog.objects.create(
+            user=self.owner,
+            action_name='ai_copilot',
+            provider='groq',
+            model_name='llama-3.3-70b-versatile',
+            status='success',
+            prompt_tokens=100,
+            completion_tokens=40,
+            total_tokens=140,
+            credits_used=1,
+            latency_ms=420,
+        )
+
+        # Admin overview
+        ov = self.client.get(reverse('admin-overview') + '?range=30d', **admin_headers)
+        self.assertEqual(ov.status_code, 200)
+        self.assertGreaterEqual(ov.json()['users']['total'], 2)
+        self.assertGreaterEqual(ov.json()['users']['dau'], 1)
+        self.assertEqual(ov.json()['ai']['total_requests'], 1)
+
+        # Admin user search & CSV export
+        ulist = self.client.get(reverse('admin-users-list') + '?search=regular', **admin_headers)
+        self.assertEqual(ulist.status_code, 200)
+        self.assertEqual(ulist.json()['count'], 1)
+
+        csv_res = self.client.get(reverse('admin-users-export'), **admin_headers)
+        self.assertEqual(csv_res.status_code, 200)
+        self.assertIn('text/csv', csv_res['Content-Type'])
+        self.assertIn('regular@example.com', csv_res.content.decode('utf-8'))
+
+        # Admin user detail + plan upgrade + suspension + login block
+        detail = self.client.get(reverse('admin-user-detail', args=[self.owner.id]), **admin_headers)
+        self.assertEqual(detail.status_code, 200)
+        self.assertTrue(len(detail.json()['timeline']) >= 2)
+
+        patch_user = self.client.patch(
+            reverse('admin-user-detail', args=[self.owner.id]),
+            {'plan': 'pro', 'is_active': False},
+            content_type='application/json',
+            **admin_headers,
+        )
+        self.assertEqual(patch_user.status_code, 200)
+        self.assertEqual(patch_user.json()['user']['plan'], 'pro')
+        self.assertFalse(patch_user.json()['user']['is_active'])
+
+        # Self-suspend guard
+        self_guard = self.client.patch(
+            reverse('admin-user-detail', args=[self.admin.id]),
+            {'is_active': False},
+            content_type='application/json',
+            **admin_headers,
+        )
+        self.assertEqual(self_guard.status_code, 400)
+
+        # Suspended user cannot log in
+        login_res = self.client.post(
+            reverse('auth-login'),
+            {'email': 'regular@example.com', 'password': 'RegularPassword123!'},
+            content_type='application/json',
+        )
+        self.assertEqual(login_res.status_code, 401)
+
+        # Analytics, AI usage, system health & audit logs
+        an = self.client.get(reverse('admin-analytics') + '?range=30d', **admin_headers)
+        self.assertEqual(an.status_code, 200)
+        self.assertIn('features', an.json())
+        self.assertIn('engagement', an.json())
+
+        ai_res = self.client.get(reverse('admin-ai-usage') + '?range=30d', **admin_headers)
+        self.assertEqual(ai_res.status_code, 200)
+        self.assertEqual(ai_res.json()['summary']['total_tokens'], 140)
+
+        health = self.client.get(reverse('admin-system-health'), **admin_headers)
+        self.assertEqual(health.status_code, 200)
+        self.assertEqual(health.json()['database']['status'], 'healthy')
+
+        audits = self.client.get(reverse('admin-audit-logs'), **admin_headers)
+        self.assertEqual(audits.status_code, 200)
+        action_types = {r['action_type'] for r in audits.json()['results']}
+        self.assertIn('plan_changed', action_types)
+        self.assertIn('user_suspended', action_types)
+        self.assertIn('csv_exported', action_types)
+        self.assertTrue(ActivityEvent.objects.filter(user=self.owner, event_name='portfolio_created').exists())
+        self.assertTrue(AdminAuditLog.objects.count() >= 3)
+
+    def test_session_heartbeat_duration_and_ensure_admin_command(self):
+        from datetime import timedelta
+        from django.core.management import call_command
+        from django.utils import timezone
+        from api.models import UserSession
+
+        # Heartbeat requires authentication and valid session_key
+        self.assertEqual(self.client.post(reverse('activity-heartbeat')).status_code, 401)
+        owner_headers = auth_client(self.client, self.owner)
+        bad = self.client.post(
+            reverse('activity-heartbeat'),
+            {'session_key': 'bad'},
+            content_type='application/json',
+            **owner_headers,
+        )
+        self.assertEqual(bad.status_code, 400)
+
+        # Initial beat caps huge spoofed values to <= 60s
+        r1 = self.client.post(
+            reverse('activity-heartbeat'),
+            {'session_key': 'sess_12345678', 'active_seconds': 9999, 'page_path': '/dashboard'},
+            content_type='application/json',
+            **owner_headers,
+        )
+        self.assertEqual(r1.status_code, 200)
+        self.assertEqual(r1.json()['duration_seconds'], 60)
+
+        # Simulate 35s elapsed and send 30s active heartbeat
+        sess = UserSession.objects.get(user=self.owner, session_key='sess_12345678')
+        sess.last_seen_at = timezone.now() - timedelta(seconds=35)
+        sess.save(update_fields=['last_seen_at'])
+
+        r2 = self.client.post(
+            reverse('activity-heartbeat'),
+            {'session_key': 'sess_12345678', 'active_seconds': 30, 'page_path': '/workspace/1'},
+            content_type='application/json',
+            **owner_headers,
+        )
+        self.assertEqual(r2.status_code, 200)
+        self.assertEqual(r2.json()['duration_seconds'], 90)
+
+        admin_headers = auth_client(self.client, self.admin)
+        ov = self.client.get(reverse('admin-overview') + '?range=30d', **admin_headers).json()
+        self.assertEqual(ov['usage_duration']['total_seconds'], 90)
+        self.assertEqual(ov['usage_duration']['total_sessions'], 1)
+        self.assertIn('recent_timeline', ov)
+        self.assertIn('recent_sessions', ov)
+
+        ulist = self.client.get(reverse('admin-users-list') + '?search=regular', **admin_headers).json()
+        self.assertEqual(ulist['results'][0]['total_duration_seconds'], 90)
+        self.assertEqual(ulist['results'][0]['sessions_count'], 1)
+
+        detail = self.client.get(reverse('admin-user-detail', args=[self.owner.id]), **admin_headers).json()
+        self.assertEqual(detail['metrics']['total_duration_seconds'], 90)
+        self.assertEqual(len(detail['recent_sessions']), 1)
+
+        csv_res = self.client.get(reverse('admin-users-export'), **admin_headers)
+        self.assertIn('Usage Duration (sec)', csv_res.content.decode('utf-8'))
+
+        # ensure_admin command provisions idempotent staff superuser from env
+        with patch.dict(os.environ, {
+            'ADMIN_EMAIL': 'envadmin@example.com',
+            'ADMIN_PASSWORD': 'EnvStrongPassword99!',
+        }):
+            call_command('ensure_admin')
+        created_admin = User.objects.get(email='envadmin@example.com')
+        self.assertTrue(created_admin.is_staff)
+        self.assertTrue(created_admin.is_superuser)
+        self.assertTrue(created_admin.check_password('EnvStrongPassword99!'))
+
 
 
 

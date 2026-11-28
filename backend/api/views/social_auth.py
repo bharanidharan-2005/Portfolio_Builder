@@ -5,6 +5,7 @@ import secrets
 import requests
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from rest_framework import status
@@ -148,7 +149,9 @@ class SocialLoginView(APIView):
             return Response({'error': 'Social authentication failed.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         user = User.objects.filter(email__iexact=email).first()
+        is_new_user = False
         if not user:
+            is_new_user = True
             user = User.objects.create_user(
                 username=email,
                 email=email,
@@ -156,9 +159,25 @@ class SocialLoginView(APIView):
                 first_name=first_name or email.split('@')[0],
                 last_name=last_name,
             )
-        elif not user.first_name and first_name:
-            user.first_name = first_name
-            user.save(update_fields=['first_name'])
+        else:
+            if not user.is_active:
+                return Response(
+                    {'error': 'This account has been suspended. Please contact support.'},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            if not user.first_name and first_name:
+                user.first_name = first_name
+                user.save(update_fields=['first_name'])
+
+        user.last_login = timezone.now()
+        user.save(update_fields=['last_login'])
+        try:
+            from api.services.tracking import record_activity
+            if is_new_user:
+                record_activity(user, 'user_registered', metadata={'provider': provider})
+            record_activity(user, 'user_login', metadata={'provider': provider})
+        except Exception:
+            pass
 
         workspace_code = get_or_create_workspace_code(user)
         user_payload = serialize_user_payload(user)
@@ -175,6 +194,9 @@ class SocialLoginView(APIView):
                 'email': user_payload['email'],
                 'avatar': user_payload['avatar'],
                 'username': user.username,
+                'plan': user_payload['plan'],
+                'is_staff': user_payload['is_staff'],
+                'ai_credits_used': user_payload['ai_credits_used'],
             },
         }, status=status.HTTP_200_OK)
 

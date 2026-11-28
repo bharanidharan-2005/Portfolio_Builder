@@ -18,6 +18,8 @@ import {
   Check,
   Copy,
   RefreshCw,
+  Search,
+  ShieldCheck,
 } from "lucide-react";
 import { API } from "../../api";
 import { useAppContext } from "../../context/AppContext";
@@ -69,6 +71,10 @@ export default function DashboardPage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [savingPassword, setSavingPassword] = useState(false);
+
+  // Portfolio search & status filtering
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const loadDashboard = useCallback(async () => {
     setError("");
@@ -268,6 +274,28 @@ export default function DashboardPage() {
     )}?portfolio=${encodeURIComponent(portfolio.slug || portfolio.id)}`;
   };
 
+  const filteredPortfolios = portfolios.filter((p) => {
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "published" && p.is_published) ||
+      (statusFilter === "draft" && !p.is_published);
+    const q = searchQuery.trim().toLowerCase();
+    const matchesSearch =
+      !q ||
+      (p.title || "").toLowerCase().includes(q) ||
+      (p.career_track || "").toLowerCase().includes(q) ||
+      (p.slug || "").toLowerCase().includes(q);
+    return matchesStatus && matchesSearch;
+  });
+
+  const primaryPortfolio = portfolios[0] || null;
+  const showOnboardingCard =
+    !loading &&
+    !error &&
+    (portfolios.length === 0 ||
+      !portfolios.some((p) => p.is_published) ||
+      (primaryPortfolio && (primaryPortfolio.completeness ?? 0) < 80));
+
   return (
     <div className="min-h-screen bg-[var(--color-canvas-bg)] text-[var(--text-primary)]">
       {/* Top Workspace Bar */}
@@ -316,6 +344,19 @@ export default function DashboardPage() {
                 {themeMode === "light" ? "Dark" : "Light"}
               </span>
             </Button>
+
+            {userData?.isStaff && (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="px-2 sm:px-3 border-indigo-500/40 text-indigo-400"
+                onClick={() => navigate("/admin")}
+                aria-label="Open Admin Console"
+                icon={<ShieldCheck className="w-3.5 h-3.5" />}
+              >
+                <span className="hidden md:inline">Admin</span>
+              </Button>
+            )}
 
             <Button
               variant="secondary"
@@ -445,18 +486,101 @@ export default function DashboardPage() {
           </Card>
         </section>
 
+        {/* Onboarding Guidance (shown only until user has a complete & published site) */}
+        {showOnboardingCard && (
+          <Card className="border-indigo-500/30 bg-indigo-500/5">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <p className="text-xs font-bold uppercase tracking-wider text-indigo-400">
+                  Launch Checklist
+                </p>
+                <h2 className="text-sm sm:text-base font-bold">
+                  Finish setting up your portfolio in 3 quick steps
+                </h2>
+                <div className="flex flex-wrap gap-3 pt-1 text-xs text-[var(--text-muted)]">
+                  <span className={portfolios.length > 0 ? "text-emerald-400 font-medium" : ""}>
+                    {portfolios.length > 0 ? "✓" : "1."} Create workspace
+                  </span>
+                  <span className={(primaryPortfolio?.completeness ?? 0) >= 80 ? "text-emerald-400 font-medium" : ""}>
+                    {(primaryPortfolio?.completeness ?? 0) >= 80 ? "✓" : "2."} Import resume or fill sections ({primaryPortfolio?.completeness ?? 0}%)
+                  </span>
+                  <span className={portfolios.some((p) => p.is_published) ? "text-emerald-400 font-medium" : ""}>
+                    {portfolios.some((p) => p.is_published) ? "✓" : "3."} Publish public URL
+                  </span>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setOpenResumeAfterCreate(true);
+                    setCreateOpen(true);
+                  }}
+                  icon={<FileUp className="w-3.5 h-3.5" />}
+                >
+                  Import Resume
+                </Button>
+                {primaryPortfolio && (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => handleOpenWorkspace(primaryPortfolio)}
+                    icon={<FolderOpen className="w-3.5 h-3.5" />}
+                  >
+                    Open Editor
+                  </Button>
+                )}
+              </div>
+            </div>
+          </Card>
+        )}
+
         {/* Recent Portfolios Grid */}
         <section className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h2 className="text-lg font-bold tracking-tight">Your Portfolios</h2>
-            <Button
-              variant="ghost"
-              size="xs"
-              onClick={loadDashboard}
-              icon={<RefreshCw className="w-3.5 h-3.5" />}
-            >
-              Refresh
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              {portfolios.length > 0 && (
+                <>
+                  <div className="relative flex-1 sm:w-52">
+                    <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Filter portfolios..."
+                      aria-label="Filter portfolios"
+                      className="w-full h-8 pl-8 pr-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-panel)] text-xs focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div className="inline-flex rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-panel)] p-0.5 text-[11px] font-semibold">
+                    {["all", "published", "draft"].map((tab) => (
+                      <button
+                        key={tab}
+                        type="button"
+                        onClick={() => setStatusFilter(tab)}
+                        className={`px-2.5 py-1 rounded-md capitalize transition-colors cursor-pointer ${
+                          statusFilter === tab
+                            ? "bg-indigo-600 text-white"
+                            : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                        }`}
+                      >
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+              <Button
+                variant="ghost"
+                size="xs"
+                onClick={loadDashboard}
+                icon={<RefreshCw className="w-3.5 h-3.5" />}
+              >
+                Refresh
+              </Button>
+            </div>
           </div>
 
           {loading ? (
@@ -491,9 +615,27 @@ export default function DashboardPage() {
                 </Button>
               }
             />
+          ) : filteredPortfolios.length === 0 ? (
+            <EmptyState
+              icon={<Search className="w-6 h-6" />}
+              title="No matching portfolios"
+              description="Try clearing your search filter or switching between Published and Draft tabs."
+              action={
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setStatusFilter("all");
+                  }}
+                >
+                  Reset Filters
+                </Button>
+              }
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {portfolios.map((p) => {
+              {filteredPortfolios.map((p) => {
                 const trackMeta =
                   CAREER_TRACKS.find((t) => t.id === p.career_track) ||
                   CAREER_TRACKS[0];
@@ -712,7 +854,7 @@ export default function DashboardPage() {
             <label className="block text-xs font-semibold mb-2">
               Career Path Preset
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pr-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
               {CAREER_TRACKS.map((track) => {
                 const active = selectedTrack === track.id;
                 return (
@@ -743,7 +885,7 @@ export default function DashboardPage() {
             <label className="block text-xs font-semibold mb-2">
               Frontpage Layout ({FRONTPAGE_LAYOUTS.length} layouts)
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-56 overflow-y-auto pr-1">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
               {FRONTPAGE_LAYOUTS.map((layout) => {
                 const active = selectedLayout === layout.id;
                 return (
@@ -843,6 +985,17 @@ export default function DashboardPage() {
               readOnly
               className="w-full h-10 px-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-hover)] text-sm text-[var(--text-muted)]"
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 p-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-panel)] text-xs">
+            <div>
+              <span className="text-[var(--text-muted)] block">Current Plan</span>
+              <span className="font-bold uppercase mt-0.5 inline-block">{userData?.plan || "free"}</span>
+            </div>
+            <div>
+              <span className="text-[var(--text-muted)] block">AI Credits Consumed</span>
+              <span className="font-bold mt-0.5 inline-block">{userData?.aiCreditsUsed ?? 0}</span>
+            </div>
           </div>
 
           {userData?.code && (

@@ -23,6 +23,8 @@ Never commit `.env`, `API KEYS.txt`, or SQLite databases to version control. Con
 | `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL` | Optional email | SMTP fallback credentials when `RESEND_API_KEY` is unset. |
 | `VERCEL_DEPLOY_HOOK_URL` | Optional hosting | Vercel Deploy Hook triggered when publishing via `/api/deploy/`. |
 | `REDIS_URL` | Optional cache/Celery | Redis URL (falls back to `LocMemCache` / in-memory when omitted). |
+| `ADMIN_EMAIL` | Admin Console | Admin login email provisioned idempotently by `python manage.py ensure_admin`. |
+| `ADMIN_PASSWORD` | Admin Console | Admin password provisioned idempotently by `python manage.py ensure_admin` (set in Render/local `.env`, never commit to Git). |
 
 ### Frontend (`frontend/.env` or Vercel Environment)
 
@@ -82,7 +84,7 @@ npm run build
 1. Provision a PostgreSQL instance and set `DATABASE_URL`, `DEBUG=False`, a high-entropy `SECRET_KEY`, `ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, and `CSRF_TRUSTED_ORIGINS`.
 2. Build command:
    ```bash
-   pip install -r backend/requirements.txt && cd backend && python manage.py collectstatic --noinput && python manage.py migrate --noinput
+   pip install -r backend/requirements.txt && cd backend && python manage.py collectstatic --noinput && python manage.py migrate --noinput && python manage.py ensure_admin
    ```
 3. Start command (Gunicorn / WSGI):
    ```bash

@@ -94,6 +94,8 @@ def serialize_user_payload(user):
         'avatar': profile.avatar or '👨‍💻',
         'workspace_code': profile.workspace_code,
         'plan': profile.plan or 'free',
+        'ai_credits_used': profile.ai_credits_used or 0,
+        'last_active_at': profile.last_active_at.isoformat() if profile.last_active_at else None,
         'is_staff': bool(user.is_staff),
     }
 
@@ -262,6 +264,14 @@ class RegisterView(APIView):
         )
 
         tokens = get_tokens_for_user(user)
+        user.last_login = timezone.now()
+        user.save(update_fields=['last_login'])
+        try:
+            from api.services.tracking import record_activity
+            record_activity(user, 'user_registered', metadata={'action': 'password_signup'})
+            record_activity(user, 'user_login', metadata={'action': 'password_signup'})
+        except Exception:
+            pass
         user_payload = serialize_user_payload(user)
         response = Response({
             'success': True,
@@ -273,6 +283,9 @@ class RegisterView(APIView):
                 'name': user_payload['name'],
                 'email': user_payload['email'],
                 'avatar': user_payload['avatar'],
+                'plan': user_payload['plan'],
+                'is_staff': user_payload['is_staff'],
+                'ai_credits_used': user_payload['ai_credits_used'],
             },
             'message': 'Account created successfully! Entering workspace...',
         }, status=status.HTTP_201_CREATED)
@@ -354,6 +367,20 @@ class LoginView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        if not user.is_active:
+            return Response(
+                {'error': 'This account has been suspended. Please contact support.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        user.last_login = timezone.now()
+        user.save(update_fields=['last_login'])
+        try:
+            from api.services.tracking import record_activity
+            record_activity(user, 'user_login', metadata={'action': 'password' if identifier else 'workspace_code'})
+        except Exception:
+            pass
+
         user_payload = serialize_user_payload(user)
         tokens = get_tokens_for_user(user)
 
@@ -367,6 +394,9 @@ class LoginView(APIView):
                 'name': user_payload['name'],
                 'email': user_payload['email'],
                 'avatar': user_payload['avatar'],
+                'plan': user_payload['plan'],
+                'is_staff': user_payload['is_staff'],
+                'ai_credits_used': user_payload['ai_credits_used'],
             },
             'message': 'Authenticated successfully.',
         }, status=status.HTTP_200_OK)
@@ -453,6 +483,8 @@ class ResetPasswordView(APIView):
                     'name': user_payload['name'],
                     'email': user_payload['email'],
                     'avatar': user_payload['avatar'],
+                    'plan': user_payload['plan'],
+                    'is_staff': user_payload['is_staff'],
                 },
             }, status=status.HTTP_200_OK)
             return set_auth_cookies(response, tokens['access'], tokens['refresh'])
@@ -512,6 +544,8 @@ class ResetPasswordView(APIView):
                 'name': user_payload['name'],
                 'email': user_payload['email'],
                 'avatar': user_payload['avatar'],
+                'plan': user_payload['plan'],
+                'is_staff': user_payload['is_staff'],
             },
         }, status=status.HTTP_200_OK)
         return set_auth_cookies(response, tokens['access'], tokens['refresh'])

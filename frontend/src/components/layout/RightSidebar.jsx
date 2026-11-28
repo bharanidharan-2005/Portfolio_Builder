@@ -13,6 +13,7 @@ import { API } from "../../api";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { downloadPortfolioHtml } from "../../utils/exportWebsiteHtml";
 import { refineSectionWithAI, generateAITemplate, runAIAssistantAction } from "../../utils/aiUtils";
+import { trackClientActivity } from "../../utils/activityTracker";
 import { notify } from "../../toast";
 
 const UNSPLASH_GALLERY = [
@@ -1014,7 +1015,7 @@ function RightSidebar({
                     {aiSuggestionPreview && aiSuggestionPreview.actionTitle.includes("Refine") && (
                         <div className="mt-4 p-4 rounded-xl border border-blue-500/50 bg-blue-900/10 animate-in fade-in slide-in-from-top-2">
                             <h4 className="text-[10px] font-black uppercase text-blue-400 mb-2">Review Suggested Changes</h4>
-                            <div className="text-xs text-slate-300 mb-4 bg-black/40 p-2 rounded max-h-32 overflow-y-auto">
+                            <div className="text-xs text-slate-300 mb-4 bg-black/40 p-2 rounded max-h-32 overflow-y-auto custom-scrollbar">
                                 <strong>Before:</strong> {aiSuggestionPreview.originalContent}
                                 <br/><br/>
                                 <strong>After:</strong> {aiSuggestionPreview.suggestedContent}
@@ -1225,7 +1226,7 @@ function RightSidebar({
             {aiSuggestionPreview && aiSuggestionPreview.actionTitle === "Inject Target Keywords" && (
                 <div className="mt-4 p-4 rounded-xl border border-emerald-500/50 bg-emerald-900/10 animate-in fade-in slide-in-from-top-2">
                     <h4 className="text-[10px] font-black uppercase text-emerald-400 mb-2">Review Keyword Injection</h4>
-                    <div className="text-xs text-slate-300 mb-4 bg-black/40 p-2 rounded max-h-32 overflow-y-auto">
+                    <div className="text-xs text-slate-300 mb-4 bg-black/40 p-2 rounded max-h-32 overflow-y-auto custom-scrollbar">
                         <strong>Before:</strong> {typeof aiSuggestionPreview.originalContent === 'object' ? JSON.stringify(aiSuggestionPreview.originalContent) : aiSuggestionPreview.originalContent}
                         <br/><br/>
                         <strong>After:</strong> {typeof aiSuggestionPreview.suggestedContent === 'object' ? "Skills Updated!" : aiSuggestionPreview.suggestedContent}
@@ -1297,7 +1298,7 @@ function RightSidebar({
             {aiSuggestionPreview && !aiSuggestionPreview.actionTitle.includes("Refine") && (
                 <div className="mt-4 p-4 rounded-xl border border-orange-500/50 bg-orange-900/10 animate-in fade-in slide-in-from-top-2">
                     <h4 className="text-[10px] font-black uppercase text-orange-400 mb-2">Review Impact Changes</h4>
-                    <div className="text-xs text-slate-300 mb-4 bg-black/40 p-2 rounded max-h-32 overflow-y-auto">
+                    <div className="text-xs text-slate-300 mb-4 bg-black/40 p-2 rounded max-h-32 overflow-y-auto custom-scrollbar">
                         <strong>Before:</strong> {typeof aiSuggestionPreview.originalContent === 'object' ? JSON.stringify(aiSuggestionPreview.originalContent) : aiSuggestionPreview.originalContent}
                         <br/><br/>
                         <strong>After:</strong> {typeof aiSuggestionPreview.suggestedContent === 'object' ? "Projects updated!" : aiSuggestionPreview.suggestedContent}
@@ -2018,7 +2019,10 @@ function RightSidebar({
                     disabled={isProcessing}
                     onClick={async () => {
                         setIsProcessing(true);
-                        if (onExportZip) await onExportZip();
+                        if (onExportZip) {
+                            await onExportZip();
+                            trackClientActivity("resume_exported", { format: "zip" });
+                        }
                         setIsProcessing(false);
                     }}
                     className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-xs font-bold transition-all duration-300 shadow-md cursor-pointer active:scale-95 hover:-translate-y-0.5 ${
@@ -2040,6 +2044,7 @@ function RightSidebar({
                             activePage: activePage || 'Home', 
                             userData: userData || contextUserData 
                         });
+                        trackClientActivity("resume_exported", { format: "html" });
                     }}
                     className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-xs font-bold transition-all duration-300 shadow-md cursor-pointer active:scale-95 hover:-translate-y-0.5 ${
                         isLight ? 'bg-slate-100 border border-slate-300 text-slate-800 hover:bg-slate-200' : 'bg-slate-900 border border-slate-700 text-cyan-400 hover:bg-slate-850'

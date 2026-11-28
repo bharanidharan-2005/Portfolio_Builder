@@ -6,6 +6,7 @@ import Toasts from "./components/Toasts.jsx";
 
 const LandingPage = lazy(() => import("./components/LandingPage.jsx"));
 const DashboardPage = lazy(() => import("./components/dashboard/DashboardPage.jsx"));
+const AdminDashboardPage = lazy(() => import("./components/admin/AdminDashboardPage.jsx"));
 const WorkspaceLayout = lazy(() => import("./components/workspace/WorkspaceLayout.jsx"));
 const GithubCallback = lazy(() => import("./components/GithubCallback.jsx"));
 import PortfolioSkeleton from "./components/portfolio/PortfolioSkeleton.jsx";
@@ -53,6 +54,20 @@ function ProtectedRoute({ children }) {
     return children;
 }
 
+function AdminProtectedRoute({ children }) {
+    const { isAuthenticated, isAuthLoading, userData, themeMode } = useAppContext();
+    if (isAuthLoading) {
+        return <PortfolioSkeleton themeMode={themeMode} isPreview={false} />;
+    }
+    if (!isAuthenticated) {
+        return <Navigate to="/" replace />;
+    }
+    if (!userData?.isStaff) {
+        return <Navigate to="/dashboard" replace />;
+    }
+    return children;
+}
+
 function WorkspaceRouteWrapper() {
     const { portfolioId } = useParams();
     const { themeMode } = useAppContext();
@@ -73,7 +88,7 @@ function PreviewRouteWrapper({ isSubdomainPreview, subdomainUsername }) {
     const publicToken = isSubdomainPreview ? "public" : (token || "public");
 
     // Reserved paths that should never be treated as usernames
-    const reservedRoutes = ['dashboard', 'workspace', 'github', 'login', 'signup', 'api', 'auth', 'settings'];
+    const reservedRoutes = ['dashboard', 'workspace', 'github', 'login', 'signup', 'api', 'auth', 'settings', 'admin'];
     if (reservedRoutes.includes((publicUsername || '').toLowerCase())) {
         return <Navigate to="/" replace />;
     }
@@ -90,7 +105,7 @@ function PreviewRouteWrapper({ isSubdomainPreview, subdomainUsername }) {
 }
 
 function MainApp() {
-    const { themeMode, isAuthenticated } = useAppContext();
+    const { themeMode, isAuthenticated, userData } = useAppContext();
 
     const hostname = window.location.hostname;
     let subdomainUsername = null;
@@ -121,7 +136,7 @@ function MainApp() {
                 <Routes>
                     <Route path="/" element={
                         isAuthenticated ? (
-                            <Navigate to="/dashboard" replace />
+                            <Navigate to={userData?.isStaff ? "/admin" : "/dashboard"} replace />
                         ) : (
                             <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-bold text-slate-500">Loading AuraBuild...</div>}>
                                 <LandingPage />
@@ -134,6 +149,13 @@ function MainApp() {
                                 <DashboardPage />
                             </Suspense>
                         </ProtectedRoute>
+                    } />
+                    <Route path="/admin" element={
+                        <AdminProtectedRoute>
+                            <Suspense fallback={<PortfolioSkeleton themeMode={themeMode} isPreview={false} />}>
+                                <AdminDashboardPage />
+                            </Suspense>
+                        </AdminProtectedRoute>
                     } />
                     <Route path="/workspace" element={
                         <ProtectedRoute>

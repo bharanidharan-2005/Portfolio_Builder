@@ -1201,7 +1201,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             <h3 style={accentTextStyle} className={`text-sm font-black tracking-widest uppercase mb-8 text-center w-full ${accentText}`}>
                                 Open Source Contributions
                             </h3>
-                            <div className={`w-full overflow-x-auto pb-4 ${textPrimary}`}>
+                            <div className={`w-full overflow-x-auto custom-scrollbar pb-4 ${textPrimary}`}>
                                 <div className="w-max mx-auto px-2" style={{ color: 'inherit' }}>
                                     <GitHubCalendar 
                                         username={data.githubUsername.trim()} 
@@ -1845,7 +1845,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                             <span className={`h-px w-8 sm:w-16 bg-blue-500/50 hidden sm:block`}></span>
                         </motion.div>
                         <div className={`p-4 sm:p-8 rounded-2xl sm:rounded-3xl border shadow-lg overflow-hidden ${cardBg} ${borderClass}`}>
-                            <div className={`w-full overflow-x-auto pb-4 ${textPrimary}`}>
+                            <div className={`w-full overflow-x-auto custom-scrollbar pb-4 ${textPrimary}`}>
                                 <div className="w-max mx-auto px-2" style={{ color: 'inherit' }}>
                                     <GitHubCalendar 
                                         username={(data.githubUsername || "torvalds").trim()} 

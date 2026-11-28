@@ -1,4 +1,5 @@
 import React from "react";
+import { trackClientActivity } from "./activityTracker";
 
 export async function downloadPortfolioPdf(sections, fileName = "Portfolio_Resume.pdf") {
   const [{ pdf }, { ResumePDF }] = await Promise.all([
@@ -13,6 +14,7 @@ export async function downloadPortfolioPdf(sections, fileName = "Portfolio_Resum
   document.body.appendChild(a);
   a.click();
   a.remove();
+  trackClientActivity("resume_exported", { format: "pdf" });
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 

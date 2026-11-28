@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import re
+import time
 import uuid
 
 import requests
@@ -19,6 +20,7 @@ from rest_framework.views import APIView
 
 from ..models import AISessionLog, PortfolioPage, PortfolioSection
 from ..serializers import AISessionLogSerializer
+from ..services.tracking import record_activity, record_ai_usage
 from .utils import (
     DEFAULT_WORKSPACE_SECTIONS_MAP,
     ensure_user_workspace,
@@ -88,6 +90,11 @@ def get_groq_client():
     return Groq(api_key=api_key, timeout=AI_TIMEOUT_SECONDS)
 
 
+def _safe_int_attr(obj, attr):
+    val = getattr(obj, attr, None)
+    return val if isinstance(val, int) and val >= 0 else None
+
+
 def _try_gemini_clients(clients, prompt):
     last_gemini_error = None
     for gemini_client in clients:
@@ -100,9 +107,16 @@ def _try_gemini_clients(clients, prompt):
             if not text:
                 raise ValueError("Gemini returned an empty response.")
 
+            usage_meta = getattr(response, 'usage_metadata', None)
+
             class TextResponse:
                 def __init__(self, payload):
                     self.text = payload
+                    self.provider = 'gemini'
+                    self.model_name = TEXT_MODEL
+                    self.prompt_tokens = _safe_int_attr(usage_meta, 'prompt_token_count')
+                    self.completion_tokens = _safe_int_attr(usage_meta, 'candidates_token_count')
+                    self.total_tokens = _safe_int_attr(usage_meta, 'total_token_count')
 
             return TextResponse(text), None
         except Exception as exc:
@@ -132,9 +146,16 @@ def _try_groq_models(prompt):
             if not content:
                 raise ValueError("Groq returned empty content.")
 
+            usage_obj = getattr(chat_completion, 'usage', None)
+
             class TextResponse:
                 def __init__(self, payload):
                     self.text = payload
+                    self.provider = 'groq'
+                    self.model_name = model
+                    self.prompt_tokens = _safe_int_attr(usage_obj, 'prompt_tokens')
+                    self.completion_tokens = _safe_int_attr(usage_obj, 'completion_tokens')
+                    self.total_tokens = _safe_int_attr(usage_obj, 'total_tokens')
 
             return TextResponse(content), None
         except Exception as exc:
@@ -144,19 +165,49 @@ def _try_groq_models(prompt):
     return None, last_error
 
 
+def track_ai_outcome(user, action_name, res=None, exc=None, elapsed_ms=None, default_provider='unknown', default_model=''):
+    if exc is None:
+        record_ai_usage(
+            user,
+            action_name,
+            provider=getattr(res, 'provider', default_provider) or default_provider,
+            model_name=getattr(res, 'model_name', default_model) or default_model,
+            status='success',
+            prompt_tokens=getattr(res, 'prompt_tokens', None),
+            completion_tokens=getattr(res, 'completion_tokens', None),
+            total_tokens=getattr(res, 'total_tokens', None),
+            credits_used=1,
+            latency_ms=getattr(res, 'latency_ms', elapsed_ms),
+        )
+    else:
+        record_ai_usage(
+            user,
+            action_name,
+            provider=default_provider,
+            model_name=default_model,
+            status='failed',
+            credits_used=0,
+            latency_ms=elapsed_ms,
+            error_message=str(exc)[:200],
+        )
+
+
 def generate_text_with_fallback(clients, prompt):
     """Attempt generation with explicit clients (if provided) or Groq -> Gemini failover."""
+    started = time.monotonic()
     errors = []
 
     if clients:
         res, err = _try_gemini_clients(clients, prompt)
         if res is not None:
+            res.latency_ms = int((time.monotonic() - started) * 1000)
             return res
         if err is not None:
             errors.append(f"Gemini: {err}")
 
     groq_res, groq_err = _try_groq_models(prompt)
     if groq_res is not None:
+        groq_res.latency_ms = int((time.monotonic() - started) * 1000)
         return groq_res
     if groq_err is not None:
         errors.append(f"Groq: {groq_err}")
@@ -166,6 +217,7 @@ def generate_text_with_fallback(clients, prompt):
             fallback_clients = get_gemini_clients()
             res, err = _try_gemini_clients(fallback_clients, prompt)
             if res is not None:
+                res.latency_ms = int((time.monotonic() - started) * 1000)
                 return res
             if err is not None:
                 errors.append(f"Gemini: {err}")
@@ -400,6 +452,7 @@ class AISectionRefinementView(APIView):
                 description=f"Refined '{section_type}' section: {prompt[:120]}",
                 status='applied' if apply_changes else 'preview',
             )
+            track_ai_outcome(user, 'section_refinement', res=res)
 
             return Response({
                 'success': True,
@@ -412,12 +465,15 @@ class AISectionRefinementView(APIView):
 
         except AIKeyMissingError as exc:
             logger.error("AI key missing during section refinement: %s", exc)
+            track_ai_outcome(user, 'section_refinement', exc=exc)
             return Response({'error': str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except ValueError as exc:
             logger.warning("AI section refinement parse error: %s", exc)
+            track_ai_outcome(user, 'section_refinement', exc=exc)
             return Response({'error': 'AI returned an invalid structure. Please try again.'}, status=status.HTTP_502_BAD_GATEWAY)
         except Exception as exc:
             logger.error("AI section refinement failed: %s", exc)
+            track_ai_outcome(user, 'section_refinement', exc=exc)
             return Response({'error': 'AI refinement temporarily unavailable. Please try again.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
@@ -508,13 +564,17 @@ class AIAssistantActionAPIView(APIView):
                 description=f"Executed AI action '{action}'",
                 status='applied',
             )
+            track_ai_outcome(request.user, action, res=res)
             return Response({'success': True, 'data': data, 'log': log.to_frontend_dict()})
         except AIKeyMissingError as exc:
+            track_ai_outcome(request.user, action, exc=exc)
             return Response({'error': str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-        except ValueError:
+        except ValueError as exc:
+            track_ai_outcome(request.user, action, exc=exc)
             return Response({'error': 'AI returned an unreadable response. Please try again.'}, status=status.HTTP_502_BAD_GATEWAY)
         except Exception as exc:
             logger.error("AI assistant action '%s' failed: %s", action, exc)
+            track_ai_outcome(request.user, action, exc=exc)
             return Response({'error': 'AI service temporarily unavailable. Please try again.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
@@ -558,11 +618,14 @@ class AITemplateGeneratorView(APIView):
             if theme_accent and page:
                 page.theme_accent = str(theme_accent)[:50]
                 page.save()
+            track_ai_outcome(request.user, 'generate_template', res=res)
             return Response({'success': True, 'template': template})
         except AIKeyMissingError as exc:
+            track_ai_outcome(request.user, 'generate_template', exc=exc)
             return Response({'error': str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except Exception as exc:
             logger.error("Template generation failed: %s", exc)
+            track_ai_outcome(request.user, 'generate_template', exc=exc)
             return Response({'error': 'Template generation failed. Please try again.'}, status=status.HTTP_502_BAD_GATEWAY)
 
 
@@ -639,17 +702,21 @@ Choose ONE of the following formats based on the user's intent:
                 description=f"Prompt: {prompt[:100]}\nOutput: {str(action_data)[:200]}",
                 status="applied"
             )
+            track_ai_outcome(request.user, 'ai_copilot', res=response)
 
             return Response({'success': True, 'action': action_data, 'log': log.to_frontend_dict()})
 
         except AIKeyMissingError as exc:
             logger.error("AI key missing during copilot: %s", exc)
+            track_ai_outcome(request.user, 'ai_copilot', exc=exc)
             return Response({'error': 'AI service not configured. Please contact administrator.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except ValueError as exc:
             logger.error("AI copilot response parse error: %s", exc)
+            track_ai_outcome(request.user, 'ai_copilot', exc=exc)
             return Response({'error': 'Failed to understand AI response. Please try again.'}, status=status.HTTP_502_BAD_GATEWAY)
         except Exception as exc:
             logger.error("AI Copilot failed: %s", exc, exc_info=True)
+            track_ai_outcome(request.user, 'ai_copilot', exc=exc)
             return Response({'error': 'AI copilot service temporarily unavailable.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -740,12 +807,22 @@ Return ONLY a strictly valid JSON object exactly in this schema:
                 description=f"Imported projects & skills from GitHub @{username}",
                 status='applied',
             )
+            track_ai_outcome(request.user, 'github_ingest', res=res)
+            record_activity(
+                request.user,
+                'github_connected',
+                feature_name='github_integration',
+                metadata={'action': 'github_ingest'},
+                touch_active=False,
+            )
             return Response({'success': True, 'data': structured_data})
 
         except AIKeyMissingError as exc:
+            track_ai_outcome(request.user, 'github_ingest', exc=exc)
             return Response({'error': str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except Exception as exc:
             logger.error("GitHub ingestion failed: %s", exc, exc_info=True)
+            track_ai_outcome(request.user, 'github_ingest', exc=exc)
             return Response({'error': 'GitHub ingestion failed. Please try again.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -802,13 +879,16 @@ Return ONLY valid JSON:
                 description=f"Generated SEO metadata & audit for {len(sections_data)} sections.",
                 status="applied",
             )
+            track_ai_outcome(request.user, 'seo_analytics', res=res)
 
             return Response({'success': True, 'data': structured_data})
 
         except AIKeyMissingError as exc:
+            track_ai_outcome(request.user, 'seo_analytics', exc=exc)
             return Response({'error': str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except Exception as exc:
             logger.error("SEO generation failed: %s", exc, exc_info=True)
+            track_ai_outcome(request.user, 'seo_analytics', exc=exc)
             return Response({'error': 'SEO generation failed. Please try again.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -1024,6 +1104,7 @@ def generate_custom_image(request):
     try:
         clients = get_gemini_clients()
     except AIKeyMissingError as e:
+        track_ai_outcome(request.user, 'image_generation', exc=e, default_provider='gemini')
         return JsonResponse({'error': str(e)}, status=503)
 
     image_data, friendly = _generate_gemini_image(clients, prompt)
@@ -1033,10 +1114,12 @@ def generate_custom_image(request):
             friendly = imagen_friendly
 
     if not image_data:
+        track_ai_outcome(request.user, 'image_generation', exc=RuntimeError(friendly or 'Image generation failed'), default_provider='gemini')
         return JsonResponse({'error': friendly or 'Image generation failed.'}, status=500)
 
     filename = _save_generated_image(image_data)
     image_url = request.build_absolute_uri('/api' + settings.MEDIA_URL + filename)
+    track_ai_outcome(request.user, 'image_generation', default_provider='gemini', default_model='gemini-image')
     return JsonResponse({'success': True, 'image_url': image_url})
 
 

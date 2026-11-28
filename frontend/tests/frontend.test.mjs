@@ -139,3 +139,31 @@ test("AI Copilot errors do not fabricate synced success and ResumePDF supports e
   assert.ok(resumePdfSrc.includes("achievements"), "ResumePDF should export achievements");
 });
 
+test("Admin Console route and real Admin API integrations are wired with staff guard", () => {
+  const appSrc = fs.readFileSync(path.join(FRONTEND_ROOT, "src/App.jsx"), "utf8");
+  assert.ok(appSrc.includes('path="/admin"'), "App.jsx must mount /admin route");
+  assert.ok(appSrc.includes("AdminProtectedRoute"), "App.jsx must guard /admin with AdminProtectedRoute");
+  assert.ok(appSrc.includes("'admin'"), "reservedRoutes must exclude admin from username previews");
+
+  const adminSrc = fs.readFileSync(path.join(FRONTEND_ROOT, "src/components/admin/AdminDashboardPage.jsx"), "utf8");
+  for (const endpoint of [
+    "admin/overview/",
+    "admin/users/",
+    "admin/users/export/",
+    "admin/analytics/",
+    "admin/ai-usage/",
+    "admin/system-health/",
+    "admin/audit-logs/",
+    "recent_timeline",
+    "usage_duration",
+    "formatDuration",
+  ]) {
+    assert.ok(adminSrc.includes(endpoint), `AdminDashboardPage must connect to ${endpoint}`);
+  }
+
+  const trackerSrc = fs.readFileSync(path.join(FRONTEND_ROOT, "src/utils/activityTracker.js"), "utf8");
+  assert.ok(trackerSrc.includes("activity/heartbeat/"), "activityTracker must post duration heartbeats");
+  const landingSrc = fs.readFileSync(path.join(FRONTEND_ROOT, "src/components/LandingPage.jsx"), "utf8");
+  assert.ok(landingSrc.includes('data.user?.is_staff ? "/admin" : "/dashboard"'), "Staff users must land on /admin after login");
+});
+

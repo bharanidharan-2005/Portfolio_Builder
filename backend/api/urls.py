@@ -11,6 +11,14 @@ from .views import (
     AISEOAnalyticsAPIView,
     AISessionLogListAPIView,
     AITemplateGeneratorView,
+    AdminAIUsageAPIView,
+    AdminAuditLogListAPIView,
+    AdminFeatureAnalyticsAPIView,
+    AdminOverviewAPIView,
+    AdminSystemHealthAPIView,
+    AdminUserDetailAPIView,
+    AdminUserListAPIView,
+    AdminUsersExportCSVView,
     ContactMessageView,
     DeploymentView,
     PageDetailAPIView,
@@ -25,6 +33,8 @@ from .views import (
     SectionDetailAPIView,
     SectionDuplicateAPIView,
     SectionReorderAPIView,
+    SessionHeartbeatView,
+    TrackClientActivityView,
     generate_custom_image,
     send_workspace_key_view,
     serve_media,
@@ -75,4 +85,18 @@ urlpatterns = [
     path('contact-message/', ContactMessageView.as_view(), name='contact-message'),
     path('deploy/', DeploymentView.as_view(), name='deploy'),
     path('media/<path:path>', serve_media, name='serve_media'),
+
+    # Activity Tracking (Authenticated)
+    path('activity/track/', TrackClientActivityView.as_view(), name='activity-track'),
+    path('activity/heartbeat/', SessionHeartbeatView.as_view(), name='activity-heartbeat'),
+
+    # SaaS Admin Console APIs (Strictly Staff / IsAdminUser)
+    path('admin/overview/', AdminOverviewAPIView.as_view(), name='admin-overview'),
+    path('admin/users/', AdminUserListAPIView.as_view(), name='admin-users-list'),
+    path('admin/users/export/', AdminUsersExportCSVView.as_view(), name='admin-users-export'),
+    path('admin/users/<int:pk>/', AdminUserDetailAPIView.as_view(), name='admin-user-detail'),
+    path('admin/analytics/', AdminFeatureAnalyticsAPIView.as_view(), name='admin-analytics'),
+    path('admin/ai-usage/', AdminAIUsageAPIView.as_view(), name='admin-ai-usage'),
+    path('admin/system-health/', AdminSystemHealthAPIView.as_view(), name='admin-system-health'),
+    path('admin/audit-logs/', AdminAuditLogListAPIView.as_view(), name='admin-audit-logs'),
 ]

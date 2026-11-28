@@ -1,6 +1,11 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useEffect, useContext } from 'react';
 import { API, clearAuthTokens, setAuthTokens } from '../api';
+import {
+    clearSessionKey,
+    getOrCreateSessionKey,
+    sendSessionHeartbeat,
+} from '../utils/activityTracker';
 
 const AppContext = createContext();
 
@@ -55,16 +60,19 @@ export function AppProvider({ children }) {
                         code: res.data.workspace_code || prev.code,
                         avatar: res.data.avatar || prev.avatar || '👨‍💻',
                         plan: res.data.plan || 'free',
+                        aiCreditsUsed: res.data.ai_credits_used ?? 0,
                         isStaff: Boolean(res.data.is_staff),
                     }));
                     setIsAuthenticated(true);
                 } else {
                     clearAuthTokens();
+        clearSessionKey();
                     setIsAuthenticated(false);
                 }
             } catch (err) {
                 if (err.response && (err.response.status === 401 || err.response.status === 403)) {
                     clearAuthTokens();
+        clearSessionKey();
                     localStorage.removeItem("aurabuild_user");
                     setIsAuthenticated(false);
                 } else {
@@ -92,6 +100,66 @@ export function AppProvider({ children }) {
         localStorage.setItem("aurabuild_user", JSON.stringify(userData));
     }, [userData]);
 
+    // Honest visibility-aware usage duration heartbeat while authenticated
+    useEffect(() => {
+        if (!isAuthenticated) return undefined;
+
+        const sessionKey = getOrCreateSessionKey();
+        if (!sessionKey) return undefined;
+
+        let visibleStartMs = document.visibilityState === "visible" ? Date.now() : null;
+        let accumulatedMs = 0;
+
+        const flushHeartbeat = (keepalive = false) => {
+            if (visibleStartMs !== null) {
+                accumulatedMs += Math.max(0, Date.now() - visibleStartMs);
+                visibleStartMs = document.visibilityState === "visible" ? Date.now() : null;
+            }
+            const activeSeconds = Math.floor(accumulatedMs / 1000);
+            accumulatedMs = accumulatedMs % 1000;
+            sendSessionHeartbeat({
+                sessionKey,
+                activeSeconds,
+                pagePath: window.location.pathname,
+                keepalive,
+            });
+        };
+
+        // Open session immediately
+        sendSessionHeartbeat({
+            sessionKey,
+            activeSeconds: 0,
+            pagePath: window.location.pathname,
+        });
+
+        const intervalId = window.setInterval(() => {
+            if (document.visibilityState === "visible") {
+                flushHeartbeat(false);
+            }
+        }, 30000);
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "hidden") {
+                flushHeartbeat(true);
+            } else if (visibleStartMs === null) {
+                visibleStartMs = Date.now();
+            }
+        };
+
+        const handlePageHide = () => {
+            flushHeartbeat(true);
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        window.addEventListener("pagehide", handlePageHide);
+
+        return () => {
+            window.clearInterval(intervalId);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            window.removeEventListener("pagehide", handlePageHide);
+        };
+    }, [isAuthenticated]);
+
     const toggleTheme = () => {
         setThemeSetting(prev => (resolveEffectiveTheme(prev) === "light" ? "dark" : "light"));
     };
@@ -113,6 +181,7 @@ export function AppProvider({ children }) {
         }
 
         clearAuthTokens();
+        clearSessionKey();
         try {
             Object.keys(localStorage).forEach((key) => {
                 if (
@@ -138,6 +207,7 @@ export function AppProvider({ children }) {
             avatar: "👨‍💻",
             theme: "modern_glass",
             plan: "free",
+            aiCreditsUsed: 0,
             isStaff: false,
         });
 

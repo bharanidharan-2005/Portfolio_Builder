@@ -8,11 +8,13 @@ from rest_framework.views import APIView
 
 from ..models import AISessionLog, PortfolioPage, PortfolioSection
 from ..serializers import PortfolioSectionSerializer
+from ..services.tracking import record_activity
 from .ai import (
     AICreditThrottle,
     AIKeyMissingError,
     extract_clean_json_payload,
     generate_text_with_fallback,
+    track_ai_outcome,
 )
 from .utils import (
     MAX_RESUME_BYTES,
@@ -197,12 +199,17 @@ class ResumeUploadAPIView(APIView):
 
             parsed['projects'] = combined_projects
             parsed['experience'] = cleaned_experience
+            track_ai_outcome(request.user, 'resume_parse', res=res)
         except AIKeyMissingError as e:
             logger.error("AI key missing during resume parse: %s", e)
+            track_ai_outcome(request.user, 'resume_parse', exc=e)
+            record_activity(request.user, 'resume_uploaded', status='failed', metadata={'error_type': 'ai_key_missing'})
             return Response({'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except Exception as e:
             error_message = str(e)
             logger.error("Resume AI parse failed: %s", error_message)
+            track_ai_outcome(request.user, 'resume_parse', exc=e)
+            record_activity(request.user, 'resume_uploaded', status='failed', metadata={'error_type': 'parse_failed'})
 
             if "503" in error_message or "UNAVAILABLE" in error_message:
                 return Response({
@@ -287,6 +294,7 @@ class ResumeUploadAPIView(APIView):
                 description=f"Parsed resume '{uploaded.name}' ({word_count} words) for review.",
                 status='preview',
             )
+            record_activity(request.user, 'resume_uploaded', status='success', metadata={'action': 'preview'})
             return Response({
                 'success': True,
                 'message': 'Parsed successfully (ready for review)',
@@ -324,6 +332,7 @@ class ResumeUploadAPIView(APIView):
                 description=f"Parsed resume '{uploaded.name}': Structured {word_count} words into canvas sections.",
                 status='applied',
             )
+            record_activity(request.user, 'resume_uploaded', status='success', metadata={'action': 'apply'})
 
         except Exception as e:
             logger.error("Resume persist failed: %s", e)

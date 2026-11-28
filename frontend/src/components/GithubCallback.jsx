@@ -69,7 +69,7 @@ export default function GithubCallback() {
                         data.access,
                         data.refresh
                     );
-                    navigate("/dashboard");
+                    navigate(data.user?.is_staff ? "/admin" : "/dashboard");
                 } else {
                     setError("GitHub login failed: " + (data?.error || "Unknown error"));
                     redirectTimer = setTimeout(() => navigate('/'), 3500);
