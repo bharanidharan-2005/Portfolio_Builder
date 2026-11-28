@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { X, User, Shield, HardDrive, Palette, AlertTriangle, Trash2, Loader2, CheckCircle2, ExternalLink, LogOut, Globe, Copy, Check, Download, Sun, Moon, Sparkles } from "lucide-react";
 import { API, clearAuthTokens } from "../../api";
 import { useAppContext } from "../../context/AppContext";
+import { notify } from "../../toast";
 
 export default function SettingsModal({ isOpen, onClose, userData, setUserData, themeMode, onLogout, onDeploy, onExportZip, onResetWorkspace, portfolioMeta, updatePortfolioSettings }) {
     const { themeSetting, setThemeSetting } = useAppContext();
@@ -18,6 +19,25 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
     const [isSaving, setIsSaving] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [currentPw, setCurrentPw] = useState("");
+    const [newPw, setNewPw] = useState("");
+    const [updatingPw, setUpdatingPw] = useState(false);
+
+    const syncKey = isOpen
+        ? `${userData?.name || ""}|${userData?.avatar || ""}|${portfolioMeta?.seoTitle || ""}|${portfolioMeta?.seoDescription || ""}`
+        : "closed";
+    const [prevSyncKey, setPrevSyncKey] = useState(syncKey);
+
+    // Sync local form state during render when modal opens or backend props change
+    if (isOpen && syncKey !== prevSyncKey) {
+        setPrevSyncKey(syncKey);
+        setLocalName(userData?.name || "Developer");
+        setLocalAvatar(userData?.avatar || "👨‍💻");
+        setSeoTitle(portfolioMeta?.seoTitle || "");
+        setSeoDesc(portfolioMeta?.seoDescription || "");
+    } else if (!isOpen && prevSyncKey !== "closed") {
+        setPrevSyncKey("closed");
+    }
 
     const handleCopyUrl = (urlToCopy) => {
         if (navigator.clipboard) {
@@ -209,17 +229,62 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                                         />
                                     </div>
                                     <div>
-                                        <label className={`block text-xs font-bold mb-1.5 uppercase tracking-wider ${isSystem ? 'text-purple-300' : (isLight ? 'text-slate-500' : 'text-slate-400')}`}>Access Token / Email</label>
+                                        <label className={`block text-xs font-bold mb-1.5 uppercase tracking-wider ${isSystem ? 'text-purple-300' : (isLight ? 'text-slate-500' : 'text-slate-400')}`}>Workspace Access Code</label>
                                         <input 
                                             type="text" 
                                             readOnly 
-                                            defaultValue={userData?.code || "Auth Token"} 
-                                            className={`w-full max-w-md px-4 py-3 rounded-xl border text-sm font-mono opacity-70 cursor-not-allowed ${
+                                            value={userData?.code || userData?.email || "Authenticated Session"} 
+                                            className={`w-full max-w-md px-4 py-3 rounded-xl border text-sm font-mono opacity-80 cursor-default select-all ${
                                                 isSystem 
                                                     ? 'bg-[#080314]/80 border-[#7c00ff]/20 text-purple-300' 
-                                                    : (isLight ? 'bg-slate-100 border-slate-200 text-slate-500' : 'bg-slate-900/50 border-slate-800 text-slate-500')
+                                                    : (isLight ? 'bg-slate-100 border-slate-200 text-slate-600' : 'bg-slate-900/50 border-slate-800 text-slate-400')
                                             }`} 
                                         />
+                                    </div>
+
+                                    <div className="pt-4 mt-2 border-t border-slate-700/30 space-y-3 max-w-md">
+                                        <p className={`text-xs font-bold uppercase tracking-wider ${isSystem ? 'text-purple-300' : (isLight ? 'text-slate-500' : 'text-slate-400')}`}>Change Password</p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                            <input
+                                                type="password"
+                                                value={currentPw}
+                                                onChange={(e) => setCurrentPw(e.target.value)}
+                                                placeholder="Current password"
+                                                className={`px-3 py-2.5 rounded-xl border text-xs outline-none ${isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#111218] border-slate-700 text-slate-100'}`}
+                                            />
+                                            <input
+                                                type="password"
+                                                value={newPw}
+                                                onChange={(e) => setNewPw(e.target.value)}
+                                                placeholder="New password (8+ chars)"
+                                                className={`px-3 py-2.5 rounded-xl border text-xs outline-none ${isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#111218] border-slate-700 text-slate-100'}`}
+                                            />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            disabled={updatingPw}
+                                            onClick={async () => {
+                                                if (!currentPw || newPw.length < 8) {
+                                                    notify("Enter current password and a new password (8+ chars).", "error");
+                                                    return;
+                                                }
+                                                setUpdatingPw(true);
+                                                try {
+                                                    await API.post('auth/reset-password/', { current_password: currentPw, new_password: newPw });
+                                                    setCurrentPw("");
+                                                    setNewPw("");
+                                                    notify("Password updated successfully.", "success");
+                                                } catch (err) {
+                                                    const d = err.response?.data;
+                                                    notify(d?.error || (Array.isArray(d?.password) ? d.password[0] : null) || "Password update failed.", "error");
+                                                } finally {
+                                                    setUpdatingPw(false);
+                                                }
+                                            }}
+                                            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold cursor-pointer disabled:opacity-50"
+                                        >
+                                            {updatingPw ? "Updating..." : "Update Password"}
+                                        </button>
                                     </div>
 
                                     {/* Mobile Logout Option */}
@@ -275,6 +340,9 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                                                             setTogglingPublish(true);
                                                             try {
                                                                 await updatePortfolioSettings({ isPublished: !isPublished });
+                                                                notify(!isPublished ? "Portfolio published publicly." : "Portfolio set back to Private Draft.", "success");
+                                                            } catch {
+                                                                notify("Failed to update portfolio visibility.", "error");
                                                             } finally {
                                                                 setTogglingPublish(false);
                                                             }
@@ -392,6 +460,9 @@ export default function SettingsModal({ isOpen, onClose, userData, setUserData, 
                                                         setSavingSeo(true);
                                                         try {
                                                             await updatePortfolioSettings({ seoTitle, seoDescription: seoDesc });
+                                                            notify("SEO metadata saved.", "success");
+                                                        } catch {
+                                                            notify("Failed to save SEO metadata.", "error");
                                                         } finally {
                                                             setSavingSeo(false);
                                                         }

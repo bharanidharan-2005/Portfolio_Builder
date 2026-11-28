@@ -526,6 +526,88 @@ class WorkspaceAPITests(TestCase):
         self.assertTrue(portfolio.is_published)
         self.assertEqual(portfolio.published_url, 'https://aurabuild-demo.vercel.app')
 
+    def test_public_portfolio_query_param_scopes_to_owner_and_slug(self):
+        headers_owner = auth_client(self.client, self.owner)
+        headers_other = auth_client(self.client, self.other)
+
+        p1 = self.client.post(
+            reverse('portfolio-list'),
+            {'title': 'Systems Showcase', 'slug': 'systems-demo', 'owner_name': 'OwnerOne'},
+            content_type='application/json',
+            **headers_owner,
+        ).json()
+        p2 = self.client.post(
+            reverse('portfolio-list'),
+            {'title': 'Design Showcase', 'slug': 'design-demo', 'owner_name': 'OwnerOne'},
+            content_type='application/json',
+            **headers_owner,
+        ).json()
+        # Publish both portfolios under owner
+        self.client.patch(
+            reverse('portfolio-detail', args=[p1['id']]),
+            {'is_published': True},
+            content_type='application/json',
+            **headers_owner,
+        )
+        self.client.patch(
+            reverse('portfolio-detail', args=[p2['id']]),
+            {'is_published': True},
+            content_type='application/json',
+            **headers_owner,
+        )
+
+        # Create a same-slug published portfolio under other user
+        other_p = self.client.post(
+            reverse('portfolio-list'),
+            {'title': 'Other User Design', 'slug': 'shared-slug', 'owner_name': 'OtherTwo'},
+            content_type='application/json',
+            **headers_other,
+        ).json()
+        self.client.patch(
+            reverse('portfolio-detail', args=[other_p['id']]),
+            {'is_published': True},
+            content_type='application/json',
+            **headers_other,
+        )
+
+        # ?portfolio=design-demo resolves specifically to owner's second portfolio
+        res_p2 = self.client.get(reverse('public-portfolio', args=['OwnerOne']) + '?portfolio=design-demo')
+        self.assertEqual(res_p2.status_code, 200)
+        self.assertEqual(res_p2.json()['slug'], 'design-demo')
+
+        # Requesting other user's slug under OwnerOne's URL must return 404 (no cross-account leak)
+        leak = self.client.get(reverse('public-portfolio', args=['OwnerOne']) + '?portfolio=shared-slug')
+        self.assertEqual(leak.status_code, 404)
+
+    def test_section_create_persists_to_target_page_not_home(self):
+        headers = auth_client(self.client, self.owner)
+        self.client.get(reverse('page-list'), **headers)  # seeds Home
+        second = self.client.post(
+            reverse('page-create'),
+            {'name': 'Research', 'seed_default': False},
+            content_type='application/json',
+            **headers,
+        )
+        self.assertEqual(second.status_code, 201)
+        second_id = second.json()['id']
+
+        sec_res = self.client.post(
+            reverse('section-create'),
+            {'page': second_id, 'section_type': 'certifications', 'content_data': {'title': 'Honors', 'items': []}},
+            content_type='application/json',
+            **headers,
+        )
+        self.assertEqual(sec_res.status_code, 201)
+        self.assertEqual(PortfolioSection.objects.filter(page_id=second_id, section_type='certifications').count(), 1)
+
+    def test_me_returns_plan_for_monetization_readiness(self):
+        headers = auth_client(self.client, self.owner)
+        res = self.client.get(reverse('auth-me'), **headers)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()['plan'], 'free')
+        self.assertIn('is_staff', res.json())
+
+
 
 
 

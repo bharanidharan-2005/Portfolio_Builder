@@ -48,15 +48,15 @@ const CardFlip3D = ({ d }) => {
                     </p>
                     
                     <div className="flex gap-6 mb-12">
-                        <a href="#" className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors">
+                        <button type="button" onClick={d.onVisualize} aria-label="GitHub" className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors cursor-pointer">
                             <GitBranch className="w-8 h-8" />
-                        </a>
-                        <a href="#" className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors">
+                        </button>
+                        <button type="button" onClick={d.onVisualize} aria-label="Links" className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors cursor-pointer">
                             <Link className="w-8 h-8" />
-                        </a>
-                        <a href="#" className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors">
+                        </button>
+                        <button type="button" onClick={d.onVisualize} aria-label="Contact" className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors cursor-pointer">
                             <Mail className="w-8 h-8" />
-                        </a>
+                        </button>
                     </div>
                     
                     <button onClick={d.onVisualize} className="px-10 py-5 bg-white text-slate-900 rounded-xl font-black uppercase tracking-widest hover:bg-blue-50 transition-colors flex items-center gap-3 cursor-pointer">

@@ -66,6 +66,9 @@ export default function DashboardPage() {
   const [profileName, setProfileName] = useState(userData?.name || "");
   const [profileAvatar, setProfileAvatar] = useState(userData?.avatar || "👨‍💻");
   const [savingProfile, setSavingProfile] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
 
   const loadDashboard = useCallback(async () => {
     setError("");
@@ -227,8 +230,38 @@ export default function DashboardPage() {
     }
   };
 
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault();
+    if (!currentPassword || newPassword.length < 8) {
+      notify("Enter your current password and a new password (8+ chars).", "error");
+      return;
+    }
+    setSavingPassword(true);
+    try {
+      await API.post("auth/reset-password/", {
+        current_password: currentPassword,
+        new_password: newPassword,
+      });
+      setCurrentPassword("");
+      setNewPassword("");
+      notify("Password updated successfully.", "success");
+    } catch (err) {
+      const d = err.response?.data;
+      const msg =
+        d?.error ||
+        (Array.isArray(d?.password) ? d.password[0] : null) ||
+        "Failed to update password.";
+      notify(msg, "error");
+    } finally {
+      setSavingPassword(false);
+    }
+  };
+
   const getPublicUrl = (portfolio) => {
-    const ownerUsername = userData?.email?.split("@")?.[0] || "me";
+    const ownerUsername =
+      (userData?.email?.split("@")?.[0] || userData?.name || "me")
+        .toLowerCase()
+        .replace(/[^a-z0-9._-]/g, "");
     if (portfolio.published_url) return portfolio.published_url;
     return `${window.location.origin}/preview/${encodeURIComponent(
       ownerUsername
@@ -252,6 +285,11 @@ export default function DashboardPage() {
                   AuraBuild
                 </span>
                 <Badge tone="accent" className="hidden sm:inline-flex">Dashboard</Badge>
+                {userData?.plan && (
+                  <Badge tone={userData.plan === "pro" ? "success" : "neutral"} className="hidden md:inline-flex uppercase">
+                    {userData.plan}
+                  </Badge>
+                )}
               </div>
               <p className="text-[11px] text-[var(--text-muted)] truncate hidden sm:block">
                 {userData?.email || "Authenticated Workspace"}
@@ -632,10 +670,10 @@ export default function DashboardPage() {
                 >
                   <div className="min-w-0">
                     <p className="font-medium truncate">
-                      {log.prompt || "AI refinement action"}
+                      {log.description || log.desc || log.prompt || "AI workspace operation"}
                     </p>
                     <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
-                      {log.action_type} · {log.section_title || "Workspace"}
+                      {log.change_type || log.type || "AI"} · {log.status || "applied"}
                     </p>
                   </div>
                   <span className="text-[11px] text-[var(--text-muted)] shrink-0">
@@ -839,6 +877,33 @@ export default function DashboardPage() {
             </Button>
             <Button type="submit" variant="primary" size="sm" loading={savingProfile}>
               Save Profile
+            </Button>
+          </div>
+        </form>
+
+        <form onSubmit={handleUpdatePassword} className="space-y-3 pt-4 mt-4 border-t border-[var(--border-subtle)]">
+          <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
+            Security · Change Password
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="Current password"
+              className="w-full h-10 px-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-panel)] text-sm focus:outline-none focus:border-indigo-500"
+            />
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="New password (min 8 chars)"
+              className="w-full h-10 px-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-panel)] text-sm focus:outline-none focus:border-indigo-500"
+            />
+          </div>
+          <div className="flex justify-end">
+            <Button type="submit" variant="secondary" size="sm" loading={savingPassword}>
+              Update Password
             </Button>
           </div>
         </form>

@@ -48,6 +48,7 @@ function ResumeReviewDialogContent({ onClose, resumeData, onApply, isLight }) {
 
   const heroSecIdx = draftSections.findIndex((s) => s.section_type === "hero");
   const aboutSecIdx = draftSections.findIndex((s) => s.section_type === "about");
+  const contactSecIdx = draftSections.findIndex((s) => s.section_type === "contact");
   const skillsSec = draftSections.find((s) => s.section_type === "skills");
   const expSec = draftSections.find((s) => s.section_type === "experience");
   const projSec = draftSections.find((s) => s.section_type === "projects_grid");
@@ -58,18 +59,16 @@ function ResumeReviewDialogContent({ onClose, resumeData, onApply, isLight }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
       <div
-        className={`w-full max-w-3xl rounded-2xl border shadow-2xl overflow-hidden flex flex-col max-h-[90vh] ${
-          isLight
-            ? "bg-white border-slate-200 text-slate-900"
-            : "bg-[#0F131E] border-slate-800 text-slate-100"
-        }`}
+        className={`w-full max-w-3xl rounded-2xl border shadow-2xl overflow-hidden flex flex-col max-h-[90vh] ${isLight
+          ? "bg-white border-slate-200 text-slate-900"
+          : "bg-[#0F131E] border-slate-800 text-slate-100"
+          }`}
       >
         <div
-          className={`px-6 py-4 border-b flex items-center justify-between gap-3 ${
-            isLight
-              ? "border-slate-200 bg-slate-50"
-              : "border-slate-800 bg-[#141927]"
-          }`}
+          className={`px-6 py-4 border-b flex items-center justify-between gap-3 ${isLight
+            ? "border-slate-200 bg-slate-50"
+            : "border-slate-800 bg-[#141927]"
+            }`}
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center shrink-0">
@@ -106,11 +105,10 @@ function ResumeReviewDialogContent({ onClose, resumeData, onApply, isLight }) {
 
               {(heroSecIdx >= 0 || aboutSecIdx >= 0) && (
                 <div
-                  className={`p-4 rounded-xl border space-y-3 ${
-                    isLight
-                      ? "bg-slate-50 border-slate-200"
-                      : "bg-slate-900/50 border-slate-800"
-                  }`}
+                  className={`p-4 rounded-xl border space-y-3 ${isLight
+                    ? "bg-slate-50 border-slate-200"
+                    : "bg-slate-900/50 border-slate-800"
+                    }`}
                 >
                   <p className="text-xs font-bold uppercase tracking-wider text-indigo-400">
                     Identity & Summary
@@ -127,11 +125,10 @@ function ResumeReviewDialogContent({ onClose, resumeData, onApply, isLight }) {
                           onChange={(e) =>
                             updateHeroField(heroSecIdx, "heading", e.target.value)
                           }
-                          className={`w-full h-9 px-3 rounded-lg border text-xs ${
-                            isLight
-                              ? "bg-white border-slate-300 text-slate-900"
-                              : "bg-[#0B0D14] border-slate-700 text-white"
-                          }`}
+                          className={`w-full h-9 px-3 rounded-lg border text-xs ${isLight
+                            ? "bg-white border-slate-300 text-slate-900"
+                            : "bg-[#0B0D14] border-slate-700 text-white"
+                            }`}
                         />
                       </div>
                       <div>
@@ -144,11 +141,10 @@ function ResumeReviewDialogContent({ onClose, resumeData, onApply, isLight }) {
                           onChange={(e) =>
                             updateHeroField(heroSecIdx, "subheading", e.target.value)
                           }
-                          className={`w-full h-9 px-3 rounded-lg border text-xs ${
-                            isLight
-                              ? "bg-white border-slate-300 text-slate-900"
-                              : "bg-[#0B0D14] border-slate-700 text-white"
-                          }`}
+                          className={`w-full h-9 px-3 rounded-lg border text-xs ${isLight
+                            ? "bg-white border-slate-300 text-slate-900"
+                            : "bg-[#0B0D14] border-slate-700 text-white"
+                            }`}
                         />
                       </div>
                     </div>
@@ -164,12 +160,49 @@ function ResumeReviewDialogContent({ onClose, resumeData, onApply, isLight }) {
                         onChange={(e) =>
                           updateHeroField(aboutSecIdx, "bio", e.target.value)
                         }
-                        className={`w-full p-2.5 rounded-lg border text-xs leading-relaxed ${
-                          isLight
-                            ? "bg-white border-slate-300 text-slate-900"
-                            : "bg-[#0B0D14] border-slate-700 text-white"
-                        }`}
+                        className={`w-full p-2.5 rounded-lg border text-xs leading-relaxed ${isLight
+                          ? "bg-white border-slate-300 text-slate-900"
+                          : "bg-[#0B0D14] border-slate-700 text-white"
+                          }`}
                       />
+                    </div>
+                  )}
+                  {contactSecIdx >= 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-semibold mb-1">
+                          Contact Email
+                        </label>
+                        <input
+                          type="email"
+                          value={draftSections[contactSecIdx].content_data.email || ""}
+                          onChange={(e) =>
+                            updateHeroField(contactSecIdx, "email", e.target.value)
+                          }
+                          className={`w-full h-9 px-3 rounded-lg border text-xs ${
+                            isLight
+                              ? "bg-white border-slate-300 text-slate-900"
+                              : "bg-[#0B0D14] border-slate-700 text-white"
+                          }`}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold mb-1">
+                          Phone
+                        </label>
+                        <input
+                          type="text"
+                          value={draftSections[contactSecIdx].content_data.phone || ""}
+                          onChange={(e) =>
+                            updateHeroField(contactSecIdx, "phone", e.target.value)
+                          }
+                          className={`w-full h-9 px-3 rounded-lg border text-xs ${
+                            isLight
+                              ? "bg-white border-slate-300 text-slate-900"
+                              : "bg-[#0B0D14] border-slate-700 text-white"
+                          }`}
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -189,13 +222,12 @@ function ResumeReviewDialogContent({ onClose, resumeData, onApply, isLight }) {
                     return (
                       <label
                         key={sec._key}
-                        className={`flex items-start gap-2.5 p-3 rounded-xl border cursor-pointer transition-colors ${
-                          sec._excluded
-                            ? "opacity-50 border-slate-700/40"
-                            : isLight
-                              ? "bg-white border-indigo-200"
-                              : "bg-slate-900/60 border-indigo-500/30"
-                        }`}
+                        className={`flex items-start gap-2.5 p-3 rounded-xl border cursor-pointer transition-colors ${sec._excluded
+                          ? "opacity-50 border-slate-700/40"
+                          : isLight
+                            ? "bg-white border-indigo-200"
+                            : "bg-slate-900/60 border-indigo-500/30"
+                          }`}
                       >
                         <input
                           type="checkbox"
@@ -240,7 +272,7 @@ function ResumeReviewDialogContent({ onClose, resumeData, onApply, isLight }) {
                           )}
                           {sec.section_type === "education" && eduSec?.content_data?.schools && (
                             <p className="text-[11px] text-slate-400 truncate mt-0.5">
-                              {eduSec.content_data.schools.map((e) => e.school || e.degree).join(", ")}
+                              {eduSec.content_data.schools.map((e) => e.institution || e.school || e.degree).join(", ")}
                             </p>
                           )}
                           {sec.section_type === "certifications" && certSec?.content_data?.items && (
@@ -264,21 +296,19 @@ function ResumeReviewDialogContent({ onClose, resumeData, onApply, isLight }) {
         </div>
 
         <div
-          className={`px-6 py-4 border-t flex flex-col sm:flex-row items-center justify-end gap-2.5 ${
-            isLight
-              ? "bg-slate-50 border-slate-200"
-              : "bg-[#141927] border-slate-800"
-          }`}
+          className={`px-6 py-4 border-t flex flex-col sm:flex-row items-center justify-end gap-2.5 ${isLight
+            ? "bg-slate-50 border-slate-200"
+            : "bg-[#141927] border-slate-800"
+            }`}
         >
           <button
             type="button"
             disabled={saving}
             onClick={onClose}
-            className={`w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-semibold border cursor-pointer ${
-              isLight
-                ? "text-slate-600 border-slate-300 hover:bg-slate-100"
-                : "text-slate-300 border-slate-700 hover:bg-slate-800"
-            }`}
+            className={`w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-semibold border cursor-pointer ${isLight
+              ? "text-slate-600 border-slate-300 hover:bg-slate-100"
+              : "text-slate-300 border-slate-700 hover:bg-slate-800"
+              }`}
           >
             Cancel
           </button>
@@ -286,11 +316,10 @@ function ResumeReviewDialogContent({ onClose, resumeData, onApply, isLight }) {
             type="button"
             disabled={saving || activeDrafts.length === 0}
             onClick={() => handleConfirm("append")}
-            className={`w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-semibold border cursor-pointer disabled:opacity-50 ${
-              isLight
-                ? "bg-white border-indigo-300 text-indigo-600 hover:bg-indigo-50"
-                : "bg-slate-800 border-slate-700 text-indigo-300 hover:bg-slate-700"
-            }`}
+            className={`w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-semibold border cursor-pointer disabled:opacity-50 ${isLight
+              ? "bg-white border-indigo-300 text-indigo-600 hover:bg-indigo-50"
+              : "bg-slate-800 border-slate-700 text-indigo-300 hover:bg-slate-700"
+              }`}
           >
             {saving ? "Saving..." : "Merge Into Canvas"}
           </button>

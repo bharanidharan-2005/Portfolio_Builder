@@ -119,7 +119,15 @@ export const ResumePDF = ({ sections = [] }) => {
   const education = sections.find(s => s.section_type === 'education')?.content_data || {};
   const skills = sections.find(s => s.section_type === 'skills')?.content_data || {};
   const projects = sections.find(s => s.section_type === 'projects_grid')?.content_data || {};
-  const experience = sections.find(s => s.section_type === 'experience')?.content_data || {}; // Future proofing
+  const experience = sections.find(s => s.section_type === 'experience')?.content_data || {};
+  const contact = sections.find(s => s.section_type === 'contact')?.content_data || {};
+  const certifications = sections.find(s => s.section_type === 'certifications')?.content_data || {};
+  const achievements = sections.find(s => s.section_type === 'achievements')?.content_data || {};
+
+  const emailVal = hero.email || contact.email;
+  const phoneVal = hero.phone || contact.phone;
+  const linkedinVal = hero.linkedin || contact.linkedin;
+  const githubVal = hero.github || contact.github;
 
   // Safely join skills
   const skillsArray = Array.isArray(skills.items) ? skills.items : [];
@@ -135,17 +143,17 @@ export const ResumePDF = ({ sections = [] }) => {
           {hero.subheading && <Text style={styles.headline}>{hero.subheading}</Text>}
           
           <View style={styles.contactRow}>
-            {hero.email && <Text>{hero.email}</Text>}
-            {hero.phone && <Text>{hero.phone}</Text>}
+            {emailVal && <Text>{emailVal}</Text>}
+            {phoneVal && <Text>{phoneVal}</Text>}
             {hero.location && <Text>{hero.location}</Text>}
             
-            {hero.linkedin && (
-              <Link style={styles.link} src={hero.linkedin}>
+            {linkedinVal && (
+              <Link style={styles.link} src={linkedinVal}>
                 LinkedIn
               </Link>
             )}
-            {hero.github && (
-              <Link style={styles.link} src={hero.github}>
+            {githubVal && (
+              <Link style={styles.link} src={githubVal}>
                 GitHub
               </Link>
             )}
@@ -169,16 +177,21 @@ export const ResumePDF = ({ sections = [] }) => {
         {experience.items && experience.items.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Experience</Text>
-            {experience.items.map((exp, i) => (
-              <View key={`exp-${i}`} style={styles.item}>
-                <View style={styles.itemHeader}>
-                  <Text style={styles.itemTitle}>{exp.company || exp.title}</Text>
-                  {exp.duration && <Text style={styles.itemDate}>{exp.duration}</Text>}
+            {experience.items.map((exp, i) => {
+              const roleTitle = exp.title || exp.role || '';
+              const companyName = exp.company || '';
+              const dateRange = exp.dates || exp.duration || '';
+              return (
+                <View key={`exp-${i}`} style={styles.item}>
+                  <View style={styles.itemHeader}>
+                    <Text style={styles.itemTitle}>{roleTitle || companyName}</Text>
+                    {dateRange && <Text style={styles.itemDate}>{dateRange}</Text>}
+                  </View>
+                  {roleTitle && companyName && <Text style={styles.itemSubtitle}>{companyName}</Text>}
+                  {exp.description && <Text style={styles.itemDesc}>{exp.description}</Text>}
                 </View>
-                {exp.role && <Text style={styles.itemSubtitle}>{exp.role}</Text>}
-                {exp.description && <Text style={styles.itemDesc}>{exp.description}</Text>}
-              </View>
-            ))}
+              );
+            })}
           </View>
         )}
 
@@ -229,7 +242,7 @@ export const ResumePDF = ({ sections = [] }) => {
               <View key={`edu-${i}`} style={styles.item}>
                 <View style={styles.itemHeader}>
                   <Text style={styles.itemTitle}>{edu.institution}</Text>
-                  {edu.years && <Text style={styles.itemDate}>{edu.years}</Text>}
+                  {(edu.years || edu.dates) && <Text style={styles.itemDate}>{edu.years || edu.dates}</Text>}
                 </View>
                 <View style={styles.itemSubtitleRow}>
                   {edu.degree && <Text style={styles.itemSubtitle}>{edu.degree}</Text>}
@@ -245,6 +258,39 @@ export const ResumePDF = ({ sections = [] }) => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Skills</Text>
             <Text style={styles.skillText}>{skillsList}</Text>
+          </View>
+        )}
+
+        {/* Certifications */}
+        {certifications.items && certifications.items.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Certifications</Text>
+            {certifications.items.map((cert, i) => (
+              <View key={`cert-${i}`} style={styles.item}>
+                <View style={styles.itemHeader}>
+                  <Text style={styles.itemTitle}>{cert.name || cert.title}</Text>
+                  {cert.date && <Text style={styles.itemDate}>{cert.date}</Text>}
+                </View>
+                {cert.issuer && <Text style={styles.itemSubtitle}>{cert.issuer}</Text>}
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Achievements */}
+        {achievements.items && achievements.items.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Achievements & Honors</Text>
+            {achievements.items.map((ach, i) => (
+              <View key={`ach-${i}`} style={styles.item}>
+                <View style={styles.itemHeader}>
+                  <Text style={styles.itemTitle}>{ach.title || ach.name}</Text>
+                  {ach.date && <Text style={styles.itemDate}>{ach.date}</Text>}
+                </View>
+                {ach.issuer && <Text style={styles.itemSubtitle}>{ach.issuer}</Text>}
+                {ach.description && <Text style={styles.itemDesc}>{ach.description}</Text>}
+              </View>
+            ))}
           </View>
         )}
 

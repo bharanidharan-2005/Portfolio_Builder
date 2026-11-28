@@ -93,6 +93,8 @@ def serialize_user_payload(user):
         'email': user.email,
         'avatar': profile.avatar or '👨‍💻',
         'workspace_code': profile.workspace_code,
+        'plan': profile.plan or 'free',
+        'is_staff': bool(user.is_staff),
     }
 
 

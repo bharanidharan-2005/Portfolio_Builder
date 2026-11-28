@@ -19,49 +19,56 @@ class PublicPortfolioAPIView(APIView):
     def get(self, request, username):
         raw_slug = (username or '').strip()
         target_clean = re.sub(r'[^a-z0-9]', '', raw_slug.lower())
-        if not target_clean:
+        requested_portfolio = (request.query_params.get('portfolio') or '').strip()
+        if not target_clean and not requested_portfolio:
             return Response({'error': 'Portfolio not found.'}, status=status.HTTP_404_NOT_FOUND)
 
         published_qs = Portfolio.objects.select_related('owner').filter(is_published=True)
 
-        # 1. Exact slug or username match (indexed)
-        matched_portfolio = (
-            published_qs.filter(
-                Q(slug__iexact=raw_slug)
-                | Q(owner__username__iexact=raw_slug)
-                | Q(owner__email__iexact=raw_slug)
-            )
-            .order_by('-is_active', '-updated_at')
-            .first()
+        # Narrow to portfolios owned by the requested username first so ?portfolio=<slug> never crosses accounts
+        owner_qs = published_qs.filter(
+            Q(owner__username__iexact=raw_slug)
+            | Q(owner__email__iexact=raw_slug)
+            | Q(owner__email__istartswith=raw_slug + '@')
+            | Q(owner__first_name__iexact=raw_slug)
+            | Q(owner_name__iexact=raw_slug)
         )
+        if not owner_qs.exists() and target_clean:
+            matching_owner_ids = []
+            for p in published_qs.order_by('-is_active', '-updated_at')[:100]:
+                owner_candidates = {
+                    re.sub(r'[^a-z0-9]', '', (p.owner_name or '').lower()),
+                    re.sub(r'[^a-z0-9]', '', (p.slug or '').lower()),
+                }
+                if p.owner:
+                    owner_candidates.add(re.sub(r'[^a-z0-9]', '', (p.owner.username or '').lower()))
+                    if p.owner.email:
+                        owner_candidates.add(re.sub(r'[^a-z0-9]', '', p.owner.email.split('@')[0].lower()))
+                    if p.owner.first_name:
+                        owner_candidates.add(re.sub(r'[^a-z0-9]', '', p.owner.first_name.lower()))
+                if target_clean in owner_candidates:
+                    matching_owner_ids.append(p.id)
+            owner_qs = published_qs.filter(pk__in=matching_owner_ids) if matching_owner_ids else published_qs.none()
 
-        # 2. Email prefix or normalized name/slug fallback among published portfolios only
-        if not matched_portfolio:
+        matched_portfolio = None
+        if requested_portfolio:
+            matched_portfolio = owner_qs.filter(slug__iexact=requested_portfolio).first()
+            if not matched_portfolio and requested_portfolio.isdigit():
+                matched_portfolio = owner_qs.filter(pk=int(requested_portfolio)).first()
+        else:
+            # 1. Exact slug or username match (indexed)
             matched_portfolio = (
                 published_qs.filter(
-                    Q(owner__email__istartswith=raw_slug + '@')
-                    | Q(owner__first_name__iexact=raw_slug)
-                    | Q(owner_name__iexact=raw_slug)
+                    Q(slug__iexact=raw_slug)
+                    | Q(owner__username__iexact=raw_slug)
+                    | Q(owner__email__iexact=raw_slug)
                 )
                 .order_by('-is_active', '-updated_at')
                 .first()
             )
-
-        if not matched_portfolio:
-            for p in published_qs.order_by('-is_active', '-updated_at')[:100]:
-                candidates = {
-                    re.sub(r'[^a-z0-9]', '', (p.slug or '').lower()),
-                    re.sub(r'[^a-z0-9]', '', (p.owner_name or '').lower()),
-                }
-                if p.owner:
-                    candidates.add(re.sub(r'[^a-z0-9]', '', (p.owner.username or '').lower()))
-                    if p.owner.email:
-                        candidates.add(re.sub(r'[^a-z0-9]', '', p.owner.email.split('@')[0].lower()))
-                    if p.owner.first_name:
-                        candidates.add(re.sub(r'[^a-z0-9]', '', p.owner.first_name.lower()))
-                if target_clean in candidates:
-                    matched_portfolio = p
-                    break
+            # 2. Email prefix or normalized owner fallback
+            if not matched_portfolio:
+                matched_portfolio = owner_qs.order_by('-is_active', '-updated_at').first()
 
         if not matched_portfolio:
             return Response(
@@ -69,7 +76,11 @@ class PublicPortfolioAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        pages = PortfolioPage.objects.filter(portfolio=matched_portfolio).order_by('order', 'id')
+        pages = (
+            PortfolioPage.objects.filter(portfolio=matched_portfolio)
+            .prefetch_related('sections')
+            .order_by('order', 'id')
+        )
         data = PortfolioPageSerializer(pages, many=True).data
 
         return Response({

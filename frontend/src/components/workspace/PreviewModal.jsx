@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from "react";
-import { 
+import {
     X, Monitor, Smartphone, Tablet as TabletIcon, ExternalLink, Copy, LayoutTemplate, ChevronDown, Check
 } from "lucide-react";
 import CanvasContainer from "../../canvas/CanvasContainer.jsx";
 import PortfolioFrontpage from "../portfolio/PortfolioFrontpage.jsx";
 import { PORTFOLIO_THEMES } from "../../canvas/themes.js";
+import { notify } from "../../toast";
 
 export default function PreviewModal({
     isOpen,
@@ -20,7 +21,8 @@ export default function PreviewModal({
     themeMode,
     globalBg,
     globalFont,
-    setTerminalLogs
+    setTerminalLogs,
+    portfolioMeta = null,
 }) {
     const [activeViewMode, setActiveViewMode] = useState('landing'); // 'landing' or 'canvas'
     const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
@@ -41,7 +43,7 @@ export default function PreviewModal({
 
     // Define the frame width and styling for responsive viewports
     let frameStyle = "relative flex flex-col overflow-hidden transition-all duration-300 ease-in-out mx-auto bg-white dark:bg-[#05050A] shadow-2xl ";
-    
+
     if (previewViewport === 'desktop') {
         frameStyle += "w-full max-w-[1440px] h-full rounded-2xl ring-1 ring-slate-700/50";
     } else if (previewViewport === 'tablet') {
@@ -52,7 +54,7 @@ export default function PreviewModal({
 
     return (
         <div className={`fixed inset-0 z-[200] flex flex-col animate-in fade-in duration-200 ${isLight ? 'bg-slate-50/95' : 'bg-[#0B0C10]/95'} backdrop-blur-lg`}>
-            
+
             {/* Ambient AuraBuild Branding Glow behind the preview */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none flex justify-center items-center">
                 <div className="w-[800px] h-[800px] bg-blue-500/10 rounded-full blur-[120px] absolute -top-40 opacity-60"></div>
@@ -60,58 +62,58 @@ export default function PreviewModal({
             </div>
 
             {/* Toolbar */}
-            <div className={`relative z-50 h-14 md:h-16 px-2 sm:px-4 md:px-6 flex items-center justify-between border-b gap-1.5 sm:gap-4 transition-colors ${isLight ? 'bg-white border-slate-200 text-slate-800 shadow-sm' : 'bg-[#05050A] border-slate-800 text-slate-100'}`}>
-                <div className="flex items-center gap-2 md:gap-4">
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold uppercase tracking-wider text-blue-500">Test Portfolio</span>
-                        <span className="hidden sm:inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30">Live Preview</span>
+            <div className={`relative z-50 h-14 md:h-16 px-2.5 sm:px-4 md:px-6 flex items-center justify-between border-b gap-2 sm:gap-4 transition-colors ${isLight ? 'bg-white border-slate-200 text-slate-800 shadow-sm' : 'bg-[#05050A] border-slate-800 text-slate-100'}`}>
+                <div className="flex items-center gap-2 md:gap-4 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-blue-500 whitespace-nowrap truncate">Preview</span>
+                        <span className="hidden lg:inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30 whitespace-nowrap">Live Preview</span>
                     </div>
-                    
-                    {/* Device Selector */}
-                    <div className={`flex items-center gap-1 p-1 rounded-xl border transition-colors ${isLight ? 'bg-slate-100 border-slate-200' : 'bg-black/40 border-slate-800'}`}>
-                        <button 
+
+                    {/* Device Selector (Desktop/Tablet screens only — hidden on mobile) */}
+                    <div className={`hidden md:flex items-center gap-1 p-1 rounded-xl border transition-colors shrink-0 ${isLight ? 'bg-slate-100 border-slate-200' : 'bg-black/40 border-slate-800'}`}>
+                        <button
                             onClick={() => setPreviewViewport('desktop')}
-                            className={`p-1.5 md:px-3 md:py-1.5 flex items-center gap-2 text-xs font-semibold rounded-lg transition-all ${previewViewport === 'desktop' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : isLight ? 'text-slate-500 hover:text-slate-800 hover:bg-white' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+                            className={`p-1.5 md:px-3 md:py-1.5 flex items-center gap-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${previewViewport === 'desktop' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : isLight ? 'text-slate-500 hover:text-slate-800 hover:bg-white' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
                             title="Desktop View"
                         >
-                            <Monitor className="w-4 h-4" /> <span className="hidden sm:inline">Desktop</span>
+                            <Monitor className="w-4 h-4" /> <span className="hidden lg:inline">Desktop</span>
                         </button>
-                        <button 
+                        <button
                             onClick={() => setPreviewViewport('tablet')}
-                            className={`p-1.5 md:px-3 md:py-1.5 flex items-center gap-2 text-xs font-semibold rounded-lg transition-all ${previewViewport === 'tablet' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : isLight ? 'text-slate-500 hover:text-slate-800 hover:bg-white' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+                            className={`p-1.5 md:px-3 md:py-1.5 flex items-center gap-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${previewViewport === 'tablet' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : isLight ? 'text-slate-500 hover:text-slate-800 hover:bg-white' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
                             title="Tablet View"
                         >
-                            <TabletIcon className="w-4 h-4" /> <span className="hidden sm:inline">Tablet</span>
+                            <TabletIcon className="w-4 h-4" /> <span className="hidden lg:inline">Tablet</span>
                         </button>
-                        <button 
+                        <button
                             onClick={() => setPreviewViewport('mobile')}
-                            className={`p-1.5 md:px-3 md:py-1.5 flex items-center gap-2 text-xs font-semibold rounded-lg transition-all ${previewViewport === 'mobile' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : isLight ? 'text-slate-500 hover:text-slate-800 hover:bg-white' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+                            className={`p-1.5 md:px-3 md:py-1.5 flex items-center gap-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${previewViewport === 'mobile' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : isLight ? 'text-slate-500 hover:text-slate-800 hover:bg-white' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
                             title="Mobile View"
                         >
-                            <Smartphone className="w-4 h-4" /> <span className="hidden sm:inline">Mobile</span>
+                            <Smartphone className="w-4 h-4" /> <span className="hidden lg:inline">Mobile</span>
                         </button>
                     </div>
 
                     {/* View Mode: Frontpage vs Full Portfolio */}
-                    <div className={`flex items-center gap-1 p-1 rounded-xl border transition-colors ${isLight ? 'bg-slate-100 border-slate-200' : 'bg-black/40 border-slate-800'}`}>
-                        <button 
+                    <div className={`flex items-center gap-1 p-1 rounded-xl border transition-colors shrink-0 ${isLight ? 'bg-slate-100 border-slate-200' : 'bg-black/40 border-slate-800'}`}>
+                        <button
                             onClick={() => setActiveViewMode('landing')}
-                            className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${activeViewMode === 'landing' ? 'bg-indigo-600 text-white shadow-md' : isLight ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-white'}`}
+                            className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg transition-all cursor-pointer whitespace-nowrap ${activeViewMode === 'landing' ? 'bg-indigo-600 text-white shadow-md' : isLight ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-white'}`}
                         >
                             Landing
                         </button>
-                        <button 
+                        <button
                             onClick={() => setActiveViewMode('canvas')}
-                            className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${activeViewMode === 'canvas' ? 'bg-indigo-600 text-white shadow-md' : isLight ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-white'}`}
+                            className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg transition-all cursor-pointer whitespace-nowrap ${activeViewMode === 'canvas' ? 'bg-indigo-600 text-white shadow-md' : isLight ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-white'}`}
                         >
                             Sections
                         </button>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2 md:gap-3">
+                <div className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0">
                     <div ref={themeDropdownRef} className="relative hidden md:block">
-                        <button 
+                        <button
                             onClick={() => setIsThemeDropdownOpen(!isThemeDropdownOpen)}
                             className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-colors ${isLight ? 'bg-slate-100 border-slate-200 text-slate-700' : 'bg-black/40 border-slate-800 text-slate-200'} hover:opacity-80`}
                         >
@@ -121,7 +123,7 @@ export default function PreviewModal({
                             </span>
                             <ChevronDown className={`w-3 h-3 transition-transform ${isThemeDropdownOpen ? 'rotate-180' : ''} ${isLight ? 'text-slate-400' : 'text-slate-500'}`} />
                         </button>
-                        
+
                         {isThemeDropdownOpen && (
                             <div className={`absolute top-full mt-2 w-48 py-1 rounded-xl shadow-2xl border overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200 ${isLight ? 'bg-white border-slate-200 right-0' : 'bg-[#0A0A0F] border-slate-800 right-0'}`}>
                                 <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
@@ -129,7 +131,7 @@ export default function PreviewModal({
                                         <button
                                             key={theme.id}
                                             onClick={() => {
-                                                setUserData({...userData, theme: theme.id});
+                                                setUserData({ ...userData, theme: theme.id });
                                                 setIsThemeDropdownOpen(false);
                                             }}
                                             className={`w-full text-left px-4 py-2.5 text-xs font-semibold transition-colors flex items-center justify-between group ${currentTheme === theme.id ? (isLight ? 'bg-blue-50 text-blue-600' : 'bg-blue-500/10 text-blue-400') : (isLight ? 'text-slate-600 hover:bg-slate-50' : 'text-slate-300 hover:bg-slate-800 hover:text-white')}`}
@@ -142,39 +144,46 @@ export default function PreviewModal({
                             </div>
                         )}
                     </div>
-                    
+
                     <div className={`h-6 w-px mx-1 hidden sm:block ${isLight ? 'bg-slate-200' : 'bg-slate-800'}`}></div>
 
-                    <button 
+                    <button
                         onClick={() => {
-                            const cleanUsername = (userData?.name || "developer").toLowerCase().replace(/[^a-z0-9]/g, '');
-                            const liveUrl = `${window.location.protocol}//${window.location.host}/${cleanUsername}/`;
-                            navigator.clipboard.writeText(liveUrl);
+                            const ownerHandle = (userData?.email?.split('@')?.[0] || userData?.name || "developer").toLowerCase().replace(/[^a-z0-9._-]/g, '');
+                            const slugQuery = portfolioMeta?.slug ? `?portfolio=${encodeURIComponent(portfolioMeta.slug)}` : '';
+                            const liveUrl = portfolioMeta?.publishedUrl || `${window.location.origin}/preview/${encodeURIComponent(ownerHandle)}${slugQuery}`;
+                            navigator.clipboard?.writeText(liveUrl).catch(() => {});
                             setCopied(true);
                             setTimeout(() => setCopied(false), 2000);
+                            notify(portfolioMeta?.isPublished ? "Public portfolio URL copied." : "Preview URL copied (publish portfolio so visitors can view it).", "info");
                             if (setTerminalLogs) setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Portfolio link copied: ${liveUrl}` }]);
                         }}
-                        className={`p-2 rounded-xl transition-all ${copied ? 'text-emerald-400 bg-emerald-500/10' : (isLight ? 'text-slate-500 hover:text-slate-800 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-white/10')}`}
+                        className={`p-1.5 sm:p-2 rounded-xl transition-all cursor-pointer ${copied ? 'text-emerald-400 bg-emerald-500/10' : (isLight ? 'text-slate-500 hover:text-slate-800 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-white/10')}`}
                         title={copied ? "Link Copied!" : "Copy Shareable Link"}
                     >
                         {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                     </button>
 
-                    <button 
+                    <button
                         onClick={() => {
-                            const cleanUsername = (userData?.name || "developer").toLowerCase().replace(/[^a-z0-9]/g, '');
-                            const liveUrl = `${window.location.protocol}//${window.location.host}/${cleanUsername}/`;
-                            window.open(liveUrl, '_blank');
+                            if (portfolioMeta && !portfolioMeta.isPublished) {
+                                notify("Portfolio is in Private Draft mode — click Deploy in the editor to publish it for external visitors.", "info");
+                            }
+                            const ownerHandle = (userData?.email?.split('@')?.[0] || userData?.name || "developer").toLowerCase().replace(/[^a-z0-9._-]/g, '');
+                            const slugQuery = portfolioMeta?.slug ? `?portfolio=${encodeURIComponent(portfolioMeta.slug)}` : '';
+                            const liveUrl = portfolioMeta?.publishedUrl || `${window.location.origin}/preview/${encodeURIComponent(ownerHandle)}${slugQuery}`;
+                            window.open(liveUrl, '_blank', 'noopener,noreferrer');
                         }}
-                        className={`p-2 rounded-xl transition-all ${isLight ? 'text-slate-500 hover:text-slate-800 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
-                        title="Test in New Browser Tab"
+                        className={`p-1.5 sm:p-2 rounded-xl transition-all cursor-pointer ${isLight ? 'text-slate-500 hover:text-slate-800 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+                        title="Open Public Preview Tab"
                     >
                         <ExternalLink className="w-4 h-4" />
                     </button>
 
-                    <button 
+                    <button
                         onClick={onClose}
-                        className="flex items-center gap-2 px-4 py-2 ml-1 md:ml-2 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-full transition-all cursor-pointer shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                        aria-label="Exit Preview"
+                        className="flex items-center gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 ml-0.5 sm:ml-2 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-full transition-all cursor-pointer shadow-md hover:shadow-lg hover:-translate-y-0.5 shrink-0 whitespace-nowrap"
                     >
                         <X className="w-4 h-4" /> <span className="hidden sm:inline">Exit Preview</span>
                     </button>
@@ -182,12 +191,12 @@ export default function PreviewModal({
             </div>
 
             {/* Preview Canvas Workspace */}
-            <div className="flex-1 overflow-auto flex items-center justify-center p-4 md:p-8 custom-scrollbar relative z-10">
+            <div className="flex-1 overflow-auto flex items-center justify-center p-2 sm:p-4 md:p-8 custom-scrollbar relative z-10">
                 <div className={frameStyle}>
-                    
+
                     {/* Fake Mobile Notch (Purely aesthetic for mobile view) */}
                     {previewViewport === 'mobile' && (
-                        <div className="absolute top-0 inset-x-0 h-6 flex justify-center z-50 pointer-events-none">
+                        <div className="hidden md:flex absolute top-0 inset-x-0 h-6 justify-center z-50 pointer-events-none">
                             <div className="w-24 h-6 bg-slate-900 rounded-b-2xl"></div>
                         </div>
                     )}
@@ -196,7 +205,7 @@ export default function PreviewModal({
                     <div id="preview-scroll-container" className="flex-1 overflow-x-hidden overflow-y-auto w-full h-full relative z-10 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                         {activeViewMode === 'landing' ? (
                             <div className={`w-full min-h-full ${previewViewport === 'mobile' ? 'pt-6' : ''}`}>
-                                <PortfolioFrontpage 
+                                <PortfolioFrontpage
                                     userData={userData}
                                     sections={sections}
                                     themeMode={themeMode}
@@ -205,16 +214,16 @@ export default function PreviewModal({
                             </div>
                         ) : (
                             <div className={`pb-24 w-full h-full ${previewViewport === 'mobile' ? 'pt-8 px-0' : 'pt-0 px-0'}`}>
-                                <CanvasContainer 
+                                <CanvasContainer
                                     activePage={activePage}
                                     sections={sections}
-                                    activeSectionId={null} 
-                                    setActiveSectionId={() => {}} 
+                                    activeSectionId={null}
+                                    setActiveSectionId={() => { }}
                                     portfolioTheme={currentTheme}
                                     themeMode={themeMode}
-                                    globalBgImage={globalBg} 
+                                    globalBgImage={globalBg}
                                     globalFont={globalFont}
-                                    isPreview={true} 
+                                    isPreview={true}
                                 />
                             </div>
                         )}

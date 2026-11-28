@@ -13,6 +13,11 @@ def normalize_workspace_code(code):
 class UserProfile(models.Model):
     """Per-user profile holding the generated workspace login code and preferences."""
 
+    PLAN_CHOICES = [
+        ('free', 'Free'),
+        ('pro', 'Pro'),
+    ]
+
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, related_name='profile'
     )
@@ -20,6 +25,7 @@ class UserProfile(models.Model):
     workspace_code = models.CharField(max_length=24, unique=True, blank=True)
     normalized_code = models.CharField(max_length=24, db_index=True, blank=True, default='')
     avatar = models.CharField(max_length=16, default='👨‍💻', blank=True)
+    plan = models.CharField(max_length=16, choices=PLAN_CHOICES, default='free', db_index=True)
     reset_code_hash = models.CharField(max_length=128, blank=True, default='')
     reset_code_expires_at = models.DateTimeField(null=True, blank=True)
     reset_attempts = models.PositiveSmallIntegerField(default=0)

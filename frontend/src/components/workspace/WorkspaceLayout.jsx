@@ -259,6 +259,7 @@ export default function WorkspaceLayout() {
                             activeTool={activeTool}
                             onSelectTool={handleSelectTool}
                             onAddPage={handleAddPage}
+                            onRenamePage={handleRenamePage}
                             onDeletePage={handleDeletePage}
                             themeMode={themeMode}
                             setTerminalLogs={setTerminalLogs}
@@ -419,6 +420,7 @@ export default function WorkspaceLayout() {
                     globalBg={globalBg}
                     globalFont={globalFont}
                     setTerminalLogs={setTerminalLogs}
+                    portfolioMeta={portfolioMeta}
                 />
             )}
 

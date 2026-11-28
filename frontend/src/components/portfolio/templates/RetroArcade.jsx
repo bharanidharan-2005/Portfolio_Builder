@@ -17,9 +17,9 @@ const RetroArcade = ({ d }) => {
                     {d.initials}_
                 </div>
                 <div className="hidden md:flex gap-8 text-sm font-bold text-[#ffff00] uppercase tracking-widest">
-                    <span className="hover:text-[#ff00ff] cursor-pointer transition-colors">START</span>
-                    <span className="hover:text-[#ff00ff] cursor-pointer transition-colors">OPTIONS</span>
-                    <span className="hover:text-[#ff00ff] cursor-pointer transition-colors">QUIT</span>
+                    <button type="button" onClick={d.onVisualize} className="hover:text-[#ff00ff] cursor-pointer transition-colors">START</button>
+                    <button type="button" onClick={d.onVisualize} className="hover:text-[#ff00ff] cursor-pointer transition-colors">OPTIONS</button>
+                    <button type="button" onClick={d.onVisualize} className="hover:text-[#ff00ff] cursor-pointer transition-colors">QUIT</button>
                 </div>
                 <div className="text-xl font-bold text-[#00ffff]">
                     HI-SCORE: 99999

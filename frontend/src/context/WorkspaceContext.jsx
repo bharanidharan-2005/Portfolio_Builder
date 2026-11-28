@@ -63,7 +63,8 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
     const setUserData = isPublicPreview ? setPublicUserData : appContext.setUserData;
     const themeMode = appContext.themeMode;
 
-    const userKey = (userData?.name || previewUserData?.name || 'default').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const userKey = (userData?.email || userData?.name || previewUserData?.name || 'default').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const cacheScope = `${userKey}_${portfolioId || 'active'}`;
 
     // --- Loading & Sync States ---
     const [isSectionsLoading, setIsSectionsLoading] = useState(true);
@@ -90,11 +91,11 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
     const pendingPatchTimersRef = useRef({});
     const pendingPatchPayloadsRef = useRef({});
 
-    // --- Centralized Backend State (Instant Cached Initialization) ---
+    // --- Centralized Backend State (Account & Portfolio Isolated) ---
     const [pages, setPages] = useState(() => {
+        if (isPublicPreview) return [];
         try {
-            const cached = localStorage.getItem(`aurabuild_cached_pages_${userKey}`) 
-                || localStorage.getItem('aurabuild_cached_pages_latest');
+            const cached = localStorage.getItem(`aurabuild_cached_pages_${cacheScope}`);
             if (cached) {
                 const parsed = JSON.parse(cached);
                 if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -107,15 +108,14 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
     const activePage = activePageState;
 
     const [sections, setSections] = useState(() => {
+        if (isPublicPreview) return [];
         try {
-            const cached = localStorage.getItem(`aurabuild_cached_sections_${userKey}`) 
-                || localStorage.getItem('aurabuild_cached_sections_latest');
+            const cached = localStorage.getItem(`aurabuild_cached_sections_${cacheScope}`);
             if (cached) {
                 const parsed = JSON.parse(cached);
                 if (Array.isArray(parsed) && parsed.length > 0) return parsed;
             }
         } catch { /* ignore */ }
-        // Fallback to showcase so public portfolio and workspace load INSTANTLY with zero empty flash
         return DEFAULT_SHOWCASE_SECTIONS;
     });
     
@@ -138,8 +138,30 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         return userData?.globalFont || localStorage.getItem(`aurabuild_font_${userData?.name || 'default'}`) || 'font-inter';
     });
 
-    const [customFontSize, setCustomFontSize] = useState("base"); // base, sm, lg, xl
-    const [customAccentColor, setCustomAccentColor] = useState(null);
+    const [customFontSize, setCustomFontSize] = useState(() => {
+        if (isPublicPreview) return "base";
+        try { return localStorage.getItem(`aurabuild_fontsize_${cacheScope}`) || "base"; } catch { return "base"; }
+    }); // sm, base, lg, xl
+    const [customAccentColor, setCustomAccentColor] = useState(() => {
+        if (isPublicPreview) return null;
+        try { return localStorage.getItem(`aurabuild_accent_${cacheScope}`) || null; } catch { return null; }
+    });
+
+    useEffect(() => {
+        if (isPublicPreview) return;
+        try { localStorage.setItem(`aurabuild_fontsize_${cacheScope}`, customFontSize || "base"); } catch { /* ignore */ }
+    }, [customFontSize, cacheScope, isPublicPreview]);
+
+    useEffect(() => {
+        if (isPublicPreview) return;
+        try {
+            if (customAccentColor) {
+                localStorage.setItem(`aurabuild_accent_${cacheScope}`, customAccentColor);
+            } else {
+                localStorage.removeItem(`aurabuild_accent_${cacheScope}`);
+            }
+        } catch { /* ignore */ }
+    }, [customAccentColor, cacheScope, isPublicPreview]);
 
     const updatePortfolioSettings = useCallback(async (patch) => {
         if (isPublicPreview) return;
@@ -437,12 +459,9 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
                     setLastSavedAt(Date.now());
                     
                     if (!isPublicPreview) {
-                        const cleanKey = (userData?.name || 'default').toLowerCase().replace(/[^a-z0-9]/g, '');
                         try {
-                            localStorage.setItem(`aurabuild_cached_sections_${cleanKey}`, JSON.stringify(sorted));
-                            localStorage.setItem('aurabuild_cached_sections_latest', JSON.stringify(sorted));
-                            localStorage.setItem(`aurabuild_cached_pages_${cleanKey}`, JSON.stringify(pagesData));
-                            localStorage.setItem('aurabuild_cached_pages_latest', JSON.stringify(pagesData));
+                            localStorage.setItem(`aurabuild_cached_sections_${cacheScope}`, JSON.stringify(sorted));
+                            localStorage.setItem(`aurabuild_cached_pages_${cacheScope}`, JSON.stringify(pagesData));
                         } catch { /* ignore */ }
                     }
                     
@@ -472,18 +491,16 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
         };
         loadWorkspace();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isPublicPreview, userData?.name, portfolioId]);
+    }, [isPublicPreview, previewUserData?.name, portfolioId]);
 
-    // Keep active workspace sections persisted to localStorage on every change
+    // Keep active workspace sections persisted to localStorage on every change (account & portfolio scoped)
     useEffect(() => {
         if (sections && sections.length > 0 && !isPublicPreview) {
-            const cleanKey = (userData?.name || 'default').toLowerCase().replace(/[^a-z0-9]/g, '');
             try {
-                localStorage.setItem(`aurabuild_cached_sections_${cleanKey}`, JSON.stringify(sections));
-                localStorage.setItem('aurabuild_cached_sections_latest', JSON.stringify(sections));
+                localStorage.setItem(`aurabuild_cached_sections_${cacheScope}`, JSON.stringify(sections));
             } catch { /* ignore */ }
         }
-    }, [sections, userData?.name, isPublicPreview]);
+    }, [sections, cacheScope, isPublicPreview]);
 
     const setActivePage = useCallback((nextPageName) => {
         setActivePageState(nextPageName);
@@ -556,16 +573,19 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
     const handleRenamePage = async (pageId, newName) => {
         const cleanName = String(newName || '').trim();
         if (!pageId || !cleanName) return;
+        const target = pages.find(p => p.id === pageId);
         setSaveStatus('saving');
         try {
             const res = await API.patch(`pages/${pageId}/`, { name: cleanName });
-            setPages(prev => prev.map(p => (p.id === pageId ? { ...p, name: res.data.name || cleanName, slug: res.data.slug || p.slug } : p)));
-            setActivePage(prev => {
-                const target = pages.find(p => p.id === pageId);
-                return target && target.name === prev ? (res.data.name || cleanName) : prev;
-            });
+            const resolvedName = res.data.name || cleanName;
+            setPages(prev => prev.map(p => (p.id === pageId ? { ...p, name: resolvedName, slug: res.data.slug || p.slug } : p)));
+            if (target && target.name === activePage) {
+                setActivePageState(resolvedName);
+                lastLoadedPage.current = resolvedName;
+            }
             setSaveStatus('saved');
             setLastSavedAt(Date.now());
+            notify(`Renamed page to "${resolvedName}".`, 'success');
         } catch (err) {
             setSaveStatus('error');
             notify(err.response?.data?.error || 'Failed to rename page.', 'error');
@@ -713,6 +733,7 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
             setSaveStatus('saving');
             try {
                 const res = await API.post('sections/', {
+                    page_id: activePageObj.id,
                     page: activePageObj.id,
                     section_type: type,
                     order: insertIndex,
@@ -795,6 +816,7 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
                     const activePageObj = pages.find(p => p.name === activePage);
                     if (activePageObj && /^\d+$/.test(String(activePageObj.id))) {
                         res = await API.post('sections/', {
+                            page_id: activePageObj.id,
                             page: activePageObj.id,
                             section_type: originalSection.section_type,
                             order: sectionIndex + 1,
@@ -852,6 +874,7 @@ export const WorkspaceProvider = ({ children, isPublicPreview = false, previewUs
                 for (let idx = 0; idx < cleanNew.length; idx++) {
                     const sec = cleanNew[idx];
                     const res = await API.post('sections/', {
+                        page_id: activePageObj.id,
                         page: activePageObj.id,
                         section_type: sec.section_type,
                         order: mode === 'append' ? currentSections.length + idx : idx,

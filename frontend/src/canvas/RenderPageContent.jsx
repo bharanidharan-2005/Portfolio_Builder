@@ -107,13 +107,11 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
     const borderClass = useScrimDarkFallback ? "border-white/15" : (themeDef.border || "border-white/5");
     const innerBorderClass = borderClass.split(' ').find(c => c.startsWith('border-')) || "border-white/5";
 
-    // Subdued premium aesthetic defaults
-    const accentText = customAccent
-        ? `text-[${customAccent}]`
-        : (useScrimDarkFallback ? "text-blue-400" : (themeDef.accentText || "text-blue-400"));
-    const accentBg = customAccent
-        ? `bg-[${customAccent}]`
-        : (useScrimDarkFallback ? "bg-blue-600" : (themeDef.accentBg || "bg-blue-600"));
+    // Subdued premium aesthetic defaults (inline style fallback prevents Tailwind JIT missing dynamic hex colors)
+    const accentText = useScrimDarkFallback ? "text-blue-400" : (themeDef.accentText || "text-blue-400");
+    const accentBg = useScrimDarkFallback ? "bg-blue-600" : (themeDef.accentBg || "bg-blue-600");
+    const accentTextStyle = customAccent ? { color: customAccent } : undefined;
+    const accentBgStyle = customAccent ? { backgroundColor: customAccent } : undefined;
     const textPrimary = useScrimDarkFallback ? "text-slate-50" : (themeDef.textPrimary || "text-slate-50");
     const textSecondary = useScrimDarkFallback ? "text-slate-300" : (themeDef.textSecondary || "text-slate-400");
     const placeholderClass = useScrimDarkFallback ? "placeholder-slate-400" : (themeDef.placeholderClass || (isLightCanvas ? "placeholder-slate-400" : "placeholder-slate-500"));
@@ -212,7 +210,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
 
     return (
         <PortfolioRenderContext.Provider value={isPreview}>
-        <div className={`w-full relative ${isPreview ? '' : 'group/section'} ${openMenu ? 'z-50' : 'z-10'}`}>
+        <div className={`w-full relative ${fontSzClass} ${isPreview ? '' : 'group/section'} ${openMenu ? 'z-50' : 'z-10'}`}>
             {/* AI Suggestion Overlay */}
             {hasAiSuggestion && !isPreview && (
                 <div className="absolute inset-0 z-[100] pointer-events-none p-4 animate-in fade-in zoom-in-95 duration-500">
@@ -279,6 +277,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                     whileInView={{ opacity: 1, y: 0 }} 
                                     viewport={{ once: false, amount: 0.1 }}
                                     transition={{ ...springTransition, delay: 0.1 }}
+                                    style={accentTextStyle}
                                     className={`text-base sm:text-xl md:text-2xl font-bold w-full max-w-full min-w-0 break-words ${accentText} ${shouldCenterHero ? 'text-center' : 'text-center lg:text-left'}`}
                                 >
                                     <TextElement 
@@ -320,6 +319,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                             const projectsSection = document.getElementById('preview-node-block-' + (sections.find(s => s.section_type === 'projects_grid')?.id || ''));
                                             if (projectsSection) projectsSection.scrollIntoView({ behavior: 'smooth' });
                                         }}
+                                        style={accentBgStyle}
                                         className={`w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl text-sm md:text-base font-bold transition-all shadow-[0_0_20px_rgba(59,130,246,0.15)] hover:shadow-[0_0_30px_rgba(59,130,246,0.3)] hover:-translate-y-1 ${accentBg} text-white flex items-center justify-center gap-2`}
                                     >
                                         View My Work &rarr;
@@ -688,7 +688,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
 
                                     <div className={`mt-3 pt-3 border-t flex flex-wrap items-center gap-2 text-xs sm:text-sm overflow-hidden ${innerBorderClass}`}>
                                         <span className={`shrink-0 ${textSecondary}`}>Performance:</span>
-                                        <span className={`font-mono font-bold whitespace-nowrap shrink-0 ${accentText}`}>
+                                        <span style={accentTextStyle} className={`font-mono font-bold whitespace-nowrap shrink-0 ${accentText}`}>
                                             <TextElement 
                                                 value={school.score || ""}
                                                 placeholder="GPA / Score"
@@ -840,7 +840,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                                 />
                                             </span>
                                         </div>
-                                        <span className={`${themeDef.badgeText || accentText} font-mono font-bold text-sm flex items-center shrink-0 ${trackBg} px-4 py-2 rounded-xl border ${borderClass} shadow-inner`}>
+                                        <span style={!themeDef.badgeText ? accentTextStyle : undefined} className={`${themeDef.badgeText || accentText} font-mono font-bold text-sm flex items-center shrink-0 ${trackBg} px-4 py-2 rounded-xl border ${borderClass} shadow-inner`}>
                                             <TextElement 
                                                 value={String((skill.level !== undefined && skill.level !== null && skill.level !== '') ? skill.level : 50)}
                                                 placeholder="50"
@@ -870,7 +870,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                             whileInView={{ width: `${(skill.level !== undefined && skill.level !== null && skill.level !== '') ? skill.level : 50}%` }}
                                             viewport={{ once: false }}
                                             transition={{ duration: 1, ease: "easeOut" }}
-                                            style={{ boxShadow: 'inset 0 1px 3px rgba(255,255,255,0.3), 0 0 10px rgba(168,85,247,0.4)' }}
+                                            style={{ ...(accentBgStyle || {}), boxShadow: 'inset 0 1px 3px rgba(255,255,255,0.3), 0 0 10px rgba(168,85,247,0.4)' }}
                                         />
                                         {!isPreview && <div className="absolute inset-0 bg-white/10 opacity-0 group-hover/bar:opacity-100 transition-opacity pointer-events-none" />}
                                     </div>
@@ -943,7 +943,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                 id={`project-card-${i}`}
                                 className={`relative group p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-[2rem] border flex flex-col md:flex-row gap-5 md:gap-8 items-stretch shadow-md backdrop-blur-xl w-full overflow-hidden transition-all duration-300 ${cardBg} ${borderClass} hover:shadow-[0_20px_40px_rgb(0,0,0,0.2)] hover:border-white/20 z-10 hover:z-20`}
                             >
-                                <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 transition-all duration-500 group-hover:w-full bg-current ${accentText}`}></div>
+                                <div style={accentTextStyle} className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 transition-all duration-500 group-hover:w-full bg-current ${accentText}`}></div>
 
                                 {!isPreview && (
                                     <button 
@@ -1035,7 +1035,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                             />
                                         </div>
                                     )}
-                                    <div className={`text-xs font-bold uppercase tracking-widest mb-3 ${accentText}`}>
+                                    <div style={accentTextStyle} className={`text-xs font-bold uppercase tracking-widest mb-3 ${accentText}`}>
                                         {isPreview ? (
                                             project.category && <span>{project.category}</span>
                                         ) : (
@@ -1198,7 +1198,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
 
                     {data.githubUsername && data.githubUsername.trim() !== "" && (
                         <div className={`w-full max-w-5xl mx-auto mt-16 p-4 sm:p-8 rounded-3xl border shadow-lg overflow-hidden ${cardBg} ${borderClass}`}>
-                            <h3 className={`text-sm font-black tracking-widest uppercase mb-8 text-center w-full ${accentText}`}>
+                            <h3 style={accentTextStyle} className={`text-sm font-black tracking-widest uppercase mb-8 text-center w-full ${accentText}`}>
                                 Open Source Contributions
                             </h3>
                             <div className={`w-full overflow-x-auto pb-4 ${textPrimary}`}>
@@ -1565,7 +1565,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                             <h4 className={"font-bold text-sm sm:text-base " + textPrimary}>
                                                 <TextElement value={item.name} placeholder="Person Name" onCommit={(v) => updateArrayItem('items', idx, 'name', v)} />
                                             </h4>
-                                            <p className={"text-xs font-medium " + accentText}>
+                                            <p style={accentTextStyle} className={"text-xs font-medium " + accentText}>
                                                 <TextElement value={item.role} placeholder="Role & Company" onCommit={(v) => updateArrayItem('items', idx, 'role', v)} />
                                             </p>
                                         </div>
@@ -1642,7 +1642,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                             </p>
                                         </div>
                                     </div>
-                                    <div className={"text-xs sm:text-sm font-semibold sm:text-right shrink-0 " + accentText}>
+                                    <div style={accentTextStyle} className={"text-xs sm:text-sm font-semibold sm:text-right shrink-0 " + accentText}>
                                         <TextElement value={item.date} placeholder="Year/Date" onCommit={(v) => updateArrayItem('items', idx, 'date', v)} />
                                     </div>
                                 </motion.div>
@@ -1651,10 +1651,18 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                         {!isPreview && (
                             <div className="pt-8 sm:pt-10 w-full px-2">
                                 <button 
-                                    onClick={(e) => { e.stopPropagation(); addArrayItem('items', { name: "New Certification", issuer: "Issuing Organization", date: "Year/Date" }); }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        addArrayItem(
+                                            'items',
+                                            currentType === 'achievements'
+                                                ? { title: "New Achievement", issuer: "Organization", date: "Year/Date" }
+                                                : { name: "New Certification", issuer: "Issuing Organization", date: "Year/Date" }
+                                        );
+                                    }}
                                     className={`w-full max-w-5xl mx-auto py-4 sm:py-5 rounded-xl border border-dashed text-sm sm:text-base font-bold opacity-50 hover:opacity-100 transition-all hover:bg-white/5 flex flex-col justify-center items-center ${textPrimary} ${borderClass}`}
                                 >
-                                    + Add Another Certification
+                                    + Add Another {currentType === 'achievements' ? 'Achievement' : 'Certification'}
                                 </button>
                             </div>
                         )}
@@ -1702,7 +1710,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                             <X className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
                                         </button>
                                     )}
-                                    <div className={"text-2xl sm:text-4xl md:text-5xl font-black mb-1 sm:mb-2 " + accentText}>
+                                    <div style={accentTextStyle} className={"text-2xl sm:text-4xl md:text-5xl font-black mb-1 sm:mb-2 " + accentText}>
                                         <TextElement value={item.metric} placeholder="50+" onCommit={(v) => updateArrayItem('items', idx, 'metric', v)} />
                                     </div>
                                     <div className={"text-[10px] sm:text-xs md:text-sm font-bold uppercase tracking-wider sm:tracking-widest " + textSecondary}>
@@ -1778,7 +1786,7 @@ export default function RenderPageContent({ section, portfolioTheme, sections, o
                                             <X className="w-3.5 h-3.5 text-white" />
                                         </button>
                                     )}
-                                    <div className={"text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-2 sm:mb-3 flex items-center justify-between " + accentText}>
+                                    <div style={accentTextStyle} className={"text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-2 sm:mb-3 flex items-center justify-between " + accentText}>
                                         <span><TextElement value={item.publisher} placeholder="Publisher" onCommit={(v) => updateArrayItem('articles', idx, 'publisher', v)} /></span>
                                         <span><TextElement value={item.date} placeholder="Date" onCommit={(v) => updateArrayItem('articles', idx, 'date', v)} /></span>
                                     </div>

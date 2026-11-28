@@ -69,21 +69,21 @@ const BentoBoxGrid = ({ d }) => {
                         <h3 className="text-2xl font-bold mb-2">Let's build together</h3>
                         <p className="text-indigo-200 font-medium">Currently open for new opportunities</p>
                     </div>
-                    <button className="w-12 h-12 bg-white text-indigo-600 rounded-full flex items-center justify-center hover:scale-110 transition-transform">
+                    <button type="button" onClick={d.onVisualize} aria-label="Open Contact & Portfolio" className="w-12 h-12 bg-white text-indigo-600 rounded-full flex items-center justify-center hover:scale-110 transition-transform cursor-pointer">
                         <Mail className="w-5 h-5" />
                     </button>
                 </motion.div>
 
                 {/* Socials Box */}
                 <motion.div variants={item} className="col-span-1 md:col-span-1 row-span-1 bg-white rounded-3xl p-6 flex flex-col justify-center gap-4 shadow-sm border border-zinc-200">
-                    <a href="#" className="flex items-center gap-3 p-3 rounded-2xl hover:bg-zinc-100 transition-colors">
+                    <button type="button" onClick={d.onVisualize} className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-zinc-100 transition-colors cursor-pointer text-left">
                         <GitBranch className="w-5 h-5 text-zinc-700" />
                         <span className="font-semibold text-zinc-700 text-sm">GitHub</span>
-                    </a>
-                    <a href="#" className="flex items-center gap-3 p-3 rounded-2xl hover:bg-zinc-100 transition-colors">
+                    </button>
+                    <button type="button" onClick={d.onVisualize} className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-zinc-100 transition-colors cursor-pointer text-left">
                         <Link className="w-5 h-5 text-blue-600" />
                         <span className="font-semibold text-zinc-700 text-sm">LinkedIn</span>
-                    </a>
+                    </button>
                 </motion.div>
                 
                 {/* Resume Box */}

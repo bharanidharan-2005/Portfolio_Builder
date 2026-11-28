@@ -54,6 +54,8 @@ export function AppProvider({ children }) {
                         email: res.data.email || prev.email,
                         code: res.data.workspace_code || prev.code,
                         avatar: res.data.avatar || prev.avatar || '👨‍💻',
+                        plan: res.data.plan || 'free',
+                        isStaff: Boolean(res.data.is_staff),
                     }));
                     setIsAuthenticated(true);
                 } else {
@@ -109,18 +111,36 @@ export function AppProvider({ children }) {
         } catch (error) {
             console.error("Failed to connect to logout endpoint", error);
         }
-        
+
         clearAuthTokens();
-        localStorage.removeItem("aurabuild_user");
+        try {
+            Object.keys(localStorage).forEach((key) => {
+                if (
+                    key === "aurabuild_user" ||
+                    key.startsWith("aurabuild_cached_") ||
+                    key.startsWith("aurabuild_bg_") ||
+                    key.startsWith("aurabuild_font_") ||
+                    key.startsWith("aurabuild_frontpage_") ||
+                    key.startsWith("aurabuild_fontsize_") ||
+                    key.startsWith("aurabuild_accent_")
+                ) {
+                    localStorage.removeItem(key);
+                }
+            });
+        } catch {
+            localStorage.removeItem("aurabuild_user");
+        }
         setIsAuthenticated(false);
         setIsAuthLoading(false);
         setUserData({
             name: "Developer",
             email: "",
             avatar: "👨‍💻",
-            theme: "modern_glass"
+            theme: "modern_glass",
+            plan: "free",
+            isStaff: false,
         });
-        
+
         window.location.href = "/";
     };
 

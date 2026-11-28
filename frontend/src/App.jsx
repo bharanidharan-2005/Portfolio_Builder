@@ -1,7 +1,8 @@
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useState, useEffect, useCallback } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { AppProvider, useAppContext } from "./context/AppContext";
 import { WorkspaceProvider } from "./context/WorkspaceContext";
+import Toasts from "./components/Toasts.jsx";
 
 const LandingPage = lazy(() => import("./components/LandingPage.jsx"));
 const DashboardPage = lazy(() => import("./components/dashboard/DashboardPage.jsx"));
@@ -171,12 +172,32 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 export default function App() {
     // In production, you would configure this in your .env file
     const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "placeholder-google-client-id.apps.googleusercontent.com";
+    const [toasts, setToasts] = useState([]);
+
+    const dismissToast = useCallback((id) => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, []);
+
+    useEffect(() => {
+        const handleToast = (e) => {
+            const detail = e.detail || {};
+            if (!detail.message) return;
+            const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+            setToasts((prev) => [...prev.slice(-4), { id, ...detail }]);
+            setTimeout(() => {
+                setToasts((prev) => prev.filter((t) => t.id !== id));
+            }, detail.duration || 4200);
+        };
+        window.addEventListener('aurabuild-toast', handleToast);
+        return () => window.removeEventListener('aurabuild-toast', handleToast);
+    }, []);
 
     return (
         <ErrorBoundary>
             <GoogleOAuthProvider clientId={googleClientId}>
                 <AppProvider>
                     <MainApp />
+                    <Toasts toasts={toasts} dismissToast={dismissToast} />
                 </AppProvider>
             </GoogleOAuthProvider>
         </ErrorBoundary>

@@ -117,7 +117,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     // 8. src/App.jsx (Main Container)
     const activePage = pages.find(p => p.name === activePageName) || pages[0] || { sections: [] };
     const sectionsJson = JSON.stringify(activePage.sections || [], null, 2);
-    
+
     const appJsx = `import React from 'react';
 import RenderPageContent from './RenderPageContent';
 import { PORTFOLIO_THEMES } from './themes';
@@ -342,11 +342,112 @@ export default function RenderPageContent({ section, portfolioTheme }) {
         );
     }
     
+    if (currentType === "education") {
+        return (
+            <div className="space-y-6 py-10 w-full max-w-4xl mx-auto px-4">
+                {sectionImageBanner}
+                <h2 className={\`text-sm uppercase font-black tracking-widest mb-8 \${accentText}\`}>{data.title || "Education"}</h2>
+                <div className="space-y-4">
+                    {(data.schools || []).map((school, i) => (
+                        <div key={i} className={\`p-6 rounded-2xl border \${borderClass} \${cardBg}\`}>
+                            <div className="flex flex-wrap justify-between gap-2">
+                                <div>
+                                    <h3 className={\`text-lg font-bold \${textPrimary}\`}>{school.institution || "Institution"}</h3>
+                                    <p className={\`text-sm \${textSecondary}\`}>{school.degree}</p>
+                                </div>
+                                {school.years && <span className={\`text-xs font-mono \${accentText}\`}>{school.years}</span>}
+                            </div>
+                            {school.score && <p className={\`text-xs mt-2 \${textSecondary}\`}>Performance: {school.score}</p>}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    if (currentType === "experience") {
+        return (
+            <div className="space-y-6 py-10 w-full max-w-4xl mx-auto px-4">
+                {sectionImageBanner}
+                <h2 className={\`text-sm uppercase font-black tracking-widest mb-8 \${accentText}\`}>{data.title || "Work Experience"}</h2>
+                <div className="space-y-4">
+                    {(data.items || []).map((item, i) => (
+                        <div key={i} className={\`p-6 rounded-2xl border \${borderClass} \${cardBg}\`}>
+                            <div className="flex flex-wrap justify-between gap-2 mb-2">
+                                <div>
+                                    <h3 className={\`text-lg font-bold \${textPrimary}\`}>{item.role || item.title}</h3>
+                                    <p className={\`text-sm \${textSecondary}\`}>{item.company}</p>
+                                </div>
+                                {(item.duration || item.dates) && <span className={\`text-xs font-mono \${accentText}\`}>{item.duration || item.dates}</span>}
+                            </div>
+                            {item.description && <p className={\`text-sm whitespace-pre-wrap \${textSecondary}\`}>{item.description}</p>}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    if (currentType === "certifications" || currentType === "achievements") {
+        return (
+            <div className="space-y-6 py-10 w-full max-w-4xl mx-auto px-4">
+                {sectionImageBanner}
+                <h2 className={\`text-sm uppercase font-black tracking-widest mb-8 \${accentText}\`}>
+                    {data.title || (currentType === "achievements" ? "Achievements & Honors" : "Certifications & Awards")}
+                </h2>
+                <div className="space-y-3">
+                    {(data.items || []).map((item, i) => (
+                        <div key={i} className={\`p-5 rounded-2xl border flex flex-wrap items-center justify-between gap-2 \${borderClass} \${cardBg}\`}>
+                            <div>
+                                <h3 className={\`text-base font-bold \${textPrimary}\`}>{item.name || item.title}</h3>
+                                {item.issuer && <p className={\`text-xs \${textSecondary}\`}>{item.issuer}</p>}
+                            </div>
+                            {item.date && <span className={\`text-xs font-mono \${accentText}\`}>{item.date}</span>}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    if (currentType === "services" || currentType === "testimonials" || currentType === "stats" || currentType === "blog" || currentType === "articles") {
+        const list = data.items || data.articles || [];
+        return (
+            <div className="space-y-6 py-10 w-full max-w-5xl mx-auto px-4">
+                {sectionImageBanner}
+                <h2 className={\`text-sm uppercase font-black tracking-widest text-center mb-8 \${accentText}\`}>{data.title || currentType}</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {list.map((item, i) => (
+                        <div key={i} className={\`p-6 rounded-2xl border \${borderClass} \${cardBg} space-y-2\`}>
+                            <h3 className={\`text-base font-bold \${textPrimary}\`}>{item.metric || item.title || item.name}</h3>
+                            <p className={\`text-sm \${textSecondary}\`}>{item.label || item.desc || item.quote || item.role || item.publisher}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    if (currentType === "contact") {
+        return (
+            <div className="space-y-6 py-12 w-full max-w-3xl mx-auto px-4 text-center">
+                <h2 className={\`text-2xl font-black uppercase tracking-widest \${textPrimary}\`}>{data.title || "Get In Touch"}</h2>
+                {data.text && <p className={\`text-base \${textSecondary}\`}>{data.text}</p>}
+                <div className="flex flex-wrap justify-center gap-4 pt-2">
+                    {data.email && <a href={\`mailto:\${data.email}\`} className={\`px-5 py-2.5 rounded-xl border \${borderClass} \${textPrimary} text-sm font-semibold\`}>{data.email}</a>}
+                    {data.phone && <a href={\`tel:\${data.phone}\`} className={\`px-5 py-2.5 rounded-xl border \${borderClass} \${textPrimary} text-sm font-semibold\`}>{data.phone}</a>}
+                    {data.linkedin && <a href={data.linkedin} target="_blank" rel="noopener noreferrer" className={\`px-5 py-2.5 rounded-xl border \${borderClass} \${textPrimary} text-sm font-semibold\`}>LinkedIn</a>}
+                    {data.github && <a href={data.github} target="_blank" rel="noopener noreferrer" className={\`px-5 py-2.5 rounded-xl border \${borderClass} \${textPrimary} text-sm font-semibold\`}>GitHub</a>}
+                </div>
+            </div>
+        );
+    }
+
     // Fallback
     return (
         <div className={\`p-10 rounded-3xl border \${borderClass} \${cardBg} text-center\`}>
-            <h3 className="text-xl font-bold mb-4">{currentType}</h3>
-            <p className="text-slate-400">Content mapped.</p>
+            <h3 className="text-xl font-bold mb-4 capitalize">{data.title || currentType}</h3>
+            <p className="text-slate-400">Section content configured.</p>
         </div>
     );
 }

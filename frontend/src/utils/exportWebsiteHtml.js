@@ -275,7 +275,7 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                                 <button onclick="document.getElementById('section-${activeSections.find(s=>s.section_type==='projects_grid')?.id||''}').scrollIntoView({behavior:'smooth'})" class="px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all shadow-lg hover:shadow-[0_20px_40px_rgba(59,130,246,0.3)] ${theme.accentBg || 'bg-blue-600'} text-white flex items-center gap-2 hover:scale-110 hover:-translate-y-2">
                                     View My Work &rarr;
                                 </button>
-                                <button class="px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all bg-transparent hover:bg-white/10 border shadow-sm hover:shadow-lg hover:shadow-white/10 ${theme.textPrimary} border-current hover:scale-110 hover:-translate-y-2">
+                                <button onclick="${data.resumeUrl ? `window.open('${escapeHtml(getAbsoluteUrl(data.resumeUrl))}', '_blank', 'noopener,noreferrer')` : 'window.print()'}" class="px-8 py-4 rounded-xl text-sm md:text-base font-bold transition-all bg-transparent hover:bg-white/10 border shadow-sm hover:shadow-lg hover:shadow-white/10 ${theme.textPrimary} border-current hover:scale-110 hover:-translate-y-2 cursor-pointer">
                                     Download Resume
                                 </button>
                             </div>
@@ -431,20 +431,92 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
             </div>
             `;
             sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl stagger-container"><h2 class="text-3xl sm:text-4xl uppercase font-black tracking-widest mb-12 text-center ${theme.textPrimary} stagger-item stagger-fade-down">${escapeHtml(data.title) || 'Showcase of Innovations'}</h2><div class="flex flex-col gap-12 w-full max-w-5xl mx-auto">${projectsHtml}</div></section>`;
+        } else if (type === 'experience') {
+            const items = data.items || [];
+            const itemsHtml = items.length > 0 ? items.map((exp) => `
+                <div class="p-8 rounded-3xl border ${theme.border} bg-white/5 hover:bg-white/10 transition-all shadow-md space-y-3">
+                    <div class="flex flex-wrap justify-between items-start gap-4">
+                        <div>
+                            <h3 class="text-xl font-bold ${theme.textPrimary}">${escapeHtml(exp.role || exp.title || 'Role')}</h3>
+                            <p class="text-sm font-semibold ${theme.accentText}">${escapeHtml(exp.company || 'Company')}</p>
+                        </div>
+                        ${(exp.duration || exp.dates) ? `<span class="text-xs font-mono px-4 py-1.5 rounded-xl border ${theme.border} bg-black/40 ${theme.textSecondary}">${escapeHtml(exp.duration || exp.dates)}</span>` : ''}
+                    </div>
+                    ${exp.description ? `<p class="text-sm md:text-base leading-relaxed ${theme.textSecondary} whitespace-pre-wrap">${escapeHtml(exp.description)}</p>` : ''}
+                </div>
+            `).join('') : `<p class="text-center text-sm ${theme.textSecondary}">No experience entries added yet.</p>`;
+            sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl stagger-container"><h2 class="text-3xl sm:text-4xl uppercase font-black tracking-widest mb-12 text-center ${theme.textPrimary}">${escapeHtml(data.title) || 'Work Experience'}</h2><div class="space-y-6 max-w-4xl mx-auto">${itemsHtml}</div></section>`;
+        } else if (type === 'certifications' || type === 'achievements') {
+            const items = data.items || [];
+            const defaultHeading = type === 'achievements' ? 'Achievements & Honors' : 'Certifications & Awards';
+            const itemsHtml = items.length > 0 ? items.map((item) => `
+                <div class="p-6 rounded-2xl border ${theme.border} bg-white/5 flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold ${theme.textPrimary}">${escapeHtml(item.name || item.title || '')}</h3>
+                        ${item.issuer ? `<p class="text-xs ${theme.textSecondary}">${escapeHtml(item.issuer)}</p>` : ''}
+                    </div>
+                    ${item.date ? `<span class="text-xs font-mono font-bold ${theme.accentText}">${escapeHtml(item.date)}</span>` : ''}
+                </div>
+            `).join('') : `<p class="text-center text-sm ${theme.textSecondary}">No entries added yet.</p>`;
+            sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl stagger-container"><h2 class="text-3xl sm:text-4xl uppercase font-black tracking-widest mb-12 text-center ${theme.textPrimary}">${escapeHtml(data.title) || defaultHeading}</h2><div class="space-y-4 max-w-4xl mx-auto">${itemsHtml}</div></section>`;
+        } else if (type === 'services') {
+            const items = data.items || [];
+            const itemsHtml = items.map((srv) => `
+                <div class="p-8 rounded-3xl border ${theme.border} bg-white/5 space-y-3">
+                    <h3 class="text-xl font-bold ${theme.textPrimary}">${escapeHtml(srv.title || '')}</h3>
+                    <p class="text-sm leading-relaxed ${theme.textSecondary}">${escapeHtml(srv.desc || srv.description || '')}</p>
+                </div>
+            `).join('');
+            sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl stagger-container"><h2 class="text-3xl sm:text-4xl uppercase font-black tracking-widest mb-12 text-center ${theme.textPrimary}">${escapeHtml(data.title) || 'Services & Capabilities'}</h2><div class="grid grid-cols-1 md:grid-cols-3 gap-6">${itemsHtml}</div></section>`;
+        } else if (type === 'testimonials') {
+            const items = data.items || [];
+            const itemsHtml = items.map((t) => `
+                <div class="p-8 rounded-3xl border ${theme.border} bg-white/5 space-y-4">
+                    <p class="text-base italic leading-relaxed ${theme.textSecondary}">"${escapeHtml(t.quote || '')}"</p>
+                    <div>
+                        <p class="font-bold text-sm ${theme.textPrimary}">${escapeHtml(t.name || '')}</p>
+                        <p class="text-xs ${theme.accentText}">${escapeHtml(t.role || '')}</p>
+                    </div>
+                </div>
+            `).join('');
+            sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl stagger-container"><h2 class="text-3xl sm:text-4xl uppercase font-black tracking-widest mb-12 text-center ${theme.textPrimary}">${escapeHtml(data.title) || 'Recommendations'}</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">${itemsHtml}</div></section>`;
+        } else if (type === 'stats') {
+            const items = data.items || [];
+            const itemsHtml = items.map((st) => `
+                <div class="p-6 rounded-2xl border ${theme.border} bg-white/5 text-center">
+                    <div class="text-3xl md:text-4xl font-black mb-1 ${theme.accentText}">${escapeHtml(st.metric || '')}</div>
+                    <div class="text-xs font-bold uppercase tracking-wider ${theme.textSecondary}">${escapeHtml(st.label || '')}</div>
+                </div>
+            `).join('');
+            sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl stagger-container"><h2 class="text-3xl sm:text-4xl uppercase font-black tracking-widest mb-12 text-center ${theme.textPrimary}">${escapeHtml(data.title) || 'By the Numbers'}</h2><div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">${itemsHtml}</div></section>`;
+        } else if (type === 'blog' || type === 'articles') {
+            const articles = data.articles || [];
+            const itemsHtml = articles.map((a) => `
+                <a ${a.link ? `href="${escapeHtml(a.link.startsWith('http') ? a.link : 'https://' + a.link)}" target="_blank" rel="noopener noreferrer"` : ''} class="block p-6 rounded-3xl border ${theme.border} bg-white/5 hover:bg-white/10 transition-all space-y-3">
+                    <div class="text-xs font-bold uppercase tracking-wider flex justify-between ${theme.accentText}">
+                        <span>${escapeHtml(a.publisher || '')}</span>
+                        <span>${escapeHtml(a.date || '')}</span>
+                    </div>
+                    <h3 class="text-lg font-bold ${theme.textPrimary}">${escapeHtml(a.title || '')}</h3>
+                </a>
+            `).join('');
+            sectionsHtml += `<section class="py-16 px-6 md:px-12 mb-16 rounded-3xl border ${theme.border} ${theme.cardBg || 'bg-black/40 backdrop-blur-xl'} shadow-2xl stagger-container"><h2 class="text-3xl sm:text-4xl uppercase font-black tracking-widest mb-12 text-center ${theme.textPrimary}">${escapeHtml(data.title) || 'Publications & Articles'}</h2><div class="grid grid-cols-1 md:grid-cols-3 gap-6">${itemsHtml}</div></section>`;
         } else if (type === 'contact') {
+            const ownerTarget = escapeHtml(data.email || userData?.email || '');
+            const contactEndpoint = escapeHtml(getAbsoluteUrl('/api/contact-message/'));
             const formHtml = `
-            <form class="max-w-xl mx-auto space-y-6 mt-12 bg-black/30 p-10 rounded-3xl border ${theme.border} shadow-2xl text-left stagger-item stagger-fade-up hover:border-white/20 transition-colors duration-500" style="transition-delay: 0.3s" onsubmit="event.preventDefault(); const btn = this.querySelector('button'); if (btn) { const orig = btn.innerText; btn.innerText = '✓ Message Sent!'; btn.style.background = '#10b981'; setTimeout(() => { btn.innerText = orig; btn.style.background = ''; }, 3000); }">
+            <form data-owner-email="${ownerTarget}" data-endpoint="${contactEndpoint}" class="max-w-xl mx-auto space-y-6 mt-12 bg-black/30 p-10 rounded-3xl border ${theme.border} shadow-2xl text-left stagger-item stagger-fade-up hover:border-white/20 transition-colors duration-500" style="transition-delay: 0.3s" onsubmit="return submitExportContactForm(event, this)">
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Name</label>
-                    <input type="text" placeholder="Your name" class="w-full px-6 py-4 rounded-xl border ${theme.border} bg-black/50 ${theme.textPrimary} focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all shadow-inner focus:scale-[1.02]" />
+                    <input type="text" name="sender_name" required placeholder="Your name" class="w-full px-6 py-4 rounded-xl border ${theme.border} bg-black/50 ${theme.textPrimary} focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all shadow-inner focus:scale-[1.02]" />
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Email</label>
-                    <input type="email" placeholder="you@email.com" class="w-full px-6 py-4 rounded-xl border ${theme.border} bg-black/50 ${theme.textPrimary} focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all shadow-inner focus:scale-[1.02]" />
+                    <input type="email" name="sender_email" required placeholder="you@email.com" class="w-full px-6 py-4 rounded-xl border ${theme.border} bg-black/50 ${theme.textPrimary} focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all shadow-inner focus:scale-[1.02]" />
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Message</label>
-                    <textarea placeholder="Tell me about your project..." rows="5" class="w-full px-6 py-4 rounded-xl border ${theme.border} bg-black/50 ${theme.textPrimary} focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all shadow-inner resize-none focus:scale-[1.02]"></textarea>
+                    <textarea name="message" required placeholder="Tell me about your project..." rows="5" class="w-full px-6 py-4 rounded-xl border ${theme.border} bg-black/50 ${theme.textPrimary} focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all shadow-inner resize-none focus:scale-[1.02]"></textarea>
                 </div>
                 <button type="submit" class="w-full px-6 py-4 rounded-xl ${theme.accentBg || 'bg-blue-600'} text-white font-bold hover:shadow-[0_15px_30px_rgba(59,130,246,0.4)] hover:-translate-y-2 transition-all flex items-center justify-center gap-2 text-lg mt-6 cursor-pointer">
                     Send Message
@@ -644,6 +716,49 @@ export function buildPortfolioHtml({ pages, activePage, selectedSection, localCo
                 document.body.classList.remove('overflow-hidden');
                 setTimeout(() => { overlay.style.display = 'none'; }, 1000);
             }
+        }
+
+        async function submitExportContactForm(event, form) {
+            event.preventDefault();
+            const btn = form.querySelector('button[type="submit"]');
+            const origText = btn ? btn.innerText : 'Send Message';
+            const ownerEmail = form.getAttribute('data-owner-email') || '';
+            const endpoint = form.getAttribute('data-endpoint') || '';
+            const sender_name = (form.sender_name?.value || '').trim();
+            const sender_email = (form.sender_email?.value || '').trim();
+            const message = (form.message?.value || '').trim();
+
+            if (!sender_name || !sender_email || !message) return false;
+            if (btn) { btn.disabled = true; btn.innerText = 'Sending...'; }
+
+            try {
+                if (!endpoint) throw new Error('No endpoint configured');
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ owner_email: ownerEmail, sender_name, sender_email, message })
+                });
+                if (!res.ok) throw new Error('Delivery failed');
+                if (btn) {
+                    btn.innerText = '✓ Message Sent!';
+                    btn.style.background = '#10b981';
+                }
+                form.reset();
+            } catch (err) {
+                if (btn) {
+                    btn.innerText = ownerEmail ? 'Unavailable — Email Directly' : 'Delivery Unavailable';
+                    btn.style.background = '#e11d48';
+                }
+                if (ownerEmail) {
+                    const mailtoUrl = 'mailto:' + encodeURIComponent(ownerEmail) + '?subject=' + encodeURIComponent('Portfolio Inquiry from ' + sender_name) + '&body=' + encodeURIComponent(message);
+                    window.location.href = mailtoUrl;
+                }
+            } finally {
+                setTimeout(() => {
+                    if (btn) { btn.disabled = false; btn.innerText = origText; btn.style.background = ''; }
+                }, 3500);
+            }
+            return false;
         }
     </script>
 </body>

@@ -262,6 +262,8 @@ export default function LandingPage() {
                     email: data.user?.email || email,
                     avatar: data.user?.avatar || "👨‍💻",
                     code: data.workspace_code || formData.code,
+                    plan: data.user?.plan || "free",
+                    isStaff: Boolean(data.user?.is_staff),
                     theme: "modern_glass"
                 });
                 navigate("/dashboard");
@@ -283,15 +285,15 @@ export default function LandingPage() {
         e.preventDefault();
         setAuthError("");
 
-        let email = formData.email.trim();
+        const email = formData.email.trim();
         if (loginMethod === "password") {
             if (!email || !formData.password) {
                 setAuthError("Please enter both your email address and password.");
                 return;
             }
             if (!email.includes("@")) {
-                email = `${email}@gmail.com`;
-                setFormData(prev => ({ ...prev, email }));
+                setAuthError("Please enter a valid email address.");
+                return;
             }
         } else {
             if (!formData.code.trim()) {
@@ -317,6 +319,8 @@ export default function LandingPage() {
                     email: data.user?.email || email,
                     avatar: data.user?.avatar || "👨‍💻",
                     code: data.workspace_code || formData.code,
+                    plan: data.user?.plan || "free",
+                    isStaff: Boolean(data.user?.is_staff),
                     theme: "modern_glass"
                 });
                 navigate("/dashboard");
@@ -426,6 +430,7 @@ export default function LandingPage() {
             name: formData.name || "Developer",
             email: formData.email,
             code: formData.code,
+            plan: "free",
             theme: "modern_glass",
             avatar: emoji
         });
@@ -448,6 +453,8 @@ export default function LandingPage() {
                         email: data.user?.email || "",
                         avatar: data.user?.avatar || "👨‍💻",
                         code: data.workspace_code || "",
+                        plan: data.user?.plan || "free",
+                        isStaff: Boolean(data.user?.is_staff),
                         theme: "modern_glass"
                     },
                     data.access,
@@ -686,11 +693,11 @@ export default function LandingPage() {
                                             <h3 className={`text-lg font-bold ${isLight ? "text-slate-900" : "text-white"}`}>
                                                 Alex Mercer — Systems & Full-Stack
                                             </h3>
-                                            <p className="text-xs text-slate-400 mt-1">
+                                            <p className={`text-xs mt-1 ${isLight ? "text-slate-600" : "text-slate-400"}`}>
                                                 {activeDemoMeta.description}
                                             </p>
                                         </div>
-                                        <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 shrink-0">
+                                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-500/15 border border-emerald-500/25 shrink-0 ${isLight ? "text-emerald-700" : "text-emerald-400"}`}>
                                             Published
                                         </span>
                                     </div>
@@ -700,17 +707,17 @@ export default function LandingPage() {
                                             <div className={`col-span-2 rounded-xl border p-3.5 space-y-2 ${
                                                 isLight ? "bg-slate-50 border-slate-200" : "bg-slate-900/70 border-slate-800"
                                             }`}>
-                                                <p className="text-[11px] font-bold text-cyan-400">Navigation & Bio</p>
-                                                <p className="text-xs text-slate-400">Fixed sidebar navigation, contact triggers, and core stack badges.</p>
+                                                <p className={`text-[11px] font-bold ${isLight ? "text-cyan-700" : "text-cyan-400"}`}>Navigation & Bio</p>
+                                                <p className={`text-xs ${isLight ? "text-slate-600" : "text-slate-400"}`}>Fixed sidebar navigation, contact triggers, and core stack badges.</p>
                                             </div>
                                             <div className="col-span-3 space-y-2.5">
                                                 <div className={`rounded-xl border p-3 ${isLight ? "bg-slate-50 border-slate-200" : "bg-slate-900/70 border-slate-800"}`}>
                                                     <p className="text-xs font-semibold">Telemetry Query Engine</p>
-                                                    <p className="text-[11px] text-slate-400">Python · Kafka · ClickHouse</p>
+                                                    <p className={`text-[11px] ${isLight ? "text-slate-600" : "text-slate-400"}`}>Python · Kafka · ClickHouse</p>
                                                 </div>
                                                 <div className={`rounded-xl border p-3 ${isLight ? "bg-slate-50 border-slate-200" : "bg-slate-900/70 border-slate-800"}`}>
                                                     <p className="text-xs font-semibold">Design Token Compiler</p>
-                                                    <p className="text-[11px] text-slate-400">TypeScript · AST · Vite</p>
+                                                    <p className={`text-[11px] ${isLight ? "text-slate-600" : "text-slate-400"}`}>TypeScript · AST · Vite</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -718,19 +725,19 @@ export default function LandingPage() {
                                         <div className="grid grid-cols-3 gap-2.5">
                                             <div className={`col-span-2 rounded-xl border p-3 ${isLight ? "bg-slate-50 border-slate-200" : "bg-slate-900/70 border-slate-800"}`}>
                                                 <p className="text-xs font-semibold">Featured Case Study</p>
-                                                <p className="text-[11px] text-slate-400 mt-1">Distributed caching gateway reducing API latency across 4 regions.</p>
+                                                <p className={`text-[11px] mt-1 ${isLight ? "text-slate-600" : "text-slate-400"}`}>Distributed caching gateway reducing API latency across 4 regions.</p>
                                             </div>
                                             <div className={`rounded-xl border p-3 text-center flex flex-col justify-center ${isLight ? "bg-slate-50 border-slate-200" : "bg-slate-900/70 border-slate-800"}`}>
-                                                <p className="text-base font-bold text-emerald-400">12+</p>
-                                                <p className="text-[10px] text-slate-400">OSS Repos</p>
+                                                <p className={`text-base font-bold ${isLight ? "text-emerald-700" : "text-emerald-400"}`}>12+</p>
+                                                <p className={`text-[10px] ${isLight ? "text-slate-600" : "text-slate-400"}`}>OSS Repos</p>
                                             </div>
                                             <div className={`rounded-xl border p-3 ${isLight ? "bg-slate-50 border-slate-200" : "bg-slate-900/70 border-slate-800"}`}>
                                                 <p className="text-[11px] font-semibold">Backend Stack</p>
-                                                <p className="text-[10px] text-slate-400 mt-0.5">Django · Postgres</p>
+                                                <p className={`text-[10px] mt-0.5 ${isLight ? "text-slate-600" : "text-slate-400"}`}>Django · Postgres</p>
                                             </div>
                                             <div className={`col-span-2 rounded-xl border p-3 ${isLight ? "bg-slate-50 border-slate-200" : "bg-slate-900/70 border-slate-800"}`}>
                                                 <p className="text-[11px] font-semibold">Resume PDF Ready</p>
-                                                <p className="text-[10px] text-slate-400 mt-0.5">Synced dynamically from your structured portfolio items.</p>
+                                                <p className={`text-[10px] mt-0.5 ${isLight ? "text-slate-600" : "text-slate-400"}`}>Synced dynamically from your structured portfolio items.</p>
                                             </div>
                                         </div>
                                     ) : (
@@ -738,14 +745,14 @@ export default function LandingPage() {
                                             <div className={`rounded-xl border p-3.5 flex items-center justify-between ${isLight ? "bg-slate-50 border-slate-200" : "bg-slate-900/70 border-slate-800"}`}>
                                                 <div>
                                                     <p className="text-xs font-semibold">Distributed Telemetry Pipeline</p>
-                                                    <p className="text-[11px] text-slate-400">FastAPI, PostgreSQL, Redis Streams</p>
+                                                    <p className={`text-[11px] ${isLight ? "text-slate-600" : "text-slate-400"}`}>FastAPI, PostgreSQL, Redis Streams</p>
                                                 </div>
                                                 <Badge tone="accent">Projects Grid</Badge>
                                             </div>
                                             <div className={`rounded-xl border p-3.5 flex items-center justify-between ${isLight ? "bg-slate-50 border-slate-200" : "bg-slate-900/70 border-slate-800"}`}>
                                                 <div>
                                                     <p className="text-xs font-semibold">Certifications & Achievements</p>
-                                                    <p className="text-[11px] text-slate-400">Extracted automatically from uploaded resume</p>
+                                                    <p className={`text-[11px] ${isLight ? "text-slate-600" : "text-slate-400"}`}>Extracted automatically from uploaded resume</p>
                                                 </div>
                                                 <Badge tone="success">AI Parsed</Badge>
                                             </div>
@@ -762,13 +769,13 @@ export default function LandingPage() {
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
                         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                             <div>
-                                <p className="text-xs font-bold uppercase tracking-wider text-indigo-400">
+                                <p className={`text-xs font-bold uppercase tracking-wider ${isLight ? "text-indigo-600" : "text-indigo-400"}`}>
                                     Career-Path Templates
                                 </p>
                                 <h2 className={`text-3xl font-extrabold tracking-tight mt-1 ${isLight ? "text-slate-900" : "text-white"}`}>
                                     Built for developers, designers, and students
                                 </h2>
-                                <p className="text-sm text-slate-400 mt-1 max-w-2xl">
+                                <p className={`text-sm mt-1 max-w-2xl ${isLight ? "text-slate-600" : "text-slate-400"}`}>
                                     Pick a role-specific starter with pre-mapped sections. You can switch templates inside the editor anytime without losing content.
                                 </p>
                             </div>
@@ -814,7 +821,7 @@ export default function LandingPage() {
                                         <h3 className={`text-lg font-bold ${isLight ? "text-slate-900" : "text-white"}`}>
                                             {track.label}
                                         </h3>
-                                        <p className="text-xs text-slate-400 leading-relaxed">
+                                        <p className={`text-xs leading-relaxed ${isLight ? "text-slate-600" : "text-slate-400"}`}>
                                             {track.summary}
                                         </p>
                                         <div className="flex flex-wrap gap-1.5 pt-1">
@@ -834,7 +841,7 @@ export default function LandingPage() {
                                     <button
                                         type="button"
                                         onClick={() => openModal("signup")}
-                                        className="w-full py-2.5 rounded-xl bg-indigo-600/12 hover:bg-indigo-600 hover:text-white text-indigo-400 border border-indigo-500/25 text-xs font-semibold transition-colors cursor-pointer"
+                                        className={`w-full py-2.5 rounded-xl bg-indigo-600/12 hover:bg-indigo-600 hover:text-white border border-indigo-500/25 text-xs font-semibold transition-colors cursor-pointer ${isLight ? "text-indigo-700" : "text-indigo-400"}`}
                                     >
                                         Start with {track.label} →
                                     </button>
@@ -848,14 +855,14 @@ export default function LandingPage() {
                                     <h3 className={`text-base font-bold ${isLight ? "text-slate-900" : "text-white"}`}>
                                         {FRONTPAGE_LAYOUTS.length} Studio Frontpage Layouts
                                     </h3>
-                                    <p className="text-xs text-slate-400">
+                                    <p className={`text-xs ${isLight ? "text-slate-600" : "text-slate-400"}`}>
                                         Switch frontpage aesthetics anytime inside the studio without losing portfolio content.
                                     </p>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={() => openModal("signup")}
-                                    className="text-xs font-semibold text-indigo-400 hover:underline cursor-pointer"
+                                    className={`text-xs font-semibold hover:underline cursor-pointer ${isLight ? "text-indigo-700" : "text-indigo-400"}`}
                                 >
                                     Try all {FRONTPAGE_LAYOUTS.length} layouts →
                                 </button>
@@ -877,7 +884,7 @@ export default function LandingPage() {
                                             <p className={`text-xs font-semibold truncate ${isLight ? "text-slate-900" : "text-white"}`}>
                                                 {layout.name}
                                             </p>
-                                            <p className="text-[10px] text-slate-400 truncate">
+                                            <p className={`text-[10px] truncate ${isLight ? "text-slate-600" : "text-slate-400"}`}>
                                                 {layout.tag}
                                             </p>
                                         </div>
@@ -894,7 +901,7 @@ export default function LandingPage() {
                         <h2 className={`text-3xl font-extrabold tracking-tight ${isLight ? "text-slate-900" : "text-white"}`}>
                             Everything required to ship faster
                         </h2>
-                        <p className="text-sm sm:text-base text-slate-400 mt-2">
+                        <p className={`text-sm sm:text-base mt-2 ${isLight ? "text-slate-600" : "text-slate-400"}`}>
                             A structured workspace backed by real persistence, resume intelligence, and clean static code generation.
                         </p>
                     </div>
@@ -917,7 +924,7 @@ export default function LandingPage() {
                                     <h3 className={`text-base font-bold mb-1.5 ${isLight ? "text-slate-900" : "text-white"}`}>
                                         {feature.title}
                                     </h3>
-                                    <p className="text-xs sm:text-sm leading-relaxed text-slate-400">
+                                    <p className={`text-xs sm:text-sm leading-relaxed ${isLight ? "text-slate-600" : "text-slate-400"}`}>
                                         {feature.desc}
                                     </p>
                                 </div>
@@ -930,11 +937,11 @@ export default function LandingPage() {
                 <section id="pipeline" className={`py-20 border-t ${isLight ? "border-slate-200/80 bg-white/70" : "border-slate-800/80 bg-[#0A0D15]/80"}`}>
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
                         <div className="space-y-3">
-                            <p className="text-xs font-bold uppercase tracking-wider text-indigo-400">Workflow</p>
+                            <p className={`text-xs font-bold uppercase tracking-wider ${isLight ? "text-indigo-600" : "text-indigo-400"}`}>Workflow</p>
                             <h2 className={`text-3xl font-extrabold tracking-tight ${isLight ? "text-slate-900" : "text-white"}`}>
                                 Three steps from resume to production URL
                             </h2>
-                            <p className="text-sm text-slate-400">
+                            <p className={`text-sm ${isLight ? "text-slate-600" : "text-slate-400"}`}>
                                 Keep multiple role-tailored portfolios in your dashboard and publish only what you choose.
                             </p>
                         </div>
@@ -943,17 +950,17 @@ export default function LandingPage() {
                             <div className={`p-5 rounded-2xl border ${isLight ? "bg-white border-slate-200" : "bg-[#101420] border-slate-800"}`}>
                                 <Terminal className="w-6 h-6 text-indigo-400 mb-3" />
                                 <h3 className="font-bold text-sm mb-1">1. Create & Import</h3>
-                                <p className="text-xs text-slate-400 leading-relaxed">Pick a career track or upload a PDF/DOCX resume and review extracted fields.</p>
+                                <p className={`text-xs leading-relaxed ${isLight ? "text-slate-600" : "text-slate-400"}`}>Pick a career track or upload a PDF/DOCX resume and review extracted fields.</p>
                             </div>
                             <div className={`p-5 rounded-2xl border ${isLight ? "bg-white border-indigo-200" : "bg-[#101420] border-indigo-500/35"}`}>
                                 <Paintbrush className="w-6 h-6 text-cyan-400 mb-3" />
                                 <h3 className="font-bold text-sm mb-1">2. Refine & Style</h3>
-                                <p className="text-xs text-slate-400 leading-relaxed">Drag-reorder sections, run AI copy & ATS checks, and preview mobile layouts.</p>
+                                <p className={`text-xs leading-relaxed ${isLight ? "text-slate-600" : "text-slate-400"}`}>Drag-reorder sections, run AI copy & ATS checks, and preview mobile layouts.</p>
                             </div>
                             <div className={`p-5 rounded-2xl border ${isLight ? "bg-white border-slate-200" : "bg-[#101420] border-slate-800"}`}>
                                 <Globe className="w-6 h-6 text-emerald-400 mb-3" />
                                 <h3 className="font-bold text-sm mb-1">3. Publish or Export</h3>
-                                <p className="text-xs text-slate-400 leading-relaxed">Toggle public visibility with SEO metadata or export a clean React ZIP & PDF.</p>
+                                <p className={`text-xs leading-relaxed ${isLight ? "text-slate-600" : "text-slate-400"}`}>Toggle public visibility with SEO metadata or export a clean React ZIP & PDF.</p>
                             </div>
                         </div>
                     </div>
@@ -986,7 +993,7 @@ export default function LandingPage() {
                                         <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
                                     </button>
                                     {isOpen && (
-                                        <div className="px-5 pb-4 text-xs sm:text-sm text-slate-400 leading-relaxed">
+                                        <div className={`px-5 pb-4 text-xs sm:text-sm leading-relaxed ${isLight ? "text-slate-600" : "text-slate-400"}`}>
                                             {item.a}
                                         </div>
                                     )}
@@ -1004,11 +1011,11 @@ export default function LandingPage() {
                             <span className={`text-sm font-bold ${isLight ? "text-slate-900" : "text-white"}`}>
                                 AuraBuild Studio
                             </span>
-                            <span className="text-xs text-slate-500">
+                            <span className={`text-xs ${isLight ? "text-slate-600" : "text-slate-400"}`}>
                                 © {new Date().getFullYear()}
                             </span>
                         </div>
-                        <div className="flex flex-wrap items-center gap-6 text-xs font-medium text-slate-400">
+                        <div className={`flex flex-wrap items-center gap-6 text-xs font-medium ${isLight ? "text-slate-600" : "text-slate-400"}`}>
                             <button type="button" onClick={() => setInfoDocKey("docs")} className="hover:text-indigo-400 cursor-pointer">Documentation</button>
                             <button type="button" onClick={() => setInfoDocKey("privacy")} className="hover:text-indigo-400 cursor-pointer">Privacy Policy</button>
                             <button type="button" onClick={() => setInfoDocKey("terms")} className="hover:text-indigo-400 cursor-pointer">Terms of Service</button>

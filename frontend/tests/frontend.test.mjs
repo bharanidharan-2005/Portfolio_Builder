@@ -115,3 +115,27 @@ test("App router defines dashboard, parameterized workspace, preview, and OAuth 
   assert.equal(Boolean(PORTFOLIO_THEMES.modern_glass.isLight), false);
 });
 
+test("App wires global Toasts listener and removes cross-account cache leakage", () => {
+  const appSrc = fs.readFileSync(path.join(FRONTEND_ROOT, "src/App.jsx"), "utf8");
+  assert.ok(appSrc.includes("aurabuild-toast"), "App.jsx must listen for aurabuild-toast events");
+  assert.ok(appSrc.includes("<Toasts"), "App.jsx must render <Toasts />");
+
+  const workspaceSrc = fs.readFileSync(path.join(FRONTEND_ROOT, "src/context/WorkspaceContext.jsx"), "utf8");
+  assert.ok(!workspaceSrc.includes("aurabuild_cached_latest"), "WorkspaceContext must not read cross-account _latest cache");
+  assert.ok(workspaceSrc.includes("page_id: activePageObj.id"), "Section creation must send page_id");
+
+  const appCtxSrc = fs.readFileSync(path.join(FRONTEND_ROOT, "src/context/AppContext.jsx"), "utf8");
+  assert.ok(appCtxSrc.includes("aurabuild_cached_"), "logout must clear scoped workspace caches");
+});
+
+test("AI Copilot errors do not fabricate synced success and ResumePDF supports experience/certifications", () => {
+  const rightSidebarSrc = fs.readFileSync(path.join(FRONTEND_ROOT, "src/components/layout/RightSidebar.jsx"), "utf8");
+  assert.ok(rightSidebarSrc.includes("isError: true"), "RightSidebar must flag failed copilot requests as errors");
+  assert.ok(rightSidebarSrc.includes("executeReviewAction"), "Review tools must execute real validation/API checks");
+
+  const resumePdfSrc = fs.readFileSync(path.join(FRONTEND_ROOT, "src/components/ResumePDF.jsx"), "utf8");
+  assert.ok(resumePdfSrc.includes("exp.title || exp.role"), "ResumePDF should support experience title/role fields");
+  assert.ok(resumePdfSrc.includes("certifications"), "ResumePDF should export certifications");
+  assert.ok(resumePdfSrc.includes("achievements"), "ResumePDF should export achievements");
+});
+

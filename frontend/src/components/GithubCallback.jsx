@@ -62,6 +62,8 @@ export default function GithubCallback() {
                             email: data.user?.email || "",
                             avatar: data.user?.avatar || "👨‍💻",
                             code: data.workspace_code || "",
+                            plan: data.user?.plan || "free",
+                            isStaff: Boolean(data.user?.is_staff),
                             theme: "modern_glass"
                         },
                         data.access,

@@ -3,10 +3,11 @@ import {
     FileText, CheckCircle2, AlertCircle, Loader2, Settings, Pin, PinOff, Plus, Trash2, 
     FileUp, Sparkles, Target, TrendingUp, Palette, Image, 
     Search, LayoutTemplate, FileCode, X, Eye, Undo2, Redo2, ChevronDown, 
-    Check, HelpCircle, LogOut, LayoutDashboard, MessageSquare 
+    Check, HelpCircle, LogOut, LayoutDashboard, MessageSquare, Pencil 
 } from "lucide-react";
 import { uploadAndParseResume } from "../utils/aiUtils";
 import { PORTFOLIO_THEMES } from "../canvas/themes";
+import { notify } from "../toast";
 
 const AI_TOOLS_LIST = [
     { id: "activity_log", icon: MessageSquare, name: "AI Chat & Logs" },
@@ -27,6 +28,7 @@ function LeftSidebar({
     onSelectTool,
     activeTool,
     onAddPage,
+    onRenamePage,
     onDeletePage,
     themeMode,
     setTerminalLogs,
@@ -54,6 +56,8 @@ function LeftSidebar({
     const [uploadedFileName, setUploadedFileName] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
     const [isThemePickerOpen, setIsThemePickerOpen] = useState(false);
+    const [editingPageId, setEditingPageId] = useState(null);
+    const [editingPageName, setEditingPageName] = useState("");
 
     // Escape key listener for accessible drawer closing
     useEffect(() => {
@@ -93,6 +97,22 @@ function LeftSidebar({
         const file = event.target.files && event.target.files[0];
         if (!file) return;
 
+        const lower = file.name.toLowerCase();
+        if (!['.pdf', '.docx', '.doc', '.txt', '.md'].some((ext) => lower.endsWith(ext))) {
+            const msg = "Unsupported file type. Upload a PDF, DOCX, TXT, or MD resume.";
+            notify(msg, "error");
+            if (setTerminalLogs) setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] ${msg}` }]);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            const msg = "Resume file exceeds the 5 MB size limit.";
+            notify(msg, "error");
+            if (setTerminalLogs) setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] ${msg}` }]);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+            return;
+        }
+
         setUploadedFileName(file.name);
         setIsUploading(true);
         if (setTerminalLogs) {
@@ -107,7 +127,8 @@ function LeftSidebar({
             }
             if (onResumeParsed && data) onResumeParsed(data);
         } catch (error) {
-            const errorMsg = error.error || error.message || "Network error. Make sure your Django backend is running.";
+            const errorMsg = error.error || error.message || "Unable to parse resume. Please try another PDF or DOCX file.";
+            notify(errorMsg, "error");
             if (setTerminalLogs) {
                 setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] ${errorMsg}` }]);
             }
@@ -376,23 +397,69 @@ function LeftSidebar({
                                         <FileText className={`w-4 h-4 ${isCurrent ? (isSystem ? 'text-[#c084fc]' : 'text-blue-600 dark:text-blue-400') : (isSystem ? 'text-purple-300/60' : 'text-slate-400')}`} />
                                     </span>
                                     <span className={`truncate whitespace-nowrap transition-all duration-300 ${labelClasses}`}>
-                                        {pageName}
+                                        {editingPageId === (page && page.id) ? (
+                                            <input
+                                                type="text"
+                                                value={editingPageName}
+                                                autoFocus
+                                                onClick={(e) => e.stopPropagation()}
+                                                onChange={(e) => setEditingPageName(e.target.value)}
+                                                onBlur={() => {
+                                                    if (editingPageName.trim() && onRenamePage && page?.id) {
+                                                        onRenamePage(page.id, editingPageName.trim());
+                                                    }
+                                                    setEditingPageId(null);
+                                                }}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        if (editingPageName.trim() && onRenamePage && page?.id) {
+                                                            onRenamePage(page.id, editingPageName.trim());
+                                                        }
+                                                        setEditingPageId(null);
+                                                    } else if (e.key === 'Escape') {
+                                                        setEditingPageId(null);
+                                                    }
+                                                }}
+                                                className="w-24 px-1.5 py-0.5 rounded bg-slate-900 text-white border border-indigo-500 text-xs outline-none"
+                                            />
+                                        ) : pageName}
                                     </span>
-                                    {onDeletePage && (
-                                        <span
-                                            role="button"
-                                            tabIndex={0}
-                                            aria-label={`Delete page ${pageName}`}
-                                            title="Delete page"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onDeletePage(pageName, page && page.id);
-                                            }}
-                                            className={`ml-auto shrink-0 p-1 text-slate-400 hover:text-red-500 rounded hover:bg-red-500/10 transition-colors cursor-pointer ${deleteBtnClasses}`}
-                                        >
-                                            <Trash2 className="w-3 h-3" />
-                                        </span>
-                                    )}
+                                    <span className={`ml-auto shrink-0 flex items-center gap-0.5 ${deleteBtnClasses}`}>
+                                        {onRenamePage && page && page.id && (
+                                            <span
+                                                role="button"
+                                                tabIndex={0}
+                                                aria-label={`Rename page ${pageName}`}
+                                                title="Rename page"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setEditingPageId(page.id);
+                                                    setEditingPageName(pageName);
+                                                }}
+                                                className="p-1 text-slate-400 hover:text-indigo-400 rounded hover:bg-indigo-500/10 transition-colors cursor-pointer"
+                                            >
+                                                <Pencil className="w-3 h-3" />
+                                            </span>
+                                        )}
+                                        {onDeletePage && pages.length > 1 && (
+                                            <span
+                                                role="button"
+                                                tabIndex={0}
+                                                aria-label={`Delete page ${pageName}`}
+                                                title="Delete page"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (window.confirm(`Delete page "${pageName}" and all of its sections?`)) {
+                                                        onDeletePage(pageName, page && page.id);
+                                                    }
+                                                }}
+                                                className="p-1 text-slate-400 hover:text-red-500 rounded hover:bg-red-500/10 transition-colors cursor-pointer"
+                                            >
+                                                <Trash2 className="w-3 h-3" />
+                                            </span>
+                                        )}
+                                    </span>
                                 </button>
                             );
                         })}
@@ -403,14 +470,14 @@ function LeftSidebar({
                 <div className="py-1">
                     <input 
                         type="file" 
-                        accept=".pdf,.docx,.txt" 
+                        accept=".pdf,.docx,.doc,.txt,.md" 
                         ref={fileInputRef}
                         onChange={handleFileChange}
                         className="hidden" 
                     />
                     <button 
                         disabled={isUploading}
-                        title="Upload Resume"
+                        title="Upload Resume (PDF, DOCX, TXT — Max 5 MB)"
                         onClick={() => fileInputRef.current && fileInputRef.current.click()}
                         className={`w-full flex items-center py-2.5 px-2 rounded-xl border border-dashed text-xs font-semibold transition-all overflow-hidden whitespace-nowrap cursor-pointer ${
                             isUploading 

@@ -47,17 +47,28 @@ class PortfolioSerializer(serializers.ModelSerializer):
         ]
 
     def get_pages_count(self, obj):
+        if hasattr(obj, '_prefetched_objects_cache') and 'portfoliopage_set' in obj._prefetched_objects_cache:
+            return len(obj._prefetched_objects_cache['portfoliopage_set'])
         return PortfolioPage.objects.filter(portfolio=obj).count()
 
     def get_sections_count(self, obj):
+        if hasattr(obj, '_prefetched_objects_cache') and 'portfoliopage_set' in obj._prefetched_objects_cache:
+            return sum(len(p.sections.all()) for p in obj._prefetched_objects_cache['portfoliopage_set'])
         return PortfolioSection.objects.filter(page__portfolio=obj).count()
 
     def get_completeness(self, obj):
         required = {'hero', 'about', 'education', 'skills', 'projects_grid', 'contact'}
-        present = set(
-            PortfolioSection.objects.filter(page__portfolio=obj)
-            .values_list('section_type', flat=True)
-        )
+        if hasattr(obj, '_prefetched_objects_cache') and 'portfoliopage_set' in obj._prefetched_objects_cache:
+            present = {
+                s.section_type
+                for p in obj._prefetched_objects_cache['portfoliopage_set']
+                for s in p.sections.all()
+            }
+        else:
+            present = set(
+                PortfolioSection.objects.filter(page__portfolio=obj)
+                .values_list('section_type', flat=True)
+            )
         return round((len(required & present) / len(required)) * 100)
 
 

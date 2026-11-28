@@ -39,9 +39,9 @@ const FloatingElements3D = ({ d }) => {
                     {d.firstName}<span className="text-blue-600">.</span>
                 </div>
                 <div className="hidden md:flex gap-8 text-sm font-bold text-slate-500">
-                    <span className="hover:text-blue-600 cursor-pointer transition-colors">Features</span>
-                    <span className="hover:text-blue-600 cursor-pointer transition-colors">Showcase</span>
-                    <span className="hover:text-blue-600 cursor-pointer transition-colors">Contact</span>
+                    <button type="button" onClick={d.onVisualize} className="hover:text-blue-600 cursor-pointer transition-colors">Features</button>
+                    <button type="button" onClick={d.onVisualize} className="hover:text-blue-600 cursor-pointer transition-colors">Showcase</button>
+                    <button type="button" onClick={d.onVisualize} className="hover:text-blue-600 cursor-pointer transition-colors">Contact</button>
                 </div>
             </header>
 

@@ -31,6 +31,13 @@ export default defineConfig({
                 // chunks so the Three.js background and editor only download
                 // on demand and never re-download on every deploy.
                 manualChunks(id) {
+                    if (
+                        id.includes('node_modules/@react-pdf') ||
+                        id.includes('node_modules/pdfkit') ||
+                        id.includes('node_modules/fontkit') ||
+                        id.includes('node_modules/yoga-layout')
+                    ) return 'pdf';
+                    if (id.includes('node_modules/jszip')) return 'jszip';
                     if (id.includes('node_modules/three')) return 'three';
                     if (id.includes('node_modules/react')) return 'react';
                     if (id.includes('node_modules/axios')) return 'axios';

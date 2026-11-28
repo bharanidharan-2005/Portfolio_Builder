@@ -10,11 +10,11 @@ const NeoBrutalism = ({ d }) => {
                     {d.initials}
                 </div>
                 <div className="hidden md:flex gap-6 text-lg font-bold uppercase">
-                    <span className="hover:bg-black hover:text-white px-2 transition-colors cursor-pointer border-2 border-transparent hover:border-black">Work</span>
-                    <span className="hover:bg-black hover:text-white px-2 transition-colors cursor-pointer border-2 border-transparent hover:border-black">About</span>
-                    <span className="hover:bg-black hover:text-white px-2 transition-colors cursor-pointer border-2 border-transparent hover:border-black">Contact</span>
+                    <button type="button" onClick={d.onVisualize} className="hover:bg-black hover:text-white px-2 transition-colors cursor-pointer border-2 border-transparent hover:border-black">Work</button>
+                    <button type="button" onClick={d.onVisualize} className="hover:bg-black hover:text-white px-2 transition-colors cursor-pointer border-2 border-transparent hover:border-black">About</button>
+                    <button type="button" onClick={d.onVisualize} className="hover:bg-black hover:text-white px-2 transition-colors cursor-pointer border-2 border-transparent hover:border-black">Contact</button>
                 </div>
-                <button className="text-lg font-bold uppercase border-4 border-black px-4 py-1 bg-[#ff5e5e] shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-all">
+                <button type="button" onClick={d.onVisualize} className="text-lg font-bold uppercase border-4 border-black px-4 py-1 bg-[#ff5e5e] shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-all cursor-pointer">
                     Resume
                 </button>
             </header>

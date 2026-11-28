@@ -5,7 +5,7 @@ import {
     LayoutTemplate, PenTool, Activity, Link2, ShieldCheck, 
     GraduationCap, Mail, Crosshair, BarChart, 
     Share2, Send, Copy, Edit3, Download,
-    ChevronDown, Check, X, Clock,
+    ChevronDown, Check, X, Clock, AlertTriangle,
     Briefcase, Wrench, MessageSquare, Award, BarChart3, BookOpen
 } from "lucide-react";
 import { PORTFOLIO_THEMES, PORTFOLIO_FONTS } from "../../canvas/themes.js";
@@ -204,6 +204,7 @@ function RightSidebar({
     const [pitchTarget, setPitchTarget] = useState("");
     const [generatedPitchText, setGeneratedPitchText] = useState("");
     const [seoData, setSeoData] = useState(null);
+    const [reviewResult, setReviewResult] = useState(null);
     
     // Image Studio States
     const [imageTab, setImageTab] = useState("ai");
@@ -217,12 +218,30 @@ function RightSidebar({
     const handleChatFileUpload = (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        e.target.value = "";
         if (file.size > 5 * 1024 * 1024) {
             notify("File too large (max 5MB)", "error");
             return;
         }
-        setChatInput(prev => (prev ? `${prev} [Attached file: ${file.name}]` : `Analyze uploaded file: ${file.name}`));
-        notify(`Attached: ${file.name}`, "success");
+        const ext = (file.name.split('.').pop() || '').toLowerCase();
+        if (ext === 'txt' || ext === 'md' || ext === 'json') {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const snippet = String(reader.result || '').trim().slice(0, 1200);
+                if (snippet) {
+                    setChatInput(prev => (prev ? `${prev}\n${snippet}` : `Use this context from ${file.name}:\n${snippet}`));
+                    notify(`Loaded text from ${file.name}`, "success");
+                }
+            };
+            reader.onerror = () => notify(`Could not read ${file.name}`, "error");
+            reader.readAsText(file);
+            return;
+        }
+        if (ext === 'pdf' || ext === 'docx' || ext === 'doc') {
+            notify("To import PDF/DOCX resumes, use the 'Upload Resume' button in the left sidebar.", "info");
+            return;
+        }
+        notify("For images, use the Media studio tool on the left rail.", "info");
     };
 
     const effectiveStudioViewMode = activeTool === "activity_log" ? "chat" : studioViewMode;
@@ -358,47 +377,54 @@ function RightSidebar({
     const handleInjectKeywords = async () => {
         if (missingKeywords.length === 0) return;
         setIsProcessing(true);
-        setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Injecting missing requirements into canvas...` }]);
+        setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Preparing keyword injection preview...` }]);
         
         try {
             const skillsSec = sections.find(s => s.section_type === 'skills');
             const aboutSec = sections.find(s => s.section_type === 'about');
-            
+
+            if (skillsSec) {
+                const currentSkills = Array.isArray(skillsSec.content_data?.items) ? skillsSec.content_data.items : [];
+                const existingNames = new Set(currentSkills.map(sk => String(sk?.name || '').trim().toLowerCase()));
+                const skillsToAdd = missingKeywords.filter(kw => !existingNames.has(String(kw).trim().toLowerCase()));
+                if (skillsToAdd.length > 0) {
+                    const mergedSkills = [...currentSkills, ...skillsToAdd.map(kw => ({ name: kw, level: 75 }))];
+                    setAiSuggestionPreview({
+                        targetSectionId: skillsSec.id,
+                        actionTitle: "Inject Target Keywords",
+                        key: "items",
+                        injectedKeywords: skillsToAdd,
+                        originalContent: currentSkills.map(s => s?.name).filter(Boolean).join(', ') || "Current Skills",
+                        suggestedContent: mergedSkills
+                    });
+                    setActiveHighlightSection(skillsSec.id);
+                    return;
+                }
+            }
+
             if (aboutSec) {
                 const currentBio = aboutSec.content_data?.bio || "";
-                const injectSentence = ` Proficient in ${missingKeywords.join(', ')} for optimized workflows.`;
-                if (!currentBio.includes(missingKeywords[0])) {
+                const lowerBio = currentBio.toLowerCase();
+                const keywordsNotInBio = missingKeywords.filter(kw => !lowerBio.includes(String(kw).toLowerCase()));
+                if (keywordsNotInBio.length > 0) {
+                    const injectSentence = ` Proficient in ${keywordsNotInBio.join(', ')} for optimized workflows.`;
                     setAiSuggestionPreview({
                         targetSectionId: aboutSec.id,
                         actionTitle: "Inject Target Keywords",
                         key: "bio",
+                        injectedKeywords: keywordsNotInBio,
                         originalContent: currentBio,
-                        suggestedContent: currentBio.trim() + injectSentence
+                        suggestedContent: `${currentBio.trim()}${injectSentence}`.trim()
                     });
                     setActiveHighlightSection(aboutSec.id);
-                    return; // Only preview one section at a time
+                    return;
                 }
             }
-            
-            if (skillsSec) {
-                const currentSkills = skillsSec.content_data?.items || [];
-                const newSkills = missingKeywords.map(kw => ({ name: kw, level: 75 }));
-                const mergedSkills = [...currentSkills, ...newSkills];
-                
-                setAiSuggestionPreview({
-                    targetSectionId: skillsSec.id,
-                    actionTitle: "Inject Target Keywords",
-                    key: "items",
-                    originalContent: "Current Skills",
-                    suggestedContent: mergedSkills
-                });
-                setActiveHighlightSection(skillsSec.id);
-                return;
-            }
 
-            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Add an About or Skills section to allow concept injection.` }]);
+            notify("Target keywords are already present in your Skills/About sections.", "info");
+            setTerminalLogs(prev => [...prev, { type: "system", text: `[INFO] Add an About or Skills section (or remove duplicates) to inject keywords.` }]);
         } catch {
-            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Injection failed.` }]);
+            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Injection preview failed.` }]);
         } finally {
             setIsProcessing(false);
         }
@@ -517,13 +543,111 @@ function RightSidebar({
         }
     };
 
-    const executeAiAction = (toolName, successMsg) => {
+    const executeReviewAction = async (toolName) => {
         setIsProcessing(true);
+        setReviewResult(null);
         setTerminalLogs(prev => [...prev, { type: "system", text: `[SYSTEM] Running audit: ${toolName}...` }]);
+
         try {
-            setTerminalLogs(prev => [...prev, { type: "success", text: successMsg }]);
-        } catch {
-            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] Action '${toolName}' failed.` }]);
+            if (toolName === "Link Validator") {
+                const urlChecks = [];
+                const pushUrlCheck = (label, raw) => {
+                    if (!raw || !String(raw).trim()) return;
+                    const val = String(raw).trim();
+                    try {
+                        const normalized = /^https?:\/\//i.test(val) ? val : `https://${val}`;
+                        const parsed = new URL(normalized);
+                        const validHost = parsed.hostname.includes('.');
+                        urlChecks.push({
+                            label,
+                            url: val,
+                            ok: validHost,
+                            detail: validHost ? "Valid URL format" : "Missing domain TLD"
+                        });
+                    } catch {
+                        urlChecks.push({ label, url: val, ok: false, detail: "Malformed URL" });
+                    }
+                };
+
+                (sections || []).forEach((sec) => {
+                    const st = (sec.section_type || '').toLowerCase();
+                    const d = sec.content_data || {};
+                    if (st === 'hero') {
+                        pushUrlCheck('Hero Resume Link', d.resumeUrl);
+                        pushUrlCheck('Hero Design Link', d.designUrl);
+                        (d.heroProjects || []).forEach((p, idx) => pushUrlCheck(`Hero Project ${idx + 1}`, p?.projectUrl));
+                    } else if (st === 'projects_grid') {
+                        (d.projects || []).forEach((p, idx) => {
+                            pushUrlCheck(`Project ${idx + 1}: ${p?.title || 'Live'}`, p?.projectUrl);
+                            pushUrlCheck(`Project ${idx + 1} Repo`, p?.githubUrl);
+                        });
+                    } else if (st === 'contact') {
+                        pushUrlCheck('LinkedIn', d.linkedin);
+                        pushUrlCheck('GitHub', d.github);
+                        pushUrlCheck('Website', d.website);
+                    } else if (st === 'blog' || st === 'articles') {
+                        (d.articles || []).forEach((a, idx) => pushUrlCheck(`Article ${idx + 1}`, a?.link));
+                    }
+                });
+
+                const invalid = urlChecks.filter(c => !c.ok);
+                const summary = urlChecks.length === 0
+                    ? "No external links configured yet on this page."
+                    : invalid.length === 0
+                        ? `All ${urlChecks.length} link(s) passed syntax validation.`
+                        : `${invalid.length} of ${urlChecks.length} link(s) need attention.`;
+
+                setReviewResult({
+                    tool: toolName,
+                    ok: invalid.length === 0,
+                    summary,
+                    details: urlChecks.map(c => `${c.ok ? '✓' : '✗'} ${c.label}: ${c.url} (${c.detail})`),
+                });
+                setTerminalLogs(prev => [...prev, { type: invalid.length === 0 ? "success" : "error", text: `[AUDIT] ${summary}` }]);
+                return;
+            }
+
+            if (toolName === "Completeness Score") {
+                const { data } = await API.get('portfolio-review/');
+                const score = data?.completeness ?? currentCompleteness;
+                const missing = Array.isArray(data?.missing_sections) ? data.missing_sections : [];
+                const suggestions = Array.isArray(data?.suggestions) ? data.suggestions : [];
+                const summary = data?.summary || `Portfolio completeness is ${score}%.`;
+                setReviewResult({
+                    tool: toolName,
+                    ok: score >= 60,
+                    summary,
+                    details: [
+                        ...(missing.length > 0 ? [`Missing recommended sections: ${missing.join(', ')}`] : []),
+                        ...suggestions.slice(0, 5),
+                    ],
+                });
+                setTerminalLogs(prev => [...prev, { type: "success", text: `[AUDIT] ${summary}` }]);
+                return;
+            }
+
+            const res = await runAIAssistantAction('quality_check', { portfolio_theme: activeTheme }, sections);
+            const payload = res?.data || {};
+            const findings = Array.isArray(payload.recommendations)
+                ? payload.recommendations
+                : Array.isArray(payload.issues)
+                    ? payload.issues
+                    : payload.feedback
+                        ? [payload.feedback]
+                        : [];
+            const summary = payload.summary || `ATS Layout Scan completed across ${sections?.length || 0} section(s).`;
+            setReviewResult({
+                tool: toolName,
+                ok: true,
+                summary,
+                details: findings.slice(0, 5),
+            });
+            setTerminalLogs(prev => [...prev, { type: "success", text: `[AUDIT] ${summary}` }]);
+        } catch (err) {
+            const msg = err?.error || err?.response?.data?.error || `Audit '${toolName}' failed.`;
+            setReviewResult({ tool: toolName, ok: false, summary: msg, details: [] });
+            setTerminalLogs(prev => [...prev, { type: "error", text: `[ERROR] ${msg}` }]);
+            notify(msg, "error");
         } finally {
             setIsProcessing(false);
         }
@@ -717,68 +841,31 @@ function RightSidebar({
 
         } catch (error) {
             console.error("AI copilot error:", error);
-            const fallbackDuration = Math.max(0.6, ((performance.now() - startTime) / 1000)).toFixed(1) + 's';
-            
-            // Intelligent fallback response matching user prompt
-            let fallbackText = "";
-            let isActionFallback = false;
-            let fallbackActivity = null;
-            let fallbackSection = null;
-            const fallbackActivities = [];
+            const errDuration = Math.max(0.2, ((performance.now() - startTime) / 1000)).toFixed(1) + 's';
+            const errorMsg =
+                error?.response?.data?.error ||
+                error?.error ||
+                error?.message ||
+                "AI Copilot service is unavailable right now. Please try again in a moment.";
 
-            if (promptLower.includes('job') || promptLower.includes('who are you') || promptLower.includes('what can you do') || promptLower.includes('help') || promptLower.includes('role')) {
-                fallbackText = "I am your AuraBuild Studio AI Co-Pilot! My job is to help you design, edit, and optimize your developer portfolio in real time. You can ask me to update your headline or bio, showcase your projects, add new sections, change the color theme, or highlight technical skills.";
-                isActionFallback = false;
-                fallbackActivities.push("Processed natural language prompt");
-                fallbackActivities.push(`Verified ${sections?.length || 0} canvas sections`);
-                fallbackActivities.push(`Generated guidance in ${fallbackDuration}`);
-            } else if ((promptLower.includes('remove') || promptLower.includes('hide') || promptLower.includes('delete')) && promptLower.includes('image')) {
-                fallbackText = "I've updated the canvas to remove/hide the image as requested.";
-                isActionFallback = true;
-                fallbackActivity = "Image removed from canvas";
-                fallbackSection = "Hero";
-                fallbackActivities.push("Removed image from Hero section");
-                fallbackActivities.push("Refreshed canvas media layer");
-                fallbackActivities.push(`Synchronized canvas in real-time (${fallbackDuration})`);
-            } else if (promptLower.includes('theme') || promptLower.includes('cyber') || promptLower.includes('minimal') || promptLower.includes('glass') || promptLower.includes('neon')) {
-                fallbackText = "I've applied the requested style theme to your portfolio canvas!";
-                isActionFallback = true;
-                fallbackActivity = "Applied portfolio design theme";
-                fallbackActivities.push("Applied portfolio design theme");
-                fallbackActivities.push("Refreshed color palette and contrast tokens");
-                fallbackActivities.push(`Synchronized canvas in real-time (${fallbackDuration})`);
-            } else {
-                fallbackText = `I have received your request: "${userMsg}". I can customize any section (Hero, About, Projects, Experience, Skills, Education, Contact) or adjust your design theme. What would you like to refine?`;
-                isActionFallback = false;
-                fallbackActivities.push("Parsed user prompt");
-                fallbackActivities.push(`Inspected ${sections?.length || 0} active portfolio sections`);
-                fallbackActivities.push(`Synchronized in ${fallbackDuration}`);
-            }
-
-            setTerminalLogs(prev => [...prev, { 
-                type: isActionFallback ? "success" : "system", 
-                text: `[AI COPILOT] ${isActionFallback ? fallbackActivity : "Response provided."}` 
+            setTerminalLogs(prev => [...prev, {
+                type: "error",
+                text: `[ERROR] AI Copilot failed (${errDuration}): ${errorMsg}`
             }]);
-
-            const canvasSectionsList = (sections || []).map(s => {
-                const rawName = s.section_type || s.name || s.id || 'Section';
-                return rawName.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-            });
+            notify(errorMsg, "error");
 
             setChatMessages(prev => [...prev, {
                 id: 'ai-' + Date.now(),
                 type: 'assistant',
                 sender: 'ai',
-                model: 'Studio Copilot',
+                model: 'Request Failed',
+                isError: true,
                 timestamp: formatCurrentChatTime(),
-                text: fallbackText,
-                isAction: isActionFallback,
-                activity: fallbackActivity,
-                activities: fallbackActivities,
-                duration: fallbackDuration,
-                canvasSections: canvasSectionsList,
-                affectedSection: fallbackSection,
-                synced: true
+                text: errorMsg,
+                isAction: false,
+                activities: ["No canvas modifications were applied"],
+                duration: errDuration,
+                synced: false
             }]);
         } finally {
             setIsProcessing(false);
@@ -1036,7 +1123,7 @@ function RightSidebar({
                         <button
                             key={i}
                             disabled={isProcessing}
-                            onClick={() => executeAiAction(bp.title, `[SUCCESS] ${bp.title} executed. Portfolio is structurally sound.`)}
+                            onClick={() => executeReviewAction(bp.title)}
                             className={`w-full flex items-center gap-3 p-3.5 rounded-2xl border transition-all duration-300 text-left cursor-pointer group hover:-translate-y-0.5 ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''} ${isLight ? 'bg-white border-slate-200 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/10' : 'bg-slate-900/40 backdrop-blur-md border-slate-800 hover:border-blue-500 hover:bg-slate-800 hover:shadow-lg hover:shadow-blue-900/20'}`}
                         >
                             <bp.icon className={`w-4 h-4 shrink-0 transition-colors ${isLight ? 'text-blue-500 group-hover:text-blue-600' : 'text-blue-400 group-hover:text-blue-300'}`} />
@@ -1049,6 +1136,28 @@ function RightSidebar({
                             )}
                         </button>
                     ))}
+                    {reviewResult && (
+                        <div className={`p-3.5 rounded-2xl border text-xs space-y-2 ${
+                            reviewResult.ok
+                                ? (isLight ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-emerald-950/30 border-emerald-500/30 text-emerald-200')
+                                : (isLight ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-amber-950/30 border-amber-500/30 text-amber-200')
+                        }`}>
+                            <div className="font-bold flex items-center justify-between gap-2">
+                                <span>{reviewResult.tool}</span>
+                                <button type="button" onClick={() => setReviewResult(null)} className="opacity-60 hover:opacity-100 cursor-pointer" aria-label="Dismiss audit result">
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                            <p className="text-[11px] leading-relaxed">{reviewResult.summary}</p>
+                            {Array.isArray(reviewResult.details) && reviewResult.details.length > 0 && (
+                                <ul className="space-y-1 text-[10.5px] opacity-90 max-h-40 overflow-y-auto custom-scrollbar">
+                                    {reviewResult.details.map((line, idx) => (
+                                        <li key={idx} className="break-all">{line}</li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
         </div>
@@ -1125,14 +1234,16 @@ function RightSidebar({
                         <button 
                             onClick={() => {
                                 onUpdateSectionContent(aiSuggestionPreview.targetSectionId, aiSuggestionPreview.key, aiSuggestionPreview.suggestedContent);
+                                const applied = Array.isArray(aiSuggestionPreview.injectedKeywords) ? aiSuggestionPreview.injectedKeywords : [];
+                                setMissingKeywords(prev => prev.filter(kw => !applied.includes(kw)));
+                                if (applied.length > 0 && typeof matchScore === 'number') {
+                                    setMatchScore(Math.min(100, Math.round(matchScore + ((100 - matchScore) * (applied.length / Math.max(1, missingKeywords.length))))));
+                                }
                                 setAiSuggestionPreview(null);
                                 setActiveHighlightSection(null);
                                 setTerminalLogs(prev => [...prev, { type: "success", text: `[SUCCESS] Keywords injected successfully.` }]);
-                                // Re-evaluate logic would ideally go here. 
-                                setMatchScore(100); 
-                                setMissingKeywords([]); 
                             }}
-                            className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-colors"
+                            className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
                         >
                             Apply
                         </button>
@@ -1698,12 +1809,18 @@ function RightSidebar({
 
                                 {/* Response Card - Left Aligned */}
                                 <div className={`rounded-2xl border p-4 sm:p-5 shadow-xs space-y-3.5 transition-all max-w-[92%] sm:max-w-[88%] text-left ${
-                                    isLight 
-                                        ? 'bg-white border-slate-200 text-slate-800' 
-                                        : 'bg-slate-900/90 border-slate-800 text-slate-200'
+                                    msg.isError
+                                        ? (isLight ? 'bg-rose-50 border-rose-200 text-rose-900' : 'bg-rose-950/40 border-rose-800/70 text-rose-100')
+                                        : isLight 
+                                            ? 'bg-white border-slate-200 text-slate-800' 
+                                            : 'bg-slate-900/90 border-slate-800 text-slate-200'
                                 }`}>
                                     {/* Description / Text Content */}
-                                    <p className="text-[13.5px] font-normal leading-relaxed text-slate-700 dark:text-slate-200">
+                                    <p className={`text-[13.5px] font-normal leading-relaxed ${
+                                        msg.isError
+                                            ? (isLight ? 'text-rose-800' : 'text-rose-200')
+                                            : 'text-slate-700 dark:text-slate-200'
+                                    }`}>
                                         {msg.text}
                                     </p>
 
@@ -1768,20 +1885,27 @@ function RightSidebar({
                                     {/* Bottom Status & Sync Bar */}
                                     <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
                                         <div className="text-slate-400 dark:text-slate-500 font-medium text-[11px] flex items-center gap-1.5">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                            <span>Studio Copilot Active</span>
+                                            <span className={`w-1.5 h-1.5 rounded-full ${msg.isError ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse'}`}></span>
+                                            <span>{msg.isError ? 'Copilot Request Error' : 'Studio Copilot Active'}</span>
                                             {msg.duration && (
                                                 <>
                                                     <span>•</span>
-                                                    <span className="font-mono text-[10px] text-slate-400">Parsed in {msg.duration}</span>
+                                                    <span className="font-mono text-[10px] text-slate-400">{msg.isError ? `Failed in ${msg.duration}` : `Parsed in ${msg.duration}`}</span>
                                                 </>
                                             )}
                                         </div>
 
-                                        <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-xs">
-                                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                            <span>Canvas Synced</span>
-                                        </div>
+                                        {msg.isError ? (
+                                            <div className="flex items-center gap-1 text-rose-600 dark:text-rose-400 font-semibold text-xs">
+                                                <AlertTriangle className="w-4 h-4 text-rose-500" />
+                                                <span>Not Synced</span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-xs">
+                                                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                                <span>Canvas Synced</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -1989,6 +2113,7 @@ function RightSidebar({
             { label: "Services", type: "services", icon: Wrench },
             { label: "Testimonials", type: "testimonials", icon: MessageSquare },
             { label: "Certifications", type: "certifications", icon: Award },
+            { label: "Achievements", type: "achievements", icon: Award },
             { label: "Key Stats", type: "stats", icon: BarChart3 },
             { label: "Blog", type: "blog", icon: BookOpen },
         ];
@@ -2143,7 +2268,17 @@ function RightSidebar({
                         }`}
                     >
                         <Sparkles className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">{activeTool && activeTool !== 'activity_log' ? activeTool.replace('_', ' ') : 'Tools'}</span>
+                        <span className="truncate">{({
+                            structure: 'Structure',
+                            generator: 'AI Generator',
+                            matcher: 'Job Matcher',
+                            impact: 'Impact',
+                            palette: 'Palette',
+                            image: 'Media',
+                            seo_pitch: 'SEO & Pitch',
+                            templates: 'Templates',
+                            export: 'Export'
+                        })[activeTool] || 'Tools'}</span>
                     </button>
                 </div>
 

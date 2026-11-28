@@ -64,20 +64,32 @@ CAREER_TRACK_SEEDS = {
 }
 
 
+def _parse_bool(val, default=False):
+    if isinstance(val, bool):
+        return val
+    if isinstance(val, str):
+        return val.strip().lower() in ('1', 'true', 'yes', 'on')
+    return bool(val) if val is not None else default
+
+
 class PortfolioListCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         # Ensure at least one workspace portfolio exists
         get_or_create_user_portfolio(request)
-        portfolios = Portfolio.objects.filter(owner=request.user).order_by('-is_active', '-updated_at', '-id')
+        portfolios = (
+            Portfolio.objects.filter(owner=request.user)
+            .prefetch_related('portfoliopage_set__sections')
+            .order_by('-is_active', '-updated_at', '-id')
+        )
         recent_logs = AISessionLog.objects.filter(user=request.user)[:10]
         total_ai_actions = AISessionLog.objects.filter(user=request.user).count()
-        published_count = portfolios.filter(is_published=True).count()
+        published_count = sum(1 for p in portfolios if p.is_published)
         return Response({
             'portfolios': PortfolioSerializer(portfolios, many=True).data,
             'usage': {
-                'total_portfolios': portfolios.count(),
+                'total_portfolios': len(portfolios),
                 'published_portfolios': published_count,
                 'total_ai_actions': total_ai_actions,
                 'recent_ai_logs': AISessionLogSerializer(recent_logs, many=True).data,
@@ -161,7 +173,7 @@ class PortfolioDetailAPIView(APIView):
         if 'seo_description' in data:
             portfolio.seo_description = str(data['seo_description'])[:300]
         if 'is_published' in data:
-            portfolio.is_published = bool(data['is_published'])
+            portfolio.is_published = _parse_bool(data['is_published'])
         if 'slug' in data and str(data['slug']).strip():
             new_slug = slugify(str(data['slug']).strip())[:120]
             if new_slug and not Portfolio.objects.filter(owner=request.user, slug=new_slug).exclude(pk=portfolio.pk).exists():
@@ -197,7 +209,11 @@ class PageListAPIView(APIView):
     def get(self, request):
         ensure_user_workspace(request)
         portfolio = get_or_create_user_portfolio(request)
-        pages = PortfolioPage.objects.filter(portfolio=portfolio).order_by('order', 'id')
+        pages = (
+            PortfolioPage.objects.filter(portfolio=portfolio)
+            .prefetch_related('sections')
+            .order_by('order', 'id')
+        )
         data = PortfolioPageSerializer(pages, many=True).data
         return Response(data)
 
@@ -218,7 +234,7 @@ class PageListAPIView(APIView):
         next_order = (max_order + 1) if max_order is not None else 0
         page = PortfolioPage.objects.create(portfolio=portfolio, name=name, slug=slug, order=next_order)
 
-        if request.data.get('seed_default', True):
+        if _parse_bool(request.data.get('seed_default', True), default=True):
             seed_default_sections(page)
 
         return Response(PortfolioPageSerializer(page).data, status=status.HTTP_201_CREATED)
@@ -229,7 +245,7 @@ class SectionCreateAPIView(APIView):
     throttle_classes = []
 
     def post(self, request):
-        page_id = request.data.get('page_id')
+        page_id = request.data.get('page_id') or request.data.get('page')
         section_type = (request.data.get('section_type') or '').strip()
         content_data = request.data.get('content_data')
 
@@ -238,7 +254,10 @@ class SectionCreateAPIView(APIView):
             return Response({'error': 'Invalid section_type.'}, status=status.HTTP_400_BAD_REQUEST)
 
         if page_id:
-            page = PortfolioPage.objects.filter(pk=page_id, portfolio__owner=request.user).first()
+            try:
+                page = PortfolioPage.objects.filter(pk=int(page_id), portfolio__owner=request.user).first()
+            except (TypeError, ValueError):
+                return Response({'error': 'Invalid page identifier.'}, status=status.HTTP_400_BAD_REQUEST)
         else:
             page = ensure_user_workspace(request)
         if not page:
@@ -415,7 +434,7 @@ class PortfolioSettingsAPIView(APIView):
         if 'frontpageTemplate' in data:
             portfolio.frontpage_template = str(data['frontpageTemplate'])[:50]
         if 'isPublished' in data:
-            portfolio.is_published = bool(data['isPublished'])
+            portfolio.is_published = _parse_bool(data['isPublished'])
         if 'seoTitle' in data:
             portfolio.seo_title = str(data['seoTitle'])[:120]
         if 'seoDescription' in data:

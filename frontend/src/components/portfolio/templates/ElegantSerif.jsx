@@ -15,11 +15,11 @@ const ElegantSerif = ({ d }) => {
                     {d.firstName}
                 </div>
                 <div className="hidden md:flex gap-10 text-sm tracking-widest uppercase font-sans font-medium text-[#5a5a5a]">
-                    <span className="hover:text-black cursor-pointer transition-colors border-b border-transparent hover:border-black pb-1">Portfolio</span>
-                    <span className="hover:text-black cursor-pointer transition-colors border-b border-transparent hover:border-black pb-1">Journal</span>
-                    <span className="hover:text-black cursor-pointer transition-colors border-b border-transparent hover:border-black pb-1">Contact</span>
+                    <button type="button" onClick={d.onVisualize} className="hover:text-black cursor-pointer transition-colors border-b border-transparent hover:border-black pb-1 uppercase">Portfolio</button>
+                    <button type="button" onClick={d.onVisualize} className="hover:text-black cursor-pointer transition-colors border-b border-transparent hover:border-black pb-1 uppercase">Journal</button>
+                    <button type="button" onClick={d.onVisualize} className="hover:text-black cursor-pointer transition-colors border-b border-transparent hover:border-black pb-1 uppercase">Contact</button>
                 </div>
-                <button className="text-sm font-sans font-bold tracking-widest uppercase bg-black text-white px-6 py-2 rounded-full hover:bg-[#333] transition-colors">
+                <button type="button" onClick={d.onVisualize} className="text-sm font-sans font-bold tracking-widest uppercase bg-black text-white px-6 py-2 rounded-full hover:bg-[#333] transition-colors cursor-pointer">
                     CV
                 </button>
             </header>
